@@ -1,0 +1,226 @@
+@font-face {
+  font-family: 'Source Serif';
+  src:
+    url('../assets/SourceSerif4Variable-Roman.otf.woff2') format('woff2-variations'),
+    url('../assets/SourceSerif4Variable-Roman.otf.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src:
+    url('../assets/SourceSerif4Variable-Italic.otf.woff2') format('woff2-variations'),
+    url('../assets/SourceSerif4Variable-Italic.otf.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+.metaText {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.editor {
+  -webkit-font-smoothing: antialiased;
+  font-family: "Source Serif", Georgia, serif;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "kern" 1;
+  font-optical-sizing: auto;
+  backface-visibility: hidden;
+  font-size: 18.5px;
+  line-height: 1.52;
+  font-weight: 480;
+
+  > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+  }
+}
+
+.editorTitle {
+  margin: 0 0 0.8em;
+  letter-spacing: -0.02em;   // tighten a bit
+  font-weight: 720;
+  font-variation-settings: "wght" 720, "opsz" 36;
+  line-height: 1.25;
+}
+
+.ProseMirror > * {
+  margin-top: 0;
+  margin-left: var(--editor-gutter);
+  margin-right: var(--editor-gutter);
+}
+
+.ProseMirror {
+  outline: none;
+  box-sizing: border-box;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  .pm-persistent-selection {
+    background: rgba(255, 214, 130, 0.35); // soft yellow
+    border-radius: 2px;
+  }
+
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;       // subtle grey
+    pointer-events: none;
+    height: 0;
+  }
+
+  p {
+    margin-bottom: 0.9em;
+  }
+
+  h2 {
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    letter-spacing: -0.015em;  // slightly less tight
+    font-weight: 640;
+    font-variation-settings: "wght" 640, "opsz" 36;
+  }
+
+  h3 {
+    margin-top: 1.6em;
+    margin-bottom: 0.4em;
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-variation-settings: "wght" 600;
+  }
+
+  h1:first-child,
+  h2:first-child,
+  h3:first-child {
+    margin-top: 0;;
+  }
+
+  /* Make *all* nested nodes inherit */
+  h1 *,
+  h2 *,
+  h3 * {
+    font-weight: inherit !important;
+    font-variation-settings: inherit !important;
+  }
+
+  /* Specific fix for <strong> inside headings */
+  h1 strong,
+  h2 strong,
+  h3 strong {
+    font-weight: inherit !important;
+    font-variation-settings: inherit !important;
+  }
+
+  // Emphasis
+  em {
+    font-style: italic;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  // Lists
+  ul,
+  ol {
+    margin-top: 0.6em;
+    margin-bottom: 0.9em;
+    padding-left: 1em;
+
+    li {
+      padding: 0;
+      margin: 0 0 0.3em;
+
+      p {
+        margin: 0;
+      }
+    }
+  }
+
+  /* ────────────────────────────────────────── */
+  /* Book-style ordered lists                  */
+  /* – number in its own narrow column         */
+  /* – hanging indent for multiline items      */
+  /* – respects outer margin from ProseMirror  */
+  /* ────────────────────────────────────────── */
+  ol {
+    counter-reset: ol-item;
+    list-style: none;         // we’ll draw our own numbers
+    position: relative;
+    left: -2.2em;
+    padding-left: 0;
+  }
+
+  ol > li {
+    counter-increment: ol-item;
+    position: relative;
+    list-style: none;
+
+    /* space for the number column */
+    padding-left: 2.2em;
+
+    /* slight extra gap between items */
+    margin-bottom: 0.55em;
+
+    /* hanging indent for wrapped lines */
+    text-indent: 0;
+  }
+
+  ol > li::before {
+    content: counter(ol-item) ".";
+    position: absolute;
+    left: 0;
+    top: 0.02em;
+
+    width: 1.8em;            // width of the number column
+    text-align: right;
+
+    font-weight: 640;
+    font-variation-settings: "wght" 640, "opsz" 36;
+    opacity: 0.85;
+  }
+
+  /* Optional: slightly tighter nested lists */
+  ol ol,
+  ol ul {
+    margin-top: 0.4em;
+    margin-bottom: 0.6em;
+  }
+
+  // Horizontal rule for strong section breaks
+  hr {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 2.5em;
+    margin-bottom: 1.5em;
+  }
+
+  // Links – subtle, non-webby
+  a {
+    color: #2c5aa0;
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.18em;
+
+    &:hover {
+      color: #234578;
+    }
+  }
+
+  // Tighten paragraph after heading
+  h1 + p,
+  h2 + p,
+  h3 + p {
+    margin-top: 0.1em;
+  }
+
+  // Focus state (TipTap may add .ProseMirror-focused)
+  &.ProseMirror-focused {
+    outline: none;
+  }
+}

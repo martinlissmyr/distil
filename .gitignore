@@ -1,0 +1,99 @@
+# -------------------------------------------------
+# Node / Package stuff
+# -------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# -------------------------------------------------
+# Vite build output
+# -------------------------------------------------
+dist/
+dist-ssr/
+dist-electron/
+*.local
+
+# -------------------------------------------------
+# Electron
+# -------------------------------------------------
+out/
+release/
+build/
+*.asar
+
+# Electron crash logs
+*.log
+*.log.*
+electron-*.dmp
+
+# -------------------------------------------------
+# Environment / Secrets
+# -------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# Prevent leaking local secrets or API keys
+/openai.key
+/keys/
+/secrets/
+
+# -------------------------------------------------
+# OS / Editor junk
+# -------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# JetBrains
+.idea/
+*.iml
+
+# macOS system files
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# -------------------------------------------------
+# Logs
+# -------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# -------------------------------------------------
+# Alinea content (if stored outside project)
+# -------------------------------------------------
+# Only uncomment this if you ever mirror ~/Alinea into the project folder.
+# Alinea/
+# Alinea/projects/
+# Alinea/manifest.json
+
+# -------------------------------------------------
+# Misc
+# -------------------------------------------------
+*.bak
+*.tmp
+*.temp
+*.cache
+.cache/
+vite.cache/
