@@ -18,6 +18,8 @@ type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Local-only message that should not be sent back to the model as history */
+  ephemeral?: boolean;
 };
 
 type QuestionScope = 'selection' | 'text';
@@ -96,10 +98,13 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
     try {
       const MAX_TURNS = 4;
-      const history = messages.concat(userMessage).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const history = messages
+        .concat(userMessage)
+        .filter((m) => !m.ephemeral) // <-- don't send these back to the model
+        .map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
       const turns = history.slice(-MAX_TURNS);
 
       const prompt = buildPrompt(
@@ -123,6 +128,30 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
       // Adapt this to your real IPC API
       const response = await window.chat.send(payload);
 
+      // If main process reported an error
+      if (!response.ok) {
+        const rawError: string = response.error ?? '';
+
+        let friendly = 'Something went wrong talking to the model.';
+
+        if (rawError.includes('No OpenAI API key configured')) {
+          friendly =
+            'No OpenAI API key is configured. Add one under Settings → API key to use the assistant.';
+        }
+
+        // Show as an assistant bubble, but mark as ephemeral so
+        // it never goes back into the model history.
+        const errorMessage: ChatMessage = {
+          id: `m-${Date.now()}-assistant-error`,
+          role: 'assistant',
+          content: friendly,
+          ephemeral: true,
+        };
+
+        setMessages((prev) => [...prev, errorMessage]);
+        return;
+      }
+      
       const assistantText =
         response.output_text ??
         response.choices?.[0]?.message?.content ??

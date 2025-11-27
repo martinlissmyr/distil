@@ -58,3 +58,9 @@ contextBridge.exposeInMainWorld('chat', {
     return ipcRenderer.invoke('chat:send', payload);
   },
 });
+
+contextBridge.exposeInMainWorld('settings', {
+  getApiKey: () => ipcRenderer.invoke('settings:getApiKey'),
+  setApiKey: (key: string) => ipcRenderer.invoke('settings:setApiKey', key),
+  clearApiKey: () => ipcRenderer.invoke('settings:clearApiKey'),
+});

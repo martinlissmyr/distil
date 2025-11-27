@@ -5,7 +5,6 @@ import {
   Group,
   Text,
   Box,
-  Divider,
   Stack,
 } from '@mantine/core';
 
@@ -70,6 +69,9 @@ type SidebarProps = {
 
   rootSection: RootSection;
   onSelectRootSection: (section: RootSection) => void;
+
+  /** Opens the API key / settings modal */
+  onOpenSettings: () => void;
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -222,12 +224,7 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
           active={rootSection === 'manifest'}
           onClick={() => onSelectRootSection('manifest')}
         />
-        <NavItem
-          Icon={Bot}
-          label="Assistant"
-          active={rootSection === 'assistant'}
-          onClick={() => onSelectRootSection('assistant')}
-        />
+        {/* Assistant entry removed – replaced by global settings button */}
       </Stack>
     </SidebarCard>
   );
@@ -414,6 +411,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   rootSection,
   onSelectRootSection,
+
+  onOpenSettings,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -424,9 +423,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentProject = projects.find((p) => p.id === selectedProjectId);
   const currentStory = stories.find((s) => s.id === selectedStoryId);
 
+  let content: React.ReactNode;
+
   // PROJECTS ROOT MODE
   if (mode === 'projects') {
-    return (
+    content = (
       <ProjectsSidebar
         projects={projects}
         selectedProjectId={selectedProjectId}
@@ -438,11 +439,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onSelectRootSection={onSelectRootSection}
       />
     );
-  }
-
-  // STORY MODE
-  if (mode === 'story') {
-    return (
+  } else if (mode === 'story') {
+    // STORY MODE
+    content = (
       <StorySidebar
         currentProject={currentProject}
         currentStory={currentStory}
@@ -451,18 +450,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onSelectStorySection={onSelectStorySection}
       />
     );
+  } else {
+    // PROJECT-DETAIL MODE (show stories list)
+    content = (
+      <ProjectSidebar
+        currentProject={currentProject}
+        stories={stories}
+        selectedStoryId={selectedStoryId}
+        onBackToProjects={onBackToProjects}
+        onSelectStory={onSelectStory}
+        onReorderStories={onReorderStories}
+        sensors={sensors}
+      />
+    );
   }
 
-  // PROJECT-DETAIL MODE (show stories list)
   return (
-    <ProjectSidebar
-      currentProject={currentProject}
-      stories={stories}
-      selectedStoryId={selectedStoryId}
-      onBackToProjects={onBackToProjects}
-      onSelectStory={onSelectStory}
-      onReorderStories={onReorderStories}
-      sensors={sensors}
-    />
+    <Box
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Main scrollable sidebar content */}
+      <Box style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{content}</Box>
+
+      {/* Fixed settings button at bottom */}
+      <Box
+        p="xs"
+        pt="sm"
+        style={{
+          borderTop: '1px solid var(--border-subtle)',
+        }}
+      >
+        <Button
+          fullWidth
+          variant="subtle"
+          leftSection={<Bot size={16} />}
+          onClick={onOpenSettings}
+        >
+          ChatGPT settings
+        </Button>
+      </Box>
+    </Box>
   );
 };

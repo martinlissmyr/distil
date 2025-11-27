@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'fs/promises';
 import './chat';
+import { saveApiKey, loadApiKey, clearApiKey } from './secureStore';
 
 import {
   listProjects,
@@ -79,9 +80,21 @@ app.on('window-all-closed', () => {
     app.quit()
     win = null
   }
-})
+});
 
-// Projects
+ipcMain.handle('settings:setApiKey', async (_e, key) => {
+  await saveApiKey(key);
+});
+
+ipcMain.handle('settings:getApiKey', async () => {
+  return loadApiKey();
+});
+
+ipcMain.handle('settings:clearApiKey', async () => {
+  await clearApiKey();
+  return { ok: true };
+});
+
 ipcMain.handle('projects:list', async () => {
   return listProjects();
 });

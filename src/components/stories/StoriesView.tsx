@@ -18,7 +18,6 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
   onCreateStory,
   onEditStory,
 }) => {
-  console.log(currentProject);
   return (
     <EntityGrid
       items={stories}

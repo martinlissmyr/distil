@@ -22,6 +22,7 @@ import { useSystemTheme } from './hooks/useSystemTheme';
 import { EntityEditModal } from './components/common/EntityEditModal';
 import { StoryOutlineView } from './components/stories/StoryOutlineView';
 import { StoryBriefView } from './components/stories/StoryBriefView';
+import { ApiKeyModal } from './components/settings/ApiKeyModal';
 
 // ---------------
 // Types
@@ -109,6 +110,9 @@ const App: React.FC = () => {
   // Edit modals
   const [editingProject, setEditingProject] = useState<EditingProjectState>(null);
   const [editingStory, setEditingStory] = useState<EditingStoryState>(null);
+
+  // API Key Modal
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
 
   const systemTheme = useSystemTheme();
 
@@ -705,6 +709,7 @@ const App: React.FC = () => {
       onBackToProjectFromStory={handleBackToProjectFromStory}
       rootSection={rootSection}
       onSelectRootSection={handleSelectRootSection}
+      onOpenSettings={() => setApiKeyModalOpen(true)}
     />
   );
 
@@ -778,6 +783,12 @@ const App: React.FC = () => {
         onClose={handleCloseEditStory}
         onSave={handleRenameStory}
         onDelete={handleDeleteStory}
+      />
+
+      {/* API Key Modal */}
+      <ApiKeyModal
+        opened={apiKeyModalOpen}
+        onClose={() => setApiKeyModalOpen(false)}
       />
     </>
   );
