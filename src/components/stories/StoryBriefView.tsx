@@ -1,36 +1,38 @@
 // src/components/stories/StoryBriefView.tsx
 import React from 'react';
-import { Box } from '@mantine/core';
-import { MetaTextEditor, MetaDoc } from '../editor/MetaTextEditor';
+import { MetaTextEditor } from '../editor/MetaTextEditor';
+import { StorySectionShell } from './StorySectionShell';
+import type { MetaScope } from '../../types/metaDoc';
 
 type StoryBriefViewProps = {
-  doc: MetaDoc | null;
-  onChange: (doc: MetaDoc) => void;
+  projectId: string;
+  storyId: string;
 };
 
 export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
-  doc,
-  onChange,
+  projectId,
+  storyId,
 }) => {
+  const scope: MetaScope = {
+    kind: 'story',
+    projectId,
+    storyId,
+  };
   return (
-    <Box
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+    <StorySectionShell
+      projectId={projectId}
+      storyId={storyId}
+      preloadMetaKeys={['brief']}
     >
       <MetaTextEditor
+        mode="bound"
+        scope={scope}
+        metaKey="brief"
         title="Story brief"
-        doc={doc}
-        onChange={onChange}
         placeholder="Capture the core idea of this story…"
         withChat
-        chatConfig={{ 
-          kind: 'brief',
-          initialMessage: 'Describe the core idea, themes, and intended audience. This is the high-level pitch of the story.'
-        }}
+        chatConfig={{ kind: 'brief', storyId }}
       />
-    </Box>
+    </StorySectionShell>
   );
 };

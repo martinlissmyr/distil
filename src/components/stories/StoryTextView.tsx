@@ -1,8 +1,10 @@
+// src/components/stories/StoryTextView.tsx
 import React from 'react';
 import { ProseEditor, ProseDoc } from '../editor/ProseEditor';
-import { Box } from '@mantine/core';
+import { StorySectionShell } from './StorySectionShell';
 
 type StoryTextViewProps = {
+  projectId: string;
   storyId: string;
   doc: ProseDoc;
   onChange: (id: string) => void;
@@ -10,35 +12,30 @@ type StoryTextViewProps = {
 };
 
 export const StoryTextView: React.FC<StoryTextViewProps> = ({
+  projectId,
   storyId,
   doc,
   onChange,
   title,
 }) => {
   return (
-    <Box
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative',
-      }}
+    <StorySectionShell
+      projectId={projectId}
+      storyId={storyId}
+      preloadMetaKeys={['brief', 'outline']}
     >
-      <Box style={{ flex: 1, minHeight: 0 }}>
-        <ProseEditor
-          key={storyId}
-          doc={doc}
-          onChange={onChange}
-          title={title}
-          withChat
-          chatConfig={{ 
-            kind: 'prose',
-            storyId,
-            storyTitle: title,
-            initialMessage: "Hi! Ask me for help on anything regarding this text.",
-          }}
-        />
-      </Box>
-    </Box>
+      <ProseEditor
+        key={storyId}
+        doc={doc}
+        onChange={onChange}
+        title={title}
+        withChat
+        chatConfig={{
+          kind: 'prose',
+          storyId,
+          storyTitle: title,
+        }}
+      />
+    </StorySectionShell>
   );
 };

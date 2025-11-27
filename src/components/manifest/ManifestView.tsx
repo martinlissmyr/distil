@@ -18,15 +18,13 @@ export const ManifestView: React.FC<ManifestViewProps> = ({ doc, onChange }) => 
       }}
     >
       <MetaTextEditor
+        mode="bound"
+        scope={{ kind: 'root' }}
+        metaKey="manifest"
         title="Author Manifest"
-        doc={doc}
-        onChange={onChange}
         placeholder="Start typing…"
         withChat
-        chatConfig={{
-          kind: 'manifest',
-          initialMessage: '👋 The manifest is where you, as an author, describe your tone of voice, your values, and the principles you adhere to. Make it well structured and concise.',
-        }}
+        chatConfig={{ kind: 'manifest' }}
       />
     </Box>
   );

@@ -1,36 +1,32 @@
 // src/components/stories/StoryOutlineView.tsx
 import React from 'react';
-import { Box } from '@mantine/core';
-import { MetaTextEditor, MetaDoc } from '../editor/MetaTextEditor';
+import { MetaTextEditor } from '../editor/MetaTextEditor';
+import { StorySectionShell } from './StorySectionShell';
 
 type StoryOutlineViewProps = {
-  doc: MetaDoc | null;
-  onChange: (doc: MetaDoc) => void;
+  projectId: string;
+  storyId: string;
 };
 
 export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
-  doc,
-  onChange,
+  projectId,
+  storyId,
 }) => {
   return (
-    <Box
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+    <StorySectionShell
+      projectId={projectId}
+      storyId={storyId}
+      preloadMetaKeys={['outline']}
     >
       <MetaTextEditor
+        mode="bound"
+        scope={{ kind: 'story', projectId, storyId }}
+        metaKey="outline"
         title="Story outline"
-        doc={doc}
-        onChange={onChange}
         placeholder="Sketch the structure of your story…"
         withChat
-        chatConfig={{ 
-          kind: 'outline',
-          initialMessage: 'Break the story into acts, chapters, or major beats. Focus on structure rather than detailed prose.',
-        }}
+        chatConfig={{ kind: 'outline', storyId }}
       />
-    </Box>
+    </StorySectionShell>
   );
 };

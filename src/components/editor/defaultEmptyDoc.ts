@@ -10,9 +10,7 @@ export const defaultEmptyDoc: JSONContent = {
   content: [
     {
       type: 'paragraph',
-      content: [
-        { type: 'text', text: '' },
-      ],
+      // no content: [] needed, Tiptap will treat this as an empty paragraph
     },
   ],
 };

@@ -10,6 +10,7 @@ import {
   StoryMeta,
   StoryData,
 } from './api/alineaClient';
+import { useAppStore } from './state/useAppStore';
 import { AlineaLayout } from './components/layout/AlineaLayout';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ProseDoc } from './components/editor/ProseEditor';
@@ -78,6 +79,13 @@ function saveNavState(state: NavState) {
 }
 
 const App: React.FC = () => {
+  const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
+
+  // Preload manifest on app start
+  useEffect(() => {
+    void ensureMetaDocsLoaded({ kind: 'root' }, ['manifest']);
+  }, [ensureMetaDocsLoaded]);
+
   // High-level navigation
   const [appSection, setAppSection] = useState<AppSection>('root');
   const [rootSection, setRootSection] = useState<RootSection>('projects');
@@ -739,15 +747,22 @@ const App: React.FC = () => {
     ) : appSection === 'story' && selectedProjectId && selectedStoryId ? (
       storySection === 'prose' ? (
         <StoryTextView
-          storyId={selectedStoryId ?? 'no-story'}
+          projectId={selectedProjectId}
+          storyId={selectedStoryId}
           doc={currentDoc}
           onChange={handleDocChange}
           title={currentTitle}
         />
       ) : storySection === 'outline' ? (
-        <StoryOutlineView doc={outlineDoc} onChange={handleOutlineChange} />
+        <StoryOutlineView
+          projectId={selectedProjectId}
+          storyId={selectedStoryId}
+        />
       ) : storySection === 'brief' ? (
-        <StoryBriefView doc={briefDoc} onChange={handleBriefChange} />
+        <StoryBriefView
+          projectId={selectedProjectId}
+          storyId={selectedStoryId}
+        />
       ) : storySection === 'characters' ? (
         <Box p="md">Characters (placeholder)</Box>
       ) : storySection === 'locations' ? (

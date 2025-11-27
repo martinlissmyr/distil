@@ -68,22 +68,19 @@ export const alineaClient = {
   ): Promise<StoryMeta> {
     return window.alinea.updateStory(projectId, storyId, updates);
   },
+
   loadStory(projectId: string, storyId: string): Promise<StoryData> {
     return window.alinea.loadStory(projectId, storyId);
   },
+
   saveStory(
     projectId: string,
     storyId: string,
-    payload: {
-      id: string;
-      title: string;
-      doc: JSONContent;
-      outlineDoc?: JSONContent;
-      briefDoc?: JSONContent;
-    }
+    payload: StoryData
   ): Promise<{ ok: boolean }> {
     return window.alinea.saveStory(projectId, storyId, payload);
   },
+
   reorderStories(
     projectId: string,
     ids: string[]
@@ -91,9 +88,26 @@ export const alineaClient = {
     return window.alinea.reorderStories(projectId, ids);
   },
 
-  // -------- Manifest --------
+  // -------- Story metaDocs (flexible) --------
+  loadStoryMetaDoc(projectId: string, storyId: string, key: string) {
+    return window.alinea.loadStoryMetaDoc(projectId, storyId, key);
+  },
+
+  saveStoryMetaDoc(projectId: string, storyId: string, key: string, doc: JSONContent) {
+    return window.alinea.saveStoryMetaDoc(projectId, storyId, key, doc);
+  },
+
+  // -------- Root metaDocs (manifest, etc.) --------
+  loadRootMetaDoc(key: string): Promise<JSONContent | null> {
+    return window.alinea.loadRootMetaDoc(key);
+  },
+
+  saveRootMetaDoc(key: string, doc: JSONContent): Promise<{ ok: boolean }> {
+    return window.alinea.saveRootMetaDoc(key, doc);
+  },
+
+  // -------- Manifest (optional legacy) --------
   loadManifest(): Promise<ManifestData> {
-    // 👈 THIS must go through window.alinea, not alineaFs
     return window.alinea.loadManifest();
   },
   saveManifest(payload: ManifestData): Promise<{ ok: boolean }> {

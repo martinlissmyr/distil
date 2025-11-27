@@ -1,153 +1,167 @@
 // electron/fs/alineaFs.ts
-import path from 'path';
-import fs from 'fs/promises';
-import { app } from 'electron';
-import type { JSONContent } from '@tiptap/react';
+import path from 'path'
+import fs from 'fs/promises'
+import { app } from 'electron'
+import type { JSONContent } from '@tiptap/react'
 
 export type ProjectMeta = {
-  id: string;
-  name: string;
-  createdAt: string;
-  order: number;
-};
+  id: string
+  name: string
+  createdAt: string
+  order: number
+}
 
 export type StoryMeta = {
-  id: string;
-  title: string;
-  createdAt: string;
-  order: number;
-};
+  id: string
+  title: string
+  createdAt: string
+  order: number
+}
 
 export type ManifestData = {
-  doc: JSONContent;
-  updatedAt: string;
-};
+  doc: JSONContent
+  updatedAt: string
+}
+
+// Flexible story file type
+type StoryFile = {
+  id: string
+  title: string
+  createdAt: string
+  order: number
+  doc: JSONContent
+  // New flexible meta docs
+  metaDocs?: Record<string, JSONContent>
+  // Legacy fields – kept for backwards compatibility (optional)
+  outlineDoc?: JSONContent
+  briefDoc?: JSONContent
+}
 
 const getRootDir = () => {
   const home =
-    process.env.HOME || process.env.USERPROFILE || app.getPath('home');
-  return path.join(home, 'Alinea');
-};
+    process.env.HOME || process.env.USERPROFILE || app.getPath('home')
+  return path.join(home, 'Alinea')
+}
 
-const getManifestFile = () => path.join(getRootDir(), 'manifest.json');
-
-const getProjectsDir = () => path.join(getRootDir(), 'projects');
-
+const getManifestFile = () => path.join(getRootDir(), 'manifest.json')
+const getProjectsDir = () => path.join(getRootDir(), 'projects')
 const getProjectDir = (projectId: string) =>
-  path.join(getProjectsDir(), projectId);
-
+  path.join(getProjectsDir(), projectId)
 const getProjectFile = (projectId: string) =>
-  path.join(getProjectDir(projectId), 'project.json');
-
+  path.join(getProjectDir(projectId), 'project.json')
 const getStoriesDir = (projectId: string) =>
-  path.join(getProjectDir(projectId), 'stories');
-
+  path.join(getProjectDir(projectId), 'stories')
 const getStoryFile = (projectId: string, storyId: string) =>
-  path.join(getStoriesDir(projectId), `${storyId}.json`);
+  path.join(getStoriesDir(projectId), `${storyId}.json`)
 
 // ---- Projects ----
 
 export async function listProjects(): Promise<ProjectMeta[]> {
-  const dir = getProjectsDir();
+  const dir = getProjectsDir()
   try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    const projects: ProjectMeta[] = [];
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    const projects: ProjectMeta[] = []
+
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const pid = entry.name;
-      const file = getProjectFile(pid);
+      if (!entry.isDirectory()) continue
+      const pid = entry.name
+      const file = getProjectFile(pid)
+
       try {
-        const raw = await fs.readFile(file, 'utf-8');
-        const data = JSON.parse(raw) as ProjectMeta;
-        projects.push(data);
+        const raw = await fs.readFile(file, 'utf-8')
+        const data = JSON.parse(raw) as ProjectMeta
+        projects.push(data)
       } catch {
         // ignore broken projects
       }
     }
-    projects.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    return projects;
+
+    projects.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    return projects
   } catch {
-    return [];
+    return []
   }
 }
 
 export async function createProject(name: string): Promise<ProjectMeta> {
-  const dir = getProjectsDir();
-  await fs.mkdir(dir, { recursive: true });
+  const dir = getProjectsDir()
+  await fs.mkdir(dir, { recursive: true })
 
-  const existing = await listProjects();
+  const existing = await listProjects()
   const maxOrder =
-    existing.length > 0 ? Math.max(...existing.map((p) => p.order ?? 0)) : 0;
+    existing.length > 0 ? Math.max(...existing.map((p) => p.order ?? 0)) : 0
 
-  const id = `project-${Date.now()}`;
-  const pdir = getProjectDir(id);
-  await fs.mkdir(pdir, { recursive: true });
-  await fs.mkdir(getStoriesDir(id), { recursive: true });
+  const id = `project-${Date.now()}`
+  const pdir = getProjectDir(id)
+  await fs.mkdir(pdir, { recursive: true })
+  await fs.mkdir(getStoriesDir(id), { recursive: true })
 
   const project: ProjectMeta = {
     id,
     name,
     createdAt: new Date().toISOString(),
     order: maxOrder + 1,
-  };
+  }
 
-  await fs.writeFile(getProjectFile(id), JSON.stringify(project, null, 2), 'utf-8');
-  return project;
+  await fs.writeFile(getProjectFile(id), JSON.stringify(project, null, 2), 'utf-8')
+  return project
 }
 
 export async function updateProject(
   projectId: string,
   updates: Partial<Pick<ProjectMeta, 'name'>>
 ): Promise<ProjectMeta> {
-  const file = getProjectFile(projectId);
-  const raw = await fs.readFile(file, 'utf-8');
-  const existing = JSON.parse(raw) as ProjectMeta;
-  const updated: ProjectMeta = { ...existing, ...updates };
-  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8');
-  return updated;
+  const file = getProjectFile(projectId)
+  const raw = await fs.readFile(file, 'utf-8')
+  const existing = JSON.parse(raw) as ProjectMeta
+  const updated: ProjectMeta = { ...existing, ...updates }
+
+  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8')
+  return updated
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
-  const dir = getProjectDir(projectId);
-  await fs.rm(dir, { recursive: true, force: true });
+  const dir = getProjectDir(projectId)
+  await fs.rm(dir, { recursive: true, force: true })
 }
 
 export async function reorderProjects(idsInOrder: string[]): Promise<void> {
-  const projects = await listProjects();
-  const byId = new Map(projects.map((p) => [p.id, p]));
+  const projects = await listProjects()
+  const byId = new Map(projects.map((p) => [p.id, p]))
 
-  let index = 0;
+  let index = 0
   for (const id of idsInOrder) {
-    const p = byId.get(id);
-    if (!p) continue;
-    p.order = index++;
-    await fs.writeFile(getProjectFile(id), JSON.stringify(p, null, 2), 'utf-8');
+    const p = byId.get(id)
+    if (!p) continue
+    p.order = index++
+
+    await fs.writeFile(getProjectFile(id), JSON.stringify(p, null, 2), 'utf-8')
   }
 }
 
 // ---- Stories ----
 
 export async function listStories(projectId: string): Promise<StoryMeta[]> {
-  const dir = getStoriesDir(projectId);
+  const dir = getStoriesDir(projectId)
   try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    const stories: StoryMeta[] = [];
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    const stories: StoryMeta[] = []
     for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
-      const fullPath = path.join(dir, entry.name);
-      const raw = await fs.readFile(fullPath, 'utf-8');
-      const json = JSON.parse(raw) as any;
+      if (!entry.isFile() || !entry.name.endsWith('.json')) continue
+      const fullPath = path.join(dir, entry.name)
+      const raw = await fs.readFile(fullPath, 'utf-8')
+      const json = JSON.parse(raw) as StoryFile
       stories.push({
         id: json.id,
         title: json.title,
         createdAt: json.createdAt ?? new Date().toISOString(),
         order: json.order ?? 0,
-      });
+      })
     }
-    stories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    return stories;
+    stories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    return stories
   } catch {
-    return [];
+    return []
   }
 }
 
@@ -155,73 +169,71 @@ export async function createStory(
   projectId: string,
   title: string
 ): Promise<StoryMeta> {
-  const existing = await listStories(projectId);
+  const existing = await listStories(projectId)
   const maxOrder =
-    existing.length > 0 ? Math.max(...existing.map((s) => s.order ?? 0)) : 0;
+    existing.length > 0 ? Math.max(...existing.map((s) => s.order ?? 0)) : 0
 
-  const id = `story-${Date.now()}`;
-  const file = getStoryFile(projectId, id);
-  await fs.mkdir(getStoriesDir(projectId), { recursive: true });
+  const id = `story-${Date.now()}`
+  const file = getStoryFile(projectId, id)
+  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
 
   const emptyDoc: JSONContent = {
     type: 'doc',
     content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
-  };
+  }
 
-  const story = {
+  const story: StoryFile = {
     id,
     title,
     createdAt: new Date().toISOString(),
     order: maxOrder + 1,
     doc: emptyDoc,
-    outlineDoc: emptyDoc,
-    briefDoc: emptyDoc,
-  };
+    metaDocs: {}, // start empty
+  }
 
-  await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8');
+  await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8')
 
   return {
     id,
     title,
     createdAt: story.createdAt,
     order: story.order,
-  };
+  }
 }
 
-export async function loadStory(projectId: string, storyId: string) {
+export async function loadStory(projectId: string, storyId: string): Promise<StoryFile> {
   const file = getStoryFile(projectId, storyId);
   const raw = await fs.readFile(file, 'utf-8');
-  return JSON.parse(raw);
+  return JSON.parse(raw) as StoryFile;
 }
 
 export async function saveStory(
   projectId: string,
   storyId: string,
-  payload: {
-    id: string;
-    title: string;
-    doc: JSONContent;
-    outlineDoc?: JSONContent;
-    briefDoc?: JSONContent;
-  }
-) {
-  const file = getStoryFile(projectId, storyId);
-  const raw = await fs.readFile(file, 'utf-8').catch(() => null);
-  let existing: any =
-    raw != null ? JSON.parse(raw) : { id: storyId, createdAt: new Date().toISOString() };
+  payload: StoryFile
+): Promise<void> {
+  const file = getStoryFile(projectId, storyId)
+  const raw = await fs.readFile(file, 'utf-8').catch(() => null)
+  const existing: StoryFile =
+    raw != null
+      ? (JSON.parse(raw) as StoryFile)
+      : {
+          id: storyId,
+          title: payload.title,
+          createdAt: new Date().toISOString(),
+          order: 0,
+          doc: payload.doc,
+          metaDocs: {},
+        }
 
-  const story = {
+  const story: StoryFile = {
     ...existing,
-    id: payload.id,
-    title: payload.title,
-    doc: payload.doc,
-    // keep old outline/brief if not provided
-    outlineDoc: payload.outlineDoc ?? existing.outlineDoc,
-    briefDoc: payload.briefDoc ?? existing.briefDoc,
-  };
+    ...payload,
+    metaDocs: payload.metaDocs ?? existing.metaDocs ?? {},
+  }
 
-  await fs.mkdir(getStoriesDir(projectId), { recursive: true });
-  await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8');
+  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+  await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8')
 }
 
 export async function updateStory(
@@ -229,71 +241,121 @@ export async function updateStory(
   storyId: string,
   updates: Partial<Pick<StoryMeta, 'title'>>
 ): Promise<StoryMeta> {
-  const file = getStoryFile(projectId, storyId);
-  const raw = await fs.readFile(file, 'utf-8');
-  const existing = JSON.parse(raw) as any;
+  const file = getStoryFile(projectId, storyId)
+  const raw = await fs.readFile(file, 'utf-8')
+  const existing = JSON.parse(raw) as StoryFile
 
-  const updated = {
+  const updated: StoryFile = {
     ...existing,
     ...updates,
-  };
+  }
 
-  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8');
+  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8')
 
-  // Return StoryMeta shape so list / UI stays consistent
   return {
     id: updated.id,
     title: updated.title,
     createdAt: updated.createdAt ?? new Date().toISOString(),
     order: updated.order ?? 0,
-  };
+  }
 }
 
 export async function deleteStory(
   projectId: string,
   storyId: string
 ): Promise<void> {
-  const file = getStoryFile(projectId, storyId);
-  // Remove the story file itself
-  await fs.rm(file, { force: true });
+  const file = getStoryFile(projectId, storyId)
+  await fs.rm(file, { force: true })
 }
 
 export async function reorderStories(
   projectId: string,
   idsInOrder: string[]
 ): Promise<void> {
-  const stories = await listStories(projectId);
-  const byId = new Map(stories.map((s) => [s.id, s]));
+  const stories = await listStories(projectId)
+  const byId = new Map(stories.map((s) => [s.id, s]))
 
-  let index = 0;
+  let index = 0
   for (const id of idsInOrder) {
-    const s = byId.get(id);
-    if (!s) continue;
-    s.order = index++;
+    const s = byId.get(id)
+    if (!s) continue
+    s.order = index++
 
-    const file = getStoryFile(projectId, id);
-    const raw = await fs.readFile(file, 'utf-8');
-    const json = JSON.parse(raw) as any;
-    json.order = s.order;
-    await fs.writeFile(file, JSON.stringify(json, null, 2), 'utf-8');
+    const file = getStoryFile(projectId, id)
+    const raw = await fs.readFile(file, 'utf-8')
+    const json = JSON.parse(raw) as StoryFile
+    json.order = s.order
+    await fs.writeFile(file, JSON.stringify(json, null, 2), 'utf-8')
   }
+}
+
+// ---- metaDocs helpers ----
+
+export async function loadStoryMetaDoc(
+  projectId: string,
+  storyId: string,
+  key: string
+): Promise<JSONContent | null> {
+  try {
+    const story = await loadStory(projectId, storyId); // existing helper
+    const meta = story.metaDocs ?? {};
+    return meta[key] ?? null;
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') {
+      // Story file (or project dir) doesn’t exist yet → no metaDoc
+      return null;
+    }
+    throw err;
+  }
+}
+
+export async function saveStoryMetaDoc(
+  projectId: string,
+  storyId: string,
+  key: string,
+  doc: JSONContent
+): Promise<void> {
+  const file = getStoryFile(projectId, storyId)
+  console.log(file);
+  const raw = await fs.readFile(file, 'utf-8').catch(() => null)
+  const existing: StoryFile =
+    raw != null
+      ? (JSON.parse(raw) as StoryFile)
+      : {
+          id: storyId,
+          title: '',
+          createdAt: new Date().toISOString(),
+          order: 0,
+          doc,
+          metaDocs: {},
+        }
+
+  const metaDocs = { ...(existing.metaDocs ?? {}), [key]: doc }
+
+  const updated: StoryFile = {
+    ...existing,
+    metaDocs,
+  }
+
+  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8')
 }
 
 // ---- Manifest ----
 
 export async function loadManifest(): Promise<ManifestData> {
-  const file = getManifestFile();
+  const file = getManifestFile()
 
   try {
-    const raw = await fs.readFile(file, 'utf-8');
-    const json = JSON.parse(raw) as ManifestData;
+    const raw = await fs.readFile(file, 'utf-8')
+    const json = JSON.parse(raw) as ManifestData
 
     return {
       doc: json.doc,
       updatedAt: json.updatedAt ?? new Date().toISOString(),
-    };
+    }
   } catch {
-    // If it doesn't exist yet, return an empty doc
+    // If it doesn't exist yet, create an empty manifest file
     const empty: ManifestData = {
       doc: {
         type: 'doc',
@@ -305,23 +367,49 @@ export async function loadManifest(): Promise<ManifestData> {
         ],
       },
       updatedAt: new Date().toISOString(),
-    };
-    await fs.mkdir(getRootDir(), { recursive: true });
-    await fs.writeFile(file, JSON.stringify(empty, null, 2), 'utf-8');
-    return empty;
+    }
+
+    await fs.mkdir(getRootDir(), { recursive: true })
+    await fs.writeFile(file, JSON.stringify(empty, null, 2), 'utf-8')
+    return empty
   }
 }
 
 export async function saveManifest(payload: {
-  doc: JSONContent;
+  doc: JSONContent
 }): Promise<void> {
-  const file = getManifestFile();
+  const file = getManifestFile()
 
   const manifest: ManifestData = {
     doc: payload.doc,
     updatedAt: new Date().toISOString(),
-  };
+  }
 
-  await fs.mkdir(getRootDir(), { recursive: true });
-  await fs.writeFile(file, JSON.stringify(manifest, null, 2), 'utf-8');
+  await fs.mkdir(getRootDir(), { recursive: true })
+  await fs.writeFile(file, JSON.stringify(manifest, null, 2), 'utf-8')
+}
+
+// ---- Root metaDocs (generic wrapper around Manifest) ----
+
+export async function loadRootMetaDoc(key: string): Promise<JSONContent | null> {
+  if (key === 'manifest') {
+    const manifest = await loadManifest();
+    return manifest.doc;
+  }
+
+  // If you later add more root-level meta docs, extend this switch.
+  return null;
+}
+
+export async function saveRootMetaDoc(
+  key: string,
+  doc: JSONContent
+): Promise<void> {
+  if (key === 'manifest') {
+    await saveManifest({ doc });
+    return;
+  }
+
+  // For unknown keys, you could either no-op or throw.
+  // For now, let's just no-op.
 }

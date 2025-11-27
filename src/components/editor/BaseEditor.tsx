@@ -3,16 +3,14 @@ import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
+import { persistentSelectionPluginKey } from './extensions/PersistentSelectionHighlight';
 import '../../styles/Editor.scss';
 
 export type BaseEditorProps = {
   editor: any; // TipTap Editor instance
   title?: string;
   showTitle?: boolean;
-
   toolbar: React.ReactNode;
-
-  description?: React.ReactNode;
   withChat?: boolean;
   chatConfig?: any;
 };
@@ -22,7 +20,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   title,
   showTitle = true,
   toolbar,
-  description,
   withChat = true,
   chatConfig,
 }) => {
@@ -30,7 +27,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   const [asideOffset, setAsideOffset] = useState<number>(12); // px
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const [fullTextMarkdown, setFullTextMarkdown] = useState('');
+  const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
   const [hasSelection, setHasSelection] = useState(false);
 
@@ -79,7 +76,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       }
     };
 
-    // tiny throttle for selection updates
     let selTimeout: number | null = null;
 
     const updateSelectionMarkdown = () => {
@@ -89,21 +85,20 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       setHasSelection(hasSel);
 
       if (!hasSel) {
-        // Optional: keep last highlight, just don’t change it
-        // If you want to clear it instead, uncomment this:
-        // const trClear = state.tr.setMeta(persistentSelectionPluginKey, { type: 'clear' });
-        // editor.view.dispatch(trClear);
+        const trClear = state.tr.setMeta(persistentSelectionPluginKey, {
+          type: 'clear',
+        });
+        editor.view.dispatch(trClear);
         setSelectionMarkdown('');
         return;
       }
 
-      // Tell the plugin where the persistent selection should be
-      /*const tr = state.tr.setMeta(persistentSelectionPluginKey, {
+      const tr = state.tr.setMeta(persistentSelectionPluginKey, {
         type: 'set',
         from,
         to,
       });
-      editor.view.dispatch(tr);*/
+      editor.view.dispatch(tr);
 
       try {
         const slice = state.doc.cut(from, to).toJSON();
@@ -122,20 +117,21 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       selTimeout = window.setTimeout(updateSelectionMarkdown, 50);
     };
 
-    // initial
+    // one combined handler so we can remove it cleanly
+    const handleUpdate = () => {
+      updateFullMarkdown();
+      handleSelectionUpdate();
+    };
+
+    // initial measurement
     updateFullMarkdown();
     updateSelectionMarkdown();
 
-    editor.on('update', () => {
-      updateFullMarkdown();
-      // selection may have changed as part of update too:
-      handleSelectionUpdate();
-    });
-
+    editor.on('update', handleUpdate);
     editor.on('selectionUpdate', handleSelectionUpdate);
 
     return () => {
-      editor.off('update', updateFullMarkdown);
+      editor.off('update', handleUpdate);
       editor.off('selectionUpdate', handleSelectionUpdate);
       if (selTimeout != null) window.clearTimeout(selTimeout);
     };
@@ -248,6 +244,8 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
             fullTextMarkdown={fullTextMarkdown}
             selectionMarkdown={selectionMarkdown}
             hasSelection={hasSelection}
+            title={title}
+            isTextLoaded={fullTextMarkdown !== null}
           />
         </Box>
       )}
