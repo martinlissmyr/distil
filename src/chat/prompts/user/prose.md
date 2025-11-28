@@ -1,7 +1,4 @@
-You've been given:
-{{#if manifestMarkdown}}- An author manifest (style/tone guidelines){{/if}}
-{{#if fullTextMarkdown}}- The full text of the piece (may be partial){{/if}}
-{{#if hasSelection}}- A snippet (current selection){{/if}}
+{{#if contextSummary}}{{contextSummary}}{{/if}}
 
 Task:
 {{rawUserPrompt}}

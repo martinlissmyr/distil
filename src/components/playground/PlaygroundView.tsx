@@ -8,6 +8,7 @@ import type { EditorKind, QuestionScope } from '../../types/chat';
 import { useAppStore } from '../../state/useAppStore';
 import { jsonToMarkdown } from '../../state/markdownUtils';
 import { PlaygroundOutput } from './PlaygroundOutput';
+import { ContextDeterminatorTest } from './ContextDeterminatorTest';
 
 type ContextType = 'story' | 'manifest';
 
@@ -36,7 +37,10 @@ type PlaygroundState = {
   loadedSelection: string;
 };
 
+type PlaygroundMode = 'prompt-builder' | 'context-determinator';
+
 export const PlaygroundView: React.FC = () => {
+  const [mode, setMode] = useState<PlaygroundMode>('prompt-builder');
   const [state, setState] = useState<PlaygroundState>({
     contextType: 'story',
     selectedProjectId: null,
@@ -231,7 +235,7 @@ export const PlaygroundView: React.FC = () => {
   }, [state.contextType]);
 
   // Build prompt when button clicked
-  const handleBuildPrompt = useCallback(() => {
+  const handleBuildPrompt = useCallback(async () => {
     const fullText = state.emptyMainDoc ? '' : state.loadedFullText;
     const selection = state.scope === 'selection' ? state.loadedSelection : '';
 
@@ -280,14 +284,23 @@ export const PlaygroundView: React.FC = () => {
         }));
       }
 
-      // Build the prompt with overrides applied
-      const prompt = buildPrompt({
+      // Get API key for intelligent context selection
+      const apiKeyResponse = await window.settings.getApiKey();
+      const apiKey = apiKeyResponse.ok && apiKeyResponse.data ? apiKeyResponse.data : undefined;
+
+      // Build the prompt with overrides applied (now async)
+      const prompt = await buildPrompt({
         rawUserPrompt: state.userPrompt,
         kind: state.contextType === 'manifest' ? 'manifest' : state.metaDocType,
         title: state.loadedTitle,
         scope: state.scope,
         fullTextMarkdown: fullText,
         selectionMarkdown: selection,
+        projectId: state.selectedProjectId || undefined,
+        storyId: state.selectedStoryId || undefined,
+        useIntelligentContext: true,
+        apiKey,
+        language: 'sv',
       });
 
       setBuiltPrompt(prompt);
@@ -299,6 +312,24 @@ export const PlaygroundView: React.FC = () => {
 
   return (
     <Box p="md" h="100vh" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* Top Navigation */}
+      <Paper p="md" mb="md" withBorder>
+        <Stack gap="sm">
+          <Title order={3}>Playground</Title>
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => setMode(value as PlaygroundMode)}
+            data={[
+              { label: 'Prompt Builder', value: 'prompt-builder' },
+              { label: 'Context Determinator', value: 'context-determinator' },
+            ]}
+          />
+        </Stack>
+      </Paper>
+
+      {mode === 'context-determinator' ? (
+        <ContextDeterminatorTest />
+      ) : (
       <Group gap="md" style={{ flex: 1, minHeight: 0 }} grow align="flex-start">
         <Stack gap="lg" p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
           {/* Context Selection */}
@@ -514,6 +545,7 @@ export const PlaygroundView: React.FC = () => {
               systemPrompt={builtPrompt.system}
               assistantPrompt={builtPrompt.assistant}
               userPrompt={builtPrompt.user}
+              includedContexts={builtPrompt.includedContexts}
             />
           ) : (
             <Paper p="md" style={{ flex: 1, height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -524,6 +556,7 @@ export const PlaygroundView: React.FC = () => {
           )}
         </Box>
       </Group>
+      )}
     </Box>
   );
 };

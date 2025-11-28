@@ -12,6 +12,8 @@ interface UseChatSendOptions {
   selectionMarkdown: string;
   messages: ChatMessage[];
   addMessage: (message: ChatMessage) => void;
+  projectId?: string;
+  storyId?: string;
 }
 
 interface UseChatSendResult {
@@ -30,6 +32,8 @@ export function useChatSend({
   selectionMarkdown,
   messages,
   addMessage,
+  projectId,
+  storyId,
 }: UseChatSendOptions): UseChatSendResult {
   const [isSending, setIsSending] = useState(false);
 
@@ -61,14 +65,23 @@ export function useChatSend({
           }));
         const turns = history.slice(-MAX_TURNS);
 
-        // Build prompt with context
-        const prompt = buildPrompt({
+        // Get API key for intelligent context selection
+        const apiKeyResponse = await window.settings.getApiKey();
+        const apiKey = apiKeyResponse.ok ? apiKeyResponse.data : undefined;
+
+        // Build prompt with context (now async)
+        const prompt = await buildPrompt({
           rawUserPrompt,
           kind,
           title,
           scope,
           fullTextMarkdown,
           selectionMarkdown,
+          projectId,
+          storyId,
+          useIntelligentContext: true, // Use GPT-4o-mini for ambiguous cases
+          apiKey,
+          language: 'sv', // TODO: Detect or configure language
         });
 
         // Construct API payload
@@ -136,6 +149,8 @@ export function useChatSend({
       scope,
       fullTextMarkdown,
       selectionMarkdown,
+      projectId,
+      storyId,
     ]
   );
 

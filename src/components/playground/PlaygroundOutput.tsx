@@ -1,18 +1,20 @@
 // src/components/playground/PlaygroundOutput.tsx
 import React, { useState } from 'react';
-import { Paper, Title, SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack } from '@mantine/core';
+import { Title, SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack, Badge } from '@mantine/core';
 import { Copy, Check } from 'lucide-react';
 
 type PlaygroundOutputProps = {
   systemPrompt: string;
   assistantPrompt: string;
   userPrompt: string;
+  includedContexts: string[];
 };
 
 export const PlaygroundOutput: React.FC<PlaygroundOutputProps> = ({
   systemPrompt,
   assistantPrompt,
   userPrompt,
+  includedContexts,
 }) => {
   const [activeTab, setActiveTab] = useState('system');
 
@@ -34,6 +36,14 @@ export const PlaygroundOutput: React.FC<PlaygroundOutputProps> = ({
     <Stack gap="sm" style={{ flexGrow: 1, minHeight: 0 }}>
       <Stack gap="sm">
         <Title order={4}>Built Prompt Output</Title>
+        {includedContexts.length > 0 && (
+          <Group gap="xs">
+            <Text size="xs" c="dimmed">Included contexts:</Text>
+            {includedContexts.map(ctx => (
+              <Badge key={ctx} size="sm" variant="light">{ctx}</Badge>
+            ))}
+          </Group>
+        )}
         <SegmentedControl
           value={activeTab}
           onChange={setActiveTab}
