@@ -15,7 +15,7 @@ export function proseExtensions(
   { placeholder = '' }: ProseExtensionsOptions = {}
 ): Extension[] {
   return [
-    Markdown,
+    Markdown.configure({}),
     PersistentSelectionHighlight,
     StarterKit.configure({
       heading: false, // we'll use the dedicated Heading extension below

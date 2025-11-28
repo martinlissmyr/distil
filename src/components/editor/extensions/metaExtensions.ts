@@ -18,7 +18,7 @@ export function metaExtensions(
   { placeholder = '' }: MetaExtensionsOptions = {}
 ): Extension[] {
   return [
-    Markdown,
+    Markdown.configure({}),
     PersistentSelectionHighlight,
     StarterKit.configure({
       heading: false,
