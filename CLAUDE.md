@@ -8,7 +8,7 @@ Alinea is an Electron-based desktop writing application for fiction authors, bui
 
 ## AI Agent Rules for This Project
 
-- All TODO lists, reports, analyses, and auto-generated notes must be placed in `./todos/`.
+- All TODO lists, reports, analyses, and auto-generated notes must be placed in `/todos/`.
 - Files must use the following naming format: `YYYY-MM-DD_description.md`.
 - Do not put reports in root or source directories.
 
