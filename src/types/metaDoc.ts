@@ -4,7 +4,7 @@ export type MetaScope =
   | { kind: 'project'; projectId: string }
   | { kind: 'story'; projectId: string; storyId: string };
 
-export type MetaDocKey = string; // 'manifest' | 'brief' | 'outline' | etc
+export type MetaDocKey = 'manifest' | 'brief' | 'outline';
 
 export type MetaDocJson = any;
 
