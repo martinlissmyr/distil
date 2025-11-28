@@ -26,6 +26,7 @@ import { StoryBriefView } from './components/stories/StoryBriefView';
 import { ApiKeyModal } from './components/settings/ApiKeyModal';
 import { useNavigation } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
+import { useEntityCRUD } from './hooks/useEntityCRUD';
 
 // ---------------
 // Types
@@ -64,9 +65,101 @@ const App: React.FC = () => {
     finishInitialization,
   } = navigation;
 
-  // Entities
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [stories, setStories] = useState<StoryMeta[]>([]);
+  // Entity CRUD hooks
+  const projectsCRUD = useEntityCRUD<Project, string, { name: string }>({
+    list: alineaClient.listProjects,
+    create: (name: string) => alineaClient.createProject(name),
+    update: (id, data) => alineaClient.updateProject(id, data),
+    delete: (id) => alineaClient.deleteProject(id),
+    reorder: (ids) => alineaClient.reorderProjects(ids),
+  }, {
+    onCreate: async (created) => {
+      // Navigate to new project and load its stories
+      goToProject(created.id);
+      setCurrentDoc(null);
+      setCurrentTitle('');
+      setDirty(false);
+
+      // Load stories for the new project (use created.id directly)
+      const listResponse = await alineaClient.listStories(created.id);
+      if (listResponse.ok) {
+        storiesCRUD.setItems(listResponse.data);
+      } else {
+        console.error('Failed to list stories:', listResponse.error);
+      }
+    },
+    onDelete: (deletedId) => {
+      // Navigate away if deleted project was selected
+      if (selectedProjectId === deletedId) {
+        goToProjects();
+        setCurrentDoc(null);
+        setCurrentTitle('');
+        setDirty(false);
+      }
+    },
+  });
+
+  const storiesCRUD = useEntityCRUD<StoryMeta, string, { title: string }>({
+    list: () => {
+      if (!selectedProjectId) {
+        return Promise.resolve({ ok: true, data: [] } as any);
+      }
+      return alineaClient.listStories(selectedProjectId);
+    },
+    create: (title: string) => {
+      if (!selectedProjectId) {
+        return Promise.reject(new Error('No project selected'));
+      }
+      return alineaClient.createStory(selectedProjectId, title);
+    },
+    update: (id, data) => {
+      if (!selectedProjectId) {
+        return Promise.reject(new Error('No project selected'));
+      }
+      return alineaClient.updateStory(selectedProjectId, id, data);
+    },
+    delete: (id) => {
+      if (!selectedProjectId) {
+        return Promise.reject(new Error('No project selected'));
+      }
+      return alineaClient.deleteStory(selectedProjectId, id);
+    },
+    reorder: (ids) => {
+      if (!selectedProjectId) {
+        return Promise.reject(new Error('No project selected'));
+      }
+      return alineaClient.reorderStories(selectedProjectId, ids);
+    },
+  }, {
+    onCreate: async (created) => {
+      // Navigate to new story and load it
+      if (!selectedProjectId) return;
+      goToStory(selectedProjectId, created.id, 'prose');
+
+      const storyResponse = await alineaClient.loadStory(selectedProjectId, created.id);
+      if (!storyResponse.ok) {
+        console.error('Failed to load story:', storyResponse.error);
+        return;
+      }
+      const story: StoryData = storyResponse.data;
+      setCurrentTitle(story.title);
+      setCurrentDoc(story.doc);
+      setDirty(false);
+    },
+    onDelete: (deletedId) => {
+      // Navigate away if deleted story was selected
+      if (selectedProjectId && selectedStoryId === deletedId) {
+        goToProject(selectedProjectId);
+        setCurrentDoc(null);
+        setCurrentTitle('');
+        setDirty(false);
+      }
+    },
+  });
+
+  // Destructure for easier access
+  const projects = projectsCRUD.items;
+  const stories = storiesCRUD.items;
 
   // Story editor state (prose)
   const [currentTitle, setCurrentTitle] = useState('');
@@ -118,7 +211,7 @@ const App: React.FC = () => {
         }
 
         const proj = projResponse.data;
-        setProjects(proj);
+        projectsCRUD.setItems(proj);
 
         // No saved nav → default root/projects
         if (!saved) {
@@ -176,7 +269,7 @@ const App: React.FC = () => {
           return;
         }
         const list = listResponse.data;
-        setStories(list);
+        storiesCRUD.setItems(list);
 
         // No valid story → show project stories list
         if (!saved.storyId || !list.some((s) => s.id === saved.storyId)) {
@@ -239,7 +332,6 @@ const App: React.FC = () => {
     }
 
     if (section !== 'projects') {
-      setStories([]);
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
@@ -248,30 +340,7 @@ const App: React.FC = () => {
 
   // ---- Project actions ----
   const handleCreateProject = async () => {
-    const createdResponse = await alineaClient.createProject('New project');
-    if (!createdResponse.ok) {
-      console.error('Failed to create project:', createdResponse.error);
-      return;
-    }
-    const created = createdResponse.data;
-
-    const updatedResponse = await alineaClient.listProjects();
-    if (!updatedResponse.ok) {
-      console.error('Failed to list projects:', updatedResponse.error);
-      return;
-    }
-    setProjects(updatedResponse.data);
-    goToProject(created.id);
-    setCurrentDoc(null);
-    setCurrentTitle('');
-    setDirty(false);
-
-    const listResponse = await alineaClient.listStories(created.id);
-    if (!listResponse.ok) {
-      console.error('Failed to list stories:', listResponse.error);
-      return;
-    }
-    setStories(listResponse.data);
+    await projectsCRUD.create('New project');
   };
 
   const handleSelectProject = async (id: string) => {
@@ -280,30 +349,24 @@ const App: React.FC = () => {
     setCurrentTitle('');
     setDirty(false);
 
+    // Load stories for this project (use id directly, not selectedProjectId which updates async)
     const listResponse = await alineaClient.listStories(id);
-    if (!listResponse.ok) {
+    if (listResponse.ok) {
+      storiesCRUD.setItems(listResponse.data);
+    } else {
       console.error('Failed to list stories:', listResponse.error);
-      return;
     }
-    setStories(listResponse.data);
   };
 
   const handleBackToProjects = () => {
     goToProjects();
-    setStories([]);
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
   };
 
   const handleReorderProjects = async (ids: string[]) => {
-    const byId = new Map(projects.map((p) => [p.id, p]));
-    const reordered = ids.map((id) => byId.get(id)!).filter(Boolean);
-    setProjects(reordered);
-    const response = await alineaClient.reorderProjects(ids);
-    if (!response.ok) {
-      console.error('Failed to reorder projects:', response.error);
-    }
+    await projectsCRUD.reorder(ids);
   };
 
   // ---- Project edit modal handlers ----
@@ -322,46 +385,13 @@ const App: React.FC = () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
 
-    const updateResponse = await alineaClient.updateProject(editingProject.id, { name: trimmed });
-    if (!updateResponse.ok) {
-      console.error('Failed to update project:', updateResponse.error);
-      return;
-    }
-
-    const updatedResponse = await alineaClient.listProjects();
-    if (!updatedResponse.ok) {
-      console.error('Failed to list projects:', updatedResponse.error);
-      return;
-    }
-    setProjects(updatedResponse.data);
-
+    await projectsCRUD.update(editingProject.id, { name: trimmed });
     setEditingProject(null);
   };
 
   const handleDeleteProject = async () => {
     if (!editingProject) return;
-
-    const deleteResponse = await alineaClient.deleteProject(editingProject.id);
-    if (!deleteResponse.ok) {
-      console.error('Failed to delete project:', deleteResponse.error);
-      return;
-    }
-
-    const updatedResponse = await alineaClient.listProjects();
-    if (!updatedResponse.ok) {
-      console.error('Failed to list projects:', updatedResponse.error);
-      return;
-    }
-    setProjects(updatedResponse.data);
-
-    if (selectedProjectId === editingProject.id) {
-      goToProjects();
-      setStories([]);
-      setCurrentDoc(null);
-      setCurrentTitle('');
-      setDirty(false);
-    }
-
+    await projectsCRUD.delete(editingProject.id);
     setEditingProject(null);
   };
 
@@ -369,34 +399,7 @@ const App: React.FC = () => {
   const handleCreateStory = async () => {
     if (!selectedProjectId) return;
     const title = `Untitled ${stories.length + 1}`;
-
-    const createdResponse = await alineaClient.createStory(selectedProjectId, title);
-    if (!createdResponse.ok) {
-      console.error('Failed to create story:', createdResponse.error);
-      return;
-    }
-    const created = createdResponse.data;
-
-    const updatedResponse = await alineaClient.listStories(selectedProjectId);
-    if (!updatedResponse.ok) {
-      console.error('Failed to list stories:', updatedResponse.error);
-      return;
-    }
-    setStories(updatedResponse.data);
-    goToStory(selectedProjectId, created.id, 'prose');
-
-    const storyResponse = await alineaClient.loadStory(
-      selectedProjectId,
-      created.id
-    );
-    if (!storyResponse.ok) {
-      console.error('Failed to load story:', storyResponse.error);
-      return;
-    }
-    const story: StoryData = storyResponse.data;
-    setCurrentTitle(story.title);
-    setCurrentDoc(story.doc);
-    setDirty(false);
+    await storiesCRUD.create(title);
   };
 
   const handleSelectStory = async (id: string) => {
@@ -423,14 +426,7 @@ const App: React.FC = () => {
   };
 
   const handleReorderStories = async (ids: string[]) => {
-    if (!selectedProjectId) return;
-    const byId = new Map(stories.map((s) => [s.id, s]));
-    const reordered = ids.map((id) => byId.get(id)!).filter(Boolean);
-    setStories(reordered);
-    const response = await alineaClient.reorderStories(selectedProjectId, ids);
-    if (!response.ok) {
-      console.error('Failed to reorder stories:', response.error);
-    }
+    await storiesCRUD.reorder(ids);
   };
 
   const handleSave = async () => {
@@ -463,21 +459,9 @@ const App: React.FC = () => {
     const trimmed = newTitle.trim();
     if (!trimmed) return;
 
-    const updateResponse = await alineaClient.updateStory(selectedProjectId, editingStory.id, {
-      title: trimmed,
-    });
-    if (!updateResponse.ok) {
-      console.error('Failed to update story:', updateResponse.error);
-      return;
-    }
+    await storiesCRUD.update(editingStory.id, { title: trimmed });
 
-    const updatedResponse = await alineaClient.listStories(selectedProjectId);
-    if (!updatedResponse.ok) {
-      console.error('Failed to list stories:', updatedResponse.error);
-      return;
-    }
-    setStories(updatedResponse.data);
-
+    // Update current title if this is the currently open story
     if (selectedStoryId === editingStory.id) {
       setCurrentTitle(trimmed);
     }
@@ -487,27 +471,7 @@ const App: React.FC = () => {
 
   const handleDeleteStory = async () => {
     if (!editingStory || !selectedProjectId) return;
-
-    const deleteResponse = await alineaClient.deleteStory(selectedProjectId, editingStory.id);
-    if (!deleteResponse.ok) {
-      console.error('Failed to delete story:', deleteResponse.error);
-      return;
-    }
-
-    const updatedResponse = await alineaClient.listStories(selectedProjectId);
-    if (!updatedResponse.ok) {
-      console.error('Failed to list stories:', updatedResponse.error);
-      return;
-    }
-    setStories(updatedResponse.data);
-
-    if (selectedStoryId === editingStory.id) {
-      goToProject(selectedProjectId);
-      setCurrentDoc(null);
-      setCurrentTitle('');
-      setDirty(false);
-    }
-
+    await storiesCRUD.delete(editingStory.id);
     setEditingStory(null);
   };
 
