@@ -63,6 +63,7 @@ export function buildPrompt({
       prompt.user = buildProseUserPrompt({
         rawUserPrompt,
         manifestMarkdown,
+        fullTextMarkdown,
         scope,
       });
       break;

@@ -113,13 +113,15 @@ export function buildAssistantContext(params: {
 export function buildProseUserPrompt(params: {
   rawUserPrompt: string;
   manifestMarkdown: string | null;
+  fullTextMarkdown: string;
   scope: 'selection' | 'text';
 }): string {
-  const { rawUserPrompt, manifestMarkdown, scope } = params;
+  const { rawUserPrompt, manifestMarkdown, fullTextMarkdown, scope } = params;
 
   return interpolate(proseUserMd, {
     rawUserPrompt,
-    manifestStatus: manifestMarkdown ? '(loaded)' : '(may be missing)',
+    manifestMarkdown: manifestMarkdown || '',
+    fullTextMarkdown: fullTextMarkdown || '',
     hasSelection: scope === 'selection',
   }).trim();
 }
