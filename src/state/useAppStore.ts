@@ -1,7 +1,7 @@
 // src/state/useAppStore.ts
 import { create } from 'zustand';
 import { alineaClient } from '../api/alineaClient';
-import { jsonToMarkdown } from './markdownUtils';
+import { metaJsonToMarkdown } from './markdownUtils';
 import type { MetaScope, MetaDocKey, MetaDocState } from '../types/metaDoc';
 
 type ApiState = { hasApiKey: boolean | null };
@@ -99,7 +99,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           }
         }
 
-        const markdown = json ? jsonToMarkdown(json) : '';
+        const markdown = json ? metaJsonToMarkdown(json) : '';
 
         set((state) => ({
           metaDocs: {
@@ -137,7 +137,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   updateMetaDoc(scope, key, json) {
     const id = metaId(scope, key);
-    const markdown = jsonToMarkdown(json);
+    const markdown = metaJsonToMarkdown(json);
     set((state) => ({
       metaDocs: {
         ...state.metaDocs,
