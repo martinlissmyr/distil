@@ -20,18 +20,8 @@ import type { StorySection, RootSection, AppSection } from './hooks/useNavigatio
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
-
-// ---------------
-// Types
-type EditingProjectState = {
-  id: string;
-  name: string;
-} | null;
-
-type EditingStoryState = {
-  id: string;
-  title: string;
-} | null;
+import { useProjectHandlers } from './hooks/useProjectHandlers';
+import { useStoryHandlers } from './hooks/useStoryHandlers';
 
 const App: React.FC = () => {
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
@@ -163,10 +153,6 @@ const App: React.FC = () => {
   // Note: Manifest, outline and brief are managed by MetaTextEditor via metaDocs system
   // They autosave independently without needing App-level state
 
-  // Edit modals
-  const [editingProject, setEditingProject] = useState<EditingProjectState>(null);
-  const [editingStory, setEditingStory] = useState<EditingStoryState>(null);
-
   // API Key Modal
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
 
@@ -190,139 +176,34 @@ const App: React.FC = () => {
     document.documentElement.dataset.editorMode = editorMode;
   }, [appSection, storySection, rootSection, selectedStoryId]);
 
+  // ---- Project handlers ----
+  const projectHandlers = useProjectHandlers({
+    goToProjects,
+    goToManifest: navigation.goToManifest,
+    goToProject,
+    clearEditor,
+    projectsCRUD,
+    projects,
+    setStories: storiesCRUD.setItems,
+  });
+
+  // ---- Story handlers ----
+  const storyHandlers = useStoryHandlers({
+    goToProject,
+    goToStory,
+    clearEditor,
+    loadStory,
+    setCurrentTitle,
+    storiesCRUD,
+    stories,
+    selectedProjectId,
+    selectedStoryId,
+  });
+
   // ---- Handlers ----
   const handleDocChange = useCallback((doc: ProseDoc) => {
     updateDoc(doc);
   }, [updateDoc]);
-
-  const handleSelectRootSection = (section: RootSection) => {
-    if (section === 'manifest') {
-      navigation.goToManifest();
-    } else {
-      navigation.goToProjects();
-    }
-
-    if (section !== 'projects') {
-      clearEditor();
-    }
-  };
-
-  // ---- Project actions ----
-  const handleCreateProject = async () => {
-    await projectsCRUD.create('New project');
-  };
-
-  const handleSelectProject = async (id: string) => {
-    goToProject(id);
-    clearEditor();
-
-    // Load stories for this project (use id directly, not selectedProjectId which updates async)
-    const listResponse = await alineaClient.listStories(id);
-    if (listResponse.ok) {
-      storiesCRUD.setItems(listResponse.data);
-    } else {
-      console.error('Failed to list stories:', listResponse.error);
-    }
-  };
-
-  const handleBackToProjects = () => {
-    goToProjects();
-    clearEditor();
-  };
-
-  const handleReorderProjects = async (ids: string[]) => {
-    await projectsCRUD.reorder(ids);
-  };
-
-  // ---- Project edit modal handlers ----
-  const handleOpenEditProject = (projectId: string) => {
-    const proj = projects.find((p) => p.id === projectId);
-    if (!proj) return;
-    setEditingProject({ id: proj.id, name: proj.name });
-  };
-
-  const handleCloseEditProject = () => {
-    setEditingProject(null);
-  };
-
-  const handleRenameProject = async (newName: string) => {
-    if (!editingProject) return;
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-
-    await projectsCRUD.update(editingProject.id, { name: trimmed });
-    setEditingProject(null);
-  };
-
-  const handleDeleteProject = async () => {
-    if (!editingProject) return;
-    await projectsCRUD.delete(editingProject.id);
-    setEditingProject(null);
-  };
-
-  // ---- Story actions ----
-  const handleCreateStory = async () => {
-    if (!selectedProjectId) return;
-    const title = `Untitled ${stories.length + 1}`;
-    await storiesCRUD.create(title);
-  };
-
-  const handleSelectStory = async (id: string) => {
-    if (!selectedProjectId) return;
-    goToStory(selectedProjectId, id, 'prose');
-
-    const storyResponse = await alineaClient.loadStory(selectedProjectId, id);
-    if (!storyResponse.ok) {
-      console.error('Failed to load story:', storyResponse.error);
-      return;
-    }
-    loadStory(storyResponse.data);
-  };
-
-  const handleBackToProjectFromStory = () => {
-    if (!selectedProjectId) return;
-    goToProject(selectedProjectId);
-    clearEditor();
-  };
-
-  const handleReorderStories = async (ids: string[]) => {
-    await storiesCRUD.reorder(ids);
-  };
-
-  // ---- Story edit modal handlers ----
-  const handleOpenEditStory = (storyId: string) => {
-    const story = stories.find((s) => s.id === storyId);
-    if (!story) return;
-    setEditingStory({ id: story.id, title: story.title });
-  };
-
-  const handleCloseEditStory = () => {
-    setEditingStory(null);
-  };
-
-  const handleRenameStory = async (newTitle: string) => {
-    if (!editingStory || !selectedProjectId) return;
-    const trimmed = newTitle.trim();
-    if (!trimmed) return;
-
-    await storiesCRUD.update(editingStory.id, { title: trimmed });
-
-    // Update current title if this is the currently open story
-    if (selectedStoryId === editingStory.id) {
-      setCurrentTitle(trimmed);
-    }
-
-    setEditingStory(null);
-  };
-
-  const handleDeleteStory = async () => {
-    if (!editingStory || !selectedProjectId) return;
-    await storiesCRUD.delete(editingStory.id);
-    setEditingStory(null);
-  };
-
-  // Note: Story (prose) autosave is handled by useStoryEditor hook
-  // Manifest, outline and brief autosave are handled by MetaTextEditor via metaDocs system
 
   // ---- Sidebar props ----
   const sidebar = (
@@ -336,19 +217,19 @@ const App: React.FC = () => {
       }
       projects={projects}
       selectedProjectId={selectedProjectId}
-      onSelectProject={handleSelectProject}
-      onCreateProject={handleCreateProject}
-      onBackToProjects={handleBackToProjects}
-      onReorderProjects={handleReorderProjects}
+      onSelectProject={projectHandlers.handleSelectProject}
+      onCreateProject={projectHandlers.handleCreateProject}
+      onBackToProjects={projectHandlers.handleBackToProjects}
+      onReorderProjects={projectHandlers.handleReorderProjects}
       stories={stories}
       selectedStoryId={selectedStoryId}
-      onSelectStory={handleSelectStory}
-      onReorderStories={handleReorderStories}
+      onSelectStory={storyHandlers.handleSelectStory}
+      onReorderStories={storyHandlers.handleReorderStories}
       storySection={storySection}
       onSelectStorySection={setStorySection}
-      onBackToProjectFromStory={handleBackToProjectFromStory}
+      onBackToProjectFromStory={storyHandlers.handleBackToProjectFromStory}
       rootSection={rootSection}
-      onSelectRootSection={handleSelectRootSection}
+      onSelectRootSection={projectHandlers.handleSelectRootSection}
       onOpenSettings={() => setApiKeyModalOpen(true)}
     />
   );
@@ -368,12 +249,12 @@ const App: React.FC = () => {
       currentProject={currentProject}
       currentDoc={currentDoc}
       currentTitle={currentTitle}
-      handleSelectProject={handleSelectProject}
-      handleCreateProject={handleCreateProject}
-      handleOpenEditProject={handleOpenEditProject}
-      handleSelectStory={handleSelectStory}
-      handleCreateStory={handleCreateStory}
-      handleOpenEditStory={handleOpenEditStory}
+      handleSelectProject={projectHandlers.handleSelectProject}
+      handleCreateProject={projectHandlers.handleCreateProject}
+      handleOpenEditProject={projectHandlers.handleOpenEditProject}
+      handleSelectStory={storyHandlers.handleSelectStory}
+      handleCreateStory={storyHandlers.handleCreateStory}
+      handleOpenEditStory={storyHandlers.handleOpenEditStory}
       handleDocChange={handleDocChange}
     />
   );
@@ -383,14 +264,14 @@ const App: React.FC = () => {
       <AlineaLayout sidebar={sidebar} main={main} />
 
       <AppModals
-        editingProject={editingProject}
-        onCloseEditProject={handleCloseEditProject}
-        onRenameProject={handleRenameProject}
-        onDeleteProject={handleDeleteProject}
-        editingStory={editingStory}
-        onCloseEditStory={handleCloseEditStory}
-        onRenameStory={handleRenameStory}
-        onDeleteStory={handleDeleteStory}
+        editingProject={projectHandlers.editingProject}
+        onCloseEditProject={projectHandlers.handleCloseEditProject}
+        onRenameProject={projectHandlers.handleRenameProject}
+        onDeleteProject={projectHandlers.handleDeleteProject}
+        editingStory={storyHandlers.editingStory}
+        onCloseEditStory={storyHandlers.handleCloseEditStory}
+        onRenameStory={storyHandlers.handleRenameStory}
+        onDeleteStory={storyHandlers.handleDeleteStory}
         apiKeyModalOpen={apiKeyModalOpen}
         onCloseApiKeyModal={() => setApiKeyModalOpen(false)}
       />
