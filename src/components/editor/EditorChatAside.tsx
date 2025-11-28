@@ -70,6 +70,8 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
     selectionMarkdown,
     messages,
     addMessage,
+    projectId,
+    storyId,
   });
 
   // Auto-scroll behavior

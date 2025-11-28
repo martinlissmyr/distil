@@ -25,7 +25,7 @@ function interpolate(template: string, vars: Record<string, any>): string {
   // Also capture leading and trailing newlines to remove them when condition is false
   result = result.replace(
     /(\n?)\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}(\n?)/g,
-    (match, leadingNewline, expression, content, trailingNewline) => {
+    (_match, leadingNewline, expression, content, _trailingNewline) => {
       const condition = evaluateCondition(expression.trim(), vars);
       if (condition) {
         // Keep the content and the leading newline
@@ -102,16 +102,16 @@ export const defaultSystemPrompt = defaultSystemMd.trim();
 export function buildAssistantContext(params: {
   title: string;
   fullTextMarkdown: string;
-  manifestMarkdown: string | null;
+  contextDocumentsMarkdown: string;
   selectionMarkdown?: string;
   scope: 'selection' | 'text';
 }): string {
-  const { title, fullTextMarkdown, manifestMarkdown, selectionMarkdown, scope } = params;
+  const { title, fullTextMarkdown, contextDocumentsMarkdown, selectionMarkdown, scope } = params;
 
   return interpolate(contextTemplateMd, {
     title,
     fullTextMarkdown: fullTextMarkdown || '',
-    manifestMarkdown: manifestMarkdown || '',
+    contextDocumentsMarkdown: contextDocumentsMarkdown || '',
     selectionMarkdown: selectionMarkdown || '',
     hasSelection: scope === 'selection' && selectionMarkdown,
   }).trim();
@@ -122,15 +122,15 @@ export function buildAssistantContext(params: {
  */
 export function buildProseUserPrompt(params: {
   rawUserPrompt: string;
-  manifestMarkdown: string | null;
+  contextSummary: string;
   fullTextMarkdown: string;
   scope: 'selection' | 'text';
 }): string {
-  const { rawUserPrompt, manifestMarkdown, fullTextMarkdown, scope } = params;
+  const { rawUserPrompt, contextSummary, fullTextMarkdown, scope } = params;
 
   return interpolate(proseUserMd, {
     rawUserPrompt,
-    manifestMarkdown: manifestMarkdown || '',
+    contextSummary: contextSummary || '',
     fullTextMarkdown: fullTextMarkdown || '',
     hasSelection: scope === 'selection',
   }).trim();
