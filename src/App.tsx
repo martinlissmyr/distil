@@ -27,6 +27,7 @@ import { ApiKeyModal } from './components/settings/ApiKeyModal';
 import { useNavigation } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
+import { useStoryEditor } from './hooks/useStoryEditor';
 
 // ---------------
 // Types
@@ -76,9 +77,7 @@ const App: React.FC = () => {
     onCreate: async (created) => {
       // Navigate to new project and load its stories
       goToProject(created.id);
-      setCurrentDoc(null);
-      setCurrentTitle('');
-      setDirty(false);
+      clearEditor();
 
       // Load stories for the new project (use created.id directly)
       const listResponse = await alineaClient.listStories(created.id);
@@ -92,9 +91,7 @@ const App: React.FC = () => {
       // Navigate away if deleted project was selected
       if (selectedProjectId === deletedId) {
         goToProjects();
-        setCurrentDoc(null);
-        setCurrentTitle('');
-        setDirty(false);
+        clearEditor();
       }
     },
   });
@@ -141,18 +138,13 @@ const App: React.FC = () => {
         console.error('Failed to load story:', storyResponse.error);
         return;
       }
-      const story: StoryData = storyResponse.data;
-      setCurrentTitle(story.title);
-      setCurrentDoc(story.doc);
-      setDirty(false);
+      loadStory(storyResponse.data);
     },
     onDelete: (deletedId) => {
       // Navigate away if deleted story was selected
       if (selectedProjectId && selectedStoryId === deletedId) {
         goToProject(selectedProjectId);
-        setCurrentDoc(null);
-        setCurrentTitle('');
-        setDirty(false);
+        clearEditor();
       }
     },
   });
@@ -161,10 +153,9 @@ const App: React.FC = () => {
   const projects = projectsCRUD.items;
   const stories = storiesCRUD.items;
 
-  // Story editor state (prose)
-  const [currentTitle, setCurrentTitle] = useState('');
-  const [currentDoc, setCurrentDoc] = useState<ProseDoc | null>(null);
-  const [dirty, setDirty] = useState(false);
+  // Story editor hook
+  const storyEditor = useStoryEditor(selectedProjectId, selectedStoryId);
+  const { currentTitle, currentDoc, dirty, loadStory, clearEditor, updateDoc, setCurrentTitle, setCurrentDoc, setDirty } = storyEditor;
 
   // Note: Manifest, outline and brief are managed by MetaTextEditor via metaDocs system
   // They autosave independently without needing App-level state
@@ -222,9 +213,7 @@ const App: React.FC = () => {
             storyId: null,
             storySection: 'prose',
           });
-          setCurrentDoc(null);
-          setCurrentTitle('');
-          setDirty(false);
+          clearEditor();
           return;
         }
 
@@ -237,9 +226,7 @@ const App: React.FC = () => {
             storyId: null,
             storySection: 'prose',
           });
-          setCurrentDoc(null);
-          setCurrentTitle('');
-          setDirty(false);
+          clearEditor();
           return;
         }
 
@@ -256,9 +243,7 @@ const App: React.FC = () => {
             storyId: null,
             storySection: 'prose',
           });
-          setCurrentDoc(null);
-          setCurrentTitle('');
-          setDirty(false);
+          clearEditor();
           return;
         }
 
@@ -280,9 +265,7 @@ const App: React.FC = () => {
             storyId: null,
             storySection: 'prose',
           });
-          setCurrentDoc(null);
-          setCurrentTitle('');
-          setDirty(false);
+          clearEditor();
           return;
         }
 
@@ -303,10 +286,7 @@ const App: React.FC = () => {
           console.error('Failed to load story:', storyResponse.error);
           return;
         }
-        const story: StoryData = storyResponse.data;
-        setCurrentTitle(story.title);
-        setCurrentDoc(story.doc);
-        setDirty(false);
+        loadStory(storyResponse.data);
 
         // hydrate outline/brief if present on disk
       } finally {
@@ -318,9 +298,8 @@ const App: React.FC = () => {
 
   // ---- Handlers ----
   const handleDocChange = useCallback((doc: ProseDoc) => {
-    setCurrentDoc(doc);
-    setDirty(true);
-  }, []);
+    updateDoc(doc);
+  }, [updateDoc]);
 
   const handleSelectRootSection = (section: RootSection) => {
     if (section === 'manifest') {
@@ -332,9 +311,7 @@ const App: React.FC = () => {
     }
 
     if (section !== 'projects') {
-      setCurrentDoc(null);
-      setCurrentTitle('');
-      setDirty(false);
+      clearEditor();
     }
   };
 
@@ -345,9 +322,7 @@ const App: React.FC = () => {
 
   const handleSelectProject = async (id: string) => {
     goToProject(id);
-    setCurrentDoc(null);
-    setCurrentTitle('');
-    setDirty(false);
+    clearEditor();
 
     // Load stories for this project (use id directly, not selectedProjectId which updates async)
     const listResponse = await alineaClient.listStories(id);
@@ -360,9 +335,7 @@ const App: React.FC = () => {
 
   const handleBackToProjects = () => {
     goToProjects();
-    setCurrentDoc(null);
-    setCurrentTitle('');
-    setDirty(false);
+    clearEditor();
   };
 
   const handleReorderProjects = async (ids: string[]) => {
@@ -411,36 +384,17 @@ const App: React.FC = () => {
       console.error('Failed to load story:', storyResponse.error);
       return;
     }
-    const story: StoryData = storyResponse.data;
-    setCurrentTitle(story.title);
-    setCurrentDoc(story.doc);
-    setDirty(false);
+    loadStory(storyResponse.data);
   };
 
   const handleBackToProjectFromStory = () => {
     if (!selectedProjectId) return;
     goToProject(selectedProjectId);
-    setCurrentDoc(null);
-    setCurrentTitle('');
-    setDirty(false);
+    clearEditor();
   };
 
   const handleReorderStories = async (ids: string[]) => {
     await storiesCRUD.reorder(ids);
-  };
-
-  const handleSave = async () => {
-    if (!selectedProjectId || !selectedStoryId || !currentDoc) return;
-    const response = await alineaClient.saveStory(selectedProjectId, selectedStoryId, {
-      id: selectedStoryId,
-      title: currentTitle || 'Untitled',
-      doc: currentDoc,
-    });
-    if (!response.ok) {
-      console.error('Failed to save story:', response.error);
-      return;
-    }
-    setDirty(false);
   };
 
   // ---- Story edit modal handlers ----
@@ -475,33 +429,8 @@ const App: React.FC = () => {
     setEditingStory(null);
   };
 
-  // ---- Autosave story (prose) ----
-  useEffect(() => {
-    if (!dirty || !currentDoc || !selectedProjectId || !selectedStoryId) return;
-
-    const timeout = setTimeout(() => {
-      (async () => {
-        try {
-          const response = await alineaClient.saveStory(selectedProjectId, selectedStoryId, {
-            id: selectedStoryId,
-            title: currentTitle || 'Untitled',
-            doc: currentDoc,
-          });
-          if (response.ok) {
-            setDirty(false);
-          } else {
-            console.error('Autosave failed:', response.error);
-          }
-        } catch (e) {
-          console.error('Autosave failed', e);
-        }
-      })();
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [dirty, currentDoc, currentTitle, selectedProjectId, selectedStoryId]);
-
-  // Note: Manifest, outline and brief autosave are handled by MetaTextEditor via metaDocs system
+  // Note: Story (prose) autosave is handled by useStoryEditor hook
+  // Manifest, outline and brief autosave are handled by MetaTextEditor via metaDocs system
 
   // ---- Sidebar props ----
   const sidebar = (
