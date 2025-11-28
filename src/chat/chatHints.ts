@@ -34,13 +34,16 @@ export type AssistantHint = {
 
 /**
  * Decide what the chat should say/show when it first opens,
- * based on editor kind and whether the doc is empty.
+ * based on editor kind, document state, and available metaDocs.
  */
 export function getInitialAssistantHint(params: {
   kind: EditorKind;
   isEmpty: boolean;
+  hasBrief?: boolean;
+  hasOutline?: boolean;
+  hasManifest?: boolean;
 }): AssistantHint | null {
-  const { kind, isEmpty } = params;
+  const { kind, isEmpty, hasBrief, hasOutline, hasManifest } = params;
 
   if (kind === 'prose') {
     if (isEmpty) {
