@@ -30,6 +30,34 @@ async function getOpenAIClient(): Promise<OpenAI> {
 ipcMain.handle('chat:send', async (_event, payload) => {
   // payload = { messages: [{ role, content }, ...] }
   try {
+    // Validate payload structure
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Invalid payload: must be an object');
+    }
+    if (!Array.isArray(payload.messages)) {
+      throw new Error('Invalid payload: messages must be an array');
+    }
+    if (payload.messages.length === 0) {
+      throw new Error('Invalid payload: messages array cannot be empty');
+    }
+
+    // Validate each message
+    for (const msg of payload.messages) {
+      if (!msg || typeof msg !== 'object') {
+        throw new Error('Invalid message: must be an object');
+      }
+      if (typeof msg.role !== 'string' || !['user', 'assistant', 'system'].includes(msg.role)) {
+        throw new Error('Invalid message: role must be user, assistant, or system');
+      }
+      if (typeof msg.content !== 'string') {
+        throw new Error('Invalid message: content must be a string');
+      }
+      // Reasonable content length limit (100k characters ~ 25k tokens)
+      if (msg.content.length > 100000) {
+        throw new Error('Invalid message: content too long (max 100k characters)');
+      }
+    }
+
     const openai = await getOpenAIClient();
 
     const completion = await openai.chat.completions.create({
@@ -43,13 +71,12 @@ ipcMain.handle('chat:send', async (_event, payload) => {
       output_text: completion.choices[0]?.message?.content ?? '',
       raw: completion,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('OpenAI error', err);
     return {
       ok: false,
       error:
-        err?.message ??
-        'Unknown error while talking to OpenAI. Check your API key and connection.',
+        err instanceof Error ? err.message : 'Unknown error while talking to OpenAI. Check your API key and connection.',
     };
   }
 });

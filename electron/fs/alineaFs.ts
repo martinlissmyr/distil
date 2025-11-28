@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import { app } from 'electron'
 import type { JSONContent } from '@tiptap/react'
+import { sanitizeId } from '../validation'
 
 export type ProjectMeta = {
   id: string
@@ -46,13 +47,13 @@ const getRootDir = () => {
 const getManifestFile = () => path.join(getRootDir(), 'manifest.json')
 const getProjectsDir = () => path.join(getRootDir(), 'projects')
 const getProjectDir = (projectId: string) =>
-  path.join(getProjectsDir(), projectId)
+  path.join(getProjectsDir(), sanitizeId(projectId))
 const getProjectFile = (projectId: string) =>
   path.join(getProjectDir(projectId), 'project.json')
 const getStoriesDir = (projectId: string) =>
   path.join(getProjectDir(projectId), 'stories')
 const getStoryFile = (projectId: string, storyId: string) =>
-  path.join(getStoriesDir(projectId), `${storyId}.json`)
+  path.join(getStoriesDir(projectId), `${sanitizeId(storyId)}.json`)
 
 // ---- Projects ----
 
@@ -300,9 +301,9 @@ export async function loadStoryMetaDoc(
     const story = await loadStory(projectId, storyId); // existing helper
     const meta = story.metaDocs ?? {};
     return meta[key] ?? null;
-  } catch (err: any) {
-    if (err?.code === 'ENOENT') {
-      // Story file (or project dir) doesn’t exist yet → no metaDoc
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      // Story file (or project dir) doesn't exist yet → no metaDoc
       return null;
     }
     throw err;

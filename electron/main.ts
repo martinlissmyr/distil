@@ -1,11 +1,19 @@
 // electron/main.ts
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
-import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import './chat';
 import { saveApiKey, loadApiKey, clearApiKey } from './secureStore';
 import type { JSONContent } from '@tiptap/react';
+import {
+  validateProjectId,
+  validateStoryId,
+  validateName,
+  validateMetaDocKey,
+  validateIdArray,
+  validateApiKey,
+  validateJsonDoc,
+} from './validation';
 
 import {
   listProjects,
@@ -29,7 +37,6 @@ import {
   type ManifestData,
 } from './fs/alineaFs';
 
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, '..');
 
@@ -78,8 +85,6 @@ function createWindow() {
     win.webContents.openDevTools();
   } else {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'));
-    // keep or remove depending on whether you want devtools in prod
-    win.webContents.openDevTools();
   }
 }
 
@@ -92,6 +97,7 @@ app.on('window-all-closed', () => {
 
 // ---- Settings (API key) ----
 ipcMain.handle('settings:setApiKey', async (_e, key: string) => {
+  validateApiKey(key);
   await saveApiKey(key);
 });
 
@@ -107,46 +113,65 @@ ipcMain.handle('settings:clearApiKey', async () => {
 // ---- Projects ----
 ipcMain.handle('projects:list', async () => listProjects());
 
-ipcMain.handle('projects:create', async (_event, name: string) =>
-  createProject(name)
-);
+ipcMain.handle('projects:create', async (_event, name: string) => {
+  validateName(name);
+  return createProject(name);
+});
 
 ipcMain.handle(
   'projects:update',
-  async (_event, projectId: string, updates: { name?: string }) =>
-    updateProject(projectId, updates)
+  async (_event, projectId: string, updates: { name?: string }) => {
+    validateProjectId(projectId);
+    if (updates.name !== undefined) {
+      validateName(updates.name);
+    }
+    return updateProject(projectId, updates);
+  }
 );
 
 ipcMain.handle('projects:delete', async (_event, projectId: string) => {
+  validateProjectId(projectId);
   await deleteProject(projectId);
   return { ok: true };
 });
 
 ipcMain.handle('projects:reorder', async (_event, ids: string[]) => {
+  validateIdArray(ids);
+  ids.forEach(validateProjectId);
   await reorderProjects(ids);
   return { ok: true };
 });
 
 // ---- Stories ----
-ipcMain.handle('stories:list', async (_event, projectId: string) =>
-  listStories(projectId)
-);
+ipcMain.handle('stories:list', async (_event, projectId: string) => {
+  validateProjectId(projectId);
+  return listStories(projectId);
+});
 
 ipcMain.handle(
   'story:create',
-  async (_event, projectId: string, title: string) =>
-    createStory(projectId, title)
+  async (_event, projectId: string, title: string) => {
+    validateProjectId(projectId);
+    validateName(title);
+    return createStory(projectId, title);
+  }
 );
 
 ipcMain.handle(
   'story:load',
-  async (_event, projectId: string, storyId: string) =>
-    loadStory(projectId, storyId)
+  async (_event, projectId: string, storyId: string) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    return loadStory(projectId, storyId);
+  }
 );
 
 ipcMain.handle(
   'story:save',
   async (_event, projectId: string, storyId: string, payload) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    // payload validation happens implicitly through TypeScript types
     await saveStory(projectId, storyId, payload);
     return { ok: true };
   }
@@ -155,6 +180,9 @@ ipcMain.handle(
 ipcMain.handle(
   'stories:reorder',
   async (_event, projectId: string, ids: string[]) => {
+    validateProjectId(projectId);
+    validateIdArray(ids);
+    ids.forEach(validateStoryId);
     await reorderStories(projectId, ids);
     return { ok: true };
   }
@@ -167,12 +195,21 @@ ipcMain.handle(
     projectId: string,
     storyId: string,
     updates: { title?: string }
-  ) => updateStory(projectId, storyId, updates)
+  ) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    if (updates.title !== undefined) {
+      validateName(updates.title);
+    }
+    return updateStory(projectId, storyId, updates);
+  }
 );
 
 ipcMain.handle(
   'story:delete',
   async (_event, projectId: string, storyId: string) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
     await deleteStory(projectId, storyId);
     return { ok: true };
   }
@@ -184,6 +221,7 @@ ipcMain.handle('alinea:loadManifest', async () => loadManifest());
 ipcMain.handle(
   'alinea:saveManifest',
   async (_event, payload: ManifestData) => {
+    validateJsonDoc(payload);
     await saveManifest(payload);
     return { ok: true };
   }
@@ -192,8 +230,12 @@ ipcMain.handle(
 // ---- Story metaDocs ----
 ipcMain.handle(
   'storyMeta:load',
-  async (_event, projectId: string, storyId: string, key: string) =>
-    loadStoryMetaDoc(projectId, storyId, key)
+  async (_event, projectId: string, storyId: string, key: string) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    validateMetaDocKey(key);
+    return loadStoryMetaDoc(projectId, storyId, key);
+  }
 );
 
 ipcMain.handle(
@@ -205,6 +247,10 @@ ipcMain.handle(
     key: string,
     doc: JSONContent
   ) => {
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    validateMetaDocKey(key);
+    validateJsonDoc(doc);
     await saveStoryMetaDoc(projectId, storyId, key, doc);
     return { ok: true };
   }
@@ -213,6 +259,7 @@ ipcMain.handle(
 ipcMain.handle(
   'rootMeta:load',
   async (_event, key: string) => {
+    validateMetaDocKey(key);
     return loadRootMetaDoc(key);
   }
 );
@@ -220,6 +267,8 @@ ipcMain.handle(
 ipcMain.handle(
   'rootMeta:save',
   async (_event, key: string, doc: JSONContent) => {
+    validateMetaDocKey(key);
+    validateJsonDoc(doc);
     await saveRootMetaDoc(key, doc);
     return { ok: true };
   }
