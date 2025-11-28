@@ -9,7 +9,7 @@ import {
   StoryData,
 } from './api/alineaClient';
 import { useAppStore } from './state/useAppStore';
-import { AlineaLayout } from './components/layout/AlineaLayout';
+import { AppLayout } from './components/layout/AppLayout';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ProseDoc } from './components/editor/ProseEditor';
 import { useThemeSetup } from './hooks/useThemeSetup';
@@ -261,7 +261,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <AlineaLayout sidebar={sidebar} main={main} />
+      <AppLayout sidebar={sidebar} main={main} />
 
       <AppModals
         editingProject={projectHandlers.editingProject}
