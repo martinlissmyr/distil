@@ -15,14 +15,19 @@ import proseUserMd from './user/prose.md?raw';
  * Supports:
  * - {{variable}} - simple variable replacement
  * - {{#if variable}}...{{/if}} - conditional blocks
+ * - {{#if !variable}}...{{/if}} - negation with !
+ * - {{#if var1 && var2}}...{{/if}} - AND conditions with &&
  */
 function interpolate(template: string, vars: Record<string, any>): string {
   let result = template;
 
-  // Handle conditional blocks: {{#if key}}...{{/if}}
+  // Handle conditional blocks: {{#if expression}}...{{/if}}
   result = result.replace(
-    /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-    (_, key, content) => (vars[key] ? content : '')
+    /\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    (_, expression, content) => {
+      const condition = evaluateCondition(expression.trim(), vars);
+      return condition ? content : '';
+    }
   );
 
   // Handle simple variables: {{key}}
@@ -32,6 +37,38 @@ function interpolate(template: string, vars: Record<string, any>): string {
   });
 
   return result;
+}
+
+/**
+ * Evaluate a conditional expression
+ * Supports: variable, !variable, var1 && var2, !var1 && var2, etc.
+ */
+function evaluateCondition(expression: string, vars: Record<string, any>): boolean {
+  // Split by && operator
+  const andParts = expression.split('&&').map(part => part.trim());
+
+  // All parts must be true for the whole expression to be true
+  return andParts.every(part => {
+    // Check for negation
+    if (part.startsWith('!')) {
+      const varName = part.slice(1).trim();
+      return !isTruthy(vars[varName]);
+    }
+
+    // Simple variable check
+    return isTruthy(vars[part]);
+  });
+}
+
+/**
+ * Check if a value is truthy
+ */
+function isTruthy(value: any): boolean {
+  if (value === undefined || value === null) return false;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.length > 0;
+  if (typeof value === 'number') return value !== 0;
+  return true;
 }
 
 /**
