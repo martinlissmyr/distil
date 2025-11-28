@@ -24,23 +24,11 @@ import { EntityEditModal } from './components/common/EntityEditModal';
 import { StoryOutlineView } from './components/stories/StoryOutlineView';
 import { StoryBriefView } from './components/stories/StoryBriefView';
 import { ApiKeyModal } from './components/settings/ApiKeyModal';
+import { useNavigation } from './hooks/useNavigation';
+import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
 
 // ---------------
 // Types
-type StorySection = 'prose' | 'outline' | 'brief' | 'characters' | 'locations';
-type RootSection = 'projects' | 'manifest' | 'assistant';
-type AppSection = 'root' | 'project' | 'story';
-
-const NAV_STATE_KEY = 'alinea:navState:v3';
-
-type NavState = {
-  appSection: AppSection;
-  rootSection: RootSection;
-  projectId: string | null;
-  storyId: string | null;
-  storySection: StorySection;
-};
-
 type EditingProjectState = {
   id: string;
   name: string;
@@ -51,33 +39,6 @@ type EditingStoryState = {
   title: string;
 } | null;
 
-// ---------- nav state helpers ----------
-function loadNavState(): NavState | null {
-  try {
-    const raw = window.localStorage.getItem(NAV_STATE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<NavState>;
-
-    return {
-      appSection: parsed.appSection ?? 'root',
-      rootSection: parsed.rootSection ?? 'projects',
-      projectId: parsed.projectId ?? null,
-      storyId: parsed.storyId ?? null,
-      storySection: parsed.storySection ?? 'prose',
-    };
-  } catch {
-    return null;
-  }
-}
-
-function saveNavState(state: NavState) {
-  try {
-    window.localStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
-  } catch {
-    // ignore; localStorage might be unavailable
-  }
-}
-
 const App: React.FC = () => {
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
 
@@ -86,17 +47,26 @@ const App: React.FC = () => {
     void ensureMetaDocsLoaded({ kind: 'root' }, ['manifest']);
   }, [ensureMetaDocsLoaded]);
 
-  // High-level navigation
-  const [appSection, setAppSection] = useState<AppSection>('root');
-  const [rootSection, setRootSection] = useState<RootSection>('projects');
-  const [storySection, setStorySection] = useState<StorySection>('prose');
+  // Navigation hook
+  const navigation = useNavigation();
+  const {
+    appSection,
+    rootSection,
+    storySection,
+    selectedProjectId,
+    selectedStoryId,
+    goToProjects,
+    goToProject,
+    goToStory,
+    setStorySection,
+    loadSavedState,
+    restoreState,
+    finishInitialization,
+  } = navigation;
 
   // Entities
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-
   const [stories, setStories] = useState<StoryMeta[]>([]);
-  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
 
   // Story editor state (prose)
   const [currentTitle, setCurrentTitle] = useState('');
@@ -143,118 +113,122 @@ const App: React.FC = () => {
   // ---- Initial load: projects + manifest + nav state (+ optional story & docs) ----
   useEffect(() => {
     (async () => {
-      const saved = loadNavState();
+      try {
+        const saved = loadSavedState();
 
-      // 1. Load projects
-      const projResponse = await alineaClient.listProjects();
+        // 1. Load projects
+        const projResponse = await alineaClient.listProjects();
 
-      if (!projResponse.ok) {
-        console.error('Failed to load projects:', projResponse.error);
-        return;
-      }
+        if (!projResponse.ok) {
+          console.error('Failed to load projects:', projResponse.error);
+          return;
+        }
 
-      const proj = projResponse.data;
-      setProjects(proj);
+        const proj = projResponse.data;
+        setProjects(proj);
 
-      // No saved nav → default root/projects
-      if (!saved) {
-        setAppSection('root');
-        setRootSection('projects');
-        setSelectedProjectId(null);
-        setSelectedStoryId(null);
-        setStorySection('prose');
-        setCurrentDoc(null);
-        setCurrentTitle('');
+        // No saved nav → default root/projects
+        if (!saved) {
+          restoreState({
+            appSection: 'root',
+            rootSection: 'projects',
+            projectId: null,
+            storyId: null,
+            storySection: 'prose',
+          });
+          setCurrentDoc(null);
+          setCurrentTitle('');
+          setDirty(false);
+          return;
+        }
+
+        // If we were in the root section, ignore project/story and just restore root view
+        if (saved.appSection === 'root') {
+          restoreState({
+            appSection: 'root',
+            rootSection: saved.rootSection ?? 'projects',
+            projectId: null,
+            storyId: null,
+            storySection: 'prose',
+          });
+          setCurrentDoc(null);
+          setCurrentTitle('');
+          setDirty(false);
+          return;
+        }
+
+        // From here: appSection is 'project' or 'story' → we need a valid project
+        const projectExists = saved.projectId
+          ? proj.some((p) => p.id === saved.projectId)
+          : false;
+
+        if (!projectExists) {
+          restoreState({
+            appSection: 'root',
+            rootSection: 'projects',
+            projectId: null,
+            storyId: null,
+            storySection: 'prose',
+          });
+          setCurrentDoc(null);
+          setCurrentTitle('');
+          setDirty(false);
+          return;
+        }
+
+        // 2. Load stories for that project
+        const listResponse = await alineaClient.listStories(saved.projectId!);
+        if (!listResponse.ok) {
+          console.error('Failed to load stories:', listResponse.error);
+          return;
+        }
+        const list = listResponse.data;
+        setStories(list);
+
+        // No valid story → show project stories list
+        if (!saved.storyId || !list.some((s) => s.id === saved.storyId)) {
+          restoreState({
+            appSection: 'project',
+            rootSection: saved.rootSection ?? 'projects',
+            projectId: saved.projectId,
+            storyId: null,
+            storySection: 'prose',
+          });
+          setCurrentDoc(null);
+          setCurrentTitle('');
+          setDirty(false);
+          return;
+        }
+
+        // 3. Valid story → restore story view, section, and docs
+        restoreState({
+          appSection: 'story',
+          rootSection: saved.rootSection ?? 'projects',
+          projectId: saved.projectId,
+          storyId: saved.storyId,
+          storySection: saved.storySection ?? 'prose',
+        });
+
+        const storyResponse = await alineaClient.loadStory(
+          saved.projectId!,
+          saved.storyId
+        );
+        if (!storyResponse.ok) {
+          console.error('Failed to load story:', storyResponse.error);
+          return;
+        }
+        const story: StoryData = storyResponse.data;
+        setCurrentTitle(story.title);
+        setCurrentDoc(story.doc);
         setDirty(false);
-        return;
+
+        // hydrate outline/brief if present on disk
+      } finally {
+        // Always re-enable navigation after initialization, regardless of success/failure
+        finishInitialization();
       }
-
-      // If we were in the root section, ignore project/story and just restore root view
-      if (saved.appSection === 'root') {
-        setAppSection('root');
-        setRootSection(saved.rootSection ?? 'projects');
-        setSelectedProjectId(null);
-        setSelectedStoryId(null);
-        setStorySection('prose');
-        setCurrentDoc(null);
-        setCurrentTitle('');
-        setDirty(false);
-        return;
-      }
-
-      // From here: appSection is 'project' or 'story' → we need a valid project
-      const projectExists = saved.projectId
-        ? proj.some((p) => p.id === saved.projectId)
-        : false;
-
-      if (!projectExists) {
-        setAppSection('root');
-        setRootSection('projects');
-        setSelectedProjectId(null);
-        setSelectedStoryId(null);
-        setStorySection('prose');
-        setCurrentDoc(null);
-        setCurrentTitle('');
-        setDirty(false);
-        return;
-      }
-
-      setSelectedProjectId(saved.projectId!);
-      setRootSection(saved.rootSection ?? 'projects');
-
-      // 2. Load stories for that project
-      const listResponse = await alineaClient.listStories(saved.projectId!);
-      if (!listResponse.ok) {
-        console.error('Failed to load stories:', listResponse.error);
-        return;
-      }
-      const list = listResponse.data;
-      setStories(list);
-
-      // No valid story → show project stories list
-      if (!saved.storyId || !list.some((s) => s.id === saved.storyId)) {
-        setSelectedStoryId(null);
-        setAppSection('project');
-        setStorySection('prose');
-        setCurrentDoc(null);
-        setCurrentTitle('');
-        setDirty(false);
-        return;
-      }
-
-      // 3. Valid story → restore story view, section, and docs
-      setSelectedStoryId(saved.storyId);
-      setAppSection('story');
-      setStorySection(saved.storySection ?? 'prose');
-
-      const storyResponse = await alineaClient.loadStory(
-        saved.projectId!,
-        saved.storyId
-      );
-      if (!storyResponse.ok) {
-        console.error('Failed to load story:', storyResponse.error);
-        return;
-      }
-      const story: StoryData = storyResponse.data;
-      setCurrentTitle(story.title);
-      setCurrentDoc(story.doc);
-      setDirty(false);
-
-      // hydrate outline/brief if present on disk
     })();
-  }, []);
-
-  // ---- Persist nav on changes ----
-  useEffect(() => {
-    const nav: NavState = {
-      appSection,
-      rootSection,
-      projectId: selectedProjectId,
-      storyId: selectedStoryId,
-      storySection,
-    };
-    saveNavState(nav);
-  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection]);
+  }, [loadSavedState, restoreState, finishInitialization]);
 
   // ---- Handlers ----
   const handleDocChange = useCallback((doc: ProseDoc) => {
@@ -263,12 +237,15 @@ const App: React.FC = () => {
   }, []);
 
   const handleSelectRootSection = (section: RootSection) => {
-    setRootSection(section);
-    setAppSection('root');
+    if (section === 'manifest') {
+      navigation.goToManifest();
+    } else if (section === 'assistant') {
+      navigation.goToAssistant();
+    } else {
+      navigation.goToProjects();
+    }
 
     if (section !== 'projects') {
-      setSelectedProjectId(null);
-      setSelectedStoryId(null);
       setStories([]);
       setCurrentDoc(null);
       setCurrentTitle('');
@@ -291,13 +268,10 @@ const App: React.FC = () => {
       return;
     }
     setProjects(updatedResponse.data);
-    setSelectedProjectId(created.id);
-    setSelectedStoryId(null);
+    goToProject(created.id);
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setRootSection('projects');
-    setAppSection('project');
 
     const listResponse = await alineaClient.listStories(created.id);
     if (!listResponse.ok) {
@@ -308,13 +282,10 @@ const App: React.FC = () => {
   };
 
   const handleSelectProject = async (id: string) => {
-    setRootSection('projects');
-    setSelectedProjectId(id);
-    setSelectedStoryId(null);
+    goToProject(id);
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setAppSection('project');
 
     const listResponse = await alineaClient.listStories(id);
     if (!listResponse.ok) {
@@ -325,11 +296,8 @@ const App: React.FC = () => {
   };
 
   const handleBackToProjects = () => {
-    setAppSection('root');
-    setRootSection('projects');
-    setSelectedProjectId(null);
+    goToProjects();
     setStories([]);
-    setSelectedStoryId(null);
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
@@ -394,11 +362,8 @@ const App: React.FC = () => {
     setProjects(updatedResponse.data);
 
     if (selectedProjectId === editingProject.id) {
-      setAppSection('root');
-      setRootSection('projects');
-      setSelectedProjectId(null);
+      goToProjects();
       setStories([]);
-      setSelectedStoryId(null);
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
@@ -425,9 +390,7 @@ const App: React.FC = () => {
       return;
     }
     setStories(updatedResponse.data);
-    setSelectedStoryId(created.id);
-    setAppSection('story');
-    setStorySection('prose');
+    goToStory(selectedProjectId, created.id, 'prose');
 
     const storyResponse = await alineaClient.loadStory(
       selectedProjectId,
@@ -445,9 +408,7 @@ const App: React.FC = () => {
 
   const handleSelectStory = async (id: string) => {
     if (!selectedProjectId) return;
-    setSelectedStoryId(id);
-    setStorySection('prose');
-    setAppSection('story');
+    goToStory(selectedProjectId, id, 'prose');
 
     const storyResponse = await alineaClient.loadStory(selectedProjectId, id);
     if (!storyResponse.ok) {
@@ -461,9 +422,8 @@ const App: React.FC = () => {
   };
 
   const handleBackToProjectFromStory = () => {
-    setAppSection('project');
-    setSelectedStoryId(null);
-    setStorySection('prose');
+    if (!selectedProjectId) return;
+    goToProject(selectedProjectId);
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
@@ -549,9 +509,7 @@ const App: React.FC = () => {
     setStories(updatedResponse.data);
 
     if (selectedStoryId === editingStory.id) {
-      setAppSection('project');
-      setSelectedStoryId(null);
-      setStorySection('prose');
+      goToProject(selectedProjectId);
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
