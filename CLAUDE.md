@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Alinea is an Electron-based desktop writing application for fiction authors, built with React, TypeScript, Vite, and Mantine UI. It provides a prose editor with AI-powered writing assistance using OpenAI's API.
 
+## AI Agent Rules for This Project
+
+- All TODO lists, reports, analyses, and auto-generated notes must be placed in `./todos/`.
+- Files must use the following naming format: `YYYY-MM-DD_description.md`.
+- Do not put reports in root or source directories.
+
 ## Common Commands
 
 ### Development
