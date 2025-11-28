@@ -2,6 +2,7 @@
 import React from 'react';
 import { ProseEditor, ProseDoc } from '../editor/ProseEditor';
 import { StorySectionShell } from './StorySectionShell';
+import { useNavigation } from '../../hooks/useNavigation';
 
 type StoryTextViewProps = {
   projectId: string;
@@ -18,6 +19,8 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
+  const { setStorySection } = useNavigation();
+
   return (
     <StorySectionShell
       projectId={projectId}
@@ -34,6 +37,8 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
           kind: 'prose',
           storyId,
           storyTitle: title,
+          projectId,
+          onNavigate: (target) => setStorySection(target as any),
         }}
       />
     </StorySectionShell>

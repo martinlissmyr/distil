@@ -2,6 +2,7 @@
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
 import { StorySectionShell } from './StorySectionShell';
+import { useNavigation } from '../../hooks/useNavigation';
 
 type StoryOutlineViewProps = {
   projectId: string;
@@ -12,6 +13,8 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
   projectId,
   storyId,
 }) => {
+  const { setStorySection } = useNavigation();
+
   return (
     <StorySectionShell
       projectId={projectId}
@@ -25,7 +28,12 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
         title="Story outline"
         placeholder="Sketch the structure of your story…"
         withChat
-        chatConfig={{ kind: 'outline', storyId }}
+        chatConfig={{
+          kind: 'outline',
+          storyId,
+          projectId,
+          onNavigate: (target) => setStorySection(target as any),
+        }}
       />
     </StorySectionShell>
   );

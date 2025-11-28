@@ -1,7 +1,7 @@
 // src/chat/chatHints.ts
 import type { EditorKind } from './buildPrompt';
 
-export type SuggestionActionKind = 'prompt' | 'wizard';
+export type SuggestionActionKind = 'prompt' | 'wizard' | 'navigate';
 
 export type SuggestionAction = {
   id: string;
@@ -11,7 +11,7 @@ export type SuggestionAction = {
   /** For kind === 'prompt': text to send as a user prompt */
   prompt?: string;
 
-  /** For kind === 'wizard': semantic command for the host app */
+  /** For kind === 'wizard' or 'navigate': semantic command */
   command?: {
     type: 'openWizard';
     wizard:
@@ -19,6 +19,9 @@ export type SuggestionAction = {
       | 'outline-builder'
       | 'brief-helper'
       | 'manifest-helper';
+  } | {
+    type: 'navigate';
+    target: 'prose' | 'outline' | 'brief' | 'manifest';
   };
 };
 
@@ -43,21 +46,13 @@ export function getInitialAssistantHint(params: {
     if (isEmpty) {
       return {
         introMessage:
-          'Här kan du få hjälp att komma igång. Välj en start eller skriv en egen fråga nedan.',
+          `This is where it all begins. Don't know where to start? Have you written your brief yet?`,
         actions: [
           {
-            id: 'prose-start-scene',
-            label: 'Starta en första scen',
-            kind: 'prompt',
-            prompt:
-              'Hjälp mig skriva en första scen till en berättelse. Ställ 3–4 frågor först så vi hittar rätt ton och perspektiv.',
-          },
-          {
-            id: 'prose-brainstorm',
-            label: 'Brainstorma idéer',
-            kind: 'prompt',
-            prompt:
-              'Föreslå 5 olika berättelseidéer jag skulle kunna skriva om här. Variera genre och ton lite.',
+            id: 'write-brief',
+            label: 'Write your brief',
+            kind: 'navigate',
+            command: { type: 'navigate', target: 'brief' },
           },
         ],
       };
@@ -73,13 +68,6 @@ export function getInitialAssistantHint(params: {
           kind: 'prompt',
           prompt:
             'Förbättra stycket där markören står: gör det tydligare och mer levande, utan att ändra betydelsen.',
-        },
-        {
-          id: 'prose-next-beat',
-          label: 'Föreslå nästa scen',
-          kind: 'prompt',
-          prompt:
-            'Föreslå 3 konkreta alternativ för nästa scen, baserat på texten ovan.',
         },
       ],
     };

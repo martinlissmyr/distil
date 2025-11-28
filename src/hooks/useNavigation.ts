@@ -1,5 +1,6 @@
 // src/hooks/useNavigation.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { create } from 'zustand';
+import { useEffect, useCallback, useRef } from 'react';
 
 // Types
 export type StorySection = 'prose' | 'outline' | 'brief' | 'characters' | 'locations';
@@ -14,7 +15,38 @@ type NavState = {
   storySection: StorySection;
 };
 
+type NavigationStore = NavState & {
+  setAppSection: (section: AppSection) => void;
+  setRootSection: (section: RootSection) => void;
+  setStorySection: (section: StorySection) => void;
+  setSelectedProjectId: (id: string | null) => void;
+  setSelectedStoryId: (id: string | null) => void;
+  restoreState: (state: NavState) => void;
+};
+
 const NAV_STATE_KEY = 'alinea:navState:v3';
+
+// Create Zustand store for navigation
+const useNavigationStore = create<NavigationStore>((set) => ({
+  appSection: 'root',
+  rootSection: 'projects',
+  storySection: 'prose',
+  projectId: null,
+  storyId: null,
+
+  setAppSection: (appSection) => set({ appSection }),
+  setRootSection: (rootSection) => set({ rootSection }),
+  setStorySection: (storySection) => set({ storySection }),
+  setSelectedProjectId: (projectId) => set({ projectId }),
+  setSelectedStoryId: (storyId) => set({ storyId }),
+  restoreState: (state) => set({
+    appSection: state.appSection,
+    rootSection: state.rootSection,
+    projectId: state.projectId,
+    storyId: state.storyId,
+    storySection: state.storySection,
+  }),
+}));
 
 // Helper functions for localStorage persistence
 function loadNavState(): NavState | null {
@@ -52,12 +84,19 @@ function saveNavState(state: NavState) {
  * - Story view (prose, outline, brief, etc.)
  */
 export function useNavigation() {
-  // Navigation state
-  const [appSection, setAppSection] = useState<AppSection>('root');
-  const [rootSection, setRootSection] = useState<RootSection>('projects');
-  const [storySection, setStorySection] = useState<StorySection>('prose');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  // Get state and setters from Zustand store
+  const appSection = useNavigationStore((s) => s.appSection);
+  const rootSection = useNavigationStore((s) => s.rootSection);
+  const storySection = useNavigationStore((s) => s.storySection);
+  const selectedProjectId = useNavigationStore((s) => s.projectId);
+  const selectedStoryId = useNavigationStore((s) => s.storyId);
+
+  const setAppSection = useNavigationStore((s) => s.setAppSection);
+  const setRootSection = useNavigationStore((s) => s.setRootSection);
+  const setStorySection = useNavigationStore((s) => s.setStorySection);
+  const setSelectedProjectId = useNavigationStore((s) => s.setSelectedProjectId);
+  const setSelectedStoryId = useNavigationStore((s) => s.setSelectedStoryId);
+  const restoreStateToStore = useNavigationStore((s) => s.restoreState);
 
   // Track if we're in the initialization phase (don't persist during restoration)
   const isInitializing = useRef(true);
@@ -85,21 +124,21 @@ export function useNavigation() {
     setRootSection('projects');
     setSelectedProjectId(null);
     setSelectedStoryId(null);
-  }, []);
+  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
   const goToManifest = useCallback(() => {
     setAppSection('root');
     setRootSection('manifest');
     setSelectedProjectId(null);
     setSelectedStoryId(null);
-  }, []);
+  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
   const goToProject = useCallback((projectId: string) => {
     setAppSection('project');
     setRootSection('projects');
     setSelectedProjectId(projectId);
     setSelectedStoryId(null);
-  }, []);
+  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
   const goToStory = useCallback((
     projectId: string,
@@ -110,15 +149,11 @@ export function useNavigation() {
     setSelectedProjectId(projectId);
     setSelectedStoryId(storyId);
     setStorySection(section);
-  }, []);
+  }, [setAppSection, setSelectedProjectId, setSelectedStoryId, setStorySection]);
 
   const restoreStateCallback = useCallback((state: NavState) => {
-    setAppSection(state.appSection);
-    setRootSection(state.rootSection);
-    setSelectedProjectId(state.projectId);
-    setSelectedStoryId(state.storyId);
-    setStorySection(state.storySection);
-  }, []);
+    restoreStateToStore(state);
+  }, [restoreStateToStore]);
 
   const finishInitializationCallback = useCallback(() => {
     // Re-enable persistence after initialization is complete

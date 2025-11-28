@@ -4,6 +4,7 @@ import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
 import { persistentSelectionPluginKey } from './extensions/PersistentSelectionHighlight';
+import type { ChatConfig } from './ProseEditor';
 import '../../styles/Editor.scss';
 
 export type BaseEditorProps = {
@@ -12,7 +13,7 @@ export type BaseEditorProps = {
   showTitle?: boolean;
   toolbar: React.ReactNode;
   withChat?: boolean;
-  chatConfig?: any;
+  chatConfig?: ChatConfig;
 };
 
 export const BaseEditor: React.FC<BaseEditorProps> = ({

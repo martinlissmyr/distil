@@ -6,6 +6,7 @@ import { EditorToolbar } from './EditorToolbar';
 import { useEditorSync } from './useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
 import { metaExtensions } from './extensions/metaExtensions';
+import type { ChatConfig } from './ProseEditor';
 
 import {
   Heading1,
@@ -24,7 +25,7 @@ type MetaTextEditorProps = {
   title: string;
   placeholder?: string;
   withChat?: boolean;
-  chatConfig?: any;
+  chatConfig?: ChatConfig;
 };
 
 export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
