@@ -1,76 +1,127 @@
+// ============================================================================
+// LIGHT THEME
+// ============================================================================
+
 :root[data-mantine-color-scheme='light'] {
-  --bg-main: rgba(255, 255, 255, 1);
 
-  --bg-meta-editor: rgba(255, 246, 240, 1);
-  --bg-meta-editor-faded: rgba(255, 246, 240, .8);
-  --bg-meta-editor-transparent: rgba(255, 246, 240, 0);
-  --meta-overlay: rgba(255, 255, 250, .94);
-
-  --bg-prose-editor: rgba(245, 245, 245, 1);
-  --bg-prose-editor-faded: rgba(245, 245, 245, .8);
-  --bg-prose-editor-transparent: rgba(245, 245, 245, 0);
-  --prose-overlay: rgba(255, 255, 255, .94);
-
+  // --------------------------------------------------------------------------
+  // Base Colors
+  // --------------------------------------------------------------------------
   --text: #1a1715;
+
+  // --------------------------------------------------------------------------
+  // Backgrounds - Main App
+  // --------------------------------------------------------------------------
+  --bg-main: rgba(255, 255, 255, 1);
+  --bg-sidebar: rgba(239, 239, 239, 1);
+
+  // Generic overlays (used for cards, modals, etc.)
+  --overlay: rgba(250, 250, 250, 1);
+  --overlay-hover: rgba(245, 245, 245, 1);
+
+  // --------------------------------------------------------------------------
+  // Borders
+  // --------------------------------------------------------------------------
+  --border-subtlest: rgba(15, 23, 42, 0.03);
   --border-subtle: rgba(15, 23, 42, 0.05);
 
-  --bg-sidebar: rgba(239, 239, 239, 1);
+  // --------------------------------------------------------------------------
+  // Chat Aside (AI Assistant Panel)
+  // --------------------------------------------------------------------------
+  --aside-input: rgba(0, 0, 0, 0.02);
+  --aside-bubble: rgba(0, 0, 0, 0.04);
+  --aside-button: rgba(0, 0, 0, 0.06);
+
+  // --------------------------------------------------------------------------
+  // Editor Mode Variations
+  // --------------------------------------------------------------------------
+
+  // Meta editor mode (manifest, outline, brief)
   &[data-editor-mode='meta'] {
     --bg-sidebar: rgba(249, 239, 235, 1);
+
+    --bg-editor: rgba(255, 246, 240, 1);
+    --bg-editor-faded: rgba(255, 246, 240, 0.8);
+    --bg-editor-transparent: rgba(255, 246, 240, 0);
+    --editor-overlay: rgba(255, 255, 250, 0.94);
+    --bg-editor-aside: rgba(255, 250, 246, 0.94);
   }
 
-  --divider-color: rgba(0,0,0,0.05);
+  // Prose editor mode (story text)
+  &[data-editor-mode='prose'] {
+    --bg-sidebar: red; // TODO: set proper light mode prose sidebar color
+
+    --bg-editor: rgba(245, 245, 245, 1);
+    --bg-editor-faded: rgba(245, 245, 245, 0.8);
+    --bg-editor-transparent: rgba(245, 245, 245, 0);
+    --editor-overlay: rgba(255, 255, 255, 0.94);
+    --bg-editor-aside: red; // TODO: set proper light mode prose aside color
+  }
 }
 
-:root[data-mantine-color-scheme='dark'] {
-  --bg-main: rgba(27, 27, 31, 1);
+// ============================================================================
+// DARK THEME
+// ============================================================================
 
+:root[data-mantine-color-scheme='dark'] {
+
+  // --------------------------------------------------------------------------
+  // Base Colors
+  // --------------------------------------------------------------------------
+  --text: #efefef;
+
+  // --------------------------------------------------------------------------
+  // Backgrounds - Main App
+  // --------------------------------------------------------------------------
+  --bg-main: rgba(27, 27, 31, 1);
+  --bg-sidebar: rgba(255, 255, 255, 0.02);
+
+  // Generic overlays (used for cards, modals, etc.)
   --overlay: rgba(20, 20, 23, 1);
   --overlay-hover: rgba(23, 23, 26, 1);
 
-  --bg-meta-editor: rgba(30, 24, 20, 1);
-  --bg-meta-editor-faded: rgba(30, 24, 20, .8);
-  --bg-meta-editor-transparent: rgba(30, 24, 20, 0);
-  --meta-overlay: rgba(22, 18, 15, .94);
-  --meta-underlay: rgba(34, 28, 24, .94);
-
-  --bg-prose-editor: rgba(16, 24, 39, 1);
-  --bg-prose-editor-faded: rgba(16, 24, 39, .8);
-  --bg-prose-editor-transparent: rgba(16, 24, 39, 0);
-  --prose-overlay: rgba(12, 18, 34, .94);
-
-  --text: #efefef;
-  --text-subtle: rgba(255, 255, 255, .6);
-
+  // --------------------------------------------------------------------------
+  // Borders
+  // --------------------------------------------------------------------------
   --border-subtlest: rgba(148, 163, 184, 0.05);
   --border-subtle: rgba(148, 163, 184, 0.25);
 
-  --bg-sidebar: rgba(255, 255, 255, .02);
+  // --------------------------------------------------------------------------
+  // Chat Aside (AI Assistant Panel)
+  // --------------------------------------------------------------------------
+  --aside-input: rgba(255, 255, 255, 0.02);
+  --aside-bubble: rgba(0, 0, 0, 0.1);
+  --aside-button: rgba(255, 255, 255, 0.09);
 
-  --aside-input: rgba(255,255,255,.02);
-  --aside-bubble: rgba(0,0,0,.1);
-  --aside-button-disabled: rgba(0,0,0,.15);
-  --aside-button: rgba(255,255,255,.09);
+  // --------------------------------------------------------------------------
+  // Editor Mode Variations
+  // --------------------------------------------------------------------------
 
+  // Meta editor mode (manifest, outline, brief)
   &[data-editor-mode='meta'] {
     --bg-sidebar: rgba(26, 20, 16, 1);
 
     --bg-editor: rgba(30, 24, 20, 1);
-    --bg-editor-faded: rgba(30, 24, 20, .8);
+    --bg-editor-faded: rgba(30, 24, 20, 0.8);
     --bg-editor-transparent: rgba(30, 24, 20, 0);
-    --editor-overlay: rgba(22, 18, 15, .94);
-    --bg-editor-aside: rgba(34, 28, 24, .94);
+    --editor-overlay: rgba(22, 18, 15, 0.94);
+    --bg-editor-aside: rgba(34, 28, 24, 0.94);
   }
 
+  // Prose editor mode (story text)
   &[data-editor-mode='prose'] {
     --bg-sidebar: rgba(12, 18, 34, 1);
 
     --bg-editor: rgba(16, 24, 39, 1);
-    --bg-editor-faded: rgba(16, 24, 39, .8);
+    --bg-editor-faded: rgba(16, 24, 39, 0.8);
     --bg-editor-transparent: rgba(16, 24, 39, 0);
-    --editor-overlay: rgba(12, 18, 34, .94);
+    --editor-overlay: rgba(12, 18, 34, 0.94);
     --bg-editor-aside: rgba(18, 28, 43, 1);
   }
+
+  // --------------------------------------------------------------------------
+  // Component-Specific Overrides
+  // --------------------------------------------------------------------------
 
   .entityCard {
     &:hover {
