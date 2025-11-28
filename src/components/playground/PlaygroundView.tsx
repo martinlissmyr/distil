@@ -47,7 +47,7 @@ export const PlaygroundView: React.FC = () => {
     simulateEmptyOutline: false,
     emptyMainDoc: false,
     scope: 'text',
-    userPrompt: 'This is a test',
+    userPrompt: '{{What the user actually writes}}',
     loadedTitle: '',
     loadedFullText: '',
     loadedSelection: '',
