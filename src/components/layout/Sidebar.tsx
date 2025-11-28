@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   NavLink,
@@ -19,6 +19,7 @@ import {
   MapPin,
   Bot,
   Feather,
+  FlaskConical,
 } from 'lucide-react';
 
 import {
@@ -38,6 +39,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import type { Project, StoryMeta } from '../../api/alineaClient';
+import { alineaClient } from '../../api/alineaClient';
 
 type SidebarMode = 'projects' | 'project' | 'story';
 export type StorySection =
@@ -46,7 +48,7 @@ export type StorySection =
   | 'brief'
   | 'characters'
   | 'locations';
-export type RootSection = 'projects' | 'manifest' | 'assistant';
+export type RootSection = 'projects' | 'manifest' | 'assistant' | 'playground';
 
 type SidebarProps = {
   mode: SidebarMode;
@@ -155,6 +157,7 @@ type ProjectsSidebarProps = {
   sensors: any;
   rootSection: RootSection;
   onSelectRootSection: (section: RootSection) => void;
+  isDevMode: boolean;
 };
 
 const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
@@ -166,6 +169,7 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
   sensors,
   rootSection,
   onSelectRootSection,
+  isDevMode,
 }) => {
   return (
     <SidebarCard>
@@ -224,7 +228,14 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
           active={rootSection === 'manifest'}
           onClick={() => onSelectRootSection('manifest')}
         />
-        {/* Assistant entry removed – replaced by global settings button */}
+        {isDevMode && (
+          <NavItem
+            Icon={FlaskConical}
+            label="Playground"
+            active={rootSection === 'playground'}
+            onClick={() => onSelectRootSection('playground')}
+          />
+        )}
       </Stack>
     </SidebarCard>
   );
@@ -414,6 +425,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   onOpenSettings,
 }) => {
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    alineaClient.isDevMode().then((response) => {
+      if (response.ok) setIsDevMode(response.data);
+    });
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -437,6 +456,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         sensors={sensors}
         rootSection={rootSection}
         onSelectRootSection={onSelectRootSection}
+        isDevMode={isDevMode}
       />
     );
   } else if (mode === 'story') {

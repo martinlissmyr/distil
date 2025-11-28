@@ -19,6 +19,7 @@ export interface ProjectHandlersParams {
   // Navigation methods
   goToProjects: () => void;
   goToManifest: () => void;
+  goToPlayground: () => void;
   goToProject: (projectId: string) => void;
   clearEditor: () => void;
 
@@ -57,6 +58,7 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
   const {
     goToProjects,
     goToManifest,
+    goToPlayground,
     goToProject,
     clearEditor,
     projectsCRUD,
@@ -71,6 +73,8 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
   const handleSelectRootSection = useCallback((section: RootSection) => {
     if (section === 'manifest') {
       goToManifest();
+    } else if (section === 'playground') {
+      goToPlayground();
     } else {
       goToProjects();
     }
@@ -78,7 +82,7 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     if (section !== 'projects') {
       clearEditor();
     }
-  }, [goToManifest, goToProjects, clearEditor]);
+  }, [goToManifest, goToPlayground, goToProjects, clearEditor]);
 
   const handleBackToProjects = useCallback(() => {
     goToProjects();

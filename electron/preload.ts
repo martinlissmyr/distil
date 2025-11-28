@@ -64,3 +64,7 @@ contextBridge.exposeInMainWorld('settings', {
   setApiKey: (key: string) => ipcRenderer.invoke('settings:setApiKey', key),
   clearApiKey: () => ipcRenderer.invoke('settings:clearApiKey'),
 })
+
+contextBridge.exposeInMainWorld('devMode', {
+  isDevMode: () => ipcRenderer.invoke('devMode:isDevMode'),
+})

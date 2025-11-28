@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef } from 'react';
 
 // Types
 export type StorySection = 'prose' | 'outline' | 'brief' | 'characters' | 'locations';
-export type RootSection = 'projects' | 'manifest';
+export type RootSection = 'projects' | 'manifest' | 'playground';
 export type AppSection = 'root' | 'project' | 'story';
 
 type NavState = {
@@ -133,6 +133,13 @@ export function useNavigation() {
     setSelectedStoryId(null);
   }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
+  const goToPlayground = useCallback(() => {
+    setAppSection('root');
+    setRootSection('playground');
+    setSelectedProjectId(null);
+    setSelectedStoryId(null);
+  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
+
   const goToProject = useCallback((projectId: string) => {
     setAppSection('project');
     setRootSection('projects');
@@ -171,6 +178,7 @@ export function useNavigation() {
     // Actions
     goToProjects,
     goToManifest,
+    goToPlayground,
     goToProject,
     goToStory,
     setStorySection,

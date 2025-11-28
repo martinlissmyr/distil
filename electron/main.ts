@@ -10,6 +10,7 @@ import { registerStoryHandlers } from './handlers/stories';
 import { registerMetaDocHandlers } from './handlers/metaDocs';
 import { registerThemeHandlers, setupThemeChangeListener } from './handlers/theme';
 import { registerChatHandlers } from './chat';
+import { registerDevModeHandlers } from './handlers/devMode';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, '..');
@@ -77,6 +78,7 @@ function registerAllHandlers(): void {
   registerMetaDocHandlers();
   registerThemeHandlers();
   registerChatHandlers();
+  registerDevModeHandlers();
 }
 
 app.on('activate', () => {

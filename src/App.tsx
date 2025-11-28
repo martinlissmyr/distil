@@ -180,6 +180,7 @@ const App: React.FC = () => {
   const projectHandlers = useProjectHandlers({
     goToProjects,
     goToManifest: navigation.goToManifest,
+    goToPlayground: navigation.goToPlayground,
     goToProject,
     clearEditor,
     projectsCRUD,
