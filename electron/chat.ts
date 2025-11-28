@@ -16,7 +16,7 @@ async function getOpenAIClient(): Promise<OpenAI> {
     );
   }
 
-  // Reuse client if key hasn’t changed
+  // Reuse client if key hasn't changed
   if (cachedClient && cachedKey === apiKey) {
     return cachedClient;
   }
@@ -27,7 +27,11 @@ async function getOpenAIClient(): Promise<OpenAI> {
   return client;
 }
 
-ipcMain.handle('chat:send', async (_event, payload) => {
+/**
+ * Registers IPC handlers for OpenAI chat integration
+ */
+export function registerChatHandlers(): void {
+  ipcMain.handle('chat:send', async (_event, payload) => {
   // payload = { messages: [{ role, content }, ...] }
   try {
     // Validate payload structure
@@ -79,4 +83,5 @@ ipcMain.handle('chat:send', async (_event, payload) => {
         err instanceof Error ? err.message : 'Unknown error while talking to OpenAI. Check your API key and connection.',
     };
   }
-});
+  });
+}
