@@ -15,7 +15,7 @@ export type ChatMessage = {
 
 interface UseChatMessagesOptions {
   kind: EditorKind;
-  fullTextMarkdown: string;
+  fullTextMarkdown: string | null;
   isTextLoaded: boolean;
   projectId?: string;
   storyId?: string;
@@ -33,6 +33,7 @@ export function useChatMessages({
 }: UseChatMessagesOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const hasInitialisedRef = useRef(false);
+  const previousMarkdownLength = useRef(0);
   const metaDocs = useAppStore((s) => s.metaDocs);
 
   // Helper to check if a metaDoc exists and has content
@@ -43,12 +44,22 @@ export function useChatMessages({
     return doc?.json !== null && !doc?.isLoading;
   };
 
+  // Reset initialization if content loads after being detected as empty
+  useEffect(() => {
+    const currentLength = fullTextMarkdown?.trim().length ?? 0;
+    // If we previously initialized with empty content, but now have content, reset
+    if (hasInitialisedRef.current && previousMarkdownLength.current === 0 && currentLength > 0) {
+      hasInitialisedRef.current = false;
+    }
+    previousMarkdownLength.current = currentLength;
+  }, [fullTextMarkdown]);
+
   // Initial ephemeral assistant message with suggestions
   useEffect(() => {
     // Don't seed until we know whether the text is empty or not
     if (!isTextLoaded || hasInitialisedRef.current) return;
 
-    const isEmpty = !fullTextMarkdown.trim();
+    const isEmpty = !fullTextMarkdown?.trim();
 
     // Check metaDoc existence
     const hasBrief = hasMetaDoc('brief');
