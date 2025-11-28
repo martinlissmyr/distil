@@ -1,14 +1,9 @@
 // src/components/manifest/ManifestView.tsx
 import React from 'react';
 import { Box } from '@mantine/core';
-import { MetaTextEditor, MetaDoc } from '../editor/MetaTextEditor';
+import { MetaTextEditor } from '../editor/MetaTextEditor';
 
-type ManifestViewProps = {
-  doc: MetaDoc | null;
-  onChange: (doc: MetaDoc) => void;
-};
-
-export const ManifestView: React.FC<ManifestViewProps> = ({ doc, onChange }) => {
+export const ManifestView: React.FC = () => {
   return (
     <Box
       style={{

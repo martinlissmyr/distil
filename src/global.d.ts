@@ -61,10 +61,6 @@ declare global {
       ) => Promise<IpcResponse<undefined>>;
       loadRootMetaDoc: (key: string) => Promise<IpcResponse<any | null>>;
       saveRootMetaDoc: (key: string, doc: any) => Promise<IpcResponse<undefined>>;
-
-      // Manifest (legacy)
-      loadManifest: () => Promise<IpcResponse<{ doc: any; updatedAt?: string }>>;
-      saveManifest: (payload: { doc: any }) => Promise<IpcResponse<undefined>>;
     };
 
     chat: {

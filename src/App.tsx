@@ -103,12 +103,8 @@ const App: React.FC = () => {
   const [currentDoc, setCurrentDoc] = useState<ProseDoc | null>(null);
   const [dirty, setDirty] = useState(false);
 
-  // Manifest state
-  const [manifestDoc, setManifestDoc] = useState<MetaDoc | null>(null);
-  const [manifestDirty, setManifestDirty] = useState(false);
-
-  // Note: Outline and brief are now managed by MetaTextEditor via metaDocs system
-  // They autosave independently without rewriting the entire story file
+  // Note: Manifest, outline and brief are managed by MetaTextEditor via metaDocs system
+  // They autosave independently without needing App-level state
 
   // Edit modals
   const [editingProject, setEditingProject] = useState<EditingProjectState>(null);
@@ -149,24 +145,8 @@ const App: React.FC = () => {
     (async () => {
       const saved = loadNavState();
 
-      // 1. Load projects + manifest in parallel
-      const [projResponse, manifestMaybe] = await Promise.all([
-        alineaClient.listProjects(),
-        (async () => {
-          try {
-            const response = await alineaClient.loadManifest();
-            if (response.ok) {
-              return response.data.doc;
-            } else {
-              console.error('Failed to load manifest:', response.error);
-              return null;
-            }
-          } catch (e) {
-            console.error('Failed to load manifest', e);
-            return null;
-          }
-        })(),
-      ]);
+      // 1. Load projects
+      const projResponse = await alineaClient.listProjects();
 
       if (!projResponse.ok) {
         console.error('Failed to load projects:', projResponse.error);
@@ -175,10 +155,6 @@ const App: React.FC = () => {
 
       const proj = projResponse.data;
       setProjects(proj);
-      if (manifestMaybe) {
-        setManifestDoc(manifestMaybe);
-        setManifestDirty(false);
-      }
 
       // No saved nav → default root/projects
       if (!saved) {
@@ -284,11 +260,6 @@ const App: React.FC = () => {
   const handleDocChange = useCallback((doc: ProseDoc) => {
     setCurrentDoc(doc);
     setDirty(true);
-  }, []);
-
-  const handleManifestChange = useCallback((doc: MetaDoc) => {
-    setManifestDoc(doc);
-    setManifestDirty(true);
   }, []);
 
   const handleSelectRootSection = (section: RootSection) => {
@@ -615,29 +586,7 @@ const App: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [dirty, currentDoc, currentTitle, selectedProjectId, selectedStoryId]);
 
-  // Note: Outline and brief autosave is handled by MetaTextEditor via metaDocs system
-
-  // ---- Autosave manifest ----
-  useEffect(() => {
-    if (!manifestDirty || !manifestDoc) return;
-
-    const timeout = setTimeout(() => {
-      (async () => {
-        try {
-          const response = await alineaClient.saveManifest({ doc: manifestDoc });
-          if (response.ok) {
-            setManifestDirty(false);
-          } else {
-            console.error('Manifest autosave failed:', response.error);
-          }
-        } catch (e) {
-          console.error('Manifest autosave failed', e);
-        }
-      })();
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, [manifestDirty, manifestDoc]);
+  // Note: Manifest, outline and brief autosave are handled by MetaTextEditor via metaDocs system
 
   // ---- Sidebar props ----
   const sidebar = (
@@ -680,7 +629,7 @@ const App: React.FC = () => {
         onEditProject={handleOpenEditProject}
       />
     ) : appSection === 'root' && rootSection === 'manifest' ? (
-      <ManifestView doc={manifestDoc} onChange={handleManifestChange} />
+      <ManifestView />
     ) : appSection === 'root' && rootSection === 'assistant' ? (
       <Box p="md">Assistant settings (placeholder)</Box>
     ) : appSection === 'project' && selectedProjectId && !selectedStoryId ? (

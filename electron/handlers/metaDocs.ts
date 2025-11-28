@@ -1,13 +1,10 @@
 // electron/handlers/metaDocs.ts
 import type { JSONContent } from '@tiptap/react';
 import {
-  loadManifest,
-  saveManifest,
   loadStoryMetaDoc,
   saveStoryMetaDoc,
   loadRootMetaDoc,
   saveRootMetaDoc,
-  type ManifestData,
 } from '../fs/alineaFs';
 import {
   validateProjectId,
@@ -18,19 +15,10 @@ import {
 import { safeHandle } from '../utils/ipcHandler';
 
 /**
- * Registers IPC handlers for metaDocs and manifest operations
+ * Registers IPC handlers for metaDocs operations
  * MetaDocs are flexible JSON documents scoped to root/project/story levels
  */
 export function registerMetaDocHandlers(): void {
-  // ---- Manifest (legacy direct API) ----
-  safeHandle('alinea:loadManifest', async () => loadManifest());
-
-  safeHandle('alinea:saveManifest', async (payload: ManifestData) => {
-    validateJsonDoc(payload);
-    await saveManifest(payload);
-    return undefined; // void return
-  });
-
   // ---- Story-level metaDocs ----
   safeHandle(
     'storyMeta:load',
