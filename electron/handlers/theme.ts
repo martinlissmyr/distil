@@ -1,11 +1,12 @@
 // electron/handlers/theme.ts
-import { ipcMain, nativeTheme, BrowserWindow } from 'electron';
+import { nativeTheme, BrowserWindow } from 'electron';
+import { safeHandle } from '../utils/ipcHandler';
 
 /**
  * Registers IPC handlers for system theme detection and changes
  */
 export function registerThemeHandlers(): void {
-  ipcMain.handle('theme:get', () =>
+  safeHandle('theme:get', async () =>
     nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
   );
 
