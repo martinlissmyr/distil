@@ -28,6 +28,7 @@ import { useNavigation } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
+import { useAppInitialization } from './hooks/useAppInitialization';
 
 // ---------------
 // Types
@@ -157,6 +158,17 @@ const App: React.FC = () => {
   const storyEditor = useStoryEditor(selectedProjectId, selectedStoryId);
   const { currentTitle, currentDoc, dirty, loadStory, clearEditor, updateDoc, setCurrentTitle, setCurrentDoc, setDirty } = storyEditor;
 
+  // App initialization hook
+  useAppInitialization({
+    loadSavedState,
+    restoreState,
+    finishInitialization,
+    setProjects: projectsCRUD.setItems,
+    setStories: storiesCRUD.setItems,
+    loadStory,
+    clearEditor,
+  });
+
   // Note: Manifest, outline and brief are managed by MetaTextEditor via metaDocs system
   // They autosave independently without needing App-level state
 
@@ -186,115 +198,6 @@ const App: React.FC = () => {
 
     document.documentElement.dataset.editorMode = editorMode;
   }, [appSection, storySection, rootSection, selectedStoryId]);
-
-  // ---- Initial load: projects + manifest + nav state (+ optional story & docs) ----
-  useEffect(() => {
-    (async () => {
-      try {
-        const saved = loadSavedState();
-
-        // 1. Load projects
-        const projResponse = await alineaClient.listProjects();
-
-        if (!projResponse.ok) {
-          console.error('Failed to load projects:', projResponse.error);
-          return;
-        }
-
-        const proj = projResponse.data;
-        projectsCRUD.setItems(proj);
-
-        // No saved nav → default root/projects
-        if (!saved) {
-          restoreState({
-            appSection: 'root',
-            rootSection: 'projects',
-            projectId: null,
-            storyId: null,
-            storySection: 'prose',
-          });
-          clearEditor();
-          return;
-        }
-
-        // If we were in the root section, ignore project/story and just restore root view
-        if (saved.appSection === 'root') {
-          restoreState({
-            appSection: 'root',
-            rootSection: saved.rootSection ?? 'projects',
-            projectId: null,
-            storyId: null,
-            storySection: 'prose',
-          });
-          clearEditor();
-          return;
-        }
-
-        // From here: appSection is 'project' or 'story' → we need a valid project
-        const projectExists = saved.projectId
-          ? proj.some((p) => p.id === saved.projectId)
-          : false;
-
-        if (!projectExists) {
-          restoreState({
-            appSection: 'root',
-            rootSection: 'projects',
-            projectId: null,
-            storyId: null,
-            storySection: 'prose',
-          });
-          clearEditor();
-          return;
-        }
-
-        // 2. Load stories for that project
-        const listResponse = await alineaClient.listStories(saved.projectId!);
-        if (!listResponse.ok) {
-          console.error('Failed to load stories:', listResponse.error);
-          return;
-        }
-        const list = listResponse.data;
-        storiesCRUD.setItems(list);
-
-        // No valid story → show project stories list
-        if (!saved.storyId || !list.some((s) => s.id === saved.storyId)) {
-          restoreState({
-            appSection: 'project',
-            rootSection: saved.rootSection ?? 'projects',
-            projectId: saved.projectId,
-            storyId: null,
-            storySection: 'prose',
-          });
-          clearEditor();
-          return;
-        }
-
-        // 3. Valid story → restore story view, section, and docs
-        restoreState({
-          appSection: 'story',
-          rootSection: saved.rootSection ?? 'projects',
-          projectId: saved.projectId,
-          storyId: saved.storyId,
-          storySection: saved.storySection ?? 'prose',
-        });
-
-        const storyResponse = await alineaClient.loadStory(
-          saved.projectId!,
-          saved.storyId
-        );
-        if (!storyResponse.ok) {
-          console.error('Failed to load story:', storyResponse.error);
-          return;
-        }
-        loadStory(storyResponse.data);
-
-        // hydrate outline/brief if present on disk
-      } finally {
-        // Always re-enable navigation after initialization, regardless of success/failure
-        finishInitialization();
-      }
-    })();
-  }, [loadSavedState, restoreState, finishInitialization]);
 
   // ---- Handlers ----
   const handleDocChange = useCallback((doc: ProseDoc) => {
