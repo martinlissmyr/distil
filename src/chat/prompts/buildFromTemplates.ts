@@ -22,11 +22,18 @@ function interpolate(template: string, vars: Record<string, any>): string {
   let result = template;
 
   // Handle conditional blocks: {{#if expression}}...{{/if}}
+  // Also capture leading and trailing newlines to remove them when condition is false
   result = result.replace(
-    /\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-    (_, expression, content) => {
+    /(\n?)\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}(\n?)/g,
+    (match, leadingNewline, expression, content, trailingNewline) => {
       const condition = evaluateCondition(expression.trim(), vars);
-      return condition ? content : '';
+      if (condition) {
+        // Keep the content and the leading newline
+        return leadingNewline + content;
+      } else {
+        // Remove everything including leading and trailing newlines
+        return '';
+      }
     }
   );
 
@@ -35,6 +42,9 @@ function interpolate(template: string, vars: Record<string, any>): string {
     const value = vars[key];
     return value !== undefined && value !== null ? String(value) : '';
   });
+
+  // Collapse multiple consecutive blank lines into a single blank line
+  result = result.replace(/\n\s*\n\s*\n+/g, '\n\n');
 
   return result;
 }
