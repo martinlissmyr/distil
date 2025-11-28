@@ -4,6 +4,7 @@ import fs from 'fs/promises'
 import { app } from 'electron'
 import type { JSONContent } from '@tiptap/react'
 import { sanitizeId } from '../validation'
+import { writeQueue } from './writeQueue'
 
 export type ProjectMeta = {
   id: string
@@ -213,28 +214,34 @@ export async function saveStory(
   storyId: string,
   payload: StoryFile
 ): Promise<void> {
-  const file = getStoryFile(projectId, storyId)
-  const raw = await fs.readFile(file, 'utf-8').catch(() => null)
-  const existing: StoryFile =
-    raw != null
-      ? (JSON.parse(raw) as StoryFile)
-      : {
-          id: storyId,
-          title: payload.title,
-          createdAt: new Date().toISOString(),
-          order: 0,
-          doc: payload.doc,
-          metaDocs: {},
-        }
+  // Use write queue to prevent race conditions when multiple autosaves
+  // (prose, outline, brief) trigger simultaneously
+  const queueKey = `story:${projectId}:${storyId}`
 
-  const story: StoryFile = {
-    ...existing,
-    ...payload,
-    metaDocs: payload.metaDocs ?? existing.metaDocs ?? {},
-  }
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getStoryFile(projectId, storyId)
+    const raw = await fs.readFile(file, 'utf-8').catch(() => null)
+    const existing: StoryFile =
+      raw != null
+        ? (JSON.parse(raw) as StoryFile)
+        : {
+            id: storyId,
+            title: payload.title,
+            createdAt: new Date().toISOString(),
+            order: 0,
+            doc: payload.doc,
+            metaDocs: {},
+          }
 
-  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
-  await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8')
+    const story: StoryFile = {
+      ...existing,
+      ...payload,
+      metaDocs: payload.metaDocs ?? existing.metaDocs ?? {},
+    }
+
+    await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+    await fs.writeFile(file, JSON.stringify(story, null, 2), 'utf-8')
+  })
 }
 
 export async function updateStory(
@@ -316,30 +323,35 @@ export async function saveStoryMetaDoc(
   key: string,
   doc: JSONContent
 ): Promise<void> {
-  const file = getStoryFile(projectId, storyId)
-  console.log(file);
-  const raw = await fs.readFile(file, 'utf-8').catch(() => null)
-  const existing: StoryFile =
-    raw != null
-      ? (JSON.parse(raw) as StoryFile)
-      : {
-          id: storyId,
-          title: '',
-          createdAt: new Date().toISOString(),
-          order: 0,
-          doc,
-          metaDocs: {},
-        }
+  // CRITICAL: Use same queue key as saveStory because they write to the same file
+  // This prevents race conditions between prose saves and metaDoc saves
+  const queueKey = `story:${projectId}:${storyId}`
 
-  const metaDocs = { ...(existing.metaDocs ?? {}), [key]: doc }
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getStoryFile(projectId, storyId)
+    const raw = await fs.readFile(file, 'utf-8').catch(() => null)
+    const existing: StoryFile =
+      raw != null
+        ? (JSON.parse(raw) as StoryFile)
+        : {
+            id: storyId,
+            title: '',
+            createdAt: new Date().toISOString(),
+            order: 0,
+            doc,
+            metaDocs: {},
+          }
 
-  const updated: StoryFile = {
-    ...existing,
-    metaDocs,
-  }
+    const metaDocs = { ...(existing.metaDocs ?? {}), [key]: doc }
 
-  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
-  await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8')
+    const updated: StoryFile = {
+      ...existing,
+      metaDocs,
+    }
+
+    await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+    await fs.writeFile(file, JSON.stringify(updated, null, 2), 'utf-8')
+  })
 }
 
 // ---- Manifest ----
@@ -379,15 +391,20 @@ export async function loadManifest(): Promise<ManifestData> {
 export async function saveManifest(payload: {
   doc: JSONContent
 }): Promise<void> {
-  const file = getManifestFile()
+  // Use write queue to serialize manifest saves
+  const queueKey = 'manifest:root'
 
-  const manifest: ManifestData = {
-    doc: payload.doc,
-    updatedAt: new Date().toISOString(),
-  }
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getManifestFile()
 
-  await fs.mkdir(getRootDir(), { recursive: true })
-  await fs.writeFile(file, JSON.stringify(manifest, null, 2), 'utf-8')
+    const manifest: ManifestData = {
+      doc: payload.doc,
+      updatedAt: new Date().toISOString(),
+    }
+
+    await fs.mkdir(getRootDir(), { recursive: true })
+    await fs.writeFile(file, JSON.stringify(manifest, null, 2), 'utf-8')
+  })
 }
 
 // ---- Root metaDocs (generic wrapper around Manifest) ----
