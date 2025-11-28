@@ -1,7 +1,7 @@
 // electron/chat.ts
-import { ipcMain } from 'electron';
 import OpenAI from 'openai';
 import { loadApiKey } from './secureStore';
+import { safeHandle } from './utils/ipcHandler';
 
 // Optionally cache the client between calls
 let cachedClient: OpenAI | null = null;
@@ -31,9 +31,8 @@ async function getOpenAIClient(): Promise<OpenAI> {
  * Registers IPC handlers for OpenAI chat integration
  */
 export function registerChatHandlers(): void {
-  ipcMain.handle('chat:send', async (_event, payload) => {
-  // payload = { messages: [{ role, content }, ...] }
-  try {
+  safeHandle('chat:send', async (payload) => {
+    // payload = { messages: [{ role, content }, ...] }
     // Validate payload structure
     if (!payload || typeof payload !== 'object') {
       throw new Error('Invalid payload: must be an object');
@@ -65,23 +64,14 @@ export function registerChatHandlers(): void {
     const openai = await getOpenAIClient();
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
+      model: 'gpt-4o-mini',
       messages: payload.messages,
       temperature: 0.7,
     });
 
     return {
-      ok: true,
       output_text: completion.choices[0]?.message?.content ?? '',
       raw: completion,
     };
-  } catch (err: unknown) {
-    console.error('OpenAI error', err);
-    return {
-      ok: false,
-      error:
-        err instanceof Error ? err.message : 'Unknown error while talking to OpenAI. Check your API key and connection.',
-    };
-  }
   });
 }

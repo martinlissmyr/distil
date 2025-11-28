@@ -32,9 +32,13 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     const load = async () => {
       try {
         setLoading(true);
-        const current = await window.settings?.getApiKey?.();
-        if (!cancelled && typeof current === 'string') {
-          setApiKey(current);
+        const response = await window.settings?.getApiKey?.();
+        if (!cancelled && response) {
+          if (response.ok && typeof response.data === 'string') {
+            setApiKey(response.data);
+          } else if (!response.ok) {
+            console.error('Failed to load API key:', response.error);
+          }
         }
       } catch (e) {
         console.error('Failed to load API key', e);
@@ -56,7 +60,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 
     try {
       setSaving(true);
-      await window.settings?.setApiKey?.(trimmed);
+      const response = await window.settings?.setApiKey?.(trimmed);
+      if (response && !response.ok) {
+        console.error('Failed to save API key:', response.error);
+        return;
+      }
       onClose();
     } catch (e) {
       console.error('Failed to save API key', e);
@@ -68,7 +76,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   const handleClear = async () => {
     try {
       setClearing(true);
-      await window.settings?.clearApiKey?.();
+      const response = await window.settings?.clearApiKey?.();
+      if (response && !response.ok) {
+        console.error('Failed to clear API key:', response.error);
+        return;
+      }
       setApiKey('');
       onClose();
     } catch (e) {

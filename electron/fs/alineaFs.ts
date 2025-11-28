@@ -73,15 +73,23 @@ export async function listProjects(): Promise<ProjectMeta[]> {
         const raw = await fs.readFile(file, 'utf-8')
         const data = JSON.parse(raw) as ProjectMeta
         projects.push(data)
-      } catch {
-        // ignore broken projects
+      } catch (err: unknown) {
+        // Skip broken/corrupted project files but log the issue
+        console.warn(`[listProjects] Skipping broken project ${pid}:`,
+          err instanceof Error ? err.message : 'Unknown error')
       }
     }
 
     projects.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     return projects
-  } catch {
-    return []
+  } catch (err: unknown) {
+    // Directory doesn't exist yet - expected on first run
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return []
+    }
+    // Unexpected error - log and throw
+    console.error('[listProjects] Failed to read projects directory:', err)
+    throw new Error('Failed to list projects')
   }
 }
 
@@ -151,19 +159,31 @@ export async function listStories(projectId: string): Promise<StoryMeta[]> {
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.json')) continue
       const fullPath = path.join(dir, entry.name)
-      const raw = await fs.readFile(fullPath, 'utf-8')
-      const json = JSON.parse(raw) as StoryFile
-      stories.push({
-        id: json.id,
-        title: json.title,
-        createdAt: json.createdAt ?? new Date().toISOString(),
-        order: json.order ?? 0,
-      })
+      try {
+        const raw = await fs.readFile(fullPath, 'utf-8')
+        const json = JSON.parse(raw) as StoryFile
+        stories.push({
+          id: json.id,
+          title: json.title,
+          createdAt: json.createdAt ?? new Date().toISOString(),
+          order: json.order ?? 0,
+        })
+      } catch (err: unknown) {
+        // Skip broken/corrupted story files but log the issue
+        console.warn(`[listStories] Skipping broken story ${entry.name}:`,
+          err instanceof Error ? err.message : 'Unknown error')
+      }
     }
     stories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     return stories
-  } catch {
-    return []
+  } catch (err: unknown) {
+    // Stories directory doesn't exist yet - expected for new projects
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return []
+    }
+    // Unexpected error - log and throw
+    console.error('[listStories] Failed to read stories directory:', err)
+    throw new Error('Failed to list stories')
   }
 }
 
@@ -367,24 +387,30 @@ export async function loadManifest(): Promise<ManifestData> {
       doc: json.doc,
       updatedAt: json.updatedAt ?? new Date().toISOString(),
     }
-  } catch {
-    // If it doesn't exist yet, create an empty manifest file
-    const empty: ManifestData = {
-      doc: {
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [{ type: 'text', text: '' }],
-          },
-        ],
-      },
-      updatedAt: new Date().toISOString(),
-    }
+  } catch (err: unknown) {
+    // File doesn't exist yet - create empty manifest (expected on first run)
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      console.log('[loadManifest] Creating initial manifest file')
+      const empty: ManifestData = {
+        doc: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: '' }],
+            },
+          ],
+        },
+        updatedAt: new Date().toISOString(),
+      }
 
-    await fs.mkdir(getRootDir(), { recursive: true })
-    await fs.writeFile(file, JSON.stringify(empty, null, 2), 'utf-8')
-    return empty
+      await fs.mkdir(getRootDir(), { recursive: true })
+      await fs.writeFile(file, JSON.stringify(empty, null, 2), 'utf-8')
+      return empty
+    }
+    // Unexpected error - log and throw
+    console.error('[loadManifest] Failed to load manifest:', err)
+    throw new Error('Failed to load manifest')
   }
 }
 

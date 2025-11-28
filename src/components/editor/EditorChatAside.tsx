@@ -209,7 +209,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
         .concat(userMessage)
         .filter((m) => !m.ephemeral)
         .map((m) => ({
-          role: m.role,
+          role: m.role as 'user' | 'assistant',
           content: m.content,
         }));
       const turns = history.slice(-MAX_TURNS);
@@ -225,17 +225,17 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
       const payload = {
         messages: [
-          { role: 'system', content: prompt.system },
-          { role: 'assistant', content: prompt.assistant },
+          { role: 'system' as const, content: prompt.system },
+          { role: 'assistant' as const, content: prompt.assistant },
           ...turns,
-          { role: 'user', content: prompt.user },
+          { role: 'user' as const, content: prompt.user },
         ],
       };
 
       const response = await window.chat.send(payload);
 
       if (!response.ok) {
-        const rawError: string = response.error ?? '';
+        const rawError: string = response.error;
         let friendly = 'Something went wrong talking to the model.';
 
         if (rawError.includes('No OpenAI API key configured')) {
@@ -255,9 +255,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
       }
 
       const assistantText =
-        response.output_text ??
-        response.choices?.[0]?.message?.content ??
-        'Sorry, I could not generate a response.';
+        response.data.output_text || 'Sorry, I could not generate a response.';
 
       const assistantMessage: ChatMessage = {
         id: `m-${Date.now()}-assistant`,
