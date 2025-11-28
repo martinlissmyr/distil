@@ -1,6 +1,6 @@
 // src/components/editor/chat/MessageBubble.tsx
 import React from 'react';
-import { Box, Group, Text, Button } from '@mantine/core';
+import { Box, Group, Text, Button, Stack } from '@mantine/core';
 import type { SuggestionAction } from '../../../chat/chatHints';
 import type { ChatMessage } from './useChatMessages';
 
@@ -28,7 +28,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             lineHeight: 1.5,
             borderRadius: '12px',
             backgroundColor: 'var(--aside-bubble)',
-            minWidth: '75%',
+            width: '75%',
           }}
         >
           <Text size="xs" c="dimmed" mb={2}>
@@ -51,11 +51,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </Text>
 
           {message.suggestions && message.suggestions.length > 0 && (
-            <Group mt={16} gap={6} wrap="wrap">
+            <Stack mt="lg" gap="sm" align="flex-end">
               {message.suggestions.map((action) => (
                 <Button
                   key={action.id}
-                  size="xs"
+                  size="sm"
                   variant="outline"
                   radius="xl"
                   onClick={() => onSuggestionClick?.(action)}
@@ -63,7 +63,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   {action.label}
                 </Button>
               ))}
-            </Group>
+            </Stack>
           )}
         </Box>
       )}
