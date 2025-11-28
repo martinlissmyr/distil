@@ -19,7 +19,7 @@ import { ManifestView } from './components/manifest/ManifestView';
 import { ProjectsView } from './components/projects/ProjectsView';
 import { StoriesView } from './components/stories/StoriesView';
 import { StoryTextView } from './components/stories/StoryTextView';
-import { useSystemTheme } from './hooks/useSystemTheme';
+import { useThemeSetup } from './hooks/useThemeSetup';
 import { EntityEditModal } from './components/common/EntityEditModal';
 import { StoryOutlineView } from './components/stories/StoryOutlineView';
 import { StoryBriefView } from './components/stories/StoryBriefView';
@@ -83,15 +83,8 @@ const App: React.FC = () => {
   // API Key Modal
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
 
-  const systemTheme = useSystemTheme();
-
-  // ---- Theme attribute for Mantine ----
-  useEffect(() => {
-    document.documentElement.setAttribute(
-      'data-mantine-color-scheme',
-      systemTheme
-    );
-  }, [systemTheme]);
+  // Theme setup
+  useThemeSetup();
 
   // ---- Editor mode attribute (for styling) ----
   useEffect(() => {
