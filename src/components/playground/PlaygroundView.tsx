@@ -300,115 +300,114 @@ export const PlaygroundView: React.FC = () => {
   return (
     <Box p="md" h="100vh" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Group gap="md" style={{ flex: 1, minHeight: 0 }} grow align="flex-start">
-      <Box style={{ overflow: 'auto', minHeight: 0, flex: 1 }}>
-        <Stack gap="lg">
-        {/* Context Selection */}
-        <Paper p="md">
-          <Title order={4} mb="sm">Context Source</Title>
-          <Stack gap="md">
-            <SegmentedControl
-              value={state.contextType}
-              onChange={(value) => setState((s) => ({ ...s, contextType: value as ContextType }))}
-              data={[
-                { label: 'Story', value: 'story' },
-                { label: 'Manifest', value: 'manifest' },
-              ]}
-            />
+        <Stack gap="lg" p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
+          {/* Context Selection */}
+          <Paper p="md">
+            <Title order={4} mb="sm">Context Source</Title>
+            <Stack gap="md">
+              <SegmentedControl
+                value={state.contextType}
+                onChange={(value) => setState((s) => ({ ...s, contextType: value as ContextType }))}
+                data={[
+                  { label: 'Story', value: 'story' },
+                  { label: 'Manifest', value: 'manifest' },
+                ]}
+              />
 
-            {state.contextType === 'story' && (
-              <>
-                <Select
-                  label="Project"
-                  placeholder="Select a project"
-                  data={projects.map((p) => ({ value: p.id, label: p.name }))}
-                  value={state.selectedProjectId}
-                  onChange={(value) => setState((s) => ({ ...s, selectedProjectId: value, selectedStoryId: null }))}
-                  clearable
-                />
-
-                {state.selectedProjectId && (
+              {state.contextType === 'story' && (
+                <>
                   <Select
-                    label="Story"
-                    placeholder="Select a story"
-                    data={stories.map((s) => ({ value: s.id, label: s.title }))}
-                    value={state.selectedStoryId}
-                    onChange={(value) => setState((s) => ({ ...s, selectedStoryId: value }))}
+                    label="Project"
+                    placeholder="Select a project"
+                    data={projects.map((p) => ({ value: p.id, label: p.name }))}
+                    value={state.selectedProjectId}
+                    onChange={(value) => setState((s) => ({ ...s, selectedProjectId: value, selectedStoryId: null }))}
                     clearable
                   />
-                )}
 
-                {state.selectedStoryId && (
-                  <SegmentedControl
-                    value={state.metaDocType}
-                    onChange={(value) => setState((s) => ({ ...s, metaDocType: value as EditorKind }))}
-                    data={[
-                      { label: 'Prose', value: 'prose' },
-                      { label: 'Brief', value: 'brief' },
-                      { label: 'Outline', value: 'outline' },
-                    ]}
-                  />
-                )}
-              </>
-            )}
-          </Stack>
-        </Paper>
+                  {state.selectedProjectId && (
+                    <Select
+                      label="Story"
+                      placeholder="Select a story"
+                      data={stories.map((s) => ({ value: s.id, label: s.title }))}
+                      value={state.selectedStoryId}
+                      onChange={(value) => setState((s) => ({ ...s, selectedStoryId: value }))}
+                      clearable
+                    />
+                  )}
 
-        {/* Only show configuration sections when ready */}
-        {(state.contextType === 'manifest' || (state.contextType === 'story' && state.selectedStoryId)) && (
-          <>
-            {/* Combined Document Status */}
-            <Paper p="md">
-              <Stack gap="md">
-                {/* Main Document Status */}
-                {docStatus.mainDocHasContent ? (
-                  <Group justify="space-between" align="center">
+                  {state.selectedStoryId && (
+                    <SegmentedControl
+                      value={state.metaDocType}
+                      onChange={(value) => setState((s) => ({ ...s, metaDocType: value as EditorKind }))}
+                      data={[
+                        { label: 'Prose', value: 'prose' },
+                        { label: 'Brief', value: 'brief' },
+                        { label: 'Outline', value: 'outline' },
+                      ]}
+                    />
+                  )}
+                </>
+              )}
+            </Stack>
+          </Paper>
+
+          {/* Only show configuration sections when ready */}
+          {(state.contextType === 'manifest' || (state.contextType === 'story' && state.selectedStoryId)) && (
+            <>
+              {/* Combined Document Status */}
+              <Paper p="md">
+                <Stack gap="md">
+                  {/* Main Document Status */}
+                  {docStatus.mainDocHasContent ? (
+                    <Group justify="space-between" align="center">
+                      <Group gap="xs">
+                        <Check size={16} color="var(--mantine-color-green-6)" />
+                        <Text size="sm" fw={500}>
+                          Main document has content ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
+                        </Text>
+                      </Group>
+                      <Switch
+                        label="Simulate empty"
+                        checked={state.emptyMainDoc}
+                        onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
+                        size="xs"
+                      />
+                    </Group>
+                  ) : (
                     <Group gap="xs">
-                      <Check size={16} color="var(--mantine-color-green-6)" />
+                      <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
                       <Text size="sm" fw={500}>
-                        Main document has content ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
+                        Main document is missing ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
                       </Text>
                     </Group>
-                    <Switch
-                      label="Simulate empty"
-                      checked={state.emptyMainDoc}
-                      onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
-                      size="xs"
-                    />
-                  </Group>
-                ) : (
-                  <Group gap="xs">
-                    <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                    <Text size="sm" fw={500}>
-                      Main document is missing ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
-                    </Text>
-                  </Group>
-                )}
+                  )}
 
-                {/* Contexts - only show for story context */}
-                {state.contextType === 'story' && (
-                  <>
-                    <Divider />
+                  {/* Contexts - only show for story context */}
+                  {state.contextType === 'story' && (
+                    <>
+                      <Divider />
 
-                    {/* Manifest - always show as context */}
-                    {docStatus.manifestHasContent ? (
-                      <Group justify="space-between" align="center">
-                        <Group gap="xs">
-                          <Check size={16} color="var(--mantine-color-green-6)" />
-                          <Text size="sm" fw={500}>Manifest has content (used for context)</Text>
+                      {/* Manifest - always show as context */}
+                      {docStatus.manifestHasContent ? (
+                        <Group justify="space-between" align="center">
+                          <Group gap="xs">
+                            <Check size={16} color="var(--mantine-color-green-6)" />
+                            <Text size="sm" fw={500}>Manifest has content (used for context)</Text>
+                          </Group>
+                          <Switch
+                            label="Simulate empty"
+                            checked={state.simulateEmptyManifest}
+                            onChange={(e) => setState((s) => ({ ...s, simulateEmptyManifest: e.currentTarget.checked }))}
+                            size="xs"
+                          />
                         </Group>
-                        <Switch
-                          label="Simulate empty"
-                          checked={state.simulateEmptyManifest}
-                          onChange={(e) => setState((s) => ({ ...s, simulateEmptyManifest: e.currentTarget.checked }))}
-                          size="xs"
-                        />
-                      </Group>
-                    ) : (
-                      <Group gap="xs">
-                        <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                        <Text size="sm" fw={500}>Manifest is missing (used for context)</Text>
-                      </Group>
-                    )}
+                      ) : (
+                        <Group gap="xs">
+                          <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
+                          <Text size="sm" fw={500}>Manifest is missing (used for context)</Text>
+                        </Group>
+                      )}
 
                       {/* Brief - only show as context if we're NOT editing the brief */}
                       {state.metaDocType !== 'brief' && (
@@ -461,71 +460,70 @@ export const PlaygroundView: React.FC = () => {
                           )}
                         </>
                       )}
-                  </>
-                )}
+                    </>
+                  )}
 
-                {/* Scope Selector - only show if main document has content */}
-                {docStatus.mainDocHasContent && (
-                  <>
-                    <Divider />
-                    <Box>
-                      <SegmentedControl
-                        value={state.scope}
-                        onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
-                        data={[
-                          { label: 'Full Text', value: 'text' },
-                          { label: 'Selection', value: 'selection' },
-                        ]}
-                      />
-
-                      {state.scope === 'selection' && (
-                        <Textarea
-                          label="Selection Text"
-                          placeholder="Paste text that represents the selection..."
-                          value={state.loadedSelection}
-                          onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
-                          minRows={4}
-                          mt="md"
+                  {/* Scope Selector - only show if main document has content */}
+                  {docStatus.mainDocHasContent && (
+                    <>
+                      <Divider />
+                      <Box>
+                        <SegmentedControl
+                          value={state.scope}
+                          onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
+                          data={[
+                            { label: 'Full Text', value: 'text' },
+                            { label: 'Selection', value: 'selection' },
+                          ]}
                         />
-                      )}
-                    </Box>
-                  </>
-                )}
-              </Stack>
-            </Paper>
 
-            {/* User Prompt */}
-            <Textarea
-              label="User Prompt"
-              placeholder="Enter your question or instruction..."
-              value={state.userPrompt}
-              onChange={(e) => setState((s) => ({ ...s, userPrompt: e.currentTarget.value }))}
-              minRows={3}
-            />
+                        {state.scope === 'selection' && (
+                          <Textarea
+                            label="Selection Text"
+                            placeholder="Paste text that represents the selection..."
+                            value={state.loadedSelection}
+                            onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
+                            minRows={4}
+                            mt="md"
+                          />
+                        )}
+                      </Box>
+                    </>
+                  )}
+                </Stack>
+              </Paper>
 
-            <Button onClick={handleBuildPrompt}>Build Prompt</Button>
-          </>
-        )}
+              {/* User Prompt */}
+              <Textarea
+                label="User Prompt"
+                placeholder="Enter your question or instruction..."
+                value={state.userPrompt}
+                onChange={(e) => setState((s) => ({ ...s, userPrompt: e.currentTarget.value }))}
+                minRows={3}
+              />
+
+              <Button onClick={handleBuildPrompt}>Build Prompt</Button>
+            </>
+          )}
         </Stack>
-      </Box>
 
-      {/* Right Column - Output */}
-      <Box p="sm" style={{ minHeight: 0, maxHeight: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
-        {builtPrompt ? (
-          <PlaygroundOutput
-            systemPrompt={builtPrompt.system}
-            assistantPrompt={builtPrompt.assistant}
-            userPrompt={builtPrompt.user}
-          />
-        ) : (
-          <Paper p="md" style={{ flex: 1, height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Text c="dimmed" size="sm">
-              Configure settings and click "Build Prompt" to see the output
-            </Text>
-          </Paper>
-        )}
-      </Box>
-    </Group>
+        {/* Right Column - Output */}
+        <Box p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
+          {builtPrompt ? (
+            <PlaygroundOutput
+              systemPrompt={builtPrompt.system}
+              assistantPrompt={builtPrompt.assistant}
+              userPrompt={builtPrompt.user}
+            />
+          ) : (
+            <Paper p="md" style={{ flex: 1, height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Text c="dimmed" size="sm">
+                Configure settings and click "Build Prompt" to see the output
+              </Text>
+            </Paper>
+          )}
+        </Box>
+      </Group>
     </Box>
   );
 };

@@ -22,16 +22,10 @@ SNIPPET (current selection):
 ---
 {{selectionMarkdown}}
 ---
+{{/if}}
+
 When answering:
-{{#if hasSelection}}
-- focus FULLY on the snippet
-{{/if}}
-{{#if hasSelection && fullTextMarkdown}}
-- also keep the full text in mind
-{{/if}}
-{{#if !hasSelection && fullTextMarkdown}}
-- focus on the full text
-{{/if}}
-{{#if manifestMarkdown}}
-- and always keep the principles and guidelines of the manifest in mind
-{{/if}}
+{{#if hasSelection}}- focus FULLY on the snippet{{/if}}
+{{#if hasSelection && fullTextMarkdown}}- also keep the full text in mind{{/if}}
+{{#if !hasSelection && fullTextMarkdown}}- focus on the full text{{/if}}
+{{#if manifestMarkdown}}- and always keep the principles and guidelines of the manifest in mind{{/if}}
