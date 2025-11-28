@@ -1,47 +1,80 @@
 // src/state/markdownUtils.ts
 import { Editor } from '@tiptap/core';
 import type { JSONContent } from '@tiptap/core';
-import { Markdown } from '@tiptap/markdown';
 
-// Use the SAME extensions as MetaTextEditor
 import { metaExtensions } from '../components/editor/extensions/metaExtensions';
+import { proseExtensions } from '../components/editor/extensions/proseExtensions';
 
-// Singleton editor instance, reused across calls
-let markdownEditor: Editor | null = null;
+// Singleton editor instances, reused across calls
+// We maintain separate instances for meta and prose to match their different schemas
+let metaMarkdownEditor: Editor | null = null;
+let proseMarkdownEditor: Editor | null = null;
 
-function getMarkdownEditor(): Editor {
-  if (!markdownEditor) {
-    markdownEditor = new Editor({
-      extensions: [
-        ...metaExtensions({ placeholder: '' }),
-      ],
-      content: {
-        type: 'doc',
-        content: [],
-      },
+function getMetaMarkdownEditor(): Editor {
+  if (!metaMarkdownEditor) {
+    metaMarkdownEditor = new Editor({
+      extensions: metaExtensions({ placeholder: '' }),
+      content: { type: 'doc', content: [] },
       contentType: 'json',
     });
   }
-  return markdownEditor;
+  return metaMarkdownEditor;
+}
+
+function getProseMarkdownEditor(): Editor {
+  if (!proseMarkdownEditor) {
+    proseMarkdownEditor = new Editor({
+      extensions: proseExtensions({ placeholder: '' }),
+      content: { type: 'doc', content: [] },
+      contentType: 'json',
+    });
+  }
+  return proseMarkdownEditor;
 }
 
 /**
- * Convert a TipTap JSON document to Markdown using the same
- * schema/extensions as the meta editors, via the Markdown extension.
+ * Convert a TipTap JSON document to Markdown.
+ *
+ * Note: This approach uses a singleton Editor instance to leverage TipTap's
+ * official Markdown extension. While it feels heavy, this is the standard way
+ * to convert TipTap JSON to Markdown, and the singleton pattern makes it efficient.
+ *
+ * @param doc - TipTap JSON content
+ * @param schema - Which editor schema to use ('meta' for manifest/outline/brief, 'prose' for story text)
  */
-export function jsonToMarkdown(doc: JSONContent): string {
-  const editor = getMarkdownEditor();
+export function jsonToMarkdown(
+  doc: JSONContent,
+  schema: 'meta' | 'prose' = 'meta'
+): string {
+  const editor = schema === 'meta'
+    ? getMetaMarkdownEditor()
+    : getProseMarkdownEditor();
 
   // Replace content with the provided JSON
   editor.commands.setContent(doc, false);
 
-  // Markdown extension adds getMarkdown(); keep your existing call style
-  // Depending on your tiptap/markdown version this is either:
-  // editor.storage.markdown.getMarkdown() or editor.getMarkdown()
+  // Get markdown from the extension
+  // Different TipTap versions expose this differently, so we try both
   const md =
     (editor as any).getMarkdown?.() ??
     (editor as any).storage?.markdown?.getMarkdown?.() ??
     '';
 
   return md.trim();
+}
+
+/**
+ * Helper specifically for meta documents (manifest, outline, brief).
+ * Uses the meta extensions schema (H1, H2, bullet/ordered lists, horizontal rules).
+ */
+export function metaJsonToMarkdown(doc: JSONContent): string {
+  return jsonToMarkdown(doc, 'meta');
+}
+
+/**
+ * Helper specifically for prose documents (story text).
+ * Uses the prose extensions schema (H2, H3, bullet/ordered lists, but no H1 or horizontal rules).
+ */
+export function proseJsonToMarkdown(doc: JSONContent): string {
+  return jsonToMarkdown(doc, 'prose');
 }
