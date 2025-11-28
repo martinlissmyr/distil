@@ -107,13 +107,8 @@ const App: React.FC = () => {
   const [manifestDoc, setManifestDoc] = useState<MetaDoc | null>(null);
   const [manifestDirty, setManifestDirty] = useState(false);
 
-  // Outline state
-  const [outlineDoc, setOutlineDoc] = useState<MetaDoc | null>(null);
-  const [outlineDirty, setOutlineDirty] = useState(false);
-
-  // Brief state
-  const [briefDoc, setBriefDoc] = useState<MetaDoc | null>(null);
-  const [briefDirty, setBriefDirty] = useState(false);
+  // Note: Outline and brief are now managed by MetaTextEditor via metaDocs system
+  // They autosave independently without rewriting the entire story file
 
   // Edit modals
   const [editingProject, setEditingProject] = useState<EditingProjectState>(null);
@@ -195,10 +190,6 @@ const App: React.FC = () => {
         setCurrentDoc(null);
         setCurrentTitle('');
         setDirty(false);
-        setOutlineDoc(null);
-        setOutlineDirty(false);
-        setBriefDoc(null);
-        setBriefDirty(false);
         return;
       }
 
@@ -212,10 +203,6 @@ const App: React.FC = () => {
         setCurrentDoc(null);
         setCurrentTitle('');
         setDirty(false);
-        setOutlineDoc(null);
-        setOutlineDirty(false);
-        setBriefDoc(null);
-        setBriefDirty(false);
         return;
       }
 
@@ -233,10 +220,6 @@ const App: React.FC = () => {
         setCurrentDoc(null);
         setCurrentTitle('');
         setDirty(false);
-        setOutlineDoc(null);
-        setOutlineDirty(false);
-        setBriefDoc(null);
-        setBriefDirty(false);
         return;
       }
 
@@ -260,10 +243,6 @@ const App: React.FC = () => {
         setCurrentDoc(null);
         setCurrentTitle('');
         setDirty(false);
-        setOutlineDoc(null);
-        setOutlineDirty(false);
-        setBriefDoc(null);
-        setBriefDirty(false);
         return;
       }
 
@@ -286,10 +265,6 @@ const App: React.FC = () => {
       setDirty(false);
 
       // hydrate outline/brief if present on disk
-      setOutlineDoc((story as any).outlineDoc ?? null);
-      setOutlineDirty(false);
-      setBriefDoc((story as any).briefDoc ?? null);
-      setBriefDirty(false);
     })();
   }, []);
 
@@ -316,16 +291,6 @@ const App: React.FC = () => {
     setManifestDirty(true);
   }, []);
 
-  const handleOutlineChange = useCallback((doc: MetaDoc) => {
-    setOutlineDoc(doc);
-    setOutlineDirty(true);
-  }, []);
-
-  const handleBriefChange = useCallback((doc: MetaDoc) => {
-    setBriefDoc(doc);
-    setBriefDirty(true);
-  }, []);
-
   const handleSelectRootSection = (section: RootSection) => {
     setRootSection(section);
     setAppSection('root');
@@ -337,10 +302,6 @@ const App: React.FC = () => {
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
-      setOutlineDoc(null);
-      setOutlineDirty(false);
-      setBriefDoc(null);
-      setBriefDirty(false);
     }
   };
 
@@ -364,10 +325,6 @@ const App: React.FC = () => {
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setOutlineDoc(null);
-    setOutlineDirty(false);
-    setBriefDoc(null);
-    setBriefDirty(false);
     setRootSection('projects');
     setAppSection('project');
 
@@ -386,10 +343,6 @@ const App: React.FC = () => {
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setOutlineDoc(null);
-    setOutlineDirty(false);
-    setBriefDoc(null);
-    setBriefDirty(false);
     setAppSection('project');
 
     const listResponse = await alineaClient.listStories(id);
@@ -409,10 +362,6 @@ const App: React.FC = () => {
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setOutlineDoc(null);
-    setOutlineDirty(false);
-    setBriefDoc(null);
-    setBriefDirty(false);
   };
 
   const handleReorderProjects = async (ids: string[]) => {
@@ -482,10 +431,6 @@ const App: React.FC = () => {
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
-      setOutlineDoc(null);
-      setOutlineDirty(false);
-      setBriefDoc(null);
-      setBriefDirty(false);
     }
 
     setEditingProject(null);
@@ -525,10 +470,6 @@ const App: React.FC = () => {
     setCurrentTitle(story.title);
     setCurrentDoc(story.doc);
     setDirty(false);
-    setOutlineDoc((story as any).outlineDoc ?? null);
-    setOutlineDirty(false);
-    setBriefDoc((story as any).briefDoc ?? null);
-    setBriefDirty(false);
   };
 
   const handleSelectStory = async (id: string) => {
@@ -546,10 +487,6 @@ const App: React.FC = () => {
     setCurrentTitle(story.title);
     setCurrentDoc(story.doc);
     setDirty(false);
-    setOutlineDoc((story as any).outlineDoc ?? null);
-    setOutlineDirty(false);
-    setBriefDoc((story as any).briefDoc ?? null);
-    setBriefDirty(false);
   };
 
   const handleBackToProjectFromStory = () => {
@@ -559,10 +496,6 @@ const App: React.FC = () => {
     setCurrentDoc(null);
     setCurrentTitle('');
     setDirty(false);
-    setOutlineDoc(null);
-    setOutlineDirty(false);
-    setBriefDoc(null);
-    setBriefDirty(false);
   };
 
   const handleReorderStories = async (ids: string[]) => {
@@ -582,16 +515,12 @@ const App: React.FC = () => {
       id: selectedStoryId,
       title: currentTitle || 'Untitled',
       doc: currentDoc,
-      outlineDoc: outlineDoc ?? undefined,
-      briefDoc: briefDoc ?? undefined,
     });
     if (!response.ok) {
       console.error('Failed to save story:', response.error);
       return;
     }
     setDirty(false);
-    setOutlineDirty(false);
-    setBriefDirty(false);
   };
 
   // ---- Story edit modal handlers ----
@@ -655,10 +584,6 @@ const App: React.FC = () => {
       setCurrentDoc(null);
       setCurrentTitle('');
       setDirty(false);
-      setOutlineDoc(null);
-      setOutlineDirty(false);
-      setBriefDoc(null);
-      setBriefDirty(false);
     }
 
     setEditingStory(null);
@@ -675,8 +600,6 @@ const App: React.FC = () => {
             id: selectedStoryId,
             title: currentTitle || 'Untitled',
             doc: currentDoc,
-            outlineDoc: outlineDoc ?? undefined,
-            briefDoc: briefDoc ?? undefined,
           });
           if (response.ok) {
             setDirty(false);
@@ -690,105 +613,9 @@ const App: React.FC = () => {
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [
-    dirty,
-    currentDoc,
-    currentTitle,
-    selectedProjectId,
-    selectedStoryId,
-    outlineDoc,
-    briefDoc,
-  ]);
+  }, [dirty, currentDoc, currentTitle, selectedProjectId, selectedStoryId]);
 
-  // ---- Autosave outline ----
-  useEffect(() => {
-    if (!outlineDirty || !outlineDoc || !selectedProjectId || !selectedStoryId) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      (async () => {
-        try {
-          const response = await alineaClient.saveStory(selectedProjectId, selectedStoryId, {
-            id: selectedStoryId,
-            title: currentTitle || 'Untitled',
-            doc:
-              currentDoc ??
-              ({
-                type: 'doc',
-                content: [
-                  { type: 'paragraph', content: [{ type: 'text', text: '' }] },
-                ],
-              } as ProseDoc),
-            outlineDoc: outlineDoc ?? undefined,
-            briefDoc: briefDoc ?? undefined,
-          });
-          if (response.ok) {
-            setOutlineDirty(false);
-          } else {
-            console.error('Outline autosave failed:', response.error);
-          }
-        } catch (e) {
-          console.error('Outline autosave failed', e);
-        }
-      })();
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, [
-    outlineDirty,
-    outlineDoc,
-    briefDoc,
-    currentDoc,
-    currentTitle,
-    selectedProjectId,
-    selectedStoryId,
-  ]);
-
-  // ---- Autosave brief ----
-  useEffect(() => {
-    if (!briefDirty || !briefDoc || !selectedProjectId || !selectedStoryId) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      (async () => {
-        try {
-          const response = await alineaClient.saveStory(selectedProjectId, selectedStoryId, {
-            id: selectedStoryId,
-            title: currentTitle || 'Untitled',
-            doc:
-              currentDoc ??
-              ({
-                type: 'doc',
-                content: [
-                  { type: 'paragraph', content: [{ type: 'text', text: '' }] },
-                ],
-              } as ProseDoc),
-            outlineDoc: outlineDoc ?? undefined,
-            briefDoc: briefDoc ?? undefined,
-          });
-          if (response.ok) {
-            setBriefDirty(false);
-          } else {
-            console.error('Brief autosave failed:', response.error);
-          }
-        } catch (e) {
-          console.error('Brief autosave failed', e);
-        }
-      })();
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, [
-    briefDirty,
-    briefDoc,
-    outlineDoc,
-    currentDoc,
-    currentTitle,
-    selectedProjectId,
-    selectedStoryId,
-  ]);
+  // Note: Outline and brief autosave is handled by MetaTextEditor via metaDocs system
 
   // ---- Autosave manifest ----
   useEffect(() => {
