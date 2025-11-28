@@ -22,6 +22,9 @@ export function metaExtensions(
     PersistentSelectionHighlight,
     StarterKit.configure({
       heading: false,
+      bulletList: false,
+      orderedList: false,
+      horizontalRule: false,
     }),
     Heading.configure({
       levels: [1, 2],
