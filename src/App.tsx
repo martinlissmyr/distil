@@ -2,8 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './styles/App.scss';
 
-import { Box } from '@mantine/core';
-
 import {
   alineaClient,
   Project,
@@ -14,16 +12,9 @@ import { useAppStore } from './state/useAppStore';
 import { AlineaLayout } from './components/layout/AlineaLayout';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ProseDoc } from './components/editor/ProseEditor';
-import type { MetaDoc } from './components/editor/MetaTextEditor';
-import { ManifestView } from './components/manifest/ManifestView';
-import { ProjectsView } from './components/projects/ProjectsView';
-import { StoriesView } from './components/stories/StoriesView';
-import { StoryTextView } from './components/stories/StoryTextView';
 import { useThemeSetup } from './hooks/useThemeSetup';
-import { EntityEditModal } from './components/common/EntityEditModal';
-import { StoryOutlineView } from './components/stories/StoryOutlineView';
-import { StoryBriefView } from './components/stories/StoryBriefView';
-import { ApiKeyModal } from './components/settings/ApiKeyModal';
+import { AppContent } from './components/layout/AppContent';
+import { AppModals } from './components/common/AppModals';
 import { useNavigation } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
@@ -207,8 +198,6 @@ const App: React.FC = () => {
   const handleSelectRootSection = (section: RootSection) => {
     if (section === 'manifest') {
       navigation.goToManifest();
-    } else if (section === 'assistant') {
-      navigation.goToAssistant();
     } else {
       navigation.goToProjects();
     }
@@ -367,86 +356,43 @@ const App: React.FC = () => {
   const currentProject = projects.find((p) => p.id === selectedProjectId);
 
   // ---- Main content ----
-  const main =
-    appSection === 'root' && rootSection === 'projects' ? (
-      <ProjectsView
-        projects={projects}
-        onSelectProject={handleSelectProject}
-        onCreateProject={handleCreateProject}
-        onEditProject={handleOpenEditProject}
-      />
-    ) : appSection === 'root' && rootSection === 'manifest' ? (
-      <ManifestView />
-    ) : appSection === 'root' && rootSection === 'assistant' ? (
-      <Box p="md">Assistant settings (placeholder)</Box>
-    ) : appSection === 'project' && selectedProjectId && !selectedStoryId ? (
-      <StoriesView
-        stories={stories}
-        currentProject={currentProject}
-        onSelectStory={handleSelectStory}
-        onCreateStory={handleCreateStory}
-        onEditStory={handleOpenEditStory}
-      />
-    ) : appSection === 'story' && selectedProjectId && selectedStoryId ? (
-      storySection === 'prose' ? (
-        <StoryTextView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-          doc={currentDoc}
-          onChange={handleDocChange}
-          title={currentTitle}
-        />
-      ) : storySection === 'outline' ? (
-        <StoryOutlineView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-        />
-      ) : storySection === 'brief' ? (
-        <StoryBriefView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-        />
-      ) : storySection === 'characters' ? (
-        <Box p="md">Characters (placeholder)</Box>
-      ) : storySection === 'locations' ? (
-        <Box p="md">Locations (placeholder)</Box>
-      ) : null
-    ) : (
-      <Box p="md">Invalid state</Box>
-    );
+  const main = (
+    <AppContent
+      appSection={appSection}
+      rootSection={rootSection}
+      storySection={storySection}
+      selectedProjectId={selectedProjectId}
+      selectedStoryId={selectedStoryId}
+      projects={projects}
+      stories={stories}
+      currentProject={currentProject}
+      currentDoc={currentDoc}
+      currentTitle={currentTitle}
+      handleSelectProject={handleSelectProject}
+      handleCreateProject={handleCreateProject}
+      handleOpenEditProject={handleOpenEditProject}
+      handleSelectStory={handleSelectStory}
+      handleCreateStory={handleCreateStory}
+      handleOpenEditStory={handleOpenEditStory}
+      handleDocChange={handleDocChange}
+    />
+  );
 
   return (
     <>
       <AlineaLayout sidebar={sidebar} main={main} />
 
-      {/* Project edit modal */}
-      <EntityEditModal
-        opened={!!editingProject}
-        title="Edit project"
-        fieldLabel="Name"
-        deleteLabel="project"
-        initialName={editingProject?.name ?? ''}
-        onClose={handleCloseEditProject}
-        onSave={handleRenameProject}
-        onDelete={handleDeleteProject}
-      />
-
-      {/* Story edit modal */}
-      <EntityEditModal
-        opened={!!editingStory}
-        title="Edit story"
-        fieldLabel="Title"
-        deleteLabel="story"
-        initialName={editingStory?.title ?? ''}
-        onClose={handleCloseEditStory}
-        onSave={handleRenameStory}
-        onDelete={handleDeleteStory}
-      />
-
-      {/* API Key Modal */}
-      <ApiKeyModal
-        opened={apiKeyModalOpen}
-        onClose={() => setApiKeyModalOpen(false)}
+      <AppModals
+        editingProject={editingProject}
+        onCloseEditProject={handleCloseEditProject}
+        onRenameProject={handleRenameProject}
+        onDeleteProject={handleDeleteProject}
+        editingStory={editingStory}
+        onCloseEditStory={handleCloseEditStory}
+        onRenameStory={handleRenameStory}
+        onDeleteStory={handleDeleteStory}
+        apiKeyModalOpen={apiKeyModalOpen}
+        onCloseApiKeyModal={() => setApiKeyModalOpen(false)}
       />
     </>
   );

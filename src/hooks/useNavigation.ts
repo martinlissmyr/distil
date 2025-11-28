@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Types
 export type StorySection = 'prose' | 'outline' | 'brief' | 'characters' | 'locations';
-export type RootSection = 'projects' | 'manifest' | 'assistant';
+export type RootSection = 'projects' | 'manifest';
 export type AppSection = 'root' | 'project' | 'story';
 
 type NavState = {
@@ -47,7 +47,7 @@ function saveNavState(state: NavState) {
  * Custom hook to manage application navigation state and localStorage persistence
  *
  * Handles navigation between:
- * - Root sections (projects, manifest, assistant)
+ * - Root sections (projects, manifest)
  * - Project view (list of stories)
  * - Story view (prose, outline, brief, etc.)
  */
@@ -94,13 +94,6 @@ export function useNavigation() {
     setSelectedStoryId(null);
   }, []);
 
-  const goToAssistant = useCallback(() => {
-    setAppSection('root');
-    setRootSection('assistant');
-    setSelectedProjectId(null);
-    setSelectedStoryId(null);
-  }, []);
-
   const goToProject = useCallback((projectId: string) => {
     setAppSection('project');
     setRootSection('projects');
@@ -143,7 +136,6 @@ export function useNavigation() {
     // Actions
     goToProjects,
     goToManifest,
-    goToAssistant,
     goToProject,
     goToStory,
     setStorySection,
