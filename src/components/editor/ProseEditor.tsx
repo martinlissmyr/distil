@@ -7,7 +7,18 @@ import { defaultEmptyDoc } from './defaultEmptyDoc';
 
 import { proseExtensions } from './extensions/proseExtensions';
 
+import type { EditorKind } from '../../types/chat';
+
 import { Heading2, Heading3 } from 'lucide-react';
+
+export type ChatConfig = {
+  kind: EditorKind;
+  storyId?: string;
+  storyTitle?: string;
+  projectId?: string;
+  projectName?: string;
+  onNavigate?: (target: string) => void;
+};
 
 export const ProseEditor = ({
   doc,

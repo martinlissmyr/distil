@@ -28,6 +28,9 @@ type EditorChatAsideProps = {
   hasSelection?: boolean;
   onSuggestionAction?: (action: SuggestionAction) => void;
   isTextLoaded?: boolean;
+  projectId?: string;
+  storyId?: string;
+  onNavigate?: (target: string) => void;
 };
 
 export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
@@ -38,6 +41,9 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   hasSelection = false,
   onSuggestionAction,
   isTextLoaded = false,
+  projectId,
+  storyId,
+  onNavigate,
 }) => {
   const [input, setInput] = useState('');
 
@@ -46,6 +52,8 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
     kind,
     fullTextMarkdown,
     isTextLoaded,
+    projectId,
+    storyId,
   });
 
   // Scope management (selection vs full text)
@@ -70,6 +78,13 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   const handleSuggestionClick = (action: SuggestionAction) => {
     if (action.kind === 'prompt' && action.prompt) {
       void handleSend(action.prompt);
+      return;
+    }
+
+    if (action.kind === 'navigate' && action.command?.type === 'navigate') {
+      if (onNavigate) {
+        onNavigate(action.command.target);
+      }
       return;
     }
 

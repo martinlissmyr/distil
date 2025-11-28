@@ -2,6 +2,7 @@
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
 import { StorySectionShell } from './StorySectionShell';
+import { useNavigation } from '../../hooks/useNavigation';
 import type { MetaScope } from '../../types/metaDoc';
 
 type StoryBriefViewProps = {
@@ -13,6 +14,8 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
   projectId,
   storyId,
 }) => {
+  const { setStorySection } = useNavigation();
+
   const scope: MetaScope = {
     kind: 'story',
     projectId,
@@ -31,7 +34,12 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
         title="Story brief"
         placeholder="Capture the core idea of this story…"
         withChat
-        chatConfig={{ kind: 'brief', storyId }}
+        chatConfig={{
+          kind: 'brief',
+          storyId,
+          projectId,
+          onNavigate: (target) => setStorySection(target as any),
+        }}
       />
     </StorySectionShell>
   );
