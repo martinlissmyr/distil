@@ -22,5 +22,16 @@ SNIPPET (current selection):
 ---
 {{selectionMarkdown}}
 ---
-When answering, focus FULLY on the snippet, but keep the full text and manifest in mind.
+When answering:
+{{#if hasSelection}}
+- focus FULLY on the snippet
+{{/if}}
+{{#if hasSelection && fullTextMarkdown}}
+- also keep the full text in mind
+{{/if}}
+{{#if !hasSelection && fullTextMarkdown}}
+- focus on the full text
+{{/if}}
+{{#if manifestMarkdown}}
+- and always keep the principles and guidelines of the manifest in mind
 {{/if}}
