@@ -1,8 +1,9 @@
 // src/chat/buildPrompt.ts
 import { useAppStore, metaId } from '../state/useAppStore';
+import type { EditorKind, QuestionScope } from '../types/chat';
 
-export type EditorKind = 'prose' | 'manifest' | 'outline' | 'brief';
-export type QuestionScope = 'selection' | 'text';
+// Re-export types for backwards compatibility
+export type { EditorKind, QuestionScope };
 
 export type BuiltPrompt = {
   system: string;
