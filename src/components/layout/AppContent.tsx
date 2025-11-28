@@ -3,6 +3,7 @@ import React from 'react';
 import { Box } from '@mantine/core';
 import { ProjectsView } from '../projects/ProjectsView';
 import { ManifestView } from '../manifest/ManifestView';
+import { PlaygroundView } from '../playground/PlaygroundView';
 import { StoriesView } from '../stories/StoriesView';
 import { StoryTextView } from '../story/StoryTextView';
 import { StoryOutlineView } from '../story/StoryOutlineView';
@@ -79,6 +80,10 @@ export const AppContent: React.FC<AppContentProps> = ({
 
   if (appSection === 'root' && rootSection === 'manifest') {
     return <ManifestView />;
+  }
+
+  if (appSection === 'root' && rootSection === 'playground') {
+    return <PlaygroundView />;
   }
 
   // Project view - stories list

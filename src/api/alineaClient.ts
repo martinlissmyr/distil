@@ -99,4 +99,9 @@ export const alineaClient = {
   saveRootMetaDoc(key: string, doc: JSONContent) {
     return window.alinea.saveRootMetaDoc(key, doc);
   },
+
+  // -------- Dev Mode --------
+  isDevMode() {
+    return window.devMode.isDevMode();
+  },
 };

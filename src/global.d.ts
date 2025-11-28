@@ -82,5 +82,9 @@ declare global {
       get: () => Promise<IpcResponse<'dark' | 'light'>>;
       onChange: (callback: (theme: 'dark' | 'light') => void) => void;
     };
+
+    devMode: {
+      isDevMode: () => Promise<IpcResponse<boolean>>;
+    };
   }
 }
