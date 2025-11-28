@@ -1,6 +1,5 @@
 // preload.ts
 import { ipcRenderer, contextBridge } from 'electron'
-import type { ManifestData } from '../src/api/alineaClient' // adjust path if needed
 
 contextBridge.exposeInMainWorld('theme', {
   get: () => ipcRenderer.invoke('theme:get'),
@@ -52,11 +51,6 @@ contextBridge.exposeInMainWorld('alinea', {
     ipcRenderer.invoke('rootMeta:load', key),
   saveRootMetaDoc: (key: string, doc: any) =>
     ipcRenderer.invoke('rootMeta:save', key, doc),
-
-  // -------- manifest (legacy direct API, still okay to keep) ----------
-  loadManifest: () => ipcRenderer.invoke('alinea:loadManifest'),
-  saveManifest: (payload: ManifestData) =>
-    ipcRenderer.invoke('alinea:saveManifest', payload),
 })
 
 contextBridge.exposeInMainWorld('chat', {

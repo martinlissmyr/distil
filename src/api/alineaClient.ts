@@ -99,12 +99,4 @@ export const alineaClient = {
   saveRootMetaDoc(key: string, doc: JSONContent) {
     return window.alinea.saveRootMetaDoc(key, doc);
   },
-
-  // -------- Manifest (optional legacy) --------
-  loadManifest() {
-    return window.alinea.loadManifest();
-  },
-  saveManifest(payload: ManifestData) {
-    return window.alinea.saveManifest(payload);
-  },
 };

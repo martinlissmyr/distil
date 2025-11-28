@@ -71,20 +71,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
         let json: any | null = null;
 
         if (scope.kind === 'root') {
-          // Currently only "manifest" is supported as a root metaDoc
-          if (key === 'manifest') {
-            const response = await alineaClient.loadManifest();
-            if (response.ok) {
-              json = response.data?.doc ?? null;
-            } else {
-              throw new Error(response.error);
-            }
+          const response = await alineaClient.loadRootMetaDoc(key);
+          if (response.ok) {
+            json = response.data;
           } else {
-            console.warn(
-              '[useAppStore] Root metaDoc key not supported yet:',
-              key
-            );
-            json = null;
+            throw new Error(response.error);
           }
         } else if (scope.kind === 'project') {
           // Project-level metaDocs not implemented yet — no-op for now
@@ -168,17 +159,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!docState?.json) return;
 
     if (scope.kind === 'root') {
-      if (key === 'manifest') {
-        const response = await alineaClient.saveManifest({ doc: docState.json });
-        if (!response.ok) {
-          console.error('[useAppStore] saveManifest failed:', response.error);
-          throw new Error(response.error);
-        }
-      } else {
-        console.warn(
-          '[useAppStore] saveMetaDoc: root key not supported yet:',
-          key
-        );
+      const response = await alineaClient.saveRootMetaDoc(key, docState.json);
+      if (!response.ok) {
+        console.error('[useAppStore] saveRootMetaDoc failed:', response.error);
+        throw new Error(response.error);
       }
     } else if (scope.kind === 'project') {
       // placeholder for future project-level metaDocs
