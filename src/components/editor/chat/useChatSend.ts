@@ -18,7 +18,7 @@ interface UseChatSendOptions {
 
 interface UseChatSendResult {
   isSending: boolean;
-  handleSend: (promptOverride?: string) => Promise<void>;
+  handleSend: (promptOverride?: string, displayMessage?: string) => Promise<void>;
 }
 
 /**
@@ -38,16 +38,16 @@ export function useChatSend({
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = useCallback(
-    async (promptOverride?: string) => {
+    async (promptOverride?: string, displayMessage?: string) => {
       const rawInput = promptOverride ?? '';
       const rawUserPrompt = rawInput.trim();
       if (!rawUserPrompt || isSending) return;
 
-      // Add user message
+      // Add user message (use displayMessage for UI, rawUserPrompt for API)
       const userMessage: ChatMessage = {
         id: `m-${Date.now()}-user`,
         role: 'user',
-        content: rawUserPrompt,
+        content: displayMessage?.trim() || rawUserPrompt,
       };
 
       addMessage(userMessage);

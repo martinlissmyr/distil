@@ -9,6 +9,7 @@ import { useAppStore } from '../../state/useAppStore';
 import { jsonToMarkdown } from '../../state/markdownUtils';
 import { PlaygroundOutput } from './PlaygroundOutput';
 import { ContextDeterminatorTest } from './ContextDeterminatorTest';
+import { InitialHintsTest } from './InitialHintsTest';
 
 type ContextType = 'story' | 'manifest';
 
@@ -37,7 +38,7 @@ type PlaygroundState = {
   loadedSelection: string;
 };
 
-type PlaygroundMode = 'prompt-builder' | 'context-determinator';
+type PlaygroundMode = 'prompt-builder' | 'context-determinator' | 'initial-hints-test';
 
 export const PlaygroundView: React.FC = () => {
   const [mode, setMode] = useState<PlaygroundMode>('prompt-builder');
@@ -322,11 +323,14 @@ export const PlaygroundView: React.FC = () => {
           data={[
             { label: 'Prompt Builder', value: 'prompt-builder' },
             { label: 'Context Determinator', value: 'context-determinator' },
+            { label: 'Initial Hints', value: 'initial-hints-test' },
           ]}
         />
       </Stack>
 
-      {mode === 'context-determinator' ? (
+      {mode === 'initial-hints-test' ? (
+        <InitialHintsTest />
+      ) : mode === 'context-determinator' ? (
         <ContextDeterminatorTest />
       ) : (
       <Group gap="md" style={{ flex: 1, minHeight: 0 }} grow align="flex-start">

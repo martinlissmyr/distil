@@ -31,11 +31,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             width: '75%',
           }}
         >
-          <Text size="xs" c="dimmed" mb={2}>
-            You
-          </Text>
           <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-            {message.content}
+            <b>You:</b> {message.content}
           </Text>
         </Box>
       ) : (
@@ -47,7 +44,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           }}
         >
           <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-            {message.content}
+            <b>Assistant:</b> {message.content}
           </Text>
 
           {message.suggestions && message.suggestions.length > 0 && (
