@@ -195,11 +195,12 @@ export const PlaygroundView: React.FC = () => {
         'outline'
       );
 
-      setDocStatus({
+      setDocStatus((prevStatus) => ({
+        ...prevStatus,
         manifestHasContent: !!(manifestDoc?.markdown && manifestDoc.markdown.trim().length > 0),
         briefHasContent: !!(briefDoc?.markdown && briefDoc.markdown.trim().length > 0),
         outlineHasContent: !!(outlineDoc?.markdown && outlineDoc.markdown.trim().length > 0),
-      });
+      }));
     };
 
     checkDocStatus();
