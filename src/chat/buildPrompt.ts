@@ -1,6 +1,7 @@
 // src/chat/buildPrompt.ts
 import { useAppStore, metaId } from '../state/useAppStore';
 import type { EditorKind, QuestionScope } from '../types/chat';
+import type { MetaDocKey } from '../types/metaDoc';
 import {
   systemPrompts,
   defaultSystemPrompt,
@@ -8,6 +9,7 @@ import {
   buildProseUserPrompt,
 } from './prompts/buildFromTemplates';
 import { determineContextNeeds } from './contextSelector';
+import { getContextRules } from './contextRules';
 
 // Re-export types for backwards compatibility
 export type { EditorKind, QuestionScope };
@@ -49,58 +51,76 @@ export async function buildPrompt({
 }: BuildPromptArgs): Promise<BuiltPrompt> {
   const state = useAppStore.getState();
 
+  // Get context rules for this editor kind
+  const rules = getContextRules(kind);
+
   // Collect available context documents
   const includedContexts: string[] = [];
   const contextDocs: Array<{ label: string; content: string }> = [];
 
-  // Look up manifest (always check, included for all kinds)
-  const manifestId = metaId({ kind: 'root' } as const, 'manifest');
-  const manifestState = state.metaDocs[manifestId];
-  const manifestMarkdown = manifestState?.markdown ?? null;
+  // Helper to get document labels
+  const getDocLabel = (docKey: MetaDocKey): string => {
+    switch (docKey) {
+      case 'manifest': return 'AUTHOR MANIFEST (style/tone)';
+      case 'brief': return 'STORY BRIEF (high-level concept)';
+      case 'outline': return 'STORY OUTLINE (structure/plot)';
+      default: return docKey.toUpperCase();
+    }
+  };
 
-  if (manifestMarkdown) {
-    includedContexts.push('manifest');
-    contextDocs.push({
-      label: 'AUTHOR MANIFEST (style/tone)',
-      content: manifestMarkdown
-    });
+  // Helper to load a metaDoc
+  const loadMetaDoc = (docKey: MetaDocKey): string | null => {
+    if (docKey === 'manifest') {
+      const manifestId = metaId({ kind: 'root' } as const, 'manifest');
+      return state.metaDocs[manifestId]?.markdown ?? null;
+    } else if (projectId && storyId) {
+      const docId = metaId({ kind: 'story', projectId, storyId }, docKey);
+      return state.metaDocs[docId]?.markdown ?? null;
+    }
+    return null;
+  };
+
+  // 1. Always include documents (no intelligence needed)
+  for (const docKey of rules.alwaysInclude) {
+    const markdown = loadMetaDoc(docKey);
+    if (markdown) {
+      includedContexts.push(docKey);
+      contextDocs.push({
+        label: getDocLabel(docKey),
+        content: markdown
+      });
+    }
   }
 
-  // Determine if we need brief/outline context (only for prose)
-  if (projectId && storyId && kind === 'prose') {
+  // 2. Intelligently select documents (use LLM/heuristic)
+  if (rules.intelligentlySelect.length > 0 && projectId && storyId) {
     const contextNeeds = await determineContextNeeds(rawUserPrompt, {
       useIntelligent: useIntelligentContext,
       apiKey,
       language,
     });
 
-    // Load brief if needed
-    if (contextNeeds.needsBrief) {
-      const briefId = metaId({ kind: 'story', projectId, storyId }, 'brief');
-      const briefState = state.metaDocs[briefId];
-      const briefMarkdown = briefState?.markdown ?? null;
+    // Check each document in intelligentlySelect list
+    for (const docKey of rules.intelligentlySelect) {
+      let shouldInclude = false;
 
-      if (briefMarkdown) {
-        includedContexts.push('brief');
-        contextDocs.push({
-          label: 'STORY BRIEF (high-level concept)',
-          content: briefMarkdown
-        });
+      // Map docKey to contextNeeds properties
+      if (docKey === 'brief' && contextNeeds.needsBrief) {
+        shouldInclude = true;
+      } else if (docKey === 'outline' && contextNeeds.needsOutline) {
+        shouldInclude = true;
       }
-    }
+      // Future: Add checks for 'characters', 'places', etc.
 
-    // Load outline if needed
-    if (contextNeeds.needsOutline) {
-      const outlineId = metaId({ kind: 'story', projectId, storyId }, 'outline');
-      const outlineState = state.metaDocs[outlineId];
-      const outlineMarkdown = outlineState?.markdown ?? null;
-
-      if (outlineMarkdown) {
-        includedContexts.push('outline');
-        contextDocs.push({
-          label: 'STORY OUTLINE (structure/plot)',
-          content: outlineMarkdown
-        });
+      if (shouldInclude) {
+        const markdown = loadMetaDoc(docKey);
+        if (markdown) {
+          includedContexts.push(docKey);
+          contextDocs.push({
+            label: getDocLabel(docKey),
+            content: markdown
+          });
+        }
       }
     }
   }
@@ -114,14 +134,16 @@ export async function buildPrompt({
   const contextSummaryItems: string[] = [];
 
   // Add context documents with user-friendly descriptions
-  if (manifestMarkdown) {
-    contextSummaryItems.push('- An author manifest (style/tone)');
-  }
-  if (includedContexts.includes('brief')) {
-    contextSummaryItems.push('- A story brief (high-level concept)');
-  }
-  if (includedContexts.includes('outline')) {
-    contextSummaryItems.push('- A story outline (structure/plot)');
+  const contextDescriptions: Record<MetaDocKey, string> = {
+    manifest: '- An author manifest (style/tone)',
+    brief: '- A story brief (high-level concept)',
+    outline: '- A story outline (structure/plot)',
+  };
+
+  for (const docKey of includedContexts) {
+    if (docKey in contextDescriptions) {
+      contextSummaryItems.push(contextDescriptions[docKey as MetaDocKey]);
+    }
   }
 
   // Add full text if present
