@@ -1,5 +1,5 @@
 // src/components/editor/EditorChatAside.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import {
   Box,
   Stack,
@@ -7,7 +7,6 @@ import {
   Textarea,
   Button,
   Group,
-  Loader,
 } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
@@ -19,6 +18,7 @@ import { useChatScroll } from './chat/useChatScroll';
 import { useScopeManager } from './chat/useScopeManager';
 import { MessageBubble } from './chat/MessageBubble';
 import { SelectionPill } from './chat/SelectionPill';
+import { TypingIndicator } from './chat/TypingIndicator';
 
 type EditorChatAsideProps = {
   kind: EditorKind;
@@ -46,6 +46,10 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   onNavigate,
 }) => {
   const [input, setInput] = useState('');
+  const [scrollbarOffset, setScrollbarOffset] = useState(0);
+  const [isScrolledTop, setIsScrolledTop] = useState(false);
+  const [isScrolledBottom, setIsScrolledBottom] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Message management
   const { messages, addMessage } = useChatMessages({
@@ -76,6 +80,32 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
   // Auto-scroll behavior
   const viewportRef = useChatScroll(messages.length);
+
+  // Measure scrollbar width on mount + resize
+  useLayoutEffect(() => {
+    const updateScrollbarOffset = () => {
+      if (!scrollContainerRef.current) return;
+      const node = scrollContainerRef.current;
+      const scrollbarWidth = node.offsetWidth - node.clientWidth;
+      setScrollbarOffset(scrollbarWidth);
+    };
+
+    updateScrollbarOffset();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollbarOffset();
+    });
+
+    if (scrollContainerRef.current) {
+      resizeObserver.observe(scrollContainerRef.current);
+    }
+    window.addEventListener('resize', updateScrollbarOffset);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateScrollbarOffset);
+    };
+  }, []);
 
   const handleSuggestionClick = (action: SuggestionAction) => {
     if (action.kind === 'prompt' && action.prompt) {
@@ -117,42 +147,93 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
   return (
     <Box
+      ref={scrollContainerRef}
       style={{
         height: '100%',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        padding: 12,
         boxSizing: 'border-box',
         backgroundColor: 'var(--bg-editor-aside)',
         borderRadius: '12px',
+        position: 'relative',
       }}
     >
-      {/* Messages */}
-      <ScrollArea
-        style={{ flex: 1, minHeight: 0 }}
-        viewportRef={viewportRef}
-        type="auto"
-      >
-        <Stack gap="xs">
-          {messages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              onSuggestionClick={handleSuggestionClick}
-            />
-          ))}
-          <Box p="xs">{isSending && <Loader size="xs" />}</Box>
-        </Stack>
-      </ScrollArea>
+      {/* Messages container with overlays */}
+      <Box style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        {/* Top overlay */}
+        <Box
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: scrollbarOffset,
+            height: 60,
+            pointerEvents: 'none',
+            zIndex: 10,
+            opacity: isScrolledTop ? 1 : 0,
+            transition: 'opacity 120ms ease-out',
+            background:
+              'linear-gradient(to bottom, var(--bg-editor-aside), transparent)',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+          }}
+        />
+
+        {/* Messages */}
+        <ScrollArea
+          style={{ height: '100%' }}
+          viewportRef={viewportRef}
+          type="auto"
+          onScrollPositionChange={(position) => {
+            const viewport = viewportRef.current;
+            if (!viewport) return;
+
+            const scrollTop = position.y;
+            const scrollHeight = viewport.scrollHeight;
+            const clientHeight = viewport.clientHeight;
+
+            setIsScrolledTop(scrollTop > 0);
+            setIsScrolledBottom(scrollTop + clientHeight < scrollHeight - 5);
+          }}
+        >
+          <Stack gap="xl" p="md">
+            {messages.map((m) => (
+              <MessageBubble
+                key={m.id}
+                message={m}
+                onSuggestionClick={handleSuggestionClick}
+              />
+            ))}
+            {isSending && <TypingIndicator />}
+          </Stack>
+        </ScrollArea>
+
+        {/* Bottom overlay */}
+        <Box
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: scrollbarOffset,
+            height: 60,
+            pointerEvents: 'none',
+            zIndex: 10,
+            opacity: isScrolledBottom ? 1 : 0,
+            transition: 'opacity 120ms ease-out',
+            background:
+              'linear-gradient(to top, var(--bg-editor-aside), transparent)',
+          }}
+        />
+      </Box>
 
       {/* Context pill */}
-      {showSelectionPill && <SelectionPill onDismiss={dismissSelectionPill} />}
+      {showSelectionPill && <Box ml="xs"><SelectionPill onDismiss={dismissSelectionPill} /></Box>}
 
       {/* Input */}
       <Box
         p="xs"
-        mt="xs"
+        m="xs"
         style={{
           backgroundColor: 'var(--aside-input)',
           borderRadius: '12px',

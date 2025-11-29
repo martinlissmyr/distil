@@ -143,7 +143,7 @@ export function getInitialAssistantHint(params: {
         message.actions.push(ACTIONS.writeManifest);
       } else {
         if (!hasBrief) {
-          message.introMessage += " Before you start writing, consider creating a brief (core idea, premise, themes)";
+          message.introMessage += " Before you start writing, consider creating a brief (core idea, premise, themes).";
           message.actions.push(ACTIONS.writeBrief);
         }
         if (!hasOutline) {
@@ -155,6 +155,22 @@ export function getInitialAssistantHint(params: {
       }
     } else {
       message.introMessage = `You're well underway with your story. I'm here to help with revisions, suggestions, or expanding your narrative.`;
+
+      if (!hasManifest) {
+        message.introMessage += " However, it would be much easier to help if you had a personal style guide that defines your voice, values, and writing style.";
+        message.actions.push(ACTIONS.writeManifest);
+      } else {
+        if (!hasBrief) {
+          message.introMessage += " However, it would be easier for me to help you if you'd consider creating a brief (core idea, premise, themes).";
+          message.actions.push(ACTIONS.writeBrief);
+        }
+        if (!hasOutline) {
+          if (hasBrief) {
+            message.introMessage += " Although, before moving on, consider creating an outline (plot structure, character arcs) to guide your writing."
+            message.actions.push(ACTIONS.writeOutline);
+          }
+        }
+      }
     }
   }
 
