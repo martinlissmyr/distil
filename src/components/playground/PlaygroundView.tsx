@@ -314,19 +314,17 @@ export const PlaygroundView: React.FC = () => {
   return (
     <Box p="md" h="100vh" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* Top Navigation */}
-      <Paper p="md" mb="md" withBorder>
-        <Stack gap="sm">
-          <Title order={3}>Playground</Title>
-          <SegmentedControl
-            value={mode}
-            onChange={(value) => setMode(value as PlaygroundMode)}
-            data={[
-              { label: 'Prompt Builder', value: 'prompt-builder' },
-              { label: 'Context Determinator', value: 'context-determinator' },
-            ]}
-          />
-        </Stack>
-      </Paper>
+      <Stack gap="sm" mb="sm">
+        <Title order={3}>Playground</Title>
+        <SegmentedControl
+          value={mode}
+          onChange={(value) => setMode(value as PlaygroundMode)}
+          data={[
+            { label: 'Prompt Builder', value: 'prompt-builder' },
+            { label: 'Context Determinator', value: 'context-determinator' },
+          ]}
+        />
+      </Stack>
 
       {mode === 'context-determinator' ? (
         <ContextDeterminatorTest />
