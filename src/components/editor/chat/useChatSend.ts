@@ -94,6 +94,71 @@ export function useChatSend({
           ],
         };
 
+        // TEMPORARY: Mock response for testing scroll behavior
+        const USE_MOCK_RESPONSE = false;
+
+        if (USE_MOCK_RESPONSE) {
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          const mockResponse = {
+            ok: true as const,
+            data: {
+              output_text: `Here's a comprehensive response to test the scrolling behavior with a long message that includes various markdown elements.
+
+## Introduction
+
+This is a lengthy response designed to demonstrate how the chat interface handles long content with the typing animation effect. The response should scroll smoothly as it appears.
+
+### Key Points to Consider
+
+1. **First important point**: The scrolling behavior should keep the user's message visible at the top while this response appears below.
+
+2. **Second point**: As the typing animation progresses, the content should grow naturally and the scroll position should remain stable.
+
+3. **Third consideration**: The markdown formatting should render correctly throughout the typing animation.
+
+## Detailed Analysis
+
+Let me break down the analysis into several sections:
+
+### Section One
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+
+Here's some **bold text** and *italic text* to test inline formatting.
+
+### Section Three with Lists
+
+Some important items to note:
+
+- First item in the list
+- Second item with more details
+- Third item that wraps to multiple lines to see how the layout handles longer content
+- Fourth item
+
+And a numbered list:
+
+1. Step one of the process
+2. Step two with additional context
+3. Step three as the final step
+
+## Conclusion
+
+This concludes the test response. The scrolling should have maintained a good reading position throughout the typing animation, and all markdown formatting should be rendered correctly.`
+            }
+          };
+
+          const assistantMessage: ChatMessage = {
+            id: `m-${Date.now()}-assistant`,
+            role: 'assistant',
+            content: mockResponse.data.output_text,
+          };
+
+          addMessage(assistantMessage);
+          return;
+        }
+
         // Call chat API
         const response = await window.chat.send(payload);
 
