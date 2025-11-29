@@ -19,6 +19,7 @@ import { useScopeManager } from './chat/useScopeManager';
 import { MessageBubble } from './chat/MessageBubble';
 import { SelectionPill } from './chat/SelectionPill';
 import { TypingIndicator } from './chat/TypingIndicator';
+import styles from './chat/ChatScrollbar.module.scss';
 
 type EditorChatAsideProps = {
   kind: EditorKind;
@@ -79,7 +80,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   });
 
   // Auto-scroll behavior
-  const viewportRef = useChatScroll(messages.length);
+  const { viewportRef, contentRef, spacerRef, spacerHeight } = useChatScroll(messages);
 
   // Measure scrollbar width on mount + resize
   useLayoutEffect(() => {
@@ -182,9 +183,11 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
         {/* Messages */}
         <ScrollArea
+          className={styles.chatScrollArea}
           style={{ height: '100%' }}
           viewportRef={viewportRef}
           type="auto"
+          scrollbarSize={8}
           onScrollPositionChange={(position) => {
             const viewport = viewportRef.current;
             if (!viewport) return;
@@ -197,15 +200,26 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
             setIsScrolledBottom(scrollTop + clientHeight < scrollHeight - 5);
           }}
         >
-          <Stack gap="xl" p="md">
+          <Stack gap="xl" p="md" ref={contentRef}>
             {messages.map((m) => (
-              <MessageBubble
-                key={m.id}
-                message={m}
-                onSuggestionClick={handleSuggestionClick}
-              />
+              <Box key={m.id} data-message-bubble>
+                <MessageBubble
+                  message={m}
+                  onSuggestionClick={handleSuggestionClick}
+                />
+              </Box>
             ))}
             {isSending && <TypingIndicator />}
+
+            {/* Spacer to allow scrolling user message to desired offset */}
+            {spacerHeight > 0 && (
+              <Box
+                ref={spacerRef}
+                style={{
+                  height: spacerHeight,
+                }}
+              />
+            )}
           </Stack>
         </ScrollArea>
 
