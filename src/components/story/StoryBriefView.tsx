@@ -14,7 +14,15 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
   projectId,
   storyId,
 }) => {
-  const { setStorySection } = useNavigation();
+  const { setStorySection, goToManifest } = useNavigation();
+
+  const handleNavigate = (target: string) => {
+    if (target === 'manifest') {
+      goToManifest();
+    } else {
+      setStorySection(target as any);
+    }
+  };
 
   const scope: MetaScope = {
     kind: 'story',
@@ -38,7 +46,7 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
           kind: 'brief',
           storyId,
           projectId,
-          onNavigate: (target) => setStorySection(target as any),
+          onNavigate: handleNavigate,
         }}
       />
     </StorySectionShell>

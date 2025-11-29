@@ -19,7 +19,15 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
-  const { setStorySection } = useNavigation();
+  const { setStorySection, goToManifest } = useNavigation();
+
+  const handleNavigate = (target: string) => {
+    if (target === 'manifest') {
+      goToManifest();
+    } else {
+      setStorySection(target as any);
+    }
+  };
 
   return (
     <StorySectionShell
@@ -38,7 +46,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
           storyId,
           storyTitle: title,
           projectId,
-          onNavigate: (target) => setStorySection(target as any),
+          onNavigate: handleNavigate,
         }}
       />
     </StorySectionShell>

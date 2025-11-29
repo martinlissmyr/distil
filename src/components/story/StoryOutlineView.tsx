@@ -13,7 +13,15 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
   projectId,
   storyId,
 }) => {
-  const { setStorySection } = useNavigation();
+  const { setStorySection, goToManifest } = useNavigation();
+
+  const handleNavigate = (target: string) => {
+    if (target === 'manifest') {
+      goToManifest();
+    } else {
+      setStorySection(target as any);
+    }
+  };
 
   return (
     <StorySectionShell
@@ -32,7 +40,7 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
           kind: 'outline',
           storyId,
           projectId,
-          onNavigate: (target) => setStorySection(target as any),
+          onNavigate: handleNavigate,
         }}
       />
     </StorySectionShell>

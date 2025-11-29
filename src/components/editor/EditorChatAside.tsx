@@ -79,13 +79,19 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
   const handleSuggestionClick = (action: SuggestionAction) => {
     if (action.kind === 'prompt' && action.prompt) {
-      void handleSend(action.prompt);
+      void handleSend(action.prompt, action.displayMessage);
       return;
     }
 
-    if (action.kind === 'navigate' && action.command?.type === 'navigate') {
-      if (onNavigate) {
-        onNavigate(action.command.target);
+    if (action.kind === 'navigate' && action.command) {
+      if (action.command.type === 'navigateToStorySection') {
+        if (onNavigate) {
+          onNavigate(action.command.section);
+        }
+      } else if (action.command.type === 'navigateToManifest') {
+        if (onNavigate) {
+          onNavigate('manifest');
+        }
       }
       return;
     }
