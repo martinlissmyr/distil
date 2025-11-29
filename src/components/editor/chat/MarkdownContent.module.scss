@@ -1,0 +1,77 @@
+// src/components/editor/chat/MarkdownContent.module.scss
+
+.markdown {
+
+  p {
+    margin-top: 0;
+    font-size: 14px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    margin-top: 24px;
+    line-height: 1.4;
+
+    &:first-child {
+      margin-top: 8px;
+    }
+  }
+
+  ul,
+  ol {
+    margin-top: 0;
+    margin-left: 0px;
+    padding-left: 1em;
+    margin-bottom: 12px;
+  }
+
+  ol {
+    padding-left: 2em;
+  }
+
+  li {
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: var(--mantine-color-gray-1);
+    word-break: break-word;
+  }
+
+  pre {
+    margin-bottom: 12px;
+
+    code {
+      display: block;
+      padding: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--mantine-color-gray-5);
+    padding-left: 16px;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+}
