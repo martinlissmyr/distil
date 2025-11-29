@@ -17,7 +17,7 @@ import {
   Route,
   Users,
   MapPin,
-  Bot,
+  Settings2,
   Feather,
   FlaskConical,
 } from 'lucide-react';
@@ -497,20 +497,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <Box style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{content}</Box>
 
       {/* Fixed settings button at bottom */}
-      <Box
-        p="xs"
-        pt="sm"
-        style={{
-          borderTop: '1px solid var(--border-subtle)',
-        }}
-      >
+      <Box p="xs" pt="sm">
         <Button
-          fullWidth
           variant="subtle"
-          leftSection={<Bot size={16} />}
           onClick={onOpenSettings}
+          p="xs"
         >
-          ChatGPT settings
+          <Settings2 size={20} />
         </Button>
       </Box>
     </Box>
