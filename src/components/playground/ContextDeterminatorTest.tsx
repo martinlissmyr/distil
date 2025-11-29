@@ -1,7 +1,7 @@
 // src/components/playground/ContextDeterminatorTest.tsx
 import React, { useState } from 'react';
-import { Stack, Textarea, Button, Paper, Text, Group, Badge, Code, Title, Divider } from '@mantine/core';
-import { determineContextNeeds } from '../../chat/contextSelector';
+import { Stack, Textarea, Button, Paper, Text, Group, Badge, Code, Title, Divider, Box } from '@mantine/core';
+import { determineContextNeeds, LLM_CONTEXT_CLASSIFICATION_PROMPT } from '../../chat/contextSelector';
 
 type HeuristicResult = {
   needsBrief: boolean;
@@ -15,7 +15,7 @@ type LLMResult = {
 };
 
 export const ContextDeterminatorTest: React.FC = () => {
-  const [userPrompt, setUserPrompt] = useState('');
+  const [userPrompt, setUserPrompt] = useState('Hur är grammatiken?');
   const [isLoading, setIsLoading] = useState(false);
   const [heuristicResult, setHeuristicResult] = useState<HeuristicResult | null>(null);
   const [finalResult, setFinalResult] = useState<{ needsBrief: boolean; needsOutline: boolean } | null>(null);
@@ -100,41 +100,8 @@ export const ContextDeterminatorTest: React.FC = () => {
       if (confidence < 0.7 && apiKey) {
         setUsedLLM(true);
         // The LLM was called, show the prompt and response
-        const systemPrompt = `# Role and Objective
-- Assess whether a user writing question requires specific story context types (brief or outline) to be answered thoroughly. This assessment supports prompt construction for API calls.
-
-# Instructions
-- Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
-- Determine if the writing question requires story context documents for an effective answer.
-- Evaluate for the following context types:
-  - Brief: High-level premise, themes, tone, character concepts
-  - Outline: Plot structure, story progression, scene sequences
-- Only return true for a context type if it is NECESSARY to answer well.
-- After producing the output, validate that only the specified JSON object is included, with no additional text or explanations. If not, self-correct.
-
-# Example User Prompt
-- Example: "Hur står den här texten sig i förhållande till min idé?"
-
-# Output Format
-- Respond ONLY with a JSON object in the format below (no explanations or extra fields):
-\`\`\`json
-{
-  "needsBrief": boolean,   // true only if story brief context is necessary
-  "needsOutline": boolean  // true only if story outline context is necessary
-}
-\`\`\`
-- Output both fields in the order: needsBrief, needsOutline.
-- If the writing question is ambiguous or missing information for a clear answer, return false for both fields.
-- Do NOT include other fields or explanations in the response.
-
-# Verbosity
-- Output should be strictly limited to the requested JSON object.
-
-# Stop Conditions
-- Stop when the JSON object meeting the above specifications is produced.`;
-
         setLLMPrompt(`SYSTEM PROMPT:
-${systemPrompt}
+${LLM_CONTEXT_CLASSIFICATION_PROMPT}
 
 USER PROMPT:
 ${userPrompt}`);
@@ -155,113 +122,128 @@ ${userPrompt}`);
   };
 
   return (
-    <Stack gap="md" style={{ height: '100%', overflow: 'auto' }} p="md">
-      <Title order={3}>Context Determinator Test</Title>
-      <Text size="sm" c="dimmed">
-        Test how the system determines which context documents to include based on a user prompt.
-      </Text>
+    <Group gap="md" style={{ flex: 1, minHeight: 0, height: '100%' }} grow align="flex-start">
+      {/* Left Column - Input */}
+      <Stack gap="lg" p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
+        <Textarea
+          label="User Prompt"
+          placeholder="Enter a writing question in Swedish..."
+          value={userPrompt}
+          onChange={(e) => setUserPrompt(e.currentTarget.value)}
+          minRows={3}
+          autosize
+        />
 
-      <Textarea
-        label="User Prompt"
-        placeholder="Enter a writing question in Swedish..."
-        value={userPrompt}
-        onChange={(e) => setUserPrompt(e.currentTarget.value)}
-        minRows={3}
-        autosize
-      />
+        <Button
+          onClick={handleTest}
+          loading={isLoading}
+          disabled={!userPrompt.trim()}
+          fullWidth
+        >
+          Test Context Determination
+        </Button>
+      </Stack>
 
-      <Button onClick={handleTest} loading={isLoading} disabled={!userPrompt.trim()}>
-        Test Context Determination
-      </Button>
+      {/* Right Column - Results */}
+      <Box p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)', overflow: 'auto' }}>
+        <Stack gap="md">
+          {/* Step 1: Quick Heuristic Check */}
+          {heuristicResult && (
+            <Paper p="md" withBorder>
+              <Stack gap="sm">
+                <Title order={5}>Step 1: Quick Heuristic Check</Title>
+                <Group gap="xs">
+                  <Text size="sm">Needs Brief:</Text>
+                  <Badge color={heuristicResult.needsBrief ? 'blue' : 'gray'}>
+                    {heuristicResult.needsBrief ? 'Yes' : 'No'}
+                  </Badge>
+                </Group>
+                <Group gap="xs">
+                  <Text size="sm">Needs Outline:</Text>
+                  <Badge color={heuristicResult.needsOutline ? 'blue' : 'gray'}>
+                    {heuristicResult.needsOutline ? 'Yes' : 'No'}
+                  </Badge>
+                </Group>
+              </Stack>
+            </Paper>
+          )}
 
-      {heuristicResult && (
-        <Paper p="md" withBorder>
-          <Stack gap="sm">
-            <Group justify="space-between">
-              <Title order={5}>Quick Heuristic Check</Title>
-              <Badge color={getConfidenceColor(heuristicResult.confidence)} size="lg">
-                Confidence: {(heuristicResult.confidence * 100).toFixed(0)}%
-              </Badge>
-            </Group>
-
-            <Group gap="xs">
-              <Text size="sm">Needs Brief:</Text>
-              <Badge color={heuristicResult.needsBrief ? 'blue' : 'gray'}>
-                {heuristicResult.needsBrief ? 'Yes' : 'No'}
-              </Badge>
-            </Group>
-
-            <Group gap="xs">
-              <Text size="sm">Needs Outline:</Text>
-              <Badge color={heuristicResult.needsOutline ? 'blue' : 'gray'}>
-                {heuristicResult.needsOutline ? 'Yes' : 'No'}
-              </Badge>
-            </Group>
-
-            {heuristicResult.confidence >= 0.7 ? (
-              <Paper p="sm" withBorder style={{ borderLeft: '3px solid var(--mantine-color-green-6)', backgroundColor: 'var(--mantine-color-green-light)' }}>
-                <Text size="sm" fw={500}>
-                  ✓ Passed threshold (≥ 0.7) - Using heuristic result
+          {/* Step 2: Confidence Check */}
+          {heuristicResult && (
+            <Paper p="md" withBorder>
+              <Stack gap="sm">
+                <Title order={5}>Step 2: Confidence Check</Title>
+                <Group gap="xs">
+                  <Text size="sm">Confidence Level:</Text>
+                  <Badge color={getConfidenceColor(heuristicResult.confidence)} size="lg">
+                    {(heuristicResult.confidence * 100).toFixed(0)}%
+                  </Badge>
+                </Group>
+                <Text size="sm" c="dimmed">
+                  Threshold: 70%
                 </Text>
-              </Paper>
-            ) : (
-              <Paper p="sm" withBorder style={{ borderLeft: '3px solid var(--mantine-color-orange-6)', backgroundColor: 'var(--mantine-color-orange-light)' }}>
-                <Text size="sm" fw={500}>
-                  ⚠ Below threshold (&lt; 0.7) - Falling back to LLM classification
-                </Text>
-              </Paper>
-            )}
-          </Stack>
-        </Paper>
-      )}
+                {heuristicResult.confidence >= 0.7 ? (
+                  <Paper p="sm" withBorder style={{ borderLeft: '3px solid var(--mantine-color-green-6)', backgroundColor: 'var(--mantine-color-green-light)' }}>
+                    <Text size="sm" fw={500}>
+                      ✓ Above threshold - Using heuristic result
+                    </Text>
+                  </Paper>
+                ) : (
+                  <Paper p="sm" withBorder style={{ borderLeft: '3px solid var(--mantine-color-orange-6)', backgroundColor: 'var(--mantine-color-orange-light)' }}>
+                    <Text size="sm" fw={500}>
+                      ⚠ Below threshold - Proceeding to LLM classification
+                    </Text>
+                  </Paper>
+                )}
+              </Stack>
+            </Paper>
+          )}
 
-      {usedLLM && llmPrompt && (
-        <>
-          <Divider />
-          <Paper p="md" withBorder>
-            <Stack gap="sm">
-              <Title order={5}>LLM Classification (GPT-4o-mini)</Title>
+          {/* Step 3: LLM Classification (conditional) */}
+          {usedLLM && llmPrompt && (
+            <Paper p="md" withBorder>
+              <Stack gap="sm">
+                <Title order={5}>Step 3: LLM Classification (GPT-4o-mini)</Title>
 
-              <Text size="sm" fw={500}>Prompt sent to ChatGPT:</Text>
-              <Code block style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
-                {llmPrompt}
-              </Code>
+                <Text size="sm" fw={500}>Prompt sent to ChatGPT:</Text>
+                <Code block style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
+                  {llmPrompt}
+                </Code>
 
-              {llmResponse && (
-                <>
-                  <Text size="sm" fw={500} mt="md">Response:</Text>
-                  <Code block style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
-                    {JSON.stringify(llmResponse, null, 2)}
-                  </Code>
-                </>
-              )}
-            </Stack>
-          </Paper>
-        </>
-      )}
+                {llmResponse && (
+                  <>
+                    <Text size="sm" fw={500} mt="md">Response:</Text>
+                    <Code block style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
+                      {JSON.stringify(llmResponse, null, 2)}
+                    </Code>
+                  </>
+                )}
+              </Stack>
+            </Paper>
+          )}
 
-      {finalResult && (
-        <>
-          <Divider />
-          <Paper p="md" withBorder style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}>
-            <Stack gap="sm">
-              <Title order={5}>Final Result</Title>
-              <Group gap="xs">
-                <Text size="sm">Will include Brief:</Text>
-                <Badge color={finalResult.needsBrief ? 'green' : 'gray'} size="lg">
-                  {finalResult.needsBrief ? 'Yes' : 'No'}
-                </Badge>
-              </Group>
-              <Group gap="xs">
-                <Text size="sm">Will include Outline:</Text>
-                <Badge color={finalResult.needsOutline ? 'green' : 'gray'} size="lg">
-                  {finalResult.needsOutline ? 'Yes' : 'No'}
-                </Badge>
-              </Group>
-            </Stack>
-          </Paper>
-        </>
-      )}
-    </Stack>
+          {/* Final Result */}
+          {finalResult && (
+            <Paper p="md" withBorder style={{ borderLeft: '4px solid var(--mantine-color-blue-6)', backgroundColor: 'var(--mantine-color-blue-light)' }}>
+              <Stack gap="sm">
+                <Title order={5}>Final Result</Title>
+                <Group gap="xs">
+                  <Text size="sm" fw={500}>Will include Brief:</Text>
+                  <Badge color={finalResult.needsBrief ? 'green' : 'gray'} size="lg">
+                    {finalResult.needsBrief ? 'Yes' : 'No'}
+                  </Badge>
+                </Group>
+                <Group gap="xs">
+                  <Text size="sm" fw={500}>Will include Outline:</Text>
+                  <Badge color={finalResult.needsOutline ? 'green' : 'gray'} size="lg">
+                    {finalResult.needsOutline ? 'Yes' : 'No'}
+                  </Badge>
+                </Group>
+              </Stack>
+            </Paper>
+          )}
+        </Stack>
+      </Box>
+    </Group>
   );
 };

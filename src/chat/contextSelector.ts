@@ -83,6 +83,64 @@ function quickHeuristicCheck(userPrompt: string, language: 'sv' | 'en' = 'sv'): 
 }
 
 /**
+ * System prompt used for LLM context classification
+ * Exported for testing and debugging purposes
+ */
+export const LLM_CONTEXT_CLASSIFICATION_PROMPT = `# Role and Objective
+- Assess whether a user’s writing question would be better answered with access to the story’s Brief and/or Outline. Your goal is to guide prompt construction for API calls so the assistant receives the context it needs to respond effectively.
+
+# Instructions
+- Begin with a concise checklist (3-7 conceptual steps) outlining your evaluation process before you proceed; keep items high-level, not implementation-specific.
+- DDetermine whether each context type would meaningfully improve the assistant’s ability to answer the user’s question.
+- Use these criteria:
+  - **Brief**: needed when understanding the story’s premise, themes, tone, or main character concepts would influence or improve the response.
+  - **Outline**: needed when understanding plot structure, narrative order, character arcs, or planned story events would influence or improve the response.
+- Treat requests for scenes, chapters, continuations, rewrites, or expansions as implicitly dependent on story structure, and therefore usually requiring the Outline (and often the Brief).
+- When a question is vague but clearly refers to story content (e.g., “skriv första scenen”, “fortsätt berättelsen”), interpret it as needing both Brief and Outline.
+- Only return false for a context type when the question can be answered just as well without that information.
+- If the question is completely generic and unrelated to a specific story, set both fields to false.
+- After generating your response, validate that only the specified JSON object appears in the output.
+
+# Context Definitions
+
+## Brief
+Includes:
+- Core idea or concept
+- Central premise
+- Themes
+- Tone
+- Main character concepts
+
+Use when these elements shape how the requested writing should be executed.
+
+## Outline
+Includes:
+- Plot structure and sequence of events
+- Character arcs and motivations
+- Relationships and conflicts
+- Turning points, reveals, resolution plans
+- Scene/sequence ordering
+
+Use when the user’s request depends on what has happened, or will happen, in the story.
+
+# Output Format
+Respond only with this JSON object:
+
+\`\`\`json
+{
+  "needsBrief": boolean,   // true only if story brief is necessary
+  "needsOutline": boolean  // true only if story outline is necessary
+}
+\`\`\`
+
+# Verbosity
+- The output must strictly consist of the JSON object as specified
+— No additional content.
+
+# Verification & Stop Condition
+- After generating your output, confirm strict schema adherence. Complete the task upon producing a correctly formatted JSON object.`;
+
+/**
  * Use LLM to intelligently classify context needs
  */
 async function llmClassification(
@@ -91,45 +149,12 @@ async function llmClassification(
 ): Promise<ContextNeeds> {
   const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 
-  const systemPrompt = `# Role and Objective
-- Assess whether a user writing question requires specific story context types (brief or outline) to be answered thoroughly. This assessment supports prompt construction for API calls.
-
-# Instructions
-- Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
-- Determine if the writing question requires story context documents for an effective answer.
-- Evaluate for the following context types:
-  - Brief: High-level premise, themes, tone, character concepts
-  - Outline: Plot structure, story progression, scene sequences
-- Only return true for a context type if it is NECESSARY to answer well.
-- After producing the output, validate that only the specified JSON object is included, with no additional text or explanations. If not, self-correct.
-
-# Example User Prompt
-- Example: "Hur står den här texten sig i förhållande till min idé?"
-
-# Output Format
-- Respond ONLY with a JSON object in the format below (no explanations or extra fields):
-\`\`\`json
-{
-  "needsBrief": boolean,   // true only if story brief context is necessary
-  "needsOutline": boolean  // true only if story outline context is necessary
-}
-\`\`\`
-- Output both fields in the order: needsBrief, needsOutline.
-- If the writing question is ambiguous or missing information for a clear answer, return false for both fields.
-- Do NOT include other fields or explanations in the response.
-
-# Verbosity
-- Output should be strictly limited to the requested JSON object.
-
-# Stop Conditions
-- Stop when the JSON object meeting the above specifications is produced.`;
-
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{
         role: "system",
-        content: systemPrompt
+        content: LLM_CONTEXT_CLASSIFICATION_PROMPT
       }, {
         role: "user",
         content: userPrompt
