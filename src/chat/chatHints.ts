@@ -78,19 +78,17 @@ const ACTIONS = {
   },
   manifestStart: {
     id: 'manifest-start',
-    label: 'Start the manifest',
-    kind: 'prompt' as const,
-    prompt:
-      'Help me sketch out a first draft of an author manifest. Start by asking a few questions about my voice and what I want to achieve.',
-    displayMessage: 'Start the manifest',
+    label: 'Get started',
+    kind: 'wizard' as const,
+    command: { type: 'openWizard' as const, wizard: 'manifest-starter' as const },
   },
-  manifestTighten: {
-    id: 'manifest-tighten',
-    label: 'Sharpen the manifest',
+  manifestGaps: {
+    id: 'manifest-gaps',
+    label: 'Analyse the manifest',
     kind: 'prompt' as const,
     prompt:
-      'Help me make this manifest more concentrated and useful as information for the assistant.',
-    displayMessage: 'Sharpen the manifest',
+      'Please review the following Author Manifest and assess how well it expresses the author’s voice, values, themes, and creative principles. Identify strengths as well as areas that could be clarified or expanded. Keep the tone supportive and focus on how effectively the manifest communicates the author’s intended identity and storytelling approach. The audience is the author herself and an AI Assistant, not the public.',
+    displayMessage: 'Can you take a look at my manifest and tell me how well it communicates my voice and values?',
   },
   outlineWizard: {
     id: 'outline-wizard',
@@ -177,12 +175,13 @@ export function getInitialAssistantHint(params: {
   if (kind === 'manifest') {
     if (isEmpty) {
       message.introMessage =
-        'This is your author manifest — a personal style guide that defines your voice, values, and what you want the AI to understand about your writing approach.';
+        'This is where it all begins. Formulate your Author Manifest — a personal style guide that defines your voice, values, themes, and creative intentions';
 
       message.actions.push(ACTIONS.manifestStart);
     } else {
       message.introMessage =
-        'Refine your manifest to make it more focused and useful as an instruction set for AI assistance.';
+        'Make sure your manifest captures the essence of your storytelling—your voice, values, themes, and creative intentions.';
+      message.actions.push(ACTIONS.manifestGaps);
     }
   }
 
