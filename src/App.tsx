@@ -156,6 +156,23 @@ const App: React.FC = () => {
   // API Key Modal
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
 
+  // Wizard Modal
+  const [wizardModalOpen, setWizardModalOpen] = useState(false);
+  const activeWizard = useAppStore((s) => s.activeWizard);
+
+  // Open wizard modal when wizard starts
+  useEffect(() => {
+    setWizardModalOpen(!!activeWizard);
+  }, [activeWizard]);
+
+  const handleCloseWizardModal = () => {
+    const { closeWizard } = useAppStore.getState();
+    const confirmed = closeWizard(false);
+    if (confirmed) {
+      setWizardModalOpen(false);
+    }
+  };
+
   // Theme setup
   useThemeSetup();
 
@@ -275,6 +292,8 @@ const App: React.FC = () => {
         onDeleteStory={storyHandlers.handleDeleteStory}
         apiKeyModalOpen={apiKeyModalOpen}
         onCloseApiKeyModal={() => setApiKeyModalOpen(false)}
+        wizardModalOpen={wizardModalOpen}
+        onCloseWizardModal={handleCloseWizardModal}
       />
     </>
   );

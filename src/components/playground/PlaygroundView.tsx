@@ -10,6 +10,7 @@ import { jsonToMarkdown } from '../../state/markdownUtils';
 import { PlaygroundOutput } from './PlaygroundOutput';
 import { ContextDeterminatorTest } from './ContextDeterminatorTest';
 import { InitialHintsTest } from './InitialHintsTest';
+import { WizardTesterView } from './WizardTesterView';
 
 type ContextType = 'story' | 'manifest';
 
@@ -38,10 +39,38 @@ type PlaygroundState = {
   loadedSelection: string;
 };
 
-type PlaygroundMode = 'prompt-builder' | 'context-determinator' | 'initial-hints-test';
+type PlaygroundMode = 'prompt-builder' | 'context-determinator' | 'initial-hints-test' | 'wizard-tester';
+
+const PLAYGROUND_MODE_KEY = 'alinea:playgroundMode:v1';
+
+// Helper functions for localStorage persistence
+function loadPlaygroundMode(): PlaygroundMode {
+  try {
+    const raw = window.localStorage.getItem(PLAYGROUND_MODE_KEY);
+    if (!raw) return 'prompt-builder';
+    const parsed = raw as PlaygroundMode;
+
+    // Validate that it's a valid mode
+    const validModes: PlaygroundMode[] = ['prompt-builder', 'context-determinator', 'initial-hints-test', 'wizard-tester'];
+    if (validModes.includes(parsed)) {
+      return parsed;
+    }
+    return 'prompt-builder';
+  } catch {
+    return 'prompt-builder';
+  }
+}
+
+function savePlaygroundMode(mode: PlaygroundMode) {
+  try {
+    window.localStorage.setItem(PLAYGROUND_MODE_KEY, mode);
+  } catch {
+    // ignore; localStorage might be unavailable
+  }
+}
 
 export const PlaygroundView: React.FC = () => {
-  const [mode, setMode] = useState<PlaygroundMode>('prompt-builder');
+  const [mode, setMode] = useState<PlaygroundMode>(() => loadPlaygroundMode());
   const [state, setState] = useState<PlaygroundState>({
     contextType: 'story',
     selectedProjectId: null,
@@ -74,6 +103,11 @@ export const PlaygroundView: React.FC = () => {
     outlineHasContent: false,
     mainDocHasContent: false,
   });
+
+  // Persist mode to localStorage whenever it changes
+  useEffect(() => {
+    savePlaygroundMode(mode);
+  }, [mode]);
 
   // Load projects on mount
   useEffect(() => {
@@ -324,11 +358,14 @@ export const PlaygroundView: React.FC = () => {
             { label: 'Prompt Builder', value: 'prompt-builder' },
             { label: 'Context Determinator', value: 'context-determinator' },
             { label: 'Initial Hints', value: 'initial-hints-test' },
+            { label: 'Wizard Tester', value: 'wizard-tester' },
           ]}
         />
       </Stack>
 
-      {mode === 'initial-hints-test' ? (
+      {mode === 'wizard-tester' ? (
+        <WizardTesterView />
+      ) : mode === 'initial-hints-test' ? (
         <InitialHintsTest />
       ) : mode === 'context-determinator' ? (
         <ContextDeterminatorTest />
