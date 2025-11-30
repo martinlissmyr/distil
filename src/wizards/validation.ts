@@ -1,6 +1,7 @@
 // src/wizards/validation.ts
 import type { WizardConfig, WizardStep, BaseStep } from './types';
 import testWizardConfig from './configs/test-wizard.json';
+import manifestStarterConfig from './configs/manifest-starter.json';
 
 /**
  * Validates a wizard configuration
@@ -193,7 +194,7 @@ export function validateWizardConfig(data: any): WizardConfig {
  */
 const WIZARD_REGISTRY: Record<string, any> = {
   'test-wizard': testWizardConfig,
-  // 'manifest-creator': manifestCreatorConfig, // TODO: Add when created
+  'manifest-starter': manifestStarterConfig,
 };
 
 /**
