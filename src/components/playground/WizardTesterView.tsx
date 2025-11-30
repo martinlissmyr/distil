@@ -1,25 +1,25 @@
 // src/components/playground/WizardTesterView.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Stack, Group, Paper, Text, Button, Title, Badge, Divider, ScrollArea } from '@mantine/core';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { useAppStore } from '../../state/useAppStore';
 import { getAvailableWizards, loadWizardConfig } from '../../wizards/validation';
+import { metaExtensions } from '../editor/extensions/metaExtensions';
+import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
 import type { EditorKind } from '../../types/chat';
 import type { WizardConfig } from '../../wizards/types';
 
 export const WizardTesterView: React.FC = () => {
   const [selectedWizardId, setSelectedWizardId] = useState<string | null>(null);
-  const [mockEditorContent, setMockEditorContent] = useState<string>('');
 
   const availableWizards = getAvailableWizards();
   const activeWizard = useAppStore((s) => s.activeWizard);
-  const wizardResult = useAppStore((s) => s.wizardResult);
 
-  // Watch for wizard completion and update mock editor
-  useEffect(() => {
-    if (wizardResult) {
-      setMockEditorContent(wizardResult);
-    }
-  }, [wizardResult]);
+  // Create TipTap editor instance
+  const editor = useEditor({
+    extensions: metaExtensions({ placeholder: 'Wizard output will appear here...' }),
+    content: defaultEmptyDoc,
+  });
 
   // Get selected wizard config info
   const selectedWizardConfig: WizardConfig | null = selectedWizardId
@@ -31,9 +31,10 @@ export const WizardTesterView: React.FC = () => {
 
     // Launch the wizard immediately when selected
     if (activeWizard) return; // Don't launch if one is already running
+    if (!editor) return; // Wait for editor to be ready
 
     // Clear previous editor content
-    setMockEditorContent('');
+    editor.commands.setContent(defaultEmptyDoc);
 
     const config = loadWizardConfig(wizardId);
     const { startWizard } = useAppStore.getState();
@@ -57,6 +58,7 @@ export const WizardTesterView: React.FC = () => {
       editorKind,
       targetScope,
       targetKey: config.targetDoc,
+      targetEditor: editor, // Pass the editor instance
     });
   };
 
@@ -109,7 +111,7 @@ export const WizardTesterView: React.FC = () => {
         </Paper>
       </Stack>
 
-      {/* Right Column - Mock Editor */}
+      {/* Right Column - TipTap Editor */}
       <Box
         p="sm"
         style={{
@@ -122,9 +124,9 @@ export const WizardTesterView: React.FC = () => {
         }}
       >
         <Paper p="md" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Stack gap="md" style={{ flex: 1, height: '100%' }}>
+          <Stack gap="md" style={{ flex: 1, height: '100%', minHeight: 0 }}>
             <Group justify="space-between">
-              <Title order={5}>Mock Editor Output</Title>
+              <Title order={5}>Editor Output</Title>
               {selectedWizardConfig && (
                 <Badge size="lg" variant="light">
                   {selectedWizardConfig.targetDoc}
@@ -133,27 +135,26 @@ export const WizardTesterView: React.FC = () => {
             </Group>
             <Divider />
 
-            {mockEditorContent ? (
-              <ScrollArea style={{ flex: 1 }}>
-                <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                  {mockEditorContent}
-                </Text>
-              </ScrollArea>
-            ) : (
-              <Box style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Text size="sm" c="dimmed" ta="center">
-                  {selectedWizardConfig ? (
-                    <>
-                      Complete the wizard to see the generated output here.
-                      <br />
-                      <br />
-                      This simulates a <strong>{selectedWizardConfig.targetDoc}</strong> editor.
-                    </>
-                  ) : (
-                    'Select a wizard from the list to begin'
-                  )}
-                </Text>
-              </Box>
+            {/* TipTap Editor */}
+            <Box
+              className="wizard-tester-editor"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflow: 'auto',
+                border: '1px solid var(--mantine-color-dark-4)',
+                borderRadius: '4px',
+                padding: '16px',
+                backgroundColor: 'var(--mantine-color-dark-8)',
+              }}
+            >
+              <EditorContent editor={editor} />
+            </Box>
+
+            {!selectedWizardConfig && (
+              <Text size="sm" c="dimmed" ta="center">
+                Select a wizard from the list to begin
+              </Text>
             )}
           </Stack>
         </Paper>

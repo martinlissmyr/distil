@@ -652,15 +652,44 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   async insertResult(text: string) {
-    console.log('[insertResult] Setting wizard result:', text);
+    console.log('[insertResult] Inserting wizard result:', text);
 
-    // Store the result so the UI can pick it up
-    set({ wizardResult: text });
+    const { wizardContext } = get();
+    if (!wizardContext) {
+      console.error('[insertResult] No wizard context');
+      return;
+    }
 
-    // In a real implementation, this would:
-    // 1. Get the wizardContext to know which editor to insert into
-    // 2. Find the active editor instance
-    // 3. Insert the text at the cursor position or append to document
-    // For now, just storing in state for the WizardTesterView to display
+    // Get the editor instance from context
+    const editor = wizardContext.targetEditor;
+    if (!editor) {
+      console.warn('[insertResult] No editor instance in context, falling back to state storage');
+      set({ wizardResult: text });
+      return;
+    }
+
+    // Insert the markdown text into the editor
+    try {
+      // Get current content as markdown
+      const currentContent = editor.getMarkdown();
+
+      // Append wizard result (with spacing if there's existing content)
+      const newContent = currentContent.trim()
+        ? `${currentContent}\n\n${text}`
+        : text;
+
+      // Parse markdown to JSON using the editor's markdown extension
+      // The markdown extension adds a `parse` method that converts markdown to JSON
+      const jsonContent = editor.markdown.parse(newContent);
+
+      // Set the parsed JSON content
+      editor.commands.setContent(jsonContent);
+
+      console.log('[insertResult] Successfully inserted into editor');
+    } catch (error) {
+      console.error('[insertResult] Failed to insert into editor:', error);
+      // Fallback to state storage
+      set({ wizardResult: text });
+    }
   },
 }));

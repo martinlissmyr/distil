@@ -136,6 +136,7 @@ export type WizardContext = {
   storyId?: string;
   targetScope: MetaScope;
   targetKey: MetaDocKey;
+  targetEditor?: any; // TipTap Editor instance to insert results into
 };
 
 /**
