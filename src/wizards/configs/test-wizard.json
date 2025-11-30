@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "title": "Test Wizard",
   "description": "A comprehensive test wizard showcasing all question types",
-  "targetDoc": "manifest",
+  "targetDoc": "prose",
   "outputTemplate": "# {{step2_text}}\n\n{{project_summary}}\n\n---\n\n## Writing Tip\n\n{{writing_tip}}",
   "steps": [
     {

@@ -21,7 +21,8 @@ export type SuggestionAction = {
       | 'prose-starter'
       | 'outline-builder'
       | 'brief-helper'
-      | 'manifest-helper';
+      | 'manifest-helper'
+      | 'test-wizard';
   } | {
     type: 'navigateToStorySection';
     section: 'prose' | 'outline' | 'brief';
@@ -112,6 +113,12 @@ const ACTIONS = {
       'Generate a random idea for a short story, based on the concepts, ideals and values in the Author Manifest if available.',
     displayMessage: 'Generate a brief for a short story',
   },
+  testWizard: {
+    id: 'test-wizard',
+    label: 'Launch Test Wizard',
+    kind: 'wizard' as const,
+    command: { type: 'openWizard' as const, wizard: 'test-wizard' as const },
+  },
 };
 
 /**
@@ -151,6 +158,9 @@ export function getInitialAssistantHint(params: {
           }
         }
       }
+
+      // Add test wizard as an option for empty prose
+      message.actions.push(ACTIONS.testWizard);
     } else {
       message.introMessage = `You're well underway with your story. I'm here to help with revisions, suggestions, or expanding your narrative.`;
 
