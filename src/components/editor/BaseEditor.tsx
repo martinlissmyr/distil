@@ -247,6 +247,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
             hasSelection={hasSelection}
             title={title}
             isTextLoaded={fullTextMarkdown !== null}
+            editor={editor}
           />
         </Box>
       )}

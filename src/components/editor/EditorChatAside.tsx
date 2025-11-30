@@ -11,6 +11,7 @@ import {
 
 import type { EditorKind } from '../../types/chat';
 import type { SuggestionAction } from '../../chat/chatHints';
+import { useAppStore } from '../../state/useAppStore';
 
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatSend } from './chat/useChatSend';
@@ -32,6 +33,7 @@ type EditorChatAsideProps = {
   projectId?: string;
   storyId?: string;
   onNavigate?: (target: string) => void;
+  editor?: any; // TipTap Editor instance for wizard integration
 };
 
 export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
@@ -45,7 +47,9 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   projectId,
   storyId,
   onNavigate,
+  editor,
 }) => {
+  const startWizard = useAppStore((s) => s.startWizard);
   const [input, setInput] = useState('');
   const [scrollbarOffset, setScrollbarOffset] = useState(0);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
@@ -124,6 +128,36 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
           onNavigate('manifest');
         }
       }
+      return;
+    }
+
+    if (action.kind === 'wizard' && action.command?.type === 'openWizard') {
+      const wizardId = action.command.wizard;
+
+      // Determine target scope based on editor kind
+      const targetScope =
+        kind === 'manifest'
+          ? { kind: 'root' as const }
+          : kind === 'brief' || kind === 'outline' || kind === 'prose'
+          ? {
+              kind: 'story' as const,
+              projectId: projectId || 'unknown',
+              storyId: storyId || 'unknown',
+            }
+          : { kind: 'root' as const };
+
+      // Determine target key based on editor kind
+      const targetKey = kind;
+
+      // Launch the wizard
+      void startWizard(wizardId, {
+        editorKind: kind,
+        projectId,
+        storyId,
+        targetScope,
+        targetKey,
+        targetEditor: editor,
+      });
       return;
     }
 
