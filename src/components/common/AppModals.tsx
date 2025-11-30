@@ -2,6 +2,7 @@
 import React from 'react';
 import { EntityEditModal } from './EntityEditModal';
 import { ApiKeyModal } from '../settings/ApiKeyModal';
+import { WizardModal } from '../wizard/WizardModal';
 
 export interface AppModalsProps {
   // Project modal
@@ -19,6 +20,10 @@ export interface AppModalsProps {
   // API Key modal
   apiKeyModalOpen: boolean;
   onCloseApiKeyModal: () => void;
+
+  // Wizard modal
+  wizardModalOpen: boolean;
+  onCloseWizardModal: () => void;
 }
 
 /**
@@ -40,6 +45,8 @@ export const AppModals: React.FC<AppModalsProps> = ({
   onDeleteStory,
   apiKeyModalOpen,
   onCloseApiKeyModal,
+  wizardModalOpen,
+  onCloseWizardModal,
 }) => {
   return (
     <>
@@ -72,6 +79,9 @@ export const AppModals: React.FC<AppModalsProps> = ({
         opened={apiKeyModalOpen}
         onClose={onCloseApiKeyModal}
       />
+
+      {/* Wizard Modal */}
+      <WizardModal opened={wizardModalOpen} onClose={onCloseWizardModal} />
     </>
   );
 };

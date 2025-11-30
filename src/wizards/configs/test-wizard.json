@@ -1,0 +1,152 @@
+{
+  "id": "test-wizard",
+  "version": "1.0.0",
+  "title": "Test Wizard",
+  "description": "A comprehensive test wizard showcasing all question types",
+  "targetDoc": "manifest",
+  "outputTemplate": "# {{step2_text}}\n\n{{project_summary}}\n\n---\n\n## Writing Tip\n\n{{writing_tip}}",
+  "steps": [
+    {
+      "id": "step_llm_test",
+      "type": "llm-processing",
+      "title": "Generating Writing Tip",
+      "description": "Getting a helpful tip from AI",
+      "hidden": false,
+      "prompt": {
+        "system": "You are a helpful writing assistant. Provide concise, practical writing tips.",
+        "user": "Give me one practical writing tip for fiction authors in 1-2 sentences."
+      },
+      "resultKey": "writing_tip",
+      "extractJson": false,
+      "approvalOptions": {
+        "approveLabel": "Keep This Tip",
+        "rejectLabel": "Try Again"
+      }
+    },
+    {
+      "id": "step1_textarea",
+      "type": "question",
+      "title": "Writing Goals",
+      "description": "Tell us about your writing aspirations",
+      "questionType": "textarea",
+      "question": "What are your writing goals for this project?",
+      "placeholder": "I want to...",
+      "required": true,
+      "minLength": 10,
+      "maxLength": 500
+    },
+    {
+      "id": "step2_text",
+      "type": "question",
+      "title": "Project Name",
+      "description": "Give your project a working title",
+      "questionType": "text",
+      "question": "What would you like to call this project?",
+      "placeholder": "My Awesome Story",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100
+    },
+    {
+      "id": "step3_scale",
+      "type": "question",
+      "title": "Experience Level",
+      "description": "Help us understand your writing background",
+      "questionType": "scale",
+      "question": "How would you rate your writing experience?",
+      "min": 1,
+      "max": 10,
+      "scaleLabels": {
+        "min": "Beginner",
+        "max": "Expert"
+      },
+      "required": false
+    },
+    {
+      "id": "step4_single_select",
+      "type": "question",
+      "title": "Primary Genre",
+      "description": "Choose the main genre for your project",
+      "questionType": "single-select",
+      "question": "What genre best describes your project?",
+      "required": true,
+      "options": [
+        {
+          "value": "fiction",
+          "label": "Fiction",
+          "description": "Novels, short stories, and creative narratives"
+        },
+        {
+          "value": "nonfiction",
+          "label": "Non-Fiction",
+          "description": "Essays, memoirs, journalism, and factual writing"
+        },
+        {
+          "value": "poetry",
+          "label": "Poetry",
+          "description": "Verse, lyrical works, and poetic forms"
+        },
+        {
+          "value": "screenplay",
+          "label": "Screenplay",
+          "description": "Scripts for film, TV, or theater"
+        }
+      ]
+    },
+    {
+      "id": "step5_multi_select",
+      "type": "question",
+      "title": "Writing Challenges",
+      "description": "Select areas where you'd like assistance",
+      "questionType": "multi-select",
+      "question": "Which aspects of writing do you find most challenging?",
+      "required": false,
+      "minSelections": 1,
+      "maxSelections": 3,
+      "options": [
+        {
+          "value": "plot",
+          "label": "Plot Development",
+          "description": "Creating engaging story arcs and narrative structure"
+        },
+        {
+          "value": "characters",
+          "label": "Character Development",
+          "description": "Building believable, compelling characters"
+        },
+        {
+          "value": "dialogue",
+          "label": "Dialogue",
+          "description": "Writing natural, engaging conversations"
+        },
+        {
+          "value": "description",
+          "label": "Description",
+          "description": "Creating vivid imagery and sensory details"
+        },
+        {
+          "value": "pacing",
+          "label": "Pacing",
+          "description": "Maintaining reader engagement and narrative flow"
+        }
+      ]
+    },
+    {
+      "id": "step6_llm_processing",
+      "type": "llm-processing",
+      "title": "Summary",
+      "description": "Creating a concise summary based on your responses",
+      "hidden": false,
+      "prompt": {
+        "system": "You are a helpful writing assistant. Generate concise, engaging summaries for creative writing projects.",
+        "user": "Based on the following information, create a brief project summary (2-3 sentences):\n\nProject Name: {{step2_text}}\nWriting Goals: {{step1_textarea}}\nGenre: {{step4_single_select}}\nExperience Level: {{step3_scale}}/10\nChallenges: {{step5_multi_select}}\n\nProvide only the summary, no additional commentary."
+      },
+      "resultKey": "project_summary",
+      "extractJson": false,
+      "approvalOptions": {
+        "approveLabel": "Looks Good!",
+        "rejectLabel": "Try Again"
+      }
+    }
+  ]
+}
