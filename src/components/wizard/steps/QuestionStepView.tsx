@@ -236,7 +236,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
       )}
 
       {step.questionType === 'scale' && (
-        <div>
+        <div style={{ paddingLeft: '4px', paddingRight: '4px' }}>
           <Slider
             value={value}
             onChange={handleScaleChange}
@@ -249,6 +249,19 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
             label={(val) => val}
             mb="md"
           />
+          <style>{`
+            .mantine-Slider-markLabel:first-of-type {
+              transform: translateX(0) !important;
+              text-align: left;
+              left: 0 !important;
+            }
+            .mantine-Slider-markLabel:last-of-type {
+              transform: translateX(-100%) !important;
+              text-align: right;
+              right: 0 !important;
+              left: auto !important;
+            }
+          `}</style>
         </div>
       )}
 

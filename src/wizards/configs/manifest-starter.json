@@ -1,0 +1,547 @@
+{
+  "id": "manifest-starter",
+  "version": "1.0.0",
+  "title": "Author Manifest Creator",
+  "description": "Define your voice, values, themes, and creative intentions",
+  "targetDoc": "manifest",
+  "steps": [
+    {
+      "id": "step1a_influences",
+      "type": "question",
+      "title": "Who do you want to be as a writer?",
+      "description": "Identify your aspirational voice through admired storytellers",
+      "questionType": "textarea",
+      "question": "Name 3–5 authors, filmmakers, or storytellers whose work you wish you could have created yourself. What about their work draws you in?",
+      "placeholder": "e.g., Ursula Le Guin - her gentle wisdom and world-building...",
+      "required": true,
+      "minLength": 50,
+      "maxLength": 1000
+    },
+    {
+      "id": "step1b_traits",
+      "type": "question",
+      "title": "Your aspirational qualities",
+      "description": "Which qualities do you most aspire to in your writing?",
+      "questionType": "multi-select",
+      "question": "Based on the storytellers you admire, which of these qualities do you most aspire to in your own writing?",
+      "required": true,
+      "minSelections": 2,
+      "maxSelections": 6,
+      "options": [
+        {
+          "value": "lyrical-language",
+          "label": "Lyrical, image-rich language",
+          "description": "Poetic, sensory, evocative prose"
+        },
+        {
+          "value": "honest-raw",
+          "label": "Honest, raw emotional tone",
+          "description": "Unfiltered emotional truth and vulnerability"
+        },
+        {
+          "value": "tight-suspense",
+          "label": "Tight, suspenseful plotting",
+          "description": "Page-turner pacing and tension"
+        },
+        {
+          "value": "gentle-intimate",
+          "label": "Gentle, intimate atmosphere",
+          "description": "Quiet, close observation of life"
+        },
+        {
+          "value": "playful-voice",
+          "label": "Playful, surprising voice",
+          "description": "Wit, humor, unexpected angles"
+        },
+        {
+          "value": "moral-complexity",
+          "label": "Morally complex characters",
+          "description": "Gray areas, difficult choices, flawed people"
+        },
+        {
+          "value": "big-ideas",
+          "label": "Big, ambitious ideas",
+          "description": "Philosophical depth, conceptual reach"
+        },
+        {
+          "value": "quiet-realism",
+          "label": "Quiet, observational realism",
+          "description": "True-to-life detail and restraint"
+        },
+        {
+          "value": "bold-experimental",
+          "label": "Bold, experimental form",
+          "description": "Structure-breaking, risk-taking storytelling"
+        },
+        {
+          "value": "emotional-intensity",
+          "label": "Powerful emotional intensity",
+          "description": "Stories that hit hard and linger"
+        }
+      ]
+    },
+    {
+      "id": "step2a_intensity",
+      "type": "question",
+      "title": "Emotional intensity",
+      "description": "Define how intense you want your stories to feel",
+      "questionType": "scale",
+      "question": "How intense do you want your stories to feel for your readers?",
+      "required": true,
+      "min": 1,
+      "max": 7,
+      "scaleLabels": {
+        "min": "Gentle and soothing",
+        "max": "Powerful and overwhelming"
+      }
+    },
+    {
+      "id": "step2b_aftertaste",
+      "type": "question",
+      "title": "Emotional aftertaste",
+      "description": "What emotional resonance should remain?",
+      "questionType": "multi-select",
+      "question": "What emotional 'aftertaste' do you want your stories to leave?",
+      "required": true,
+      "minSelections": 1,
+      "maxSelections": 4,
+      "options": [
+        {
+          "value": "hopeful",
+          "label": "Hopeful",
+          "description": "A sense of possibility and optimism"
+        },
+        {
+          "value": "bittersweet",
+          "label": "Bittersweet",
+          "description": "Beauty tinged with loss or longing"
+        },
+        {
+          "value": "unsettled",
+          "label": "Unsettled",
+          "description": "Lingering questions and unease"
+        },
+        {
+          "value": "inspired",
+          "label": "Inspired to act",
+          "description": "Motivation to change or do something"
+        },
+        {
+          "value": "seen",
+          "label": "Seen and understood",
+          "description": "Recognition and validation"
+        },
+        {
+          "value": "thoughtful",
+          "label": "Intrigued and thoughtful",
+          "description": "Curiosity and reflection"
+        },
+        {
+          "value": "calm",
+          "label": "Calm and comforted",
+          "description": "Peace and reassurance"
+        },
+        {
+          "value": "challenged",
+          "label": "Shaken or challenged",
+          "description": "Assumptions questioned, perspective shifted"
+        }
+      ]
+    },
+    {
+      "id": "step2c_themes",
+      "type": "question",
+      "title": "Core themes & questions",
+      "description": "The big human questions you explore",
+      "questionType": "textarea",
+      "question": "What big human questions or tensions do you find yourself wanting to explore in your stories?",
+      "placeholder": "e.g., How do we stay true to ourselves when the world demands conformity? The tension between belonging and independence...",
+      "required": false,
+      "maxLength": 800
+    },
+    {
+      "id": "step3a_world_tilt",
+      "type": "question",
+      "title": "World realism scale",
+      "description": "How grounded or fantastical are your worlds?",
+      "questionType": "scale",
+      "question": "How close to everyday reality do you want most of your stories to be?",
+      "required": true,
+      "min": 1,
+      "max": 7,
+      "scaleLabels": {
+        "min": "Very grounded, real-world",
+        "max": "Highly fantastical or reimagined"
+      }
+    },
+    {
+      "id": "step3b_world_flavour",
+      "type": "question",
+      "title": "World settings",
+      "description": "What kinds of worlds call to you?",
+      "questionType": "multi-select",
+      "question": "What kinds of worlds or settings do you feel called to create?",
+      "required": false,
+      "minSelections": 1,
+      "maxSelections": 5,
+      "options": [
+        {
+          "value": "contemporary",
+          "label": "Everyday, contemporary life",
+          "description": "Here and now, recognizable settings"
+        },
+        {
+          "value": "historical",
+          "label": "Historical",
+          "description": "Past eras and periods"
+        },
+        {
+          "value": "off-kilter",
+          "label": "Slightly off-kilter reality",
+          "description": "Familiar but with a twist"
+        },
+        {
+          "value": "speculative",
+          "label": "Near future or speculative",
+          "description": "What-if scenarios and extrapolations"
+        },
+        {
+          "value": "high-fantasy",
+          "label": "High fantasy or wildly reimagined",
+          "description": "Fully invented worlds"
+        },
+        {
+          "value": "intimate-scale",
+          "label": "Intimate, small-scale settings",
+          "description": "Focused on personal spaces and moments"
+        },
+        {
+          "value": "epic-scale",
+          "label": "Epic, large-scale worlds",
+          "description": "Sweeping scope and breadth"
+        }
+      ]
+    },
+    {
+      "id": "step3c_characters",
+      "type": "question",
+      "title": "Character types",
+      "description": "Who are you drawn to write about?",
+      "questionType": "multi-select",
+      "question": "What kinds of characters do you feel most drawn to write about?",
+      "required": false,
+      "minSelections": 1,
+      "maxSelections": 5,
+      "options": [
+        {
+          "value": "quiet-observers",
+          "label": "Quiet observers",
+          "description": "Watchers, listeners, internal processors"
+        },
+        {
+          "value": "messy-conflicted",
+          "label": "Messy, conflicted people",
+          "description": "Flawed, struggling, contradictory"
+        },
+        {
+          "value": "idealists",
+          "label": "Idealists in a cynical world",
+          "description": "Hopeful people facing harsh realities"
+        },
+        {
+          "value": "morally-gray",
+          "label": "Morally gray decision-makers",
+          "description": "Complex choices without clear right answers"
+        },
+        {
+          "value": "outsiders",
+          "label": "Outsiders/loners",
+          "description": "People on the margins, not fitting in"
+        },
+        {
+          "value": "in-transition",
+          "label": "People in transition",
+          "description": "Grief, moves, break-ups, life changes"
+        },
+        {
+          "value": "ordinary-extraordinary",
+          "label": "Ordinary people in extraordinary situations",
+          "description": "Regular folks facing unusual circumstances"
+        },
+        {
+          "value": "extraordinary-ordinary",
+          "label": "Extraordinary people in ordinary situations",
+          "description": "Remarkable individuals in mundane settings"
+        }
+      ]
+    },
+    {
+      "id": "step3d_struggles",
+      "type": "question",
+      "title": "Human struggles",
+      "description": "The contradictions you keep circling back to",
+      "questionType": "textarea",
+      "question": "Name a few human struggles or contradictions you keep circling back to in your imagination.",
+      "placeholder": "e.g., The need for connection vs. fear of vulnerability, wanting to be special vs. wanting to belong...",
+      "required": false,
+      "maxLength": 600
+    },
+    {
+      "id": "step4a_priorities",
+      "type": "question",
+      "title": "What matters most",
+      "description": "Your core storytelling values",
+      "questionType": "multi-select",
+      "question": "When you think about your stories at their best, what matters most?",
+      "required": true,
+      "minSelections": 2,
+      "maxSelections": 5,
+      "options": [
+        {
+          "value": "emotional-truth",
+          "label": "Emotional truth",
+          "description": "Authentic feelings and genuine human experience"
+        },
+        {
+          "value": "strong-characters",
+          "label": "Strong, meaningful characters",
+          "description": "Memorable, fully-realized people"
+        },
+        {
+          "value": "interesting-ideas",
+          "label": "Interesting ideas or concepts",
+          "description": "Intellectual depth and novelty"
+        },
+        {
+          "value": "atmosphere",
+          "label": "Atmosphere and mood",
+          "description": "Immersive feeling and tone"
+        },
+        {
+          "value": "pace-momentum",
+          "label": "Pace and momentum",
+          "description": "Forward drive and energy"
+        },
+        {
+          "value": "surprise",
+          "label": "Surprise and unpredictability",
+          "description": "Keeping readers off-balance"
+        },
+        {
+          "value": "clarity",
+          "label": "Clarity and accessibility",
+          "description": "Easy to follow and understand"
+        },
+        {
+          "value": "language-style",
+          "label": "Language and style",
+          "description": "Beautiful or distinctive prose"
+        }
+      ]
+    },
+    {
+      "id": "step4b_avoid",
+      "type": "question",
+      "title": "Things to avoid",
+      "description": "What you never want your writing to feel like",
+      "questionType": "multi-select",
+      "question": "What do you never want your writing to feel like?",
+      "required": false,
+      "minSelections": 1,
+      "maxSelections": 6,
+      "options": [
+        {
+          "value": "preachy",
+          "label": "Preachy",
+          "description": "Heavy-handed messages or moralizing"
+        },
+        {
+          "value": "cynical",
+          "label": "Cynical without purpose",
+          "description": "Darkness for its own sake"
+        },
+        {
+          "value": "empty",
+          "label": "Empty or shallow",
+          "description": "Style over substance"
+        },
+        {
+          "value": "cruel",
+          "label": "Cruel for shock value",
+          "description": "Violence or trauma as spectacle"
+        },
+        {
+          "value": "confusing",
+          "label": "Confusing without reward",
+          "description": "Opaque with no payoff"
+        },
+        {
+          "value": "cliche",
+          "label": "Cliché and predictable",
+          "description": "Tired tropes and obvious plots"
+        },
+        {
+          "value": "manipulative",
+          "label": "Emotionally manipulative",
+          "description": "Cheap emotional tricks"
+        },
+        {
+          "value": "tidy",
+          "label": "Overly tidy / unrealistically neat",
+          "description": "Too convenient or pat resolutions"
+        }
+      ]
+    },
+    {
+      "id": "step4c_principles",
+      "type": "question",
+      "title": "Personal principles",
+      "description": "Reminders for your future writing self",
+      "questionType": "textarea",
+      "question": "Are there any personal principles you want your future self to remember when writing (e.g. 'always be honest about emotion', 'never cheapen trauma', etc.)?",
+      "placeholder": "Your writing principles...",
+      "required": false,
+      "maxLength": 600
+    },
+    {
+      "id": "step5a_reader_temperament",
+      "type": "question",
+      "title": "Your ideal reader",
+      "description": "Who are you writing toward?",
+      "questionType": "multi-select",
+      "question": "What kind of reader do you imagine connecting most deeply with your stories?",
+      "required": false,
+      "minSelections": 1,
+      "maxSelections": 4,
+      "options": [
+        {
+          "value": "comfort",
+          "label": "Someone looking for comfort",
+          "description": "Seeking solace and reassurance"
+        },
+        {
+          "value": "challenge",
+          "label": "Someone who wants to be challenged",
+          "description": "Open to difficulty and provocation"
+        },
+        {
+          "value": "think-reflect",
+          "label": "Someone who loves to think and reflect",
+          "description": "Intellectual and contemplative readers"
+        },
+        {
+          "value": "feel-intensely",
+          "label": "Someone who wants to feel intensely",
+          "description": "Craving emotional immersion"
+        },
+        {
+          "value": "escape",
+          "label": "Someone who needs escape",
+          "description": "Looking to leave their world behind"
+        },
+        {
+          "value": "recognition",
+          "label": "Someone searching for recognition / feeling seen",
+          "description": "Wanting their experience reflected back"
+        }
+      ]
+    },
+    {
+      "id": "step5b_complexity",
+      "type": "question",
+      "title": "Story complexity",
+      "description": "How demanding should your stories be?",
+      "questionType": "single-select",
+      "question": "How demanding do you want your stories to be for your readers?",
+      "required": true,
+      "options": [
+        {
+          "value": "gentle",
+          "label": "Easy to enter, emotionally gentle",
+          "description": "Low barrier, soft landing"
+        },
+        {
+          "value": "accessible-rich",
+          "label": "Accessible but emotionally rich",
+          "description": "Easy to follow, deep to feel"
+        },
+        {
+          "value": "nuanced",
+          "label": "Nuanced and layered, asking for attention",
+          "description": "Rewards careful reading"
+        },
+        {
+          "value": "challenging",
+          "label": "Challenging, asking for patience and depth",
+          "description": "Complex, requires work from reader"
+        }
+      ]
+    },
+    {
+      "id": "step5c_who_needs_this",
+      "type": "question",
+      "title": "Who needs this?",
+      "description": "Imagine your ideal reader",
+      "questionType": "textarea",
+      "question": "Imagine one person who finishes your story and quietly thinks, 'I needed this.' Who are they? Describe them in a sentence or two.",
+      "placeholder": "e.g., Someone who's felt invisible their whole life, finally seeing themselves reflected...",
+      "required": false,
+      "maxLength": 400
+    },
+    {
+      "id": "step6a_voice_closeness",
+      "type": "question",
+      "title": "Finding your voice",
+      "description": "How formed is your writing voice?",
+      "questionType": "scale",
+      "question": "How close do you feel to the writing voice you ultimately want?",
+      "required": true,
+      "min": 1,
+      "max": 7,
+      "scaleLabels": {
+        "min": "I'm just starting to find it",
+        "max": "I'm very close to what I want"
+      }
+    },
+    {
+      "id": "step6b_future_self",
+      "type": "question",
+      "title": "The writer you're becoming",
+      "description": "Your aspirational writing identity",
+      "questionType": "textarea",
+      "question": "Describe, in a few words or sentences, the writer you're becoming. What will your voice and work feel like when you're closer to that future self?",
+      "placeholder": "e.g., Confident in my own rhythm, unafraid of quiet moments, writing stories that trust the reader...",
+      "required": false,
+      "maxLength": 500
+    },
+    {
+      "id": "step6c_process",
+      "type": "question",
+      "title": "Your writing process",
+      "description": "How you want to work",
+      "questionType": "textarea",
+      "question": "What do you want your writing process to feel like (e.g. playful, disciplined, exploratory, ritualistic) and what do you hope to get better at?",
+      "placeholder": "e.g., I want it to feel exploratory but with structure, getting better at finishing drafts...",
+      "required": false,
+      "maxLength": 500
+    },
+    {
+      "id": "step7_synthesis",
+      "type": "llm-processing",
+      "title": "Generating your Author Manifest",
+      "description": "Creating a draft based on your answers",
+      "hidden": false,
+      "prompt": {
+        "system": "You are an expert writing coach helping authors articulate their creative vision. Generate a thoughtful, personal Author Manifest based on the writer's responses. The manifest should feel authentic to their voice and aspirations, organized into clear sections: Purpose & Mission, Voice & Tone, Core Themes & Questions, Worlds & Characters, Principles & Non-Negotiables, Audience, and Aspirations for Growth. Write in second person ('you', 'your') as if speaking directly to the author. Be specific, drawing from their actual answers. Avoid generic advice.",
+        "user": "Based on these responses, create an Author Manifest:\n\nINFLUENCES:\n{{step1a_influences}}\n\nASPIRATIONAL QUALITIES:\n{{step1b_traits}}\n\nEMOTIONAL INTENSITY (1-7): {{step2a_intensity}}\nEMOTIONAL AFTERTASTE: {{step2b_aftertaste}}\nCORE THEMES: {{step2c_themes}}\n\nWORLD REALISM (1-7): {{step3a_world_tilt}}\nWORLD SETTINGS: {{step3b_world_flavour}}\nCHARACTER TYPES: {{step3c_characters}}\nHUMAN STRUGGLES: {{step3d_struggles}}\n\nPRIORITIES: {{step4a_priorities}}\nTHINGS TO AVOID: {{step4b_avoid}}\nPRINCIPLES: {{step4c_principles}}\n\nREADER TEMPERAMENT: {{step5a_reader_temperament}}\nCOMPLEXITY LEVEL: {{step5b_complexity}}\nWHO NEEDS THIS: {{step5c_who_needs_this}}\n\nVOICE CLOSENESS (1-7): {{step6a_voice_closeness}}\nFUTURE SELF: {{step6b_future_self}}\nPROCESS ASPIRATION: {{step6c_process}}\n\nCreate a cohesive, inspiring Author Manifest organized into these sections:\n\n# Purpose & Mission\n# Voice & Tone\n# Core Themes & Questions\n# Worlds & Characters\n# Principles & Non-Negotiables\n# Your Reader\n# Aspirations for Growth"
+      },
+      "resultKey": "manifest_draft",
+      "extractJson": false,
+      "approvalOptions": {
+        "approveLabel": "This feels like me",
+        "rejectLabel": "Try again"
+      }
+    }
+  ],
+  "outputTemplate": "{{manifest_draft}}"
+}
