@@ -184,8 +184,7 @@ const App: React.FC = () => {
       editorMode = 'prose';
     } else if (
       (appSection === 'root' && rootSection === 'manifest') ||
-      (appSection === 'story' &&
-        (storySection === 'outline' || storySection === 'brief'))
+      (appSection === 'story' && storySection != 'prose')
     ) {
       editorMode = 'meta';
     }
