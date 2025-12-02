@@ -1,6 +1,6 @@
 // src/components/wizard/steps/LlmApprovalStepView.tsx
 import React from 'react';
-import { Stack, Text, Paper, Group, Button, List, Code, Box } from '@mantine/core';
+import { Stack, Text, Paper, Group, Button, List, Code, Box, Title } from '@mantine/core';
 import { Check, X, Edit } from 'lucide-react';
 import type { LlmApprovalStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
@@ -102,16 +102,16 @@ export const LlmApprovalStepView: React.FC<LlmApprovalStepViewProps> = ({ step }
   return (
     <Stack gap="md">
       {/* Step header */}
-      <div>
-        <Text size="lg" fw={600}>
+      <Stack gap="20" mb="2">
+        <Title order={1} size="h2" fw={600}>
           {step.title}
-        </Text>
+        </Title>
         {step.description && (
-          <Text size="sm" c="dimmed" mt="xs">
+          <Text size="sm" c="dimmed">
             {step.description}
           </Text>
         )}
-      </div>
+      </Stack>
 
       {/* Result display */}
       <Paper p="md" withBorder>

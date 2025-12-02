@@ -6,15 +6,68 @@
   "targetDoc": "manifest",
   "steps": [
     {
+      "id": "step2b_aftertaste",
+      "type": "question",
+      "title": "Emotional aftertaste",
+      "description": "What emotional resonance should remain?",
+      "questionType": "multi-select",
+      "question": "What emotional 'aftertaste' do you want your stories to leave?",
+      "required": true,
+      "minSelections": 1,
+      "maxSelections": 4,
+      "options": [
+        {
+          "value": "hopeful",
+          "label": "Hopeful",
+          "description": "A sense of possibility and optimism"
+        },
+        {
+          "value": "bittersweet",
+          "label": "Bittersweet",
+          "description": "Beauty tinged with loss or longing"
+        },
+        {
+          "value": "unsettled",
+          "label": "Unsettled",
+          "description": "Lingering questions and unease"
+        },
+        {
+          "value": "inspired",
+          "label": "Inspired to act",
+          "description": "Motivation to change or do something"
+        },
+        {
+          "value": "seen",
+          "label": "Seen and understood",
+          "description": "Recognition and validation"
+        },
+        {
+          "value": "thoughtful",
+          "label": "Intrigued and thoughtful",
+          "description": "Curiosity and reflection"
+        },
+        {
+          "value": "calm",
+          "label": "Calm and comforted",
+          "description": "Peace and reassurance"
+        },
+        {
+          "value": "challenged",
+          "label": "Shaken or challenged",
+          "description": "Assumptions questioned, perspective shifted"
+        }
+      ]
+    },
+    {
       "id": "step1a_influences",
       "type": "question",
       "title": "Who do you want to be as a writer?",
       "description": "Identify your aspirational voice through admired storytellers",
       "questionType": "textarea",
-      "question": "Name 3–5 authors, filmmakers, or storytellers whose work you wish you could have created yourself. What about their work draws you in?",
-      "placeholder": "e.g., Ursula Le Guin - her gentle wisdom and world-building...",
+      "question": "Name 3–5 authors, filmmakers, or storytellers whose work you wish you could have created yourself.",
+      "placeholder": "E.g Siri Hustvedt, J.K. Rowling & Charles Dickens",
       "required": true,
-      "minLength": 50,
+      "minLength": 30,
       "maxLength": 1000
     },
     {
@@ -84,69 +137,16 @@
       "id": "step2a_intensity",
       "type": "question",
       "title": "Emotional intensity",
-      "description": "Define how intense you want your stories to feel",
+      "question": "Where on the emotional spectrum do you see your stories landing?",
+      "description": "Set how much emotional intensity you want your storytelling to carry",
       "questionType": "scale",
-      "question": "How intense do you want your stories to feel for your readers?",
       "required": true,
       "min": 1,
-      "max": 7,
+      "max": 5,
       "scaleLabels": {
-        "min": "Gentle and soothing",
-        "max": "Powerful and overwhelming"
+        "min": "Quiet and understated",
+        "max": "Dramatic and emotionally charged"
       }
-    },
-    {
-      "id": "step2b_aftertaste",
-      "type": "question",
-      "title": "Emotional aftertaste",
-      "description": "What emotional resonance should remain?",
-      "questionType": "multi-select",
-      "question": "What emotional 'aftertaste' do you want your stories to leave?",
-      "required": true,
-      "minSelections": 1,
-      "maxSelections": 4,
-      "options": [
-        {
-          "value": "hopeful",
-          "label": "Hopeful",
-          "description": "A sense of possibility and optimism"
-        },
-        {
-          "value": "bittersweet",
-          "label": "Bittersweet",
-          "description": "Beauty tinged with loss or longing"
-        },
-        {
-          "value": "unsettled",
-          "label": "Unsettled",
-          "description": "Lingering questions and unease"
-        },
-        {
-          "value": "inspired",
-          "label": "Inspired to act",
-          "description": "Motivation to change or do something"
-        },
-        {
-          "value": "seen",
-          "label": "Seen and understood",
-          "description": "Recognition and validation"
-        },
-        {
-          "value": "thoughtful",
-          "label": "Intrigued and thoughtful",
-          "description": "Curiosity and reflection"
-        },
-        {
-          "value": "calm",
-          "label": "Calm and comforted",
-          "description": "Peace and reassurance"
-        },
-        {
-          "value": "challenged",
-          "label": "Shaken or challenged",
-          "description": "Assumptions questioned, perspective shifted"
-        }
-      ]
     },
     {
       "id": "step2c_themes",

@@ -1,7 +1,7 @@
 // src/components/wizard/WizardModal.tsx
 import React, { useEffect, useRef } from 'react';
-import { Box, Stack, Text, Button, Group } from '@mantine/core';
-import { Check } from 'lucide-react';
+import { Box, Stack, Text, Button, Group, ActionIcon, ScrollArea } from '@mantine/core';
+import { Check, X } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { useAppStore } from '../../state/useAppStore';
 import { getCurrentStep } from '../../wizards/navigation';
@@ -270,66 +270,107 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     <Modal
       opened={opened}
       onClose={handleClose}
-      title=""
-      size="xl"
+      size="90%"
       closeOnClickOutside={false}
       closeOnEscape={false}
       centered={false}
+      withCloseButton={false}
+      padding="0"
       styles={{
-        inner: {
-          paddingTop: 60,
-          paddingBottom: 60,
+        content: {
+          height: '90vh',
+          maxHeight: '90vh',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+        body: {
+          padding: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
         },
       }}
     >
-      <Stack gap="lg">
-        {/* Step indicator with fade overflow */}
+        {/* Top Shader */}
         <Box
           style={{
-            position: 'relative',
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            right: 0,
+            height: 100,
+            background: 'linear-gradient(to bottom, var(--mantine-color-body) 0%, transparent 100%)',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
+
+        {/* Top header */}
+        <Box
+          pt="30px"
+          pl="0"
+          pr="70px"
+          mb="20px"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
             overflow: 'hidden',
-            paddingBottom: 8,
+            zIndex: 100
           }}
         >
-          {/* Left fade gradient */}
           <Box
             style={{
               position: 'absolute',
               left: 0,
               top: 0,
-              bottom: 8,
-              width: 60,
+              bottom: 0,
+              width: 50,
               background: 'linear-gradient(to right, var(--mantine-color-body) 0%, transparent 100%)',
               pointerEvents: 'none',
               zIndex: 1,
             }}
           />
 
-          {/* Right fade gradient */}
+          <ActionIcon
+            aria-label="Close"
+            variant="subtle"
+            color="var(--text)"
+            onClick={handleClose}
+            style={{
+              position: 'absolute',
+              right: 30,
+              top: 37,
+              zIndex: 1,
+            }}
+          >
+            <X />
+          </ActionIcon>
+
           <Box
             style={{
               position: 'absolute',
-              right: 0,
+              right: 70,
               top: 0,
-              bottom: 8,
-              width: 60,
+              bottom: 0,
+              width: 70,
               background: 'linear-gradient(to left, var(--mantine-color-body) 0%, transparent 100%)',
               pointerEvents: 'none',
               zIndex: 1,
             }}
           />
 
-          {/* Steps container */}
           <Group
-            gap="xl"
             wrap="nowrap"
+            gap="10"
+            pl="30"
+            pr="60"
             style={{
-              overflowX: 'auto',
-              scrollBehavior: 'smooth',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              paddingLeft: 40,
-              paddingRight: 40,
+              overflow: 'hidden',
             }}
             ref={(node) => {
               if (node) {
@@ -351,8 +392,27 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
               const isFuture = index > currentStepIndex;
 
               return (
-                <Group key={step.id} gap={6} wrap="nowrap" style={{ flex: '0 0 auto', opacity: isCompleted ? 0.5 : 1 }}>
-                  {/* Circle with number or checkmark */}
+                <Group
+                  key={step.id}
+                  pl="4"
+                  pr="14"
+                  py="4"
+                  gap={6}
+                  wrap="nowrap"
+                  style={{
+                    borderRadius: 20,
+                    flex: '0 0 auto',
+                    backgroundColor: isCompleted
+                      ? 'var(--mantine-color-dark-8)'
+                      : isCurrent
+                      ? 'var(--mantine-color-dark-4)'
+                      : 'var(--mantine-color-dark-8)',
+                    color: isCompleted
+                      ? 'rgba(0,0,0,.3)'
+                      : isCurrent
+                      ? 'white'
+                      : 'var(--mantine-color-dark-2)',
+                  }}>
                   <Box
                     style={{
                       width: 32,
@@ -361,25 +421,24 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: isCompleted
-                        ? 'var(--mantine-color-green-8)'
-                        : isCurrent
-                        ? 'white'
-                        : 'var(--mantine-color-dark-5)',
-                      color: isCompleted
-                        ? 'white'
-                        : isCurrent
-                        ? 'var(--mantine-color-dark-9)'
-                        : 'var(--mantine-color-dark-2)',
                       fontWeight: 600,
                       fontSize: 14,
                       flexShrink: 0,
+                      backgroundColor: isCompleted
+                        ? 'rgba(0,0,0,.05)'
+                        : isCurrent
+                        ? 'rgba(255,255,255,.15)'
+                        : 'rgba(255,255,255,.05)',
+                      color: isCompleted
+                        ? 'rgba(0,0,0,.3)'
+                        : isCurrent
+                        ? 'white'
+                        : 'var(--mantine-color-dark-2)',
                     }}
                   >
                     {isCompleted ? <Check size={16} /> : index + 1}
                   </Box>
 
-                  {/* Step title */}
                   <Text
                     size="sm"
                     fw={isCurrent ? 600 : 400}
@@ -387,7 +446,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
                     style={{
                       whiteSpace: 'nowrap',
                       opacity: isFuture ? 0.5 : 1,
-                      color: isCompleted ? 'var(--mantine-color-green-8)' : undefined,
+                      color: isCompleted ? 'var(--mantine-color-green-10)' : undefined,
                     }}
                   >
                     {step.title}
@@ -396,22 +455,18 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
               );
             })}
           </Group>
-
-          {/* Hide scrollbar with CSS */}
-          <style>{`
-            .mantine-Group-root::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
         </Box>
 
-        {/* Step content */}
-        <Box p="xl" style={{ minHeight: 200 }}>
+        {/* Middle: ScrollArea should take remaining space */}
+        <ScrollArea
+          pb="20"
+          px="30"
+          style={{ flex: 1, minHeight: 0 }}
+        >
           {currentStep ? (
-            <>
-              {/* Render appropriate step component based on type */}
+            <Box pt="150">
               {currentStep.type === 'question' && (
-                <QuestionStepView step={currentStep as QuestionStep} />
+                <QuestionStepView key={currentStep.id} step={currentStep as QuestionStep} />
               )}
 
               {currentStep.type === 'llm-processing' && (
@@ -437,16 +492,23 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
                   </Text>
                 </Stack>
               )}
-            </>
+            </Box>
           ) : (
             <Text c="dimmed">No step found</Text>
           )}
-        </Box>
+        </ScrollArea>
 
-        {/* Navigation */}
-        <Group justify={canGoBack ? "space-between" : "flex-end"}>
+        {/* Bottom buttons */}
+        <Group
+          justify={canGoBack ? 'space-between' : 'flex-end'}
+          mx="30"
+          mb="20"
+          style={{
+            flex: '0 0 auto'
+          }}
+        >
           {canGoBack && (
-            <Button variant="subtle" onClick={handleBack}>
+            <Button variant="light" onClick={handleBack}>
               Back
             </Button>
           )}
@@ -472,7 +534,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
             </Group>
           )}
         </Group>
-      </Stack>
     </Modal>
   );
 };
