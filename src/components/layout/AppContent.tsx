@@ -7,6 +7,7 @@ import { PlaygroundView } from '../playground/PlaygroundView';
 import { StoriesView } from '../stories/StoriesView';
 import { StoryTextView } from '../story/StoryTextView';
 import { StoryOutlineView } from '../story/StoryOutlineView';
+import { StoryWorldView } from '../story/StoryWorldView';
 import { StoryBriefView } from '../story/StoryBriefView';
 import type { Project, StoryMeta } from '../../api/alineaClient';
 import type { ProseDoc } from '../editor/ProseEditor';
@@ -116,6 +117,15 @@ export const AppContent: React.FC<AppContentProps> = ({
     if (storySection === 'outline') {
       return (
         <StoryOutlineView
+          projectId={selectedProjectId}
+          storyId={selectedStoryId}
+        />
+      );
+    }
+
+    if (storySection === 'world') {
+      return (
+        <StoryWorldView
           projectId={selectedProjectId}
           storyId={selectedStoryId}
         />

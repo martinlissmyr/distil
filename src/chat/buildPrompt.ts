@@ -64,6 +64,7 @@ export async function buildPrompt({
       case 'manifest': return 'AUTHOR MANIFEST (style/tone)';
       case 'brief': return 'STORY BRIEF (high-level concept)';
       case 'outline': return 'STORY OUTLINE (structure/plot)';
+      case 'world': return 'WORLD (setting/worldbuilding)';
       default: return docKey.toUpperCase();
     }
   };
@@ -109,6 +110,8 @@ export async function buildPrompt({
         shouldInclude = true;
       } else if (docKey === 'outline' && contextNeeds.needsOutline) {
         shouldInclude = true;
+      } else if (docKey === 'world' && contextNeeds.needsWorld) {
+        shouldInclude = true;
       }
       // Future: Add checks for 'characters', 'places', etc.
 
@@ -138,6 +141,7 @@ export async function buildPrompt({
     manifest: '- An author manifest (style/tone)',
     brief: '- A story brief (high-level concept)',
     outline: '- A story outline (structure/plot)',
+    world: '- World information (setting/worldbuilding)',
   };
 
   for (const docKey of includedContexts) {
