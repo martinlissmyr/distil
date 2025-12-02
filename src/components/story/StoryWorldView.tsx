@@ -24,7 +24,7 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
         metaKey="world"
         title="World"
         placeholder="Describe the world of your story: time period, location, world-building details, rules of the world…"
-        withChat={false}
+        withChat
       />
     </StorySectionShell>
   );
