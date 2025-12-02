@@ -20,6 +20,7 @@ import {
   Settings2,
   Feather,
   FlaskConical,
+  Globe,
 } from 'lucide-react';
 
 import {
@@ -45,6 +46,7 @@ type SidebarMode = 'projects' | 'project' | 'story';
 export type StorySection =
   | 'prose'
   | 'outline'
+  | 'world'
   | 'brief'
   | 'characters'
   | 'locations';
@@ -380,6 +382,12 @@ const StorySidebar: React.FC<StorySidebarProps> = ({
           label="Outline"
           active={section === 'outline'}
           onClick={() => onSelectStorySection('outline')}
+        />
+        <NavItem
+          Icon={Globe}
+          label="World"
+          active={section === 'world'}
+          onClick={() => onSelectStorySection('world')}
         />
         <NavItem
           Icon={Users}

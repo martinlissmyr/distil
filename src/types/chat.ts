@@ -3,7 +3,7 @@ import type { MetaDocKey } from './metaDoc';
 
 /**
  * Type of editor for context-aware prompting
- * Extends MetaDocKey (manifest, brief, outline) with 'prose' for story text
+ * Extends MetaDocKey (manifest, brief, outline, world) with 'prose' for story text
  */
 export type EditorKind = MetaDocKey | 'prose';
 

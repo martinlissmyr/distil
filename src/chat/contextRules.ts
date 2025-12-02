@@ -42,7 +42,7 @@ export const CONTEXT_RULES: Record<EditorKind, ContextRules> = {
   prose: {
     alwaysInclude: ['manifest'],
     neverInclude: [],
-    intelligentlySelect: ['brief', 'outline'], // Future: 'characters', 'places'
+    intelligentlySelect: ['brief', 'outline', 'world'], // Future: 'characters', 'places'
   },
 
   /**
@@ -51,7 +51,7 @@ export const CONTEXT_RULES: Record<EditorKind, ContextRules> = {
    */
   brief: {
     alwaysInclude: ['manifest'],
-    neverInclude: ['outline'], // Future: 'characters', 'places'
+    neverInclude: ['outline', 'world'], // Future: 'characters', 'places'
     intelligentlySelect: [],
   },
 
@@ -61,7 +61,7 @@ export const CONTEXT_RULES: Record<EditorKind, ContextRules> = {
    */
   outline: {
     alwaysInclude: ['manifest', 'brief'],
-    neverInclude: [],
+    neverInclude: ['world'],
     intelligentlySelect: [], // Future: 'characters', 'places'
   },
 
@@ -71,7 +71,7 @@ export const CONTEXT_RULES: Record<EditorKind, ContextRules> = {
    */
   manifest: {
     alwaysInclude: [],
-    neverInclude: ['brief', 'outline'], // Future: 'characters', 'places'
+    neverInclude: ['brief', 'outline', 'world'], // Future: 'characters', 'places'
     intelligentlySelect: [],
   },
 

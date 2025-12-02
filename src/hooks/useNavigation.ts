@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { useEffect, useCallback, useRef } from 'react';
 
 // Types
-export type StorySection = 'prose' | 'outline' | 'brief' | 'characters' | 'locations';
+export type StorySection = 'prose' | 'outline' | 'world' | 'brief' | 'characters' | 'locations';
 export type RootSection = 'projects' | 'manifest' | 'playground';
 export type AppSection = 'root' | 'project' | 'story';
 
