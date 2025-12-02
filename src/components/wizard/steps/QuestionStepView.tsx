@@ -1,6 +1,20 @@
 // src/components/wizard/steps/QuestionStepView.tsx
 import React, { useState, useEffect } from 'react';
-import { Stack, Text, Textarea, TextInput, Group, Badge, Slider, Radio, Checkbox } from '@mantine/core';
+import { 
+  Stack, 
+  Text, 
+  Textarea, 
+  TextInput, 
+  Group, 
+  Badge, 
+  Slider, 
+  Radio, 
+  Checkbox, 
+  Box, 
+  SimpleGrid, 
+  Flex, 
+  Title
+} from '@mantine/core';
 import type { QuestionStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
 
@@ -129,16 +143,16 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   return (
     <Stack gap="md">
       {/* Question text */}
-      <div>
-        <Text size="lg" fw={600} mb="xs">
+      <Stack gap="20" mb="2">
+        <Title order={1} size="h2" fw={600}>
           {step.question}
-        </Text>
+        </Title>
         {step.description && (
           <Text size="sm" c="dimmed">
             {step.description}
           </Text>
         )}
-      </div>
+      </Stack>
 
       {/* Input based on question type */}
       {step.questionType === 'textarea' && (
@@ -236,90 +250,124 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
       )}
 
       {step.questionType === 'scale' && (
-        <div style={{ paddingLeft: '4px', paddingRight: '4px' }}>
+        <div>
           <Slider
             value={value}
+            restrictToMarks
             onChange={handleScaleChange}
             min={step.min ?? 0}
             max={step.max ?? 10}
-            marks={[
-              { value: step.min ?? 0, label: step.scaleLabels?.min || String(step.min ?? 0) },
-              { value: step.max ?? 10, label: step.scaleLabels?.max || String(step.max ?? 10) },
-            ]}
-            label={(val) => val}
-            mb="md"
+            marks={Array.from({ length: ((step.max ?? 10) - (step.min ?? 0) + 1) }).map((_, index) => ({ value: ((step.min ?? 0) + index), label: String((step.min ?? 0) + index) }))}
+            size="xl"
+            label={null}
+            styles={{
+              markLabel: {
+                textAlign: 'center'
+              }
+            }}
           />
-          <style>{`
-            .mantine-Slider-markLabel:first-of-type {
-              transform: translateX(0) !important;
-              text-align: left;
-              left: 0 !important;
-            }
-            .mantine-Slider-markLabel:last-of-type {
-              transform: translateX(-100%) !important;
-              text-align: right;
-              right: 0 !important;
-              left: auto !important;
-            }
-          `}</style>
+          <Group justify="space-between" mt="28" ml="6" mr="6">
+            <Box style={{
+              opacity: Math.max(0.2, Math.min(1, 1 - ((value - step.min) / (step.max - step.min)) * 0.8))
+            }}>
+              <Text size="sm">{step.scaleLabels.min}</Text>
+            </Box>
+            <Box style={{
+              opacity: Math.max(0.2, Math.min(1, 0.2 + ((value - step.min) / (step.max - step.min)) * 0.8))
+            }}>
+              <Text size="sm">{step.scaleLabels.max}</Text>
+            </Box>
+          </Group>
         </div>
       )}
 
       {step.questionType === 'single-select' && (
         <div>
           <Radio.Group value={value} onChange={handleSingleSelectChange}>
-            <Stack gap="sm">
+            <SimpleGrid cols={2} gap="sm" overflow="hidden">
               {options.map((option) => (
-                <Radio
-                  key={option.value}
-                  value={option.value}
-                  label={
-                    <div>
-                      <Text size="sm" fw={500}>
-                        {option.label}
-                      </Text>
-                      {option.description && (
-                        <Text size="xs" c="dimmed">
-                          {option.description}
-                        </Text>
-                      )}
-                    </div>
-                  }
-                />
+                <Box key={option.value}>
+                  <Radio.Card
+                    radius="48"
+                    px="15"
+                    py="10"
+                    value={option.value}
+                    withBorder={false}
+                    bg={value == option.value ? `var(--overlay-highlighted` : `var(--overlay-subtle`}
+                  >
+                    <Flex gap="10" align="center">
+                      <Radio.Indicator
+                        variant="outline"
+                        radius="xl"
+                        size="lg"
+                      />
+                      <Stack gap="0">
+                        <Text size="sm" fw={500}>{option.label}</Text>
+                        {option.description && (
+                          <Text size="sm" c="dimmed">{option.description}</Text>
+                        )}
+                      </Stack>
+                    </Flex>
+                  </Radio.Card>
+                </Box>
               ))}
-            </Stack>
+            </SimpleGrid>
           </Radio.Group>
         </div>
       )}
 
       {step.questionType === 'multi-select' && (
         <div>
-          <Stack gap="sm">
+          {step.minSelections && step.maxSelections && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="gray"
+              mb="md"
+            >
+              Select{" "}
+              {step.maxSelections-step.minSelections > 1 && (
+                <>
+                {step.minSelections}-{step.maxSelections} options
+                </>
+              )}
+              {step.maxSelections-step.minSelections == 1 && (
+                <>
+                1 option
+                </>
+              )}
+            </Badge>
+          )}
+          <SimpleGrid cols={2} gap="sm" overflow="hidden">
             {options.map((option) => (
-              <Checkbox
-                key={option.value}
-                checked={Array.isArray(value) && value.includes(option.value)}
-                onChange={() => handleMultiSelectToggle(option.value)}
-                label={
-                  <div>
-                    <Text size="sm" fw={500}>
-                      {option.label}
-                    </Text>
-                    {option.description && (
-                      <Text size="xs" c="dimmed">
-                        {option.description}
-                      </Text>
-                    )}
-                  </div>
-                }
-              />
+              <Box key={option.value}>
+                <Checkbox.Card
+                  radius="48"
+                  px="15"
+                  py="10"
+                  value={option.value}
+                  checked={Array.isArray(value) && value.includes(option.value)}
+                  onChange={() => handleMultiSelectToggle(option.value)}
+                  withBorder={false}
+                  bg={Array.isArray(value) && value.includes(option.value) ? `var(--overlay-highlighted` : `var(--overlay-subtle`}
+                >
+                  <Flex gap="10" align="center">
+                    <Checkbox.Indicator
+                      variant="outline"
+                      radius="xl"
+                      size="lg"
+                    />
+                    <Stack gap="0">
+                      <Text size="sm" fw={500}>{option.label}</Text>
+                      {option.description && (
+                        <Text size="sm" c="dimmed">{option.description}</Text>
+                      )}
+                    </Stack>
+                  </Flex>
+                </Checkbox.Card>
+              </Box>
             ))}
-            {step.minSelections && step.maxSelections && (
-              <Text size="xs" c="dimmed">
-                Select {step.minSelections}-{step.maxSelections} option(s)
-              </Text>
-            )}
-          </Stack>
+          </SimpleGrid>
         </div>
       )}
     </Stack>
