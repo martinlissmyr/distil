@@ -3,7 +3,6 @@ import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
-import { persistentSelectionPluginKey } from './extensions/PersistentSelectionHighlight';
 import type { ChatConfig } from './ProseEditor';
 import '../../styles/Editor.scss';
 
@@ -86,20 +85,9 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       setHasSelection(hasSel);
 
       if (!hasSel) {
-        const trClear = state.tr.setMeta(persistentSelectionPluginKey, {
-          type: 'clear',
-        });
-        editor.view.dispatch(trClear);
         setSelectionMarkdown('');
         return;
       }
-
-      const tr = state.tr.setMeta(persistentSelectionPluginKey, {
-        type: 'set',
-        from,
-        to,
-      });
-      editor.view.dispatch(tr);
 
       try {
         const slice = state.doc.cut(from, to).toJSON();

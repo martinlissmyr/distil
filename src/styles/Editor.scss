@@ -48,10 +48,28 @@
   line-height: 1.25;
 }
 
-.ProseMirror > * {
-  margin-top: 0;
-  margin-left: var(--editor-gutter);
-  margin-right: var(--editor-gutter);
+.ProseMirror {
+  color: var(--editor-text-color);
+
+  & > * {
+    margin-top: 0;
+    margin-left: var(--editor-gutter);
+    margin-right: var(--editor-gutter);
+  }
+
+  .selection,
+  & ::selection {
+    background-color: var(--editor-highlighted-text-bg);
+    color: inherit;
+  }
+
+  .selection {
+    padding-inline: 0.01em;   /* thicker but still natural */
+    margin-inline: -0.01em;
+    padding-block: 0.087em;    /* adds vertical bleed like ::selection */
+    margin-block: -0.087em;
+  }
+
 }
 
 .ProseMirror {
