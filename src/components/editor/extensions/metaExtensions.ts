@@ -1,14 +1,9 @@
 // src/components/editor/extensions/metaExtensions.ts
-import StarterKit from '@tiptap/starter-kit';
-import Heading from '@tiptap/extension-heading';
+import type { Extension } from '@tiptap/core';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import Placeholder from '@tiptap/extension-placeholder';
-import { Markdown } from '@tiptap/markdown';
-import { PersistentSelectionHighlight } from './PersistentSelectionHighlight';
-
-import type { Extension } from '@tiptap/core';
+import { createBaseExtensions } from './sharedExtensions';
 
 type MetaExtensionsOptions = {
   placeholder?: string;
@@ -17,31 +12,25 @@ type MetaExtensionsOptions = {
 export function metaExtensions(
   { placeholder = '' }: MetaExtensionsOptions = {}
 ): Extension[] {
-  return [
-    Markdown.configure({}),
-    PersistentSelectionHighlight,
-    StarterKit.configure({
+  return createBaseExtensions({
+    placeholder,
+    headingLevels: [1, 2],
+    starterKitConfig: {
       heading: false,
       bulletList: false,
       orderedList: false,
       horizontalRule: false,
-    }),
-    Heading.configure({
-      levels: [1, 2],
-    }),
-    BulletList.configure({
-      keepMarks: true,
-      keepAttributes: true,
-    }),
-    OrderedList.configure({
-      keepMarks: true,
-      keepAttributes: true,
-    }),
-    HorizontalRule,
-    Placeholder.configure({
-      placeholder,
-      includeChildren: true,
-      showOnlyWhenEditable: true,
-    }),
-  ];
+    },
+    extraExtensions: [
+      BulletList.configure({
+        keepMarks: true,
+        keepAttributes: true,
+      }),
+      OrderedList.configure({
+        keepMarks: true,
+        keepAttributes: true,
+      }),
+      HorizontalRule,
+    ],
+  });
 }

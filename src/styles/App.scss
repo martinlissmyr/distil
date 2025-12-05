@@ -37,6 +37,11 @@
   // Editor Mode Variations
   // --------------------------------------------------------------------------
 
+  --editor-text-color: rgba(15, 15, 15, .9);
+  --editor-text-color-dimmed: rgba(15, 15, 15, .2);
+  --editor-highlighted-text: rgba(10, 10, 10, 1);
+  --editor-highlighted-text-bg: rgba(255, 235, 80, 0.45);
+
   // Meta editor mode (manifest, outline, brief)
   &[data-editor-mode='meta'] {
     --bg-sidebar: rgba(249, 239, 235, 1);
@@ -100,6 +105,11 @@
   // --------------------------------------------------------------------------
   // Editor Mode Variations
   // --------------------------------------------------------------------------
+
+  --editor-text-color: rgba(235, 235, 235, .9);
+  --editor-text-color-dimmed: rgba(235, 235, 235, .2);
+  --editor-highlighted-text: rgba(245, 245, 245, 1);
+  --editor-highlighted-text-bg: rgba(255, 235, 80, 0.45);
 
   // Meta editor mode (manifest, outline, brief)
   &[data-editor-mode='meta'] {

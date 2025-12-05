@@ -7,10 +7,5 @@ import type { JSONContent } from '@tiptap/react';
  */
 export const defaultEmptyDoc: JSONContent = {
   type: 'doc',
-  content: [
-    {
-      type: 'paragraph',
-      // no content: [] needed, Tiptap will treat this as an empty paragraph
-    },
-  ],
+  content: [],
 };
