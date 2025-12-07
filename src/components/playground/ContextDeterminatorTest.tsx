@@ -221,7 +221,7 @@ ${userPrompt}`);
             const rules = getContextRules(actualEditorKind);
 
             // Don't show the document being edited as a potential context
-            const potentialContextDocs: MetaDocKey[] = ['manifest', 'brief', 'outline'].filter(
+            const potentialContextDocs: MetaDocKey[] = ['manifest', 'brief', 'outline', 'world'].filter(
               (doc) => doc !== actualEditorKind
             );
 
@@ -281,6 +281,12 @@ ${userPrompt}`);
                       <Text size="sm">Needs Outline:</Text>
                       <Badge color={heuristicResult.needsOutline ? 'blue' : 'gray'}>
                         {heuristicResult.needsOutline ? 'Yes' : 'No'}
+                      </Badge>
+                    </Group>
+                    <Group gap="xs">
+                      <Text size="sm">Needs World:</Text>
+                      <Badge color={heuristicResult.needsWorld ? 'blue' : 'gray'}>
+                        {heuristicResult.needsWorld ? 'Yes' : 'No'}
                       </Badge>
                     </Group>
                   </Stack>
@@ -354,6 +360,9 @@ ${userPrompt}`);
             }
             if (actualEditorKind !== 'outline') {
               documentsToShow.push({ key: 'outline', label: 'Outline', included: finalResult.needsOutline });
+            }
+            if (actualEditorKind !== 'world') {
+              documentsToShow.push({ key: 'world', label: 'World', included: finalResult.needsWorld });
             }
 
             return (

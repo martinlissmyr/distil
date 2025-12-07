@@ -102,72 +102,72 @@ function quickHeuristicCheck(userPrompt: string, language: 'sv' | 'en' = 'sv'): 
  * System prompt used for LLM context classification
  * Exported for testing and debugging purposes
  */
-export const LLM_CONTEXT_CLASSIFICATION_PROMPT = `# Role and Objective
-- Assess whether a user's writing question would be better answered with access to the story's Brief, Outline, and/or World. Your goal is to guide prompt construction for API calls so the assistant receives the context it needs to respond effectively.
+export const LLM_CONTEXT_CLASSIFICATION_PROMPT = `Developer: # Role and Objective
+- Evaluate whether a user's writing question should be answered using the story's Brief, Outline, and/or World. Your objective is to guide prompt construction for API calls so that the assistant gains the necessary context for an effective response.
 
 # Instructions
-- Begin with a concise checklist (3-7 conceptual steps) outlining your evaluation process before you proceed; keep items high-level, not implementation-specific.
-- Determine whether each context type would meaningfully improve the assistant's ability to answer the user's question.
-- Use these criteria:
-  - **Brief**: needed when understanding the story's premise, themes, tone, or main character concepts would influence or improve the response.
-  - **Outline**: needed when understanding plot structure, narrative order, character arcs, or planned story events would influence or improve the response.
-  - **World**: needed when understanding the setting, time period, world-building details, rules of the world, geography, culture, or historical context would influence or improve the response.
-- Treat requests for scenes, chapters, continuations, rewrites, or expansions as implicitly dependent on story structure, and therefore usually requiring the Outline (and often the Brief).
-- When a question is vague but clearly refers to story content (e.g., "skriv första scenen", "fortsätt berättelsen"), interpret it as needing relevant context documents.
-- Only return false for a context type when the question can be answered just as well without that information.
-- If the question is completely generic and unrelated to a specific story, set all fields to false.
-- After generating your response, validate that only the specified JSON object appears in the output.
+- Begin with a concise checklist (3–7 bullets) of conceptual evaluation steps before proceeding.
+- Assess, for each context type, whether it would meaningfully enhance the assistant’s ability to answer the user’s question.
+- Apply the following criteria:
+  - **Brief**: Required if understanding the story’s core idea, themes, tone, or principal character concepts would inform or improve the answer.
+  - **Outline**: Required if knowledge of the plot structure, narrative flow, character arcs, or story events is needed to influence or enhance the response.
+  - **World**: Required if familiarity with the setting, period, world-building details, rules, geography, culture, or historical background is essential for completing the request.
+- Automatically assume that requests for scenes, chapters, continuations, rewrites, or expansions rely on the story’s structure, and thus usually require the Outline (and often the Brief).
+- If a question is vague but clearly references story content (e.g., "skriv första scenen," "fortsätt berättelsen"), interpret it as requiring the relevant context documents.
+- Only set a context field to false if the question can be fully and effectively answered without that information.
+- For questions that are entirely generic and not linked to any story, set all context fields to false.
+Before generating output, set reasoning_effort = minimal; proceed efficiently but ensure all relevant checks are performed.
+- Upon generating your answer, ensure that your response contains only the specified JSON object format and validate strict adherence to the output schema. If the schema is not met, self-correct and regenerate.
 
 # Context Definitions
 
 ## Brief
 Includes:
-- Core idea or concept
+- Core idea/concept
 - Central premise
 - Themes
 - Tone
 - Main character concepts
 
-Use when these elements shape how the requested writing should be executed.
+Use when these qualities would shape the requested writing style or substance.
 
 ## Outline
 Includes:
-- Plot structure and sequence of events
+- Plot structure and event sequence
 - Character arcs and motivations
-- Relationships and conflicts
-- Turning points, reveals, resolution plans
-- Scene/sequence ordering
+- Relationships/conflicts
+- Turning points, reveals, and resolutions
+- Scene/sequence order
 
-Use when the user's request depends on what has happened, or will happen, in the story.
+Use when context involving story events—past or future—is necessary.
 
 ## World
 Includes:
-- Setting and location details
-- Time period and historical context
-- World-building elements and rules
-- Geography and environment
-- Culture and society
-- Fantasy/sci-fi elements and mechanics
+- Setting/location details
+- Time period/historical background
+- World-building/rules
+- Geography/environment
+- Culture/society
+- Fantasy/sci-fi aspects
 
-Use when the user's request involves descriptions of places, time periods, or world-specific details.
+Use when the request calls for a detailed depiction of locations, eras, or world-specific characteristics.
 
 # Output Format
-Respond only with this JSON object:
+Respond strictly with the following JSON schema:
 
 \`\`\`json
 {
-  "needsBrief": boolean,   // true only if story brief is necessary
-  "needsOutline": boolean, // true only if story outline is necessary
-  "needsWorld": boolean    // true only if world information is necessary
+  "needsBrief": boolean,   // true only if the story brief is necessary
+  "needsOutline": boolean, // true only if the story outline is necessary
+  "needsWorld": boolean    // true only if world-building information is necessary
 }
 \`\`\`
 
 # Verbosity
-- The output must strictly consist of the JSON object as specified
-— No additional content.
+- Output must exclusively consist of the specified JSON object—no extra content.
 
 # Verification & Stop Condition
-- After generating your output, confirm strict schema adherence. Complete the task upon producing a correctly formatted JSON object.`;
+- After generating output, confirm strict adherence to the schema. If validation fails, self-correct and regenerate. Finish the task upon correct JSON object generation.`;
 
 /**
  * Use LLM to intelligently classify context needs

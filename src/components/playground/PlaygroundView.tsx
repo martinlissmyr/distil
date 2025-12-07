@@ -25,6 +25,7 @@ type PlaygroundState = {
   simulateEmptyManifest: boolean;
   simulateEmptyBrief: boolean;
   simulateEmptyOutline: boolean;
+  simulateEmptyWorld: boolean;
   emptyMainDoc: boolean;
 
   // Scope
@@ -79,6 +80,7 @@ export const PlaygroundView: React.FC = () => {
     simulateEmptyManifest: false,
     simulateEmptyBrief: false,
     simulateEmptyOutline: false,
+    simulateEmptyWorld: false,
     emptyMainDoc: false,
     scope: 'text',
     userPrompt: '{{What the user actually writes}}',
@@ -95,11 +97,13 @@ export const PlaygroundView: React.FC = () => {
   const [docStatus, setDocStatus] = useState<{
     manifestHasContent: boolean;
     briefHasContent: boolean;
+    worldHasContent: boolean;
     outlineHasContent: boolean;
     mainDocHasContent: boolean;
   }>({
     manifestHasContent: false,
     briefHasContent: false,
+    worldHasContent: false,
     outlineHasContent: false,
     mainDocHasContent: false,
   });
@@ -154,7 +158,7 @@ export const PlaygroundView: React.FC = () => {
           }));
         }
       } else {
-        // Load metaDoc (brief or outline)
+        // Load metaDoc (brief, world or outline)
         await ensureMetaDocsLoaded(
           { kind: 'story', projectId: state.selectedProjectId!, storyId: state.selectedStoryId! },
           [state.metaDocType]
@@ -186,6 +190,7 @@ export const PlaygroundView: React.FC = () => {
             // Also update the context status for this metaDoc
             ...(state.metaDocType === 'brief' && { briefHasContent: hasContent }),
             ...(state.metaDocType === 'outline' && { outlineHasContent: hasContent }),
+            ...(state.metaDocType === 'world' && { worldHasContent: hasContent }),
           }));
         }
       }
@@ -201,6 +206,7 @@ export const PlaygroundView: React.FC = () => {
         manifestHasContent: false,
         briefHasContent: false,
         outlineHasContent: false,
+        worldHasContent: false,
         mainDocHasContent: false,
       });
       return;
@@ -217,7 +223,7 @@ export const PlaygroundView: React.FC = () => {
       // Load story metaDocs
       await ensureMetaDocsLoaded(
         { kind: 'story', projectId: state.selectedProjectId!, storyId: state.selectedStoryId! },
-        ['brief', 'outline']
+        ['brief', 'outline', 'world']
       );
 
       const briefDoc = getMetaDoc(
@@ -230,11 +236,17 @@ export const PlaygroundView: React.FC = () => {
         'outline'
       );
 
+      const worldDoc = getMetaDoc(
+        { kind: 'story', projectId: state.selectedProjectId!, storyId: state.selectedStoryId! },
+        'world'
+      );
+
       setDocStatus((prevStatus) => ({
         ...prevStatus,
         manifestHasContent: !!(manifestDoc?.markdown && manifestDoc.markdown.trim().length > 0),
         briefHasContent: !!(briefDoc?.markdown && briefDoc.markdown.trim().length > 0),
         outlineHasContent: !!(outlineDoc?.markdown && outlineDoc.markdown.trim().length > 0),
+        worldHasContent: !!(worldDoc?.markdown && worldDoc.markdown.trim().length > 0),
       }));
     };
 
@@ -288,6 +300,9 @@ export const PlaygroundView: React.FC = () => {
       const outlineDoc = state.selectedProjectId && state.selectedStoryId
         ? getMetaDoc({ kind: 'story', projectId: state.selectedProjectId, storyId: state.selectedStoryId }, 'outline')
         : null;
+      const worldDoc = state.selectedProjectId && state.selectedStoryId
+        ? getMetaDoc({ kind: 'world', projectId: state.selectedProjectId, storyId: state.selectedStoryId }, 'world')
+        : null;
 
       // Apply overrides to the store temporarily
       if (state.simulateEmptyManifest && manifestDoc) {
@@ -306,6 +321,16 @@ export const PlaygroundView: React.FC = () => {
           metaDocs: {
             ...s.metaDocs,
             [briefId]: { ...briefDoc, markdown: '' },
+          },
+        }));
+      }
+
+      if (state.simulateEmptyWorld && worldDoc) {
+        const worldId = `story:project-${state.selectedProjectId}:story-${state.selectedStoryId}::world`;
+        useAppStore.setState((s) => ({
+          metaDocs: {
+            ...s.metaDocs,
+            [worldId]: { ...worldDoc, markdown: '' },
           },
         }));
       }
@@ -414,6 +439,7 @@ export const PlaygroundView: React.FC = () => {
                       data={[
                         { label: 'Prose', value: 'prose' },
                         { label: 'Brief', value: 'brief' },
+                        { label: 'World', value: 'world' },
                         { label: 'Outline', value: 'outline' },
                       ]}
                     />
@@ -426,25 +452,50 @@ export const PlaygroundView: React.FC = () => {
           {/* Only show configuration sections when ready */}
           {(state.contextType === 'manifest' || (state.contextType === 'story' && state.selectedStoryId)) && (
             <>
-              {/* Combined Document Status */}
+              {/* Main Document Status */}
               <Paper p="md">
                 <Stack gap="md">
-                  {/* Main Document Status */}
                   {docStatus.mainDocHasContent ? (
-                    <Group justify="space-between" align="center">
-                      <Group gap="xs">
-                        <Check size={16} color="var(--mantine-color-green-6)" />
-                        <Text size="sm" fw={500}>
-                          Main document has content ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
-                        </Text>
+                    <>
+                      <Group justify="space-between" align="center">
+                        <Group gap="xs">
+                          <Check size={16} color="var(--mantine-color-green-6)" />
+                          <Text size="sm" fw={500}>
+                            Main document has content ({state.contextType === 'manifest' ? 'manifest' : state.metaDocType})
+                          </Text>
+                        </Group>
+                        <Switch
+                          label="Simulate empty"
+                          checked={state.emptyMainDoc}
+                          onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
+                          size="xs"
+                        />
                       </Group>
-                      <Switch
-                        label="Simulate empty"
-                        checked={state.emptyMainDoc}
-                        onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
-                        size="xs"
-                      />
-                    </Group>
+                      {/* Scope Selector - only show if main document has content */}
+                      {!state.emptyMainDoc && (
+                        <Box>
+                          <SegmentedControl
+                            value={state.scope}
+                            onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
+                            data={[
+                              { label: 'Full Text', value: 'text' },
+                              { label: 'Selection', value: 'selection' },
+                            ]}
+                          />
+
+                          {state.scope === 'selection' && (
+                            <Textarea
+                              label="Selection Text"
+                              placeholder="Paste text that represents the selection..."
+                              value={state.loadedSelection}
+                              onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
+                              minRows={4}
+                              mt="md"
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </>
                   ) : (
                     <Group gap="xs">
                       <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
@@ -453,12 +504,15 @@ export const PlaygroundView: React.FC = () => {
                       </Text>
                     </Group>
                   )}
+                </Stack>
+              </Paper>
 
+              {/* Combined Document Status */}
+              <Paper p="md">
+                <Stack gap="md">
                   {/* Contexts - only show for story context */}
                   {state.contextType === 'story' && (
                     <>
-                      <Divider />
-
                       {/* Manifest - always show as context */}
                       {docStatus.manifestHasContent ? (
                         <Group justify="space-between" align="center">
@@ -480,8 +534,34 @@ export const PlaygroundView: React.FC = () => {
                         </Group>
                       )}
 
-                      {/* Brief - only show as context if we're NOT editing the brief */}
-                      {state.metaDocType !== 'brief' && (
+                      {/* World */}
+                      {['outline', 'prose'].includes(state.metaDocType) && (
+                        <>
+                          <Divider />
+                          {docStatus.worldHasContent ? (
+                            <Group justify="space-between" align="center">
+                              <Group gap="xs">
+                                <Check size={16} color="var(--mantine-color-green-6)" />
+                                <Text size="sm" fw={500}>World has content (used for context)</Text>
+                              </Group>
+                              <Switch
+                                label="Simulate empty"
+                                checked={state.simulateEmptyWorld}
+                                onChange={(e) => setState((s) => ({ ...s, simulateEmptyWorld: e.currentTarget.checked }))}
+                                size="xs"
+                              />
+                            </Group>
+                          ) : (
+                            <Group gap="xs">
+                              <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
+                              <Text size="sm" fw={500}>World is missing (used for context)</Text>
+                            </Group>
+                          )}
+                        </>
+                      )}
+
+                      {/* Brief */}
+                      {['outline', 'world', 'prose'].includes(state.metaDocType) && (
                         <>
                           <Divider />
                           {docStatus.briefHasContent ? (
@@ -506,8 +586,8 @@ export const PlaygroundView: React.FC = () => {
                         </>
                       )}
 
-                      {/* Outline - only show as context if we're NOT editing the outline */}
-                      {state.metaDocType !== 'outline' && (
+                      {/* Outline */}
+                      {['prose'].includes(state.metaDocType) && (
                         <>
                           <Divider />
                           {docStatus.outlineHasContent ? (
@@ -531,34 +611,6 @@ export const PlaygroundView: React.FC = () => {
                           )}
                         </>
                       )}
-                    </>
-                  )}
-
-                  {/* Scope Selector - only show if main document has content */}
-                  {docStatus.mainDocHasContent && (
-                    <>
-                      <Divider />
-                      <Box>
-                        <SegmentedControl
-                          value={state.scope}
-                          onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
-                          data={[
-                            { label: 'Full Text', value: 'text' },
-                            { label: 'Selection', value: 'selection' },
-                          ]}
-                        />
-
-                        {state.scope === 'selection' && (
-                          <Textarea
-                            label="Selection Text"
-                            placeholder="Paste text that represents the selection..."
-                            value={state.loadedSelection}
-                            onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
-                            minRows={4}
-                            mt="md"
-                          />
-                        )}
-                      </Box>
                     </>
                   )}
                 </Stack>
