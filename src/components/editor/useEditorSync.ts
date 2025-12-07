@@ -7,6 +7,7 @@ export function useEditorSync(editor, doc, onChange) {
     const current = editor.getJSON();
     if (JSON.stringify(current) === JSON.stringify(doc)) return;
     editor.commands.setContent(doc, false);
+    editor.commands.setTextSelection(0); // Otherwise all new content is selected
   }, [doc, editor]);
 
   // Push editor changes up
