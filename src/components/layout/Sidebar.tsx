@@ -21,6 +21,7 @@ import {
   Feather,
   FlaskConical,
   Globe,
+  Bug
 } from 'lucide-react';
 
 import {
@@ -76,6 +77,7 @@ type SidebarProps = {
 
   /** Opens the API key / settings modal */
   onOpenSettings: () => void;
+  onOpenDevTools: () => void;
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -432,6 +434,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectRootSection,
 
   onOpenSettings,
+  onOpenDevTools,
 }) => {
   const [isDevMode, setIsDevMode] = useState(false);
 
@@ -505,7 +508,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <Box style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{content}</Box>
 
       {/* Fixed settings button at bottom */}
-      <Box p="xs" pt="sm">
+      <Group p="xs" pt="sm" justify="space-between">
         <Button
           variant="subtle"
           onClick={onOpenSettings}
@@ -513,7 +516,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <Settings2 size={20} />
         </Button>
-      </Box>
+        {isDevMode && (
+          <Button
+            variant="subtle"
+            onClick={onOpenDevTools}
+            p="xs"
+          >
+            <Bug size={20} />
+          </Button>
+        )}
+      </Group>
     </Box>
   );
 };

@@ -248,6 +248,7 @@ const App: React.FC = () => {
       rootSection={rootSection}
       onSelectRootSection={projectHandlers.handleSelectRootSection}
       onOpenSettings={() => setApiKeyModalOpen(true)}
+      onOpenDevTools={() => alineaClient.openDevTools()}
     />
   );
 

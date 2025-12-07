@@ -104,4 +104,8 @@ export const alineaClient = {
   isDevMode() {
     return window.devMode.isDevMode();
   },
+  openDevTools() {
+    return window.devMode.openDevTools();
+  },
+
 };
