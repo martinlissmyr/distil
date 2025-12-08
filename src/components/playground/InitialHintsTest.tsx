@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Stack, Paper, Text, Group, Badge, Box, SegmentedControl, Switch, Title, Divider } from '@mantine/core';
 import { Check, AlertTriangle } from 'lucide-react';
 import { getInitialAssistantHint, type AssistantHint } from '../../chat/chatHints';
-import { getContextRules } from '../../chat/contextRules';
+import { CONTEXT_RULES } from '../../chat/contextSelector';
 import type { EditorKind } from '../../types/chat';
 import type { MetaDocKey } from '../../types/metaDoc';
 
@@ -43,7 +43,7 @@ export const InitialHintsTest: React.FC = () => {
 
   // Get relevant metaDocs for the current editor kind
   const actualEditorKind: EditorKind = contextSource === 'manifest' ? 'manifest' : editorKind;
-  const rules = getContextRules(actualEditorKind);
+  const rules = CONTEXT_RULES[actualEditorKind];
 
   // Documents that could be relevant (alwaysInclude or intelligentlySelect)
   const relevantDocs: MetaDocKey[] = [
