@@ -9,8 +9,8 @@ import { metaExtensions } from './extensions/metaExtensions';
 import type { ChatConfig } from './ProseEditor';
 
 import {
-  Heading1,
   Heading2,
+  Heading3,
   List as ListIcon,
   ListOrdered,
   Minus,
@@ -83,15 +83,15 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
       items={[
         {
           id: 'h1',
-          label: 'H1',
-          icon: <Heading1 />,
+          label: 'H2',
+          icon: <Heading2 />,
           onClick: () =>
             editor?.chain().focus().toggleHeading({ level: 1 }).run(),
         },
         {
           id: 'h2',
-          label: 'H2',
-          icon: <Heading2 />,
+          label: 'H3',
+          icon: <Heading3 />,
           onClick: () =>
             editor?.chain().focus().toggleHeading({ level: 2 }).run(),
         },
@@ -128,7 +128,7 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
     <BaseEditor
       editor={editor}
       title={title}
-      showTitle={false}
+      showTitle={true}
       toolbar={toolbar}
       withChat={withChat}
       chatConfig={chatConfig}
