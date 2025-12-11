@@ -2,10 +2,10 @@
 import type { EditorKind, QuestionScope } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
 import {
-  systemPrompts,
+  buildSystemPrompt,
   defaultSystemPrompt,
   buildAssistantContext,
-  buildProseUserPrompt,
+  buildUserPrompt,
 } from './prompts/buildFromTemplates';
 import { getContextDocs } from './contextSelector';
 
@@ -47,7 +47,6 @@ export async function buildPrompt({
 }: BuildPromptArgs): Promise<BuiltPrompt> {
   const {
     kinds: contextKinds,
-    docs: contextDocs,     // currently unused but nice to keep around
     markdown: contextMarkdown,
   } = await getContextDocs(kind, rawUserPrompt, projectId, storyId, {
     apiKey,
@@ -55,27 +54,27 @@ export async function buildPrompt({
   });
 
   // Build context summary for user prompt with descriptive labels
+  const contextDescriptions: Record<MetaDocKey, string> = {
+    story: 'The story (what the author is currently working on)',
+    manifest: 'An author manifest (style/tone)',
+    brief: 'A story brief (high-level concept)',
+    outline: 'A story outline (structure/plot)',
+    world: 'World information (setting/worldbuilding)',
+  };
   const contextSummaryItems: string[] = [];
 
-  const contextDescriptions: Record<MetaDocKey, string> = {
-    manifest: '- An author manifest (style/tone)',
-    brief: '- A story brief (high-level concept)',
-    outline: '- A story outline (structure/plot)',
-    world: '- World information (setting/worldbuilding)',
-  };
-
-  for (const docKey of contextKinds) {
-    if (docKey in contextDescriptions) {
-      contextSummaryItems.push(contextDescriptions[docKey as MetaDocKey]);
-    }
-  }
-
   if (fullTextMarkdown) {
-    contextSummaryItems.push('- The full text of the piece (may be partial)');
+    contextSummaryItems.push('- The full main text: ' + contextDescriptions[kind]);
   }
 
   if (scope === 'selection' && selectionMarkdown) {
-    contextSummaryItems.push('- A snippet (current selection)');
+    contextSummaryItems.push('- A snippet of: ' + contextDescriptions[kind]);
+  }
+
+  for (const docKey of contextKinds) {
+    if (docKey in contextDescriptions) {
+      contextSummaryItems.push('- ' + contextDescriptions[docKey as MetaDocKey]);
+    }
   }
 
   const contextSummary =
@@ -87,10 +86,10 @@ export async function buildPrompt({
     system: '',
     assistant: '',
     user: '',
-    includedContexts: contextKinds,
+    includedContexts: contextKinds, // for tests etc
   };
 
-  // Assistant context (shared across editor kinds)
+  // Assistant context
   prompt.assistant = buildAssistantContext({
     title,
     fullTextMarkdown,
@@ -99,42 +98,16 @@ export async function buildPrompt({
     scope,
   });
 
-  // System + user prompts per editor kind
-  switch (kind) {
-    case 'prose': {
-      prompt.system = systemPrompts.prose;
-      prompt.user = buildProseUserPrompt({
-        rawUserPrompt,
-        contextSummary,
-        fullTextMarkdown,
-        scope,
-      });
-      break;
-    }
+  prompt.system = buildSystemPrompt({
+    kind
+  })
 
-    case 'manifest': {
-      prompt.system = systemPrompts.manifest;
-      prompt.user = rawUserPrompt;
-      break;
-    }
-
-    case 'outline': {
-      prompt.system = systemPrompts.outline;
-      prompt.user = rawUserPrompt;
-      break;
-    }
-
-    case 'brief': {
-      prompt.system = systemPrompts.brief;
-      prompt.user = rawUserPrompt;
-      break;
-    }
-
-    default: {
-      prompt.system = defaultSystemPrompt;
-      prompt.user = rawUserPrompt;
-    }
-  }
+  prompt.user = buildUserPrompt({
+    rawUserPrompt,
+    contextSummary,
+    fullTextMarkdown,
+    scope,
+  });
 
   return prompt;
 }

@@ -22,7 +22,7 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
         mode="bound"
         scope={{ kind: 'story', projectId, storyId }}
         metaKey="world"
-        title="World"
+        title="Story world"
         placeholder="Describe the world of your story: time period, location, world-building details, rules of the world…"
         withChat
       />

@@ -61,7 +61,9 @@
   }
 
   hr {
-    opacity: 0.3;
+    border: 0;
+    border-top: 1px solid var(--border-subtlest);
+    margin: 20px 0;
   }
 
   strong {
