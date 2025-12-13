@@ -1,15 +1,11 @@
 // src/components/editor/ProseEditor.tsx
 import { useEditor } from '@tiptap/react';
 import { BaseEditor } from './BaseEditor';
-import { EditorToolbar } from './EditorToolbar';
 import { useEditorSync } from './useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
-
-import { proseExtensions } from './extensions/proseExtensions';
-
+import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
+import { getDocKind } from '../../models/docs';
 import type { EditorKind } from '../../types/chat';
-
-import { Heading2, Heading3 } from 'lucide-react';
 
 export type ChatConfig = {
   kind: EditorKind;
@@ -24,27 +20,27 @@ export const ProseEditor = ({
   doc,
   onChange,
   title = 'New text',
-  placeholder = "Start typing…",
+  placeholder,
   withChat = true,
   chatConfig,
 }) => {
+  // Get editor config from doc model
+  const docKind = getDocKind('prose');
+  const editorConfig = { ...docKind.editorConfig };
+
+  // Override placeholder if provided as prop
+  if (placeholder !== undefined) {
+    editorConfig.placeholder = placeholder;
+  }
 
   const editor = useEditor({
-    extensions: proseExtensions({ placeholder }),
+    extensions: createExtensionsFromConfig(editorConfig),
     content: doc ?? defaultEmptyDoc,
   });
 
   useEditorSync(editor, doc, onChange);
 
-  const toolbar = (
-    <EditorToolbar
-      items={[
-        { id: 'h2', label: 'H2', icon: <Heading2 />, onClick: () => editor?.chain().focus().toggleHeading({ level: 2 }).run() },
-        { id: 'h3', label: 'H3', icon: <Heading3 />, onClick: () => editor?.chain().focus().toggleHeading({ level: 3 }).run() },
-        { id: 'body', label: 'Body', onClick: () => editor?.chain().focus().setParagraph().run() },
-      ]}
-    />
-  );
+  const toolbar = createToolbarFromConfig(editorConfig, editor);
 
   return (
     <BaseEditor

@@ -2,19 +2,11 @@
 import { useEffect, useMemo } from 'react';
 import { useEditor } from '@tiptap/react';
 import { BaseEditor } from './BaseEditor';
-import { EditorToolbar } from './EditorToolbar';
 import { useEditorSync } from './useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
-import { metaExtensions } from './extensions/metaExtensions';
+import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
+import { getDocKind } from '../../models/docs';
 import type { ChatConfig } from './ProseEditor';
-
-import {
-  Heading2,
-  Heading3,
-  List as ListIcon,
-  ListOrdered,
-  Minus,
-} from 'lucide-react';
 
 import { useAppStore, metaId } from '../../state/useAppStore';
 import type { MetaScope, MetaDocKey } from '../../types/metaDoc';
@@ -57,8 +49,19 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
     void ensureMetaDocsLoaded(scope, [metaKey]);
   }, [scope, metaKey, ensureMetaDocsLoaded]);
 
+  // Get editor config from doc model based on metaKey
+  const docKind = getDocKind(metaKey);
+  const editorConfig = useMemo(() => {
+    const config = { ...docKind.editorConfig };
+    // Override placeholder if provided as prop
+    if (placeholder !== undefined) {
+      config.placeholder = placeholder;
+    }
+    return config;
+  }, [docKind, placeholder]);
+
   const editor = useEditor({
-    extensions: metaExtensions({ placeholder }),
+    extensions: createExtensionsFromConfig(editorConfig),
     content: metaDoc?.json ?? defaultEmptyDoc,
   });
 
@@ -78,51 +81,7 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
     return () => clearTimeout(timeout);
   }, [metaDoc?.json, scope, metaKey, saveMetaDoc]);
 
-  const toolbar = (
-    <EditorToolbar
-      items={[
-        {
-          id: 'h1',
-          label: 'H2',
-          icon: <Heading2 />,
-          onClick: () =>
-            editor?.chain().focus().toggleHeading({ level: 1 }).run(),
-        },
-        {
-          id: 'h2',
-          label: 'H3',
-          icon: <Heading3 />,
-          onClick: () =>
-            editor?.chain().focus().toggleHeading({ level: 2 }).run(),
-        },
-        {
-          id: 'body',
-          label: 'Body',
-          onClick: () => editor?.chain().focus().setParagraph().run(),
-        },
-        {
-          id: 'bullet',
-          label: 'Bulleted',
-          icon: <ListIcon />,
-          onClick: () =>
-            editor?.chain().focus().toggleBulletList().run(),
-        },
-        {
-          id: 'ordered',
-          label: 'Numbered',
-          icon: <ListOrdered />,
-          onClick: () =>
-            editor?.chain().focus().toggleOrderedList().run(),
-        },
-        {
-          id: 'rule',
-          label: 'Rule',
-          icon: <Minus />,
-          onClick: () => editor?.chain().focus().setHorizontalRule().run(),
-        },
-      ]}
-    />
-  );
+  const toolbar = createToolbarFromConfig(editorConfig, editor);
 
   return (
     <BaseEditor
