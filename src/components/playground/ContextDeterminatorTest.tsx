@@ -99,8 +99,7 @@ export const ContextDeterminatorTest: React.FC = () => {
             await determineContextNeedsWithLLMClassification(
               userPrompt,
               Array.from(new Set(heuristicallyRelevantContexts)),
-              ambiguousNeededContexts,
-              apiKey
+              ambiguousNeededContexts
             );
 
           setLLMResponse(result);

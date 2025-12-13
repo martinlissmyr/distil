@@ -65,7 +65,13 @@ declare global {
 
     chat: {
       send: (
-        payload: { messages: { role: 'user' | 'assistant' | 'system'; content: string }[] }
+        payload: {
+          messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+          model?: string;
+          temperature?: number;
+          maxTokens?: number;
+          responseFormat?: 'json' | 'text';
+        }
       ) => Promise<IpcResponse<{
         output_text: string;
         raw: unknown;

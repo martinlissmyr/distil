@@ -67,10 +67,6 @@ export function useChatSend({
 
         const turns = history.slice(-MAX_TURNS);
 
-        // Get API key for intelligent context selection
-        const apiKeyResponse = await window.settings.getApiKey();
-        const apiKey = apiKeyResponse.ok ? apiKeyResponse.data : undefined;
-
         // Build prompt with context
         const prompt = await buildPrompt({
           rawUserPrompt,
@@ -81,8 +77,6 @@ export function useChatSend({
           selectionMarkdown,
           projectId,
           storyId,
-          useIntelligentContext: true,
-          apiKey,
           language: 'sv', // TODO: detect or configure language
         });
 

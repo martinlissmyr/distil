@@ -26,7 +26,6 @@ type BuildPromptArgs = {
   // Optional: For intelligent context selection
   projectId?: string;
   storyId?: string;
-  apiKey?: string;
   language?: 'sv' | 'en';
 };
 
@@ -39,14 +38,12 @@ export async function buildPrompt({
   selectionMarkdown = '',
   projectId,
   storyId,
-  apiKey,
   language = 'sv',
 }: BuildPromptArgs): Promise<BuiltPrompt> {
   const {
     kinds: contextKinds,
     markdown: contextMarkdown,
   } = await getContextDocs(kind, rawUserPrompt, projectId, storyId, {
-    apiKey,
     language,
   });
 

@@ -332,21 +332,15 @@ export const PromptBuilderView: React.FC = () => {
         }
       }
 
-      // API key for intelligent context selection
-      const apiKeyResponse = await window.settings.getApiKey();
-      const apiKey = apiKeyResponse.ok && apiKeyResponse.data ? apiKeyResponse.data : undefined;
-
       const prompt = await buildPrompt({
         rawUserPrompt: state.userPrompt,
-        kind: state.kind as any, // EditorKind is aligned with DocKindId in your current model
+        kind: state.kind as any,
         title: state.loadedTitle || getDocTitle(state.kind),
         scope: state.scope,
         fullTextMarkdown: fullText,
         selectionMarkdown: selection,
         projectId: needsStory ? state.selectedProjectId || undefined : undefined,
         storyId: needsStory ? state.selectedStoryId || undefined : undefined,
-        useIntelligentContext: true,
-        apiKey,
         language: 'sv',
       } as any);
 

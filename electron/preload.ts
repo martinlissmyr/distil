@@ -54,7 +54,13 @@ contextBridge.exposeInMainWorld('alinea', {
 })
 
 contextBridge.exposeInMainWorld('chat', {
-  send: async (payload: { messages: { role: string; content: string }[] }) => {
+  send: async (payload: {
+    messages: Array<{ role: string; content: string }>;
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
+    responseFormat?: 'json' | 'text';
+  }) => {
     return ipcRenderer.invoke('chat:send', payload)
   },
 })
