@@ -131,7 +131,12 @@ alinea/
 │   └── fs/               # Local persistence
 ├── src/
 │   ├── models/
-│   │   └── docs/         # Canonical document model (LCRF layers)
+│   │   ├── docs/         # Canonical document model (LCRF layers)
+│   │   │   ├── index.ts            # Document type definitions
+│   │   │   ├── editorConfig.ts     # TipTap editor configurations
+│   │   │   ├── contextKeywords.ts  # Multi-language keyword signals
+│   │   │   └── systemRoles/        # System prompt templates
+│   │   └── sections/     # Navigation section registry
 │   ├── chat/
 │   │   ├── buildPrompt.ts
 │   │   ├── contextSelector.ts
@@ -142,6 +147,7 @@ alinea/
 │   │   └── configs/      # Wizard definitions
 │   ├── components/
 │   │   ├── editor/
+│   │   │   └── editorConfigFactory.tsx  # Extension & toolbar factories
 │   │   ├── layout/
 │   │   └── playground/
 │   ├── state/            # Zustand stores
