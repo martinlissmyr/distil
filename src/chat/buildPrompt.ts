@@ -3,20 +3,17 @@ import type { EditorKind, QuestionScope } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
 import {
   buildSystemPrompt,
-  defaultSystemPrompt,
   buildAssistantContext,
   buildUserPrompt,
 } from './prompts/buildFromTemplates';
 import { getContextDocs } from './contextSelector';
-
-// Re-export types for backwards compatibility
-export type { EditorKind, QuestionScope };
+import { getDocDescription } from '../docs';
 
 export type BuiltPrompt = {
   system: string;
   assistant: string;
   user: string;
-  includedContexts: string[]; // List of context document keys that were included
+  includedContexts: MetaDocKey[]; // List of context document keys that were included
 };
 
 type BuildPromptArgs = {
@@ -53,28 +50,25 @@ export async function buildPrompt({
     language,
   });
 
-  // Build context summary for user prompt with descriptive labels
-  const contextDescriptions: Record<MetaDocKey, string> = {
-    story: 'The story (what the author is currently working on)',
-    manifest: 'An author manifest (style/tone)',
-    brief: 'A story brief (high-level concept)',
-    outline: 'A story outline (structure/plot)',
-    world: 'World information (setting/worldbuilding)',
-  };
   const contextSummaryItems: string[] = [];
 
   if (fullTextMarkdown) {
-    contextSummaryItems.push('- The full main text: ' + contextDescriptions[kind]);
+    contextSummaryItems.push(
+      '- The full main text: ' + getDocDescription(kind)
+    );
   }
 
   if (scope === 'selection' && selectionMarkdown) {
-    contextSummaryItems.push('- A snippet of: ' + contextDescriptions[kind]);
+    contextSummaryItems.push(
+      '- A snippet of: ' + getDocDescription(kind)
+    );
   }
 
   for (const docKey of contextKinds) {
-    if (docKey in contextDescriptions) {
-      contextSummaryItems.push('- ' + contextDescriptions[docKey as MetaDocKey]);
-    }
+    // contextKinds is expected to be MetaDocKey[] or similar
+    contextSummaryItems.push(
+      '- ' + getDocDescription(docKey as MetaDocKey)
+    );
   }
 
   const contextSummary =
@@ -98,10 +92,12 @@ export async function buildPrompt({
     scope,
   });
 
+  // System prompt
   prompt.system = buildSystemPrompt({
-    kind
-  })
+    kind,
+  });
 
+  // User prompt
   prompt.user = buildUserPrompt({
     rawUserPrompt,
     contextSummary,

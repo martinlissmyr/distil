@@ -1,10 +1,10 @@
 // src/types/metaDoc.ts
+import type { MetaDocKey } from '../docs';
+
 export type MetaScope =
   | { kind: 'root' }                      // e.g. manifest, global notes
   | { kind: 'project'; projectId: string }
   | { kind: 'story'; projectId: string; storyId: string };
-
-export type MetaDocKey = 'manifest' | 'brief' | 'outline' | 'world';
 
 export type MetaDocJson = any;
 

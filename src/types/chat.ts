@@ -1,11 +1,11 @@
 // src/types/chat.ts
-import type { MetaDocKey } from './metaDoc';
+import type { DocKindId } from '../docs';
 
 /**
- * Type of editor for context-aware prompting
- * Extends MetaDocKey (manifest, brief, outline, world) with 'prose' for story text
+ * The editor always works on a specific document kind.
+ * (manifest, brief, outline, world, prose)
  */
-export type EditorKind = MetaDocKey | 'prose';
+export type EditorKind = DocKindId;
 
 /**
  * Scope of the user's question (full text or selected portion)

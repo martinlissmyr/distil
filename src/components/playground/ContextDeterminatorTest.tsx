@@ -17,14 +17,13 @@ import {
   determineContextNeeds,
   quickHeuristicCheck,
   buildPrompt,
-  CONTEXT_RULES,
   isAboveConfidenceThreshold,
   determineContextNeedsWithLLMClassification,
-  type ContextRules,
   type HeuristicCheckResult,
 } from '../../chat/contextSelector';
 import type { EditorKind } from '../../types/chat';
 import type { MetaDocKey } from '../../types/metaDoc';
+import { getContextRulesFor, type ContextRules } from '../../docs';
 
 type ContextSource = 'story' | 'manifest';
 
@@ -38,9 +37,9 @@ export const ContextDeterminatorTest: React.FC = () => {
   const [llmResponse, setLLMResponse] = useState<FinalResult | null>(null);
   const [contextualCandidates, setContextualCandidates] = useState<ContextRules | null>(null);
   const [heuristicResults, setHeuristicResults] = useState<HeuristicCheckResult[] | null>(null);
-  const [remainingContexts, setRemainingContexts] = useState<[] | null>(null);
+  const [remainingContexts, setRemainingContexts] = useState<MetaDocKey[] | null>(null);
   const [llmPrompt, setLLMPrompt] = useState<string | null>(null);
-  const [finalResult, setFinalResult] = useState<[] | null>(null);
+  const [finalResult, setFinalResult] = useState<MetaDocKey[] | null>(null);
 
   const resetResults = () => {
     setFinalResult(null);
@@ -66,12 +65,16 @@ export const ContextDeterminatorTest: React.FC = () => {
       // Determine which editor kind’s rules to use
       const actualEditorKind: EditorKind =
         contextSource === 'manifest' ? 'manifest' : editorKind;
-      const rules = CONTEXT_RULES[actualEditorKind];
 
+      const rules = getContextRulesFor(actualEditorKind);
       setContextualCandidates(rules);
 
       if (rules.intelligentlySelect.length > 0) {
-        const heuristicCheckResults = quickHeuristicCheck(userPrompt, rules.intelligentlySelect, 'sv');
+        const heuristicCheckResults = quickHeuristicCheck(
+          userPrompt,
+          rules.intelligentlySelect,
+          'sv'
+        );
 
         setHeuristicResults(heuristicCheckResults);
 
@@ -79,7 +82,7 @@ export const ContextDeterminatorTest: React.FC = () => {
         const heuristicallyRelevantContexts: MetaDocKey[] = [];
 
         for (const { kind, confidence } of heuristicCheckResults) {
-         if (isAboveConfidenceThreshold(confidence)) {
+          if (isAboveConfidenceThreshold(confidence)) {
             // Strong signal → include directly
             heuristicallyRelevantContexts.push(kind);
           } else {
@@ -92,22 +95,23 @@ export const ContextDeterminatorTest: React.FC = () => {
           setLLMPrompt(buildPrompt(ambiguousNeededContexts));
           setRemainingContexts(ambiguousNeededContexts);
 
-          const { relevantContexts, result } = await determineContextNeedsWithLLMClassification(
-            userPrompt,
-            Array.from(new Set(heuristicallyRelevantContexts)),
-            ambiguousNeededContexts,
-            apiKey
-          );
+          const { relevantContexts, result } =
+            await determineContextNeedsWithLLMClassification(
+              userPrompt,
+              Array.from(new Set(heuristicallyRelevantContexts)),
+              ambiguousNeededContexts,
+              apiKey
+            );
 
           setLLMResponse(result);
           setFinalResult([
             ...rules.alwaysInclude,
-            ...relevantContexts
+            ...relevantContexts,
           ]);
         } else {
           setFinalResult([
             ...rules.alwaysInclude,
-            ...heuristicallyRelevantContexts
+            ...heuristicallyRelevantContexts,
           ]);
         }
       } else {
@@ -125,7 +129,7 @@ export const ContextDeterminatorTest: React.FC = () => {
     return 'gray';
   };
 
-  const getDocumentLabel = (docKey: MetaDocKey): string =>
+  const getDocumentLabel = (docKey: MetaDocKey | EditorKind): string =>
     docKey.charAt(0).toUpperCase() + docKey.slice(1);
 
   return (
@@ -248,7 +252,9 @@ export const ContextDeterminatorTest: React.FC = () => {
                 style={{ borderLeft: '4px solid var(--mantine-color-indigo-6)' }}
               >
                 <Stack gap="sm">
-                  <Title order={5}>Context Selection Rules for {getDocumentLabel(editorKind)}</Title>
+                  <Title order={5}>
+                    Context Selection Rules for {getDocumentLabel(editorKind)}
+                  </Title>
 
                   <Stack gap="xs">
                     {docs.map((docKey) => (
@@ -271,7 +277,8 @@ export const ContextDeterminatorTest: React.FC = () => {
                 <Stack gap="sm">
                   <Title order={5}>Quick Heuristic Check</Title>
                   <Text size="sm" fw={500}>
-                    Using a simple heuristic check to see if intelligently selectable context kinds should be included.
+                    Using a simple heuristic check to see if intelligently selectable
+                    context kinds should be included.
                   </Text>
                   {heuristicResults.map((result) => (
                     <Group gap="xs" key={result.kind}>
@@ -334,9 +341,7 @@ export const ContextDeterminatorTest: React.FC = () => {
                         <Text size="sm" fw={500} style={{ width: '80px' }}>
                           {getDocumentLabel(docKey)}:
                         </Text>
-                        <Badge color="green">
-                          Included
-                        </Badge>
+                        <Badge color="green">Included</Badge>
                       </Group>
                     ))}
                   </Stack>

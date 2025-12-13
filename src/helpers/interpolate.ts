@@ -1,3 +1,4 @@
+// src/helpers/interpolate.ts
 /**
  * Simple template interpolator
  * Supports:
