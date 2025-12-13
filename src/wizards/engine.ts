@@ -3,7 +3,7 @@ import type { MetaDocKey, MetaScope } from '../types/metaDoc';
 import type { WizardContext, WizardConfig, WizardStep, LlmProcessingStep, WizardState, ActiveWizard } from './types';
 import { getWizardConfig } from './registry';
 import { getCurrentStep, getNextStepPath, getPreviousStepPath, isStepComplete } from './navigation';
-import { buildInterpolationContext, interpolatePromptTemplate, interpolatePrompt } from './promptInterpolator';
+import { interpolate } from '../helpers/interpolate';
 
 export type WizardDeps = {
   // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)
@@ -139,12 +139,22 @@ export function createWizardEngine(deps: WizardDeps) {
       }
 
       const metaDocsMarkdown = await deps.resolveMetaDocsMarkdown(wizardContext);
-      const interpolationCtx = buildInterpolationContext(activeWizard, metaDocsMarkdown as any);
-      const interpolated = interpolatePromptTemplate(step.prompt, interpolationCtx);
 
+      // Merge contexts: answers, llmResults, and non-null metaDocs
+      const vars = {
+        ...activeWizard.answers,
+        ...activeWizard.llmResults,
+        ...Object.fromEntries(
+          Object.entries(metaDocsMarkdown).filter(([_, v]) => v !== null)
+        ),
+      };
+
+      // Interpolate system and user separately
       const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
-      if (interpolated.system) messages.push({ role: 'system', content: interpolated.system });
-      messages.push({ role: 'user', content: interpolated.user });
+      if (step.prompt.system) {
+        messages.push({ role: 'system', content: interpolate(step.prompt.system, vars) });
+      }
+      messages.push({ role: 'user', content: interpolate(step.prompt.user, vars) });
 
       const res = await deps.sendChat({ messages });
       if (!res.ok || !res.data?.output_text) throw new Error(res.error || 'Chat error');
@@ -180,8 +190,8 @@ export function createWizardEngine(deps: WizardDeps) {
     if (!w) return '';
 
     if (w.config.outputTemplate) {
-      const ctx = { answers: w.answers, llmResults: w.llmResults, metaDocs: {} };
-      return interpolatePrompt(w.config.outputTemplate, ctx);
+      const vars = { ...w.answers, ...w.llmResults };
+      return interpolate(w.config.outputTemplate, vars);
     }
 
     // default bake

@@ -29,13 +29,40 @@ export function interpolate(template: string, vars: Record<string, any>): string
   // Handle simple variables: {{key}}
   result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     const value = vars[key];
-    return value !== undefined && value !== null ? String(value) : '';
+    return value !== undefined && value !== null ? formatValue(value) : '';
   });
 
   // Collapse multiple consecutive blank lines into a single blank line
   result = result.replace(/\n\s*\n\s*\n+/g, '\n\n');
 
   return result;
+}
+
+/**
+ * Formats a value for insertion into a template.
+ * - Strings: returned as-is
+ * - Numbers/Booleans: converted to string
+ * - Arrays: joined with ', '
+ * - Objects: JSON.stringify with formatting
+ */
+function formatValue(value: any): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(', ');
+  }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value, null, 2);
+  }
+
+  return String(value);
 }
 
 /**
