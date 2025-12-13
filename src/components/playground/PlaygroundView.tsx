@@ -6,7 +6,7 @@ import { alineaClient, type Project, type StoryMeta } from '../../api/alineaClie
 import { buildPrompt, type BuiltPrompt } from '../../chat/buildPrompt';
 import type { EditorKind, QuestionScope } from '../../types/chat';
 import { useAppStore } from '../../state/useAppStore';
-import { jsonToMarkdown } from '../../state/markdownUtils';
+import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { PlaygroundOutput } from './PlaygroundOutput';
 import { ContextDeterminatorTest } from './ContextDeterminatorTest';
 import { InitialHintsTest } from './InitialHintsTest';

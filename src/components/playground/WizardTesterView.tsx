@@ -1,18 +1,31 @@
 // src/components/playground/WizardTesterView.tsx
-import React, { useState, useEffect } from 'react';
-import { Box, Stack, Group, Paper, Text, Button, Title, Badge, Divider, ScrollArea } from '@mantine/core';
+import React, { useState } from 'react';
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  Title,
+  Badge,
+  Divider,
+  ScrollArea,
+} from '@mantine/core';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { useAppStore } from '../../state/useAppStore';
-import { getAvailableWizards, loadWizardConfig } from '../../wizards/validation';
+
+// ✅ moved to registry
+import { listWizardIds, getWizardConfig } from '../../wizards/registry';
+
 import { metaExtensions } from '../editor/extensions/metaExtensions';
 import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
 import type { EditorKind } from '../../types/chat';
-import type { WizardConfig } from '../../wizards/types';
+import type { WizardConfig, WizardId } from '../../wizards/types';
 
 export const WizardTesterView: React.FC = () => {
-  const [selectedWizardId, setSelectedWizardId] = useState<string | null>(null);
+  const [selectedWizardId, setSelectedWizardId] = useState<WizardId | null>(null);
 
-  const availableWizards = getAvailableWizards();
+  const availableWizards = listWizardIds();
   const activeWizard = useAppStore((s) => s.activeWizard);
 
   // Create TipTap editor instance
@@ -23,10 +36,10 @@ export const WizardTesterView: React.FC = () => {
 
   // Get selected wizard config info
   const selectedWizardConfig: WizardConfig | null = selectedWizardId
-    ? loadWizardConfig(selectedWizardId)
+    ? getWizardConfig(selectedWizardId)
     : null;
 
-  const handleSelectWizard = async (wizardId: string) => {
+  const handleSelectWizard = async (wizardId: WizardId) => {
     setSelectedWizardId(wizardId);
 
     // Launch the wizard immediately when selected
@@ -36,7 +49,7 @@ export const WizardTesterView: React.FC = () => {
     // Clear previous editor content
     editor.commands.setContent(defaultEmptyDoc);
 
-    const config = loadWizardConfig(wizardId);
+    const config = getWizardConfig(wizardId);
     const { startWizard } = useAppStore.getState();
 
     // Use the wizard's targetDoc as the editor kind
@@ -47,12 +60,12 @@ export const WizardTesterView: React.FC = () => {
       editorKind === 'manifest'
         ? { kind: 'root' as const }
         : editorKind === 'brief' || editorKind === 'outline' || editorKind === 'prose'
-        ? {
-            kind: 'story' as const,
-            projectId: 'test-project',
-            storyId: 'test-story',
-          }
-        : { kind: 'root' as const };
+          ? {
+              kind: 'story' as const,
+              projectId: 'test-project',
+              storyId: 'test-story',
+            }
+          : { kind: 'root' as const };
 
     await startWizard(wizardId, {
       editorKind,
@@ -65,14 +78,25 @@ export const WizardTesterView: React.FC = () => {
   return (
     <Group gap="md" style={{ flex: 1, minHeight: 0, height: '100%' }} grow align="flex-start">
       {/* Left Column - Wizard List & Context */}
-      <Stack gap="lg" p="sm" style={{ minHeight: 0, height: '100%', flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
+      <Stack
+        gap="lg"
+        p="sm"
+        style={{
+          minHeight: 0,
+          height: '100%',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'var(--overlay)',
+        }}
+      >
         <Paper p="md">
           <Stack gap="md">
             <Title order={5}>Available Wizards</Title>
             <ScrollArea style={{ maxHeight: 300 }}>
               <Stack gap="xs">
                 {availableWizards.map((wizardId) => {
-                  const config = loadWizardConfig(wizardId);
+                  const config = getWizardConfig(wizardId);
                   const isSelected = wizardId === selectedWizardId;
 
                   return (
@@ -82,8 +106,12 @@ export const WizardTesterView: React.FC = () => {
                       withBorder
                       style={{
                         cursor: activeWizard ? 'not-allowed' : 'pointer',
-                        backgroundColor: isSelected ? 'var(--mantine-color-blue-light)' : undefined,
-                        borderColor: isSelected ? 'var(--mantine-color-blue-6)' : undefined,
+                        backgroundColor: isSelected
+                          ? 'var(--mantine-color-blue-light)'
+                          : undefined,
+                        borderColor: isSelected
+                          ? 'var(--mantine-color-blue-6)'
+                          : undefined,
                         opacity: activeWizard ? 0.6 : 1,
                       }}
                       onClick={() => handleSelectWizard(wizardId)}

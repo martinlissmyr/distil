@@ -1,12 +1,15 @@
 // src/wizards/validation.ts
 import type { WizardConfig, WizardStep, BaseStep } from './types';
-import testWizardConfig from './configs/test-wizard.json';
-import manifestStarterConfig from './configs/manifest-starter.json';
 
 /**
  * Validates a wizard configuration
  * Throws descriptive errors if invalid
  */
+
+export function validateWizardConfigs(raw: any[]): WizardConfig[] {
+  return raw.map(validateWizardConfig);
+}
+
 export function validateWizardConfig(data: any): WizardConfig {
   if (!data || typeof data !== 'object') {
     throw new Error('Wizard config must be an object');
@@ -186,33 +189,4 @@ export function validateWizardConfig(data: any): WizardConfig {
   });
 
   return data as WizardConfig;
-}
-
-/**
- * Registry of available wizard configs
- * Import new wizard configs at the top and add them here
- */
-const WIZARD_REGISTRY: Record<string, any> = {
-  'test-wizard': testWizardConfig,
-  'manifest-starter': manifestStarterConfig,
-};
-
-/**
- * Loads and validates a wizard config from the registry
- */
-export function loadWizardConfig(wizardId: string): WizardConfig {
-  const config = WIZARD_REGISTRY[wizardId];
-
-  if (!config) {
-    throw new Error(`Wizard config not found: ${wizardId}`);
-  }
-
-  return validateWizardConfig(config);
-}
-
-/**
- * Gets list of available wizard IDs
- */
-export function getAvailableWizards(): string[] {
-  return Object.keys(WIZARD_REGISTRY);
 }

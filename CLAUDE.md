@@ -85,7 +85,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - Uses TipTap for rich text editing (based on ProseMirror)
 - Two editor types: ProseEditor (main story text) and MetaTextEditor (outline/brief/manifest)
 - Documents stored as TipTap JSONContent format
-- Markdown conversion utilities in `src/state/markdownUtils.ts`
+- Markdown conversion utilities in `src/helpers/markdownUtils.ts`
 
 **AI Chat Integration** (`src/chat/buildPrompt.ts`)
 - Builds context-aware prompts based on editor type (prose/manifest/outline/brief)
