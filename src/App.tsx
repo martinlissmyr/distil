@@ -28,7 +28,7 @@ const App: React.FC = () => {
 
   // Preload manifest on app start
   useEffect(() => {
-    void ensureMetaDocsLoaded({ kind: 'root' }, ['manifest']);
+    void ensureMetaDocsLoaded({ scope: 'root' }, ['manifest']);
   }, [ensureMetaDocsLoaded]);
 
   // Navigation hook

@@ -4,6 +4,7 @@ import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
 import type { SuggestionAction } from '../../chat/chatHints';
+import type { DocRefWithKind } from '../../types/docRef';
 
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatSend } from './chat/useChatSend';
@@ -17,16 +18,11 @@ import styles from './chat/ChatScrollbar.module.scss';
 // ✅ docs-model driven scope
 import { getDocScope } from '../../models/docs';
 
-export type EditorDocRef =
-  | { scope: 'root'; kind: EditorKind }
-  | { scope: 'story'; kind: EditorKind; projectId: string; storyId: string }
-  | { scope: 'project'; kind: EditorKind; projectId: string };
-
 type EditorChatAsideProps = {
   /**
    * New preferred API: pass a doc-ref and let parent own routing/wizard wiring.
    */
-  doc?: EditorDocRef;
+  doc?: DocRefWithKind;
 
   /**
    * Back-compat props (will be removed later).
@@ -55,7 +51,7 @@ type EditorChatAsideProps = {
   /**
    * NEW: wizard boundary. Parent decides how to start wizard (engine/store/etc).
    */
-  onOpenWizard?: (args: { wizardId: string; doc: EditorDocRef; editor?: any }) => void;
+  onOpenWizard?: (args: { wizardId: string; doc: DocRefWithKind; editor?: any }) => void;
 
   /**
    * TipTap instance (optional, only used when opening wizards).
@@ -63,37 +59,37 @@ type EditorChatAsideProps = {
   editor?: any;
 };
 
-function resolveDocRef(props: EditorChatAsideProps): EditorDocRef {
+function resolveDocRef(props: EditorChatAsideProps): DocRefWithKind {
   if (props.doc) return props.doc;
 
-  const kind = props.kind;
-  if (!kind) {
+  const docKind = props.kind;
+  if (!docKind) {
     // This should basically never happen, but prevents runtime crashes.
     // Default to root to avoid hard-coding story fallback.
-    return { scope: 'root', kind: 'manifest' as EditorKind };
+    return { scope: 'root', docKind: 'manifest' as EditorKind };
   }
 
-  const scope = getDocScope(kind); // 'root' | 'project' | 'story'
+  const scope = getDocScope(docKind); // 'root' | 'project' | 'story'
 
   if (scope === 'root') {
-    return { scope: 'root', kind };
+    return { scope: 'root', docKind };
   }
 
   if (scope === 'project') {
     if (!props.projectId) {
-      console.warn('[EditorChatAside] project scope doc is missing projectId:', kind);
+      console.warn('[EditorChatAside] project scope doc is missing projectId:', docKind);
       // fallback so caller sees something consistent
-      return { scope: 'project', kind, projectId: 'unknown' };
+      return { scope: 'project', docKind, projectId: 'unknown' };
     }
-    return { scope: 'project', kind, projectId: props.projectId };
+    return { scope: 'project', docKind, projectId: props.projectId };
   }
 
   // scope === 'story'
   if (!props.projectId || !props.storyId) {
-    console.warn('[EditorChatAside] story scope doc is missing projectId/storyId:', kind);
+    console.warn('[EditorChatAside] story scope doc is missing projectId/storyId:', docKind);
     return {
       scope: 'story',
-      kind,
+      docKind,
       projectId: props.projectId ?? 'unknown',
       storyId: props.storyId ?? 'unknown',
     };
@@ -101,7 +97,7 @@ function resolveDocRef(props: EditorChatAsideProps): EditorDocRef {
 
   return {
     scope: 'story',
-    kind,
+    docKind,
     projectId: props.projectId,
     storyId: props.storyId,
   };
@@ -122,7 +118,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
 
   const doc = resolveDocRef(props);
   const effectiveIsTextLoaded = props.isTextLoaded ?? fullTextMarkdown !== null;
-  const kind = doc.kind;
+  const kind = doc.docKind;
 
   const [input, setInput] = useState('');
   const [scrollbarOffset, setScrollbarOffset] = useState(0);
@@ -133,10 +129,10 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
   const projectId = doc.scope === 'story' || doc.scope === 'project' ? doc.projectId : undefined;
   const storyId = doc.scope === 'story' ? doc.storyId : undefined;
 
-  function getThreadId(doc: EditorDocRef): string {
-    if (doc.scope === 'root') return `root:${doc.kind}`;
-    if (doc.scope === 'project') return `project:${doc.projectId}:${doc.kind}`;
-    return `story:${doc.projectId}:${doc.storyId}:${doc.kind}`;
+  function getThreadId(doc: DocRefWithKind): string {
+    if (doc.scope === 'root') return `root:${doc.docKind}`;
+    if (doc.scope === 'project') return `project:${doc.projectId}:${doc.docKind}`;
+    return `story:${doc.projectId}:${doc.storyId}:${doc.docKind}`;
   }
 
   const threadId = getThreadId(doc);

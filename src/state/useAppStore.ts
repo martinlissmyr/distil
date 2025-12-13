@@ -33,8 +33,8 @@ type AppStore = {
 
 // helper to get a unique id
 export const metaId = (scope: MetaScope, key: MetaDocKey) => {
-  if (scope.kind === 'root') return `root::${key}`;
-  if (scope.kind === 'project') return `project:${scope.projectId}::${key}`;
+  if (scope.scope === 'root') return `root::${key}`;
+  if (scope.scope === 'project') return `project:${scope.projectId}::${key}`;
   return `story:${scope.projectId}:${scope.storyId}::${key}`;
 };
 
@@ -79,14 +79,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
       try {
         let json: any | null = null;
 
-        if (scope.kind === 'root') {
+        if (scope.scope === 'root') {
           const response = await alineaClient.loadRootMetaDoc(key);
           if (response.ok) {
             json = response.data;
           } else {
             throw new Error(response.error);
           }
-        } else if (scope.kind === 'project') {
+        } else if (scope.scope === 'project') {
           // Project-level metaDocs not implemented yet — no-op for now
           console.warn(
             '[useAppStore] Project metaDocs not implemented yet:',
@@ -168,13 +168,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const docState = get().metaDocs[id];
     if (!docState?.json) return;
 
-    if (scope.kind === 'root') {
+    if (scope.scope === 'root') {
       const response = await alineaClient.saveRootMetaDoc(key, docState.json);
       if (!response.ok) {
         console.error('[useAppStore] saveRootMetaDoc failed:', response.error);
         throw new Error(response.error);
       }
-    } else if (scope.kind === 'project') {
+    } else if (scope.scope === 'project') {
       // placeholder for future project-level metaDocs
       console.warn(
         '[useAppStore] saveMetaDoc: project metaDocs not implemented yet:',

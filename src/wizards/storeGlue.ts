@@ -26,10 +26,10 @@ export function createWizardActions(args: {
       for (const key of keys) {
         const scope =
           docKinds[key].scope === 'root'
-            ? ({ kind: 'root' } as const)
-            : ctx.targetScope.kind === 'story'
-              ? ({ kind: 'story', projectId: ctx.targetScope.projectId, storyId: ctx.targetScope.storyId } as const)
-              : ({ kind: 'root' } as const);
+            ? ({ scope: 'root' } as const)
+            : ctx.ref.scope === 'story'
+              ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
+              : ({ scope: 'root' } as const);
 
         out[key] = metaDocs[metaId(scope, key)]?.markdown ?? null;
       }

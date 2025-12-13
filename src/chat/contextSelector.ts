@@ -35,10 +35,10 @@ export async function getContextDocs(
 
   const loadMetaDoc = (docKey: MetaDocKey): string | null => {
     if (docKey === 'manifest') {
-      const manifestId = metaId({ kind: 'root' } as const, 'manifest');
+      const manifestId = metaId({ scope: 'root' } as const, 'manifest');
       return state.metaDocs[manifestId]?.markdown ?? null;
     } else if (projectId && storyId) {
-      const docId = metaId({ kind: 'story', projectId, storyId }, docKey);
+      const docId = metaId({ scope: 'story', projectId, storyId }, docKey);
       return state.metaDocs[docId]?.markdown ?? null;
     }
     return null;

@@ -171,9 +171,9 @@ export const PromptBuilderView: React.FC = () => {
           const ensureMetaDocsLoaded = useAppStore.getState().ensureMetaDocsLoaded;
           const getMetaDoc = useAppStore.getState().getMetaDoc;
 
-          await ensureMetaDocsLoaded({ kind: 'root' }, [state.kind]);
+          await ensureMetaDocsLoaded({ scope: 'root' }, [state.kind]);
 
-          const doc = getMetaDoc({ kind: 'root' }, state.kind);
+          const doc = getMetaDoc({ scope: 'root' }, state.kind);
           const markdown = doc?.markdown ?? '';
 
           setState((s) => ({
@@ -218,9 +218,9 @@ export const PromptBuilderView: React.FC = () => {
         const ensureMetaDocsLoaded = useAppStore.getState().ensureMetaDocsLoaded;
         const getMetaDoc = useAppStore.getState().getMetaDoc;
 
-        await ensureMetaDocsLoaded({ kind: 'story', projectId, storyId }, [state.kind]);
+        await ensureMetaDocsLoaded({ scope: 'story', projectId, storyId }, [state.kind]);
 
-        const metaDoc = getMetaDoc({ kind: 'story', projectId, storyId }, state.kind);
+        const metaDoc = getMetaDoc({ scope: 'story', projectId, storyId }, state.kind);
         const markdown = metaDoc?.markdown ?? '';
 
         // Also load story title to present consistent title
@@ -262,9 +262,9 @@ export const PromptBuilderView: React.FC = () => {
       // Load root context docs
       const rootKeys = contextDocKeys.filter((k) => getDocScope(k) === 'root');
       if (rootKeys.length) {
-        await ensureMetaDocsLoaded({ kind: 'root' }, rootKeys);
+        await ensureMetaDocsLoaded({ scope: 'root' }, rootKeys);
         for (const k of rootKeys) {
-          const doc = getMetaDoc({ kind: 'root' }, k);
+          const doc = getMetaDoc({ scope: 'root' }, k);
           next[k] = !!doc?.markdown?.trim();
         }
       }
@@ -274,9 +274,9 @@ export const PromptBuilderView: React.FC = () => {
       if (storyKeys.length && needsStory) {
         const projectId = state.selectedProjectId!;
         const storyId = state.selectedStoryId!;
-        await ensureMetaDocsLoaded({ kind: 'story', projectId, storyId }, storyKeys);
+        await ensureMetaDocsLoaded({ scope: 'story', projectId, storyId }, storyKeys);
         for (const k of storyKeys) {
-          const doc = getMetaDoc({ kind: 'story', projectId, storyId }, k);
+          const doc = getMetaDoc({ scope: 'story', projectId, storyId }, k);
           next[k] = !!doc?.markdown?.trim();
         }
       }
@@ -306,9 +306,9 @@ export const PromptBuilderView: React.FC = () => {
 
         const scope = getDocScope(key);
         if (scope === 'root') {
-          const doc = getMetaDoc({ kind: 'root' }, key);
+          const doc = getMetaDoc({ scope: 'root' }, key);
           if (!doc) continue;
-          const id = metaId({ kind: 'root' }, key);
+          const id = metaId({ scope: 'root' }, key);
           useAppStore.setState((s) => ({
             metaDocs: {
               ...s.metaDocs,
@@ -320,9 +320,9 @@ export const PromptBuilderView: React.FC = () => {
         if (scope === 'story') {
           const projectId = state.selectedProjectId!;
           const storyId = state.selectedStoryId!;
-          const doc = getMetaDoc({ kind: 'story', projectId, storyId }, key);
+          const doc = getMetaDoc({ scope: 'story', projectId, storyId }, key);
           if (!doc) continue;
-          const id = metaId({ kind: 'story', projectId, storyId }, key);
+          const id = metaId({ scope: 'story', projectId, storyId }, key);
           useAppStore.setState((s) => ({
             metaDocs: {
               ...s.metaDocs,
