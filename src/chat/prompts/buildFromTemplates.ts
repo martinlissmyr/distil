@@ -7,7 +7,7 @@ import contextTemplateMd from './assistant/context.md?raw';
 import TaskMd from './user/task.md?raw';
 
 import {interpolate} from '../../helpers/interpolate';
-import { getSystemRoleForDocKind } from '../../docs';
+import { getSystemRoleForDocKind } from '../../models/docs';
 
 /**
  * Build the system message with dynamic content

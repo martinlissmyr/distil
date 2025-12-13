@@ -7,7 +7,7 @@ import {
   buildUserPrompt,
 } from './prompts/buildFromTemplates';
 import { getContextDocs } from './contextSelector';
-import { getDocDescription } from '../docs';
+import { getDocDescription } from '../models/docs';
 
 export type BuiltPrompt = {
   system: string;

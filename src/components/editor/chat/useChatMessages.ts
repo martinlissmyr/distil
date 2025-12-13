@@ -8,7 +8,7 @@ import {
 } from '../../../chat/chatHints';
 import { useAppStore, metaId } from '../../../state/useAppStore';
 import type { MetaDocKey } from '../../../types/metaDoc';
-import { getContextRulesFor, type DocKindId } from '../../../docs';
+import { getContextRulesFor, type DocKindId } from '../../../models/docs';
 
 export type ChatMessage = {
   id: string;

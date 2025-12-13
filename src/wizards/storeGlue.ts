@@ -4,7 +4,7 @@ import type { WizardActions, WizardContext, WizardState, LlmProcessingStep } fro
 import { createWizardEngine } from './engine';
 import { metaId } from '../state/useAppStore';
 import type { MetaDocState } from '../types/metaDoc';
-import { docKinds } from '../docs';
+import { docKinds } from '../models/docs';
 
 export function createWizardActions(args: {
   set: (fn: any) => void;

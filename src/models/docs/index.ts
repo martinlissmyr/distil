@@ -1,4 +1,4 @@
-// src/docs/index.ts
+// src/models/docs/index.ts
 
 // ---------------------------------------------------------------------------
 // Axes & base types

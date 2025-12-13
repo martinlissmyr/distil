@@ -11,7 +11,7 @@ import {
   getContextCriteriaLine,
   getContextDefinitionBlock,
   assertContextGuidanceAvailable,
-} from '../docs';
+} from '../models/docs';
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
 

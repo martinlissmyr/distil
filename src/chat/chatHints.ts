@@ -1,6 +1,6 @@
 // src/chat/chatHints.ts
 import { actions } from './actions';
-import type { DocKindId, StoryDocKindId } from '../docs';
+import type { DocKindId, StoryDocKindId } from '../models/docs';
 import type { MetaDocKey } from '../types/metaDoc';
 import type { OpenWizardCommand } from '../wizards/types';
 

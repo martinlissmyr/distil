@@ -1,5 +1,5 @@
 // src/types/metaDoc.ts
-import type { MetaDocKey } from '../docs';
+import type { MetaDocKey } from '../models/docs';
 
 export type MetaScope =
   | { kind: 'root' }                      // e.g. manifest, global notes

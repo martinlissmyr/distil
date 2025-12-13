@@ -4,16 +4,7 @@ import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
 import type { ChatConfig } from './ProseEditor';
-import '../../styles/Editor.scss';
-
-export type BaseEditorProps = {
-  editor: any; // TipTap Editor instance
-  title?: string;
-  showTitle?: boolean;
-  toolbar: React.ReactNode;
-  withChat?: boolean;
-  chatConfig?: ChatConfig;
-};
+import styles from './BaseEditor.module.scss';
 
 export const BaseEditor: React.FC<BaseEditorProps> = ({
   editor,
@@ -24,7 +15,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   chatConfig,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [asideOffset, setAsideOffset] = useState<number>(12); // px
+  const [asideOffset, setAsideOffset] = useState(12);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
@@ -33,201 +24,52 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
 
   if (!editor) return null;
 
-  // Measure scrollbar width on mount + resize
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    const updateScrollbarOffset = () => {
-      if (!scrollRef.current) return;
-      const node = scrollRef.current;
-      const scrollbarWidth = node.offsetWidth - node.clientWidth;
-
-      // Compensate if the scrollbar takes layout space
+    const update = () => {
+      const scrollbarWidth = el.offsetWidth - el.clientWidth;
       setAsideOffset(scrollbarWidth + 12);
     };
 
-    updateScrollbarOffset();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollbarOffset();
-    });
-
-    resizeObserver.observe(el);
-    window.addEventListener('resize', updateScrollbarOffset);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
 
     return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateScrollbarOffset);
+      ro.disconnect();
+      window.removeEventListener('resize', update);
     };
   }, []);
 
-  // Keep full text + selection markdown in sync with editor
-  useEffect(() => {
-    if (!editor) return;
-
-    const updateFullMarkdown = () => {
-      try {
-        const fullMd = editor.getMarkdown();
-        setFullTextMarkdown(fullMd);
-      } catch (e) {
-        console.warn('getMarkdown failed', e);
-        setFullTextMarkdown('');
-      }
-    };
-
-    let selTimeout: number | null = null;
-
-    const updateSelectionMarkdown = () => {
-      const state = editor.state;
-      const { from, to } = state.selection;
-      const hasSel = from !== to;
-      setHasSelection(hasSel);
-
-      if (!hasSel) {
-        setSelectionMarkdown('');
-        return;
-      }
-
-      try {
-        const slice = state.doc.cut(from, to).toJSON();
-        const selMd = editor.markdown.serialize(slice);
-        setSelectionMarkdown(selMd);
-      } catch (e) {
-        console.warn('serialize selection to markdown failed', e);
-        setSelectionMarkdown('');
-      }
-    };
-
-    const handleSelectionUpdate = () => {
-      if (selTimeout != null) {
-        window.clearTimeout(selTimeout);
-      }
-      selTimeout = window.setTimeout(updateSelectionMarkdown, 50);
-    };
-
-    // one combined handler so we can remove it cleanly
-    const handleUpdate = () => {
-      updateFullMarkdown();
-      handleSelectionUpdate();
-    };
-
-    // initial measurement
-    updateFullMarkdown();
-    updateSelectionMarkdown();
-
-    editor.on('update', handleUpdate);
-    editor.on('selectionUpdate', handleSelectionUpdate);
-
-    return () => {
-      editor.off('update', handleUpdate);
-      editor.off('selectionUpdate', handleSelectionUpdate);
-      if (selTimeout != null) window.clearTimeout(selTimeout);
-    };
-  }, [editor]);
-
   return (
     <Box
-      // Root editor container
+      className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
       style={{
-        position: 'relative',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--bg-editor)',
-
-        // Responsive side gutter used for both text padding and chat width calc
-        '--editor-gutter': 'min(110px, 6vw)' as any,
-        '--editor-width': 'min(680px, 40vw)' as any,
-        '--aside-offset': `${asideOffset}px` as any,
-      }}
+        '--aside-offset': `${asideOffset}px`,
+      } as React.CSSProperties}
     >
-      {/* TOOLBAR PILL */}
-      <Group
-        p="xs"
-        style={{
-          position: 'absolute',
-          top: 16,
-          left: 'calc(var(--editor-gutter) - 16px)',
-          zIndex: 20,
-          background: 'var(--editor-overlay)',
-          borderRadius: 56,
-          gap: 0,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        }}
-      >
+      <Group className={styles.toolbarPill} p="xs">
         {toolbar}
       </Group>
 
-      {/* TOP OVERLAY */}
-      <Box
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 100,
-          pointerEvents: 'none',
-          zIndex: 15,
-          opacity: isScrolled ? 1 : 0,
-          transition: 'opacity 120ms ease-out',
-          background:
-            'linear-gradient(to bottom, var(--bg-editor-faded), var(--bg-editor-transparent))',
-        }}
-      />
+      <Box className={styles.topOverlay} />
 
-      {/* SCROLLABLE AREA */}
       <Box
         ref={scrollRef}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflow: 'auto',
-          paddingTop: 120,
-          paddingBottom: 24,
-          cursor: 'text',
-          color: 'var(--text)',
-        }}
+        className={styles.scrollArea}
         onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
       >
-        <Box
-          className="editor"
-          style={{
-            width: 'calc(var(--editor-width) + var(--editor-gutter) * 2)',
-            minHeight: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {showTitle && (
-            <h1
-              className="editorTitle"
-              style={{
-                width: 'var(--editor-width)',
-                margin: '0 auto 22px auto',
-              }}
-            >
-              {title}
-            </h1>
-          )}
+        <Box className={styles.editor}>
+          {showTitle && <h1 className={styles.editorTitle}>{title}</h1>}
           <EditorContent editor={editor} />
         </Box>
       </Box>
 
-      {/* CHAT ASIDE – takes up the remaining space to the right */}
       {withChat && (
-        <Box
-          style={{
-            position: 'absolute',
-            top: '12px',
-            right: 'var(--aside-offset)',
-            bottom: '12px',
-            width:
-              'calc(100% - var(--aside-offset) - (var(--editor-gutter) * 2 + var(--editor-width)))',
-            zIndex: 20,
-            display: 'flex',
-          }}
-        >
+        <Box className={styles.chatAside}>
           <EditorChatAside
             {...chatConfig}
             fullTextMarkdown={fullTextMarkdown}

@@ -24,7 +24,7 @@ import {
   getContextRulesFor,
   getDocTitle,
   getDocDescription,
-} from '../../docs';
+} from '../../models/docs';
 
 // Mirror what chatHints uses internally
 type DocState = 'empty' | 'hasContent';
