@@ -1,4 +1,6 @@
 // src/models/docs/index.ts
+import type { EditorConfig } from './editorConfig';
+import { proseEditorConfig, metaEditorConfig } from './editorConfig';
 
 // ---------------------------------------------------------------------------
 // Axes & base types
@@ -45,6 +47,7 @@ export const docKinds = {
     contextTag: 'style/tone',
     contextLayer: 'author' as ContextLayer,
     isContextDoc: true as const,
+    editorConfig: metaEditorConfig,
     // No contextCriteria/contextIncludes/contextUsageHint for now
   },
   brief: {
@@ -56,8 +59,9 @@ export const docKinds = {
     contextTag: 'high-level concept',
     contextLayer: 'storyConcept' as ContextLayer,
     isContextDoc: true as const,
+    editorConfig: metaEditorConfig,
     contextCriteria:
-      'Required if understanding the story’s core idea, themes, tone, or principal character concepts would inform or improve the answer.',
+      "Required if understanding the story's core idea, themes, tone, or principal character concepts would inform or improve the answer.",
     contextIncludes: [
       'Core idea/concept',
       'Central premise',
@@ -77,6 +81,7 @@ export const docKinds = {
     contextTag: 'structure/plot',
     contextLayer: 'storyStructure' as ContextLayer,
     isContextDoc: true as const,
+    editorConfig: metaEditorConfig,
     contextCriteria:
       'Required if knowledge of the plot structure, narrative flow, character arcs, or story events is needed to influence or enhance the response.',
     contextIncludes: [
@@ -98,6 +103,7 @@ export const docKinds = {
     contextTag: 'setting/worldbuilding',
     contextLayer: 'storyWorld' as ContextLayer,
     isContextDoc: true as const,
+    editorConfig: metaEditorConfig,
     contextCriteria:
       'Required if familiarity with the setting, period, world-building details, rules, geography, culture, or historical background is essential for completing the request.',
     contextIncludes: [
@@ -119,6 +125,7 @@ export const docKinds = {
     shortDescription: 'The story (what the author is currently working on)',
     contextLayer: 'storyText' as ContextLayer,
     isContextDoc: false as const,
+    editorConfig: proseEditorConfig,
   },
 } as const;
 
@@ -138,6 +145,12 @@ export type DocKindConfig = {
 
   contextLayer: ContextLayer;
   isContextDoc: boolean;
+
+  /**
+   * Editor configuration for this document kind.
+   * Defines TipTap extensions, toolbar items, and formatting options.
+   */
+  editorConfig: EditorConfig;
 
   /**
    * One-line criterion describing when this doc is needed as context.
