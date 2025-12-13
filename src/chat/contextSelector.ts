@@ -1,5 +1,4 @@
 // src/chat/contextSelector.ts
-import OpenAI from 'openai';
 import { useAppStore, metaId } from '../state/useAppStore';
 import type { EditorKind } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
@@ -25,11 +24,10 @@ export async function getContextDocs(
   projectId?: string,
   storyId?: string,
   options: {
-    apiKey?: string;
     language?: SupportedLanguage;
   } = {}
 ) {
-  const { apiKey, language = 'sv' } = options;
+  const { language = 'sv' } = options;
 
   const state = useAppStore.getState();
 
@@ -73,7 +71,7 @@ export async function getContextDocs(
     const { relevantContexts } = await determineContextNeeds(
       rawUserPrompt,
       rules.intelligentlySelect,
-      { apiKey, language }
+      { language }
     );
 
     for (const docKey of relevantContexts) {
@@ -220,23 +218,12 @@ export type LlmContextResult = {
 export async function determineContextNeedsWithLLMClassification(
   userPrompt: string,
   relevantContexts: MetaDocKey[],
-  ambiguousNeededContexts: MetaDocKey[],
-  apiKey?: string
+  ambiguousNeededContexts: MetaDocKey[]
 ): Promise<LlmContextResult> {
-  if (!apiKey) {
-    return {
-      relevantContexts: Array.from(new Set(relevantContexts)),
-      result: null,
-    };
-  }
-
-  const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
-
   const contextClassificationPrompt = buildPrompt(ambiguousNeededContexts);
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const response = await window.chat.send({
       messages: [
         {
           role: 'system',
@@ -247,12 +234,21 @@ export async function determineContextNeedsWithLLMClassification(
           content: userPrompt,
         },
       ],
-      response_format: { type: 'json_object' },
+      model: 'gpt-4o-mini',
       temperature: 0,
-      max_tokens: 50,
+      maxTokens: 50,
+      responseFormat: 'json',
     });
 
-    const raw = response.choices[0]?.message?.content || '{}';
+    if (!response.ok) {
+      console.error('LLM classification failed:', response.error);
+      return {
+        relevantContexts: Array.from(new Set(relevantContexts)),
+        result: null,
+      };
+    }
+
+    const raw = response.data.output_text || '{}';
     const result = JSON.parse(raw) as Record<string, any>;
 
     for (const key of ambiguousNeededContexts) {
@@ -288,11 +284,10 @@ export async function determineContextNeeds(
   userPrompt: string,
   kinds: MetaDocKey[],
   options: {
-    apiKey?: string;
     language?: SupportedLanguage;
   } = {}
 ): Promise<ContextNeedsResult> {
-  const { apiKey, language = 'sv' } = options;
+  const { language = 'sv' } = options;
 
   const relevantContexts: MetaDocKey[] = [];
   const ambiguousNeededContexts: MetaDocKey[] = [];
@@ -320,7 +315,6 @@ export async function determineContextNeeds(
   return await determineContextNeedsWithLLMClassification(
     userPrompt,
     Array.from(new Set(relevantContexts)),
-    ambiguousNeededContexts,
-    apiKey
+    ambiguousNeededContexts
   );
 }

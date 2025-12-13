@@ -28,11 +28,21 @@ async function getOpenAIClient(): Promise<OpenAI> {
 }
 
 /**
+ * Payload for chat:send IPC call
+ */
+export type ChatPayload = {
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  responseFormat?: 'json' | 'text';
+};
+
+/**
  * Registers IPC handlers for OpenAI chat integration
  */
 export function registerChatHandlers(): void {
-  safeHandle('chat:send', async (payload) => {
-    // payload = { messages: [{ role, content }, ...] }
+  safeHandle('chat:send', async (payload: ChatPayload) => {
     // Validate payload structure
     if (!payload || typeof payload !== 'object') {
       throw new Error('Invalid payload: must be an object');
@@ -61,13 +71,34 @@ export function registerChatHandlers(): void {
       }
     }
 
+    // Validate optional parameters
+    if (payload.model !== undefined && typeof payload.model !== 'string') {
+      throw new Error('Invalid model: must be a string');
+    }
+    if (payload.temperature !== undefined && typeof payload.temperature !== 'number') {
+      throw new Error('Invalid temperature: must be a number');
+    }
+    if (payload.maxTokens !== undefined && typeof payload.maxTokens !== 'number') {
+      throw new Error('Invalid maxTokens: must be a number');
+    }
+    if (payload.responseFormat !== undefined && !['json', 'text'].includes(payload.responseFormat)) {
+      throw new Error('Invalid responseFormat: must be "json" or "text"');
+    }
+
     const openai = await getOpenAIClient();
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // Build completion options
+    const completionOptions: OpenAI.Chat.ChatCompletionCreateParams = {
+      model: payload.model ?? 'gpt-4o-mini',
       messages: payload.messages,
-      temperature: 0.7,
-    });
+      temperature: payload.temperature ?? 0.7,
+      ...(payload.maxTokens && { max_tokens: payload.maxTokens }),
+      ...(payload.responseFormat === 'json' && {
+        response_format: { type: 'json_object' },
+      }),
+    };
+
+    const completion = await openai.chat.completions.create(completionOptions);
 
     return {
       output_text: completion.choices[0]?.message?.content ?? '',
