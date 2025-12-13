@@ -7,8 +7,14 @@ export type { DocRef } from './docRef';
 export type MetaDocKey = MetaDocKeyImport;
 
 /**
- * @deprecated Use DocRef from './docRef' instead.
- * This alias exists for backward compatibility during migration.
+ * Semantic alias for DocRef when used with metaDoc APIs.
+ *
+ * MetaScope pairs with MetaDocKey in metaDoc-specific functions:
+ * - getMetaDoc(scope: MetaScope, key: MetaDocKey)
+ * - ensureMetaDocsLoaded(scope: MetaScope, keys: MetaDocKey[])
+ *
+ * This is a permanent semantic alias, not for backward compatibility.
+ * Use DocRef for general document references, MetaScope for metaDoc APIs.
  */
 export type MetaScope = DocRef;
 

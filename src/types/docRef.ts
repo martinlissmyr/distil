@@ -25,11 +25,3 @@ export type DocRef =
  * Use when you need to know both the location AND the kind of document.
  */
 export type DocRefWithKind = DocRef & { docKind: DocKindId };
-
-/**
- * Backward compatibility alias for MetaScope.
- * Will be removed after full migration.
- *
- * @deprecated Use DocRef instead
- */
-export type MetaScope = DocRef;
