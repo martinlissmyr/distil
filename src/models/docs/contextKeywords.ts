@@ -1,4 +1,4 @@
-// src/docs/contextKeywords.ts
+// src/models/docs/contextKeywords.ts
 import type { MetaDocKey } from '../types/metaDoc';
 import type SupportedLanguage from '../types/language';
 

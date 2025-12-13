@@ -24,7 +24,7 @@ import { jsonToMarkdown } from '../../helpers/markdownUtils';
 
 import { PlaygroundOutput } from './PlaygroundOutput';
 
-import type { DocKindId, MetaDocKey } from '../../docs';
+import type { DocKindId, MetaDocKey } from '../../models/docs';
 import {
   docKinds,
   getDocScope,
@@ -32,7 +32,7 @@ import {
   getDocDescription,
   getContextRulesFor,
   isMetaDocKey,
-} from '../../docs';
+} from '../../models/docs';
 
 type DocStatusMap = Partial<Record<MetaDocKey, boolean>>;
 

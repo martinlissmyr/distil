@@ -1,0 +1,315 @@
+/* src/components/editor/BaseEditor.module.scss */
+
+.root {
+  /* layout vars */
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-editor);
+
+  --editor-gutter: min(110px, 6vw);
+  --editor-width: min(680px, 40vw);
+  --aside-offset: 12px;
+}
+
+/* Keep these local and reference via styles.editor/styles.editorTitle in JSX */
+.editor {
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Source Serif', Georgia, serif;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1, 'kern' 1;
+  font-optical-sizing: auto;
+  backface-visibility: hidden;
+  font-size: 18.5px;
+  line-height: 1.52;
+  font-weight: 480;
+
+  > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+  }
+}
+
+.editorTitle {
+  margin: 0 0 0.8em;
+  letter-spacing: -0.02em;
+  font-weight: 720;
+  font-variation-settings: 'wght' 720, 'opsz' 36;
+  line-height: 1.25;
+}
+
+/* ✅ TipTap classes must be global */
+.root :global(.ProseMirror) {
+  color: var(--editor-text-color);
+
+  & > * {
+    margin-top: 0;
+    margin-left: var(--editor-gutter);
+    margin-right: var(--editor-gutter);
+  }
+
+  outline: none;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+
+  /* selection */
+  :global(.selection),
+  & ::selection {
+    background-color: var(--editor-highlighted-text-bg);
+    color: inherit;
+  }
+
+  :global(.selection) {
+    padding-inline: 0.01em;
+    margin-inline: -0.01em;
+    padding-block: 0.087em;
+    margin-block: -0.087em;
+  }
+
+  :global(.pm-persistent-selection) {
+    background: rgba(255, 214, 130, 0.35);
+    border-radius: 2px;
+  }
+
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;
+    pointer-events: none;
+    height: 0;
+  }
+
+  p {
+    margin-bottom: 0.9em;
+  }
+
+  h2 {
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    letter-spacing: -0.015em;
+    font-weight: 640;
+    font-variation-settings: 'wght' 640, 'opsz' 36;
+  }
+
+  h3 {
+    margin-top: 1.6em;
+    margin-bottom: 0.4em;
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-variation-settings: 'wght' 600;
+  }
+
+  h1:first-child,
+  h2:first-child,
+  h3:first-child {
+    margin-top: 0;
+  }
+
+  h1 *,
+  h2 *,
+  h3 * {
+    font-weight: inherit !important;
+    font-variation-settings: inherit !important;
+  }
+
+  h1 strong,
+  h2 strong,
+  h3 strong {
+    font-weight: inherit !important;
+    font-variation-settings: inherit !important;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  ul,
+  ol {
+    margin-top: 0.6em;
+    margin-bottom: 0.9em;
+    padding-left: 1em;
+
+    li {
+      padding: 0;
+      margin: 0 0 0.3em;
+
+      p {
+        margin: 0;
+      }
+    }
+  }
+
+  ol {
+    counter-reset: ol-item;
+    list-style: none;
+    position: relative;
+    left: -2.2em;
+    padding-left: 0;
+  }
+
+  ol > li {
+    counter-increment: ol-item;
+    position: relative;
+    list-style: none;
+    padding-left: 2.2em;
+    margin-bottom: 0.55em;
+    text-indent: 0;
+  }
+
+  ol > li::before {
+    content: counter(ol-item) '.';
+    position: absolute;
+    left: 0;
+    top: 0.02em;
+    width: 1.8em;
+    text-align: right;
+    font-weight: 640;
+    font-variation-settings: 'wght' 640, 'opsz' 36;
+    opacity: 0.85;
+  }
+
+  ol ol,
+  ol ul {
+    margin-top: 0.4em;
+    margin-bottom: 0.6em;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 2.5em;
+    margin-bottom: 1.5em;
+  }
+
+  a {
+    color: #2c5aa0;
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.18em;
+
+    &:hover {
+      color: #234578;
+    }
+  }
+
+  h1 + p,
+  h2 + p,
+  h3 + p {
+    margin-top: 0.1em;
+  }
+
+  &.ProseMirror-focused {
+    outline: none;
+  }
+}
+
+/* ==============================
+   Toolbar pill
+   ============================== */
+.toolbarPill {
+  position: absolute;
+  top: 16px;
+  left: calc(var(--editor-gutter) - 16px);
+  z-index: 20;
+
+  background: var(--editor-overlay);
+  border-radius: 56px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ==============================
+   Top gradient overlay
+   ============================== */
+.topOverlay {
+  position: absolute;
+  inset: 0 auto auto 0;
+  height: 100px;
+  z-index: 15;
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    var(--bg-editor-faded),
+    var(--bg-editor-transparent)
+  );
+
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+.scrolled .topOverlay {
+  opacity: 1;
+}
+
+/* ==============================
+   Scroll area
+   ============================== */
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+
+  padding-top: 120px;
+  padding-bottom: 24px;
+
+  cursor: text;
+  color: var(--text);
+}
+
+/* ==============================
+   Editor wrapper
+   ============================== */
+.editor {
+  width: calc(var(--editor-width) + var(--editor-gutter) * 2);
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Source Serif', Georgia, serif;
+  font-size: 18.5px;
+  line-height: 1.52;
+  font-weight: 480;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1, 'kern' 1;
+  font-optical-sizing: auto;
+}
+
+/* ==============================
+   Title
+   ============================== */
+.editorTitle {
+  width: var(--editor-width);
+  margin: 0 auto 22px auto;
+
+  letter-spacing: -0.02em;
+  font-weight: 720;
+  font-variation-settings: 'wght' 720, 'opsz' 36;
+  line-height: 1.25;
+}
+
+/* ==============================
+   Chat aside
+   ============================== */
+.chatAside {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  right: var(--aside-offset);
+
+  width: calc(
+    100% - var(--aside-offset) -
+      (var(--editor-gutter) * 2 + var(--editor-width))
+  );
+
+  z-index: 20;
+  display: flex;
+}

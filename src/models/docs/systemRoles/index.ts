@@ -1,4 +1,4 @@
-// src/docs/systemRoles.ts
+// src/models/docs/systemRoles.ts
 import type { DocKindId } from './index';
 
 import proseSystemRoleMd from './proseRole.md?raw';

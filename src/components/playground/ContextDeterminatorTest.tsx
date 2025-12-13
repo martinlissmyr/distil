@@ -23,7 +23,7 @@ import {
 } from '../../chat/contextSelector';
 import type { EditorKind } from '../../types/chat';
 import type { MetaDocKey } from '../../types/metaDoc';
-import { getContextRulesFor, type ContextRules } from '../../docs';
+import { getContextRulesFor, type ContextRules } from '../../models/docs';
 
 type ContextSource = 'story' | 'manifest';
 

@@ -1,5 +1,5 @@
 // src/types/chat.ts
-import type { DocKindId } from '../docs';
+import type { DocKindId } from '../models/docs';
 
 /**
  * The editor always works on a specific document kind.
