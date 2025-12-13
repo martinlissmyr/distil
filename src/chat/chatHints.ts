@@ -1,5 +1,5 @@
 // src/chat/chatHints.ts
-import type { EditorKind } from './buildPrompt';
+import type { EditorKind } from '../types/chat';
 
 export type SuggestionActionKind = 'prompt' | 'wizard' | 'navigate';
 

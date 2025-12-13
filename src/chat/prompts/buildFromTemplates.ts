@@ -2,36 +2,25 @@
 import type { EditorKind } from '../../types/chat';
 
 // Import markdown files as raw strings
-import proseSystemRoleMd from './system/proseRole.md?raw';
-import manifestSystemRoleMd from './system/manifestRole.md?raw';
-import outlineSystemRoleMd from './system/outlineRole.md?raw';
-import briefSystemRoleMd from './system/briefRole.md?raw';
-import worldSystemRoleMd from './system/worldRole.md?raw';
-import defaultSystemRoleMd from './system/defaultRole.md?raw';
 import systemMd from './system/system.md?raw';
 import contextTemplateMd from './assistant/context.md?raw';
 import TaskMd from './user/task.md?raw';
 
-// Import helper
 import {interpolate} from '../../helpers/interpolate';
+import { getSystemRoleForDocKind } from '../../docs';
 
 /**
  * Build the system message with dynamic content
  */
 export function buildSystemPrompt(params: {
-  kind: string;
+  kind: EditorKind;
 }): string {
   const { kind } = params;
-  const roleMd = {
-    "prose": proseSystemRoleMd,
-    "brief": briefSystemRoleMd,
-    "world": worldSystemRoleMd,
-    "manifest": manifestSystemRoleMd,
-    "outline": outlineSystemRoleMd,
-  }
+
+  const roleMd = getSystemRoleForDocKind(kind);
 
   return interpolate(systemMd, {
-    role: roleMd[kind] || defaultSystemRoleMd,
+    role: roleMd,
     responseLanguage: 'swedish',
   });
 }
