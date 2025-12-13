@@ -2,9 +2,20 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
+import type { Editor } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
 import type { ChatConfig } from './ProseEditor';
+import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import styles from './BaseEditor.module.scss';
+
+export type BaseEditorProps = {
+  editor: Editor | null;
+  title: string;
+  showTitle?: boolean;
+  toolbar?: React.ReactNode;
+  withChat?: boolean;
+  chatConfig?: ChatConfig;
+};
 
 export const BaseEditor: React.FC<BaseEditorProps> = ({
   editor,
@@ -22,8 +33,80 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
   const [hasSelection, setHasSelection] = useState(false);
 
-  if (!editor) return null;
+  // Determine schema based on editor kind
+  const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
 
+  // Extract full text markdown when editor content changes
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateMarkdown = () => {
+      try {
+        const json = editor.getJSON();
+        const markdown = jsonToMarkdown(json, schema);
+        setFullTextMarkdown(markdown);
+      } catch (error) {
+        console.error('Failed to extract markdown:', error);
+        setFullTextMarkdown('');
+      }
+    };
+
+    // Initial extraction
+    updateMarkdown();
+
+    // Listen to editor updates
+    const handleUpdate = () => {
+      updateMarkdown();
+    };
+
+    editor.on('update', handleUpdate);
+
+    return () => {
+      editor.off('update', handleUpdate);
+    };
+  }, [editor, schema]);
+
+  // Track selection changes
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateSelection = () => {
+      const { from, to } = editor.state.selection;
+      const hasActiveSelection = from !== to;
+      setHasSelection(hasActiveSelection);
+
+      if (hasActiveSelection) {
+        try {
+          // Get only the selected content
+          const slice = editor.state.doc.slice(from, to);
+          const selectedContent = slice.content.toJSON();
+          const markdown = jsonToMarkdown({ type: 'doc', content: selectedContent }, schema);
+          setSelectionMarkdown(markdown);
+        } catch (error) {
+          console.error('Failed to extract selection markdown:', error);
+          setSelectionMarkdown('');
+        }
+      } else {
+        setSelectionMarkdown('');
+      }
+    };
+
+    // Initial check
+    updateSelection();
+
+    // Listen to selection updates
+    const handleSelectionUpdate = () => {
+      updateSelection();
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+    };
+  }, [editor, schema]);
+
+  // Measure scrollbar width on mount + resize
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -43,6 +126,8 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       window.removeEventListener('resize', update);
     };
   }, []);
+
+  if (!editor) return null;
 
   return (
     <Box

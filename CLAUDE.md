@@ -87,11 +87,66 @@ The build process runs: `tsc && vite build && electron-builder`
 - Documents stored as TipTap JSONContent format
 - Markdown conversion utilities in `src/helpers/markdownUtils.ts`
 
-**AI Chat Integration** (`src/chat/buildPrompt.ts`)
-- Builds context-aware prompts based on editor type (prose/manifest/outline/brief)
-- Always includes: current document, user's manifest (style guide), and optionally text selection
-- Prose mode uses sophisticated "Alinea Writing Partner" system prompt focused on literary co-writing
-- Prompts detect user language and respond accordingly
+**Document Model System** (`src/models/docs/`)
+- Centralized, data-driven document configuration defining all doc types (manifest, brief, outline, world, prose)
+- Documents organized by three axes:
+  - **Scope**: root / project / story
+  - **Role**: meta (supporting docs) / primary (the actual story text)
+  - **Context Layer**: hierarchical ordering (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyText)
+- Each doc kind includes:
+  - Context guidance for AI (criteria, includes, usage hints)
+  - System role definitions (loaded from separate .md files via `systemRoles/`)
+  - Context keywords for intelligent selection (multi-language support)
+  - Context labels and descriptions
+- **Derived Context Rules**: `getContextRulesFor(target)` automatically determines which docs to include when editing a given doc
+  - Upstream docs are "always included" for meta docs
+  - Root-scope docs always included, story-scope docs intelligently selected for prose
+- Replaces scattered hardcoded context logic with a single source of truth
+
+**AI Chat Integration** (`src/chat/`)
+- **buildPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
+  - Calls context selector to get relevant docs
+  - Builds from templates with interpolated content
+  - Returns structured BuiltPrompt with included context list
+- **contextSelector.ts**: Hybrid intelligent context selection
+  - Uses `getContextRulesFor()` from doc model to determine always/intelligent inclusion
+  - Two-stage approach: fast keyword heuristics → LLM classification for ambiguous cases
+  - Heuristics check language-specific keywords (via `contextKeywords.ts`)
+  - LLM classification uses GPT-4o-mini with structured JSON output when confidence is low
+  - Loads and assembles markdown from metaDocs via Zustand store
+- **prompts/buildFromTemplates.ts**: Template-based prompt construction
+  - System, assistant context, and user prompts built from markdown template files
+  - System role varies by doc kind (loaded via `getSystemRoleForDocKind()`)
+  - Supports variable interpolation for dynamic content
+- **chatHints.ts**: Context-aware suggestion system
+  - Provides hints and suggested actions when chat opens
+  - Adapts based on document state (missing/empty/hasContent) and upstream doc availability
+  - Suggests creating upstream docs (manifest → brief → outline) in proper order
+  - Strategy pattern: different hints per doc kind
+- **actions/**: Reusable suggestion actions (prompts, wizards, navigation commands)
+
+**Wizard System** (`src/wizards/`)
+- Multi-step guided workflow framework for complex document creation tasks
+- **Core Architecture**:
+  - **engine.ts**: Pure functional engine with dependency injection (no direct DOM/store coupling)
+  - **registry.ts**: Dynamic loading of wizard configs from JSON files in `configs/`
+  - **types.ts**: Comprehensive type system for wizard configuration and state
+  - **navigation.ts**: Step traversal with conditional logic (skipIf support)
+  - **promptInterpolator.ts**: Template interpolation with access to answers, llmResults, and metaDocs
+  - **storeGlue.ts**: Zustand integration layer
+- **Step Types**:
+  - **question**: User input (text, textarea, scale, single/multi-select)
+  - **llm-processing**: Background AI processing with optional approval UI
+  - **llm-approval**: Show LLM result and get user approval/rejection/edit
+  - **compound**: Nested sub-steps with progress tracking
+- **Features**:
+  - Conditional step skipping based on previous answers
+  - Variable interpolation in prompts (e.g., `{{manifest}}`, `{{stepId}}`)
+  - Custom output templates for formatting final results
+  - Auto-advance for hidden LLM steps
+  - Insert results directly into editors
+  - Unsaved progress warnings
+- **Declarative Configs**: Wizards defined as JSON files, no code changes needed for new wizards
 
 ### Component Structure
 
@@ -188,3 +243,30 @@ The build process runs: `tsc && vite build && electron-builder`
 - Removed duplicate `loadManifest`/`saveManifest` IPC APIs
 - Manifest now accessed via unified `loadRootMetaDoc('manifest')`/`saveRootMetaDoc('manifest', doc)` API
 - Eliminated 100+ lines of duplicate code across type definitions, handlers, and client code
+
+**Document Model Refactoring**
+- Introduced centralized document model system (`src/models/docs/`) as single source of truth
+- All document types (manifest, brief, outline, world, prose) now defined via data-driven configuration
+- Context rules automatically derived from document hierarchy (scope, role, context layer)
+- AI guidance (system roles, context criteria, keywords) embedded in model and loaded from markdown files
+- Eliminates hardcoded context logic scattered across codebase
+
+**Intelligent Context Selection**
+- Hybrid approach: fast keyword heuristics + LLM classification for ambiguous cases
+- Uses doc model's context keywords and criteria for consistent behavior
+- Falls back to GPT-4o-mini (gpt-4o-mini) for cases where heuristics show low confidence
+- Reduces token usage by only including relevant context documents
+
+**Chat Hints & Suggestions**
+- Context-aware suggestion system guides users through document creation workflow
+- Adapts based on document state (missing/empty/hasContent) and upstream dependencies
+- Suggests logical next steps (manifest → brief → outline → prose)
+- Reusable action system supports prompts, wizards, and navigation commands
+
+**Wizard Framework**
+- Complete multi-step workflow system for guided document creation
+- Pure functional engine with dependency injection for testability
+- Declarative JSON configs enable new wizards without code changes
+- Four step types: question, llm-processing, llm-approval, compound
+- Conditional navigation, template interpolation, and custom output formatting
+- Currently powers manifest starter and outline builder workflows

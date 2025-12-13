@@ -1,17 +1,9 @@
 // src/components/editor/EditorChatAside.tsx
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import {
-  Box,
-  Stack,
-  ScrollArea,
-  Textarea,
-  Button,
-  Group,
-} from '@mantine/core';
+import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
 import type { SuggestionAction } from '../../chat/chatHints';
-import { useAppStore } from '../../state/useAppStore';
 
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatSend } from './chat/useChatSend';
@@ -22,45 +14,138 @@ import { SelectionPill } from './chat/SelectionPill';
 import { TypingIndicator } from './chat/TypingIndicator';
 import styles from './chat/ChatScrollbar.module.scss';
 
+// ✅ docs-model driven scope
+import { getDocScope } from '../../models/docs';
+
+export type EditorDocRef =
+  | { scope: 'root'; kind: EditorKind }
+  | { scope: 'story'; kind: EditorKind; projectId: string; storyId: string }
+  | { scope: 'project'; kind: EditorKind; projectId: string };
+
 type EditorChatAsideProps = {
-  kind: EditorKind;
-  title: string;
-  fullTextMarkdown: string;
-  selectionMarkdown?: string;
-  hasSelection?: boolean;
-  onSuggestionAction?: (action: SuggestionAction) => void;
-  isTextLoaded?: boolean;
+  /**
+   * New preferred API: pass a doc-ref and let parent own routing/wizard wiring.
+   */
+  doc?: EditorDocRef;
+
+  /**
+   * Back-compat props (will be removed later).
+   */
+  kind?: EditorKind;
   projectId?: string;
   storyId?: string;
+
+  title: string;
+  fullTextMarkdown: string;
+
+  selectionMarkdown?: string;
+  hasSelection?: boolean;
+  isTextLoaded?: boolean;
+
+  /**
+   * Called for any suggestion action (for analytics / orchestration).
+   */
+  onSuggestionAction?: (action: SuggestionAction) => void;
+
+  /**
+   * Existing navigation callback (kept as-is).
+   */
   onNavigate?: (target: string) => void;
-  editor?: any; // TipTap Editor instance for wizard integration
+
+  /**
+   * NEW: wizard boundary. Parent decides how to start wizard (engine/store/etc).
+   */
+  onOpenWizard?: (args: { wizardId: string; doc: EditorDocRef; editor?: any }) => void;
+
+  /**
+   * TipTap instance (optional, only used when opening wizards).
+   */
+  editor?: any;
 };
 
-export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
-  kind,
-  title,
-  fullTextMarkdown,
-  selectionMarkdown = '',
-  hasSelection = false,
-  onSuggestionAction,
-  isTextLoaded = false,
-  projectId,
-  storyId,
-  onNavigate,
-  editor,
-}) => {
-  const startWizard = useAppStore((s) => s.startWizard);
+function resolveDocRef(props: EditorChatAsideProps): EditorDocRef {
+  if (props.doc) return props.doc;
+
+  const kind = props.kind;
+  if (!kind) {
+    // This should basically never happen, but prevents runtime crashes.
+    // Default to root to avoid hard-coding story fallback.
+    return { scope: 'root', kind: 'manifest' as EditorKind };
+  }
+
+  const scope = getDocScope(kind); // 'root' | 'project' | 'story'
+
+  if (scope === 'root') {
+    return { scope: 'root', kind };
+  }
+
+  if (scope === 'project') {
+    if (!props.projectId) {
+      console.warn('[EditorChatAside] project scope doc is missing projectId:', kind);
+      // fallback so caller sees something consistent
+      return { scope: 'project', kind, projectId: 'unknown' };
+    }
+    return { scope: 'project', kind, projectId: props.projectId };
+  }
+
+  // scope === 'story'
+  if (!props.projectId || !props.storyId) {
+    console.warn('[EditorChatAside] story scope doc is missing projectId/storyId:', kind);
+    return {
+      scope: 'story',
+      kind,
+      projectId: props.projectId ?? 'unknown',
+      storyId: props.storyId ?? 'unknown',
+    };
+  }
+
+  return {
+    scope: 'story',
+    kind,
+    projectId: props.projectId,
+    storyId: props.storyId,
+  };
+}
+
+export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
+  const {
+    title,
+    fullTextMarkdown,
+    selectionMarkdown = '',
+    hasSelection = false,
+    isTextLoaded,
+    onSuggestionAction,
+    onNavigate,
+    onOpenWizard,
+    editor,
+  } = props;
+
+  const doc = resolveDocRef(props);
+  const effectiveIsTextLoaded = props.isTextLoaded ?? fullTextMarkdown !== null;
+  const kind = doc.kind;
+
   const [input, setInput] = useState('');
   const [scrollbarOffset, setScrollbarOffset] = useState(0);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
   const [isScrolledBottom, setIsScrolledBottom] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Message management
+  const projectId = doc.scope === 'story' || doc.scope === 'project' ? doc.projectId : undefined;
+  const storyId = doc.scope === 'story' ? doc.storyId : undefined;
+
+  function getThreadId(doc: EditorDocRef): string {
+    if (doc.scope === 'root') return `root:${doc.kind}`;
+    if (doc.scope === 'project') return `project:${doc.projectId}:${doc.kind}`;
+    return `story:${doc.projectId}:${doc.storyId}:${doc.kind}`;
+  }
+
+  const threadId = getThreadId(doc);
+
   const { messages, addMessage } = useChatMessages({
+    threadId,
     kind,
     fullTextMarkdown,
-    isTextLoaded,
+    isTextLoaded: effectiveIsTextLoaded,
     projectId,
     storyId,
   });
@@ -86,7 +171,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   // Auto-scroll behavior
   const { viewportRef, contentRef, spacerRef, spacerHeight } = useChatScroll(messages);
 
-  // Measure scrollbar width on mount + resize
+  // Measure scrollbar width on mount + resize (kept, per your request to skip #5)
   useLayoutEffect(() => {
     const updateScrollbarOffset = () => {
       if (!scrollContainerRef.current) return;
@@ -113,6 +198,10 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
   }, []);
 
   const handleSuggestionClick = (action: SuggestionAction) => {
+    // Always notify parent if it wants to observe actions
+    onSuggestionAction?.(action);
+
+    // Keep local behavior for prompt + navigate (wizard is delegated out)
     if (action.kind === 'prompt' && action.prompt) {
       void handleSend(action.prompt, action.displayMessage);
       return;
@@ -120,49 +209,23 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
 
     if (action.kind === 'navigate' && action.command) {
       if (action.command.type === 'navigateToStorySection') {
-        if (onNavigate) {
-          onNavigate(action.command.section);
-        }
+        onNavigate?.(action.command.section);
       } else if (action.command.type === 'navigateToManifest') {
-        if (onNavigate) {
-          onNavigate('manifest');
-        }
+        onNavigate?.('manifest');
       }
       return;
     }
 
     if (action.kind === 'wizard' && action.command?.type === 'openWizard') {
-      const wizardId = action.command.wizard;
+      const wizardId = action.command.wizardId;
 
-      // Determine target scope based on editor kind
-      const targetScope =
-        kind === 'manifest'
-          ? { kind: 'root' as const }
-          : kind === 'brief' || kind === 'outline' || kind === 'prose'
-          ? {
-              kind: 'story' as const,
-              projectId: projectId || 'unknown',
-              storyId: storyId || 'unknown',
-            }
-          : { kind: 'root' as const };
+      if (!onOpenWizard) {
+        console.warn('[EditorChatAside] wizard suggestion received but no onOpenWizard handler provided');
+        return;
+      }
 
-      // Determine target key based on editor kind
-      const targetKey = kind;
-
-      // Launch the wizard
-      void startWizard(wizardId, {
-        editorKind: kind,
-        projectId,
-        storyId,
-        targetScope,
-        targetKey,
-        targetEditor: editor,
-      });
+      onOpenWizard({ wizardId, doc, editor });
       return;
-    }
-
-    if (onSuggestionAction) {
-      onSuggestionAction(action);
     }
   };
 
@@ -171,9 +234,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
     setInput('');
   };
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (
-    e
-  ) => {
+  const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       void handleSendClick();
@@ -208,8 +269,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
             zIndex: 10,
             opacity: isScrolledTop ? 1 : 0,
             transition: 'opacity 120ms ease-out',
-            background:
-              'linear-gradient(to bottom, var(--bg-editor-aside), transparent)',
+            background: 'linear-gradient(to bottom, var(--bg-editor-aside), transparent)',
             borderTopLeftRadius: '12px',
             borderTopRightRadius: '12px',
           }}
@@ -237,10 +297,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
           <Stack gap="xl" p="md" ref={contentRef}>
             {messages.map((m) => (
               <Box key={m.id} data-message-bubble>
-                <MessageBubble
-                  message={m}
-                  onSuggestionClick={handleSuggestionClick}
-                />
+                <MessageBubble message={m} onSuggestionClick={handleSuggestionClick} />
               </Box>
             ))}
             {isSending && <TypingIndicator />}
@@ -269,14 +326,17 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
             zIndex: 10,
             opacity: isScrolledBottom ? 1 : 0,
             transition: 'opacity 120ms ease-out',
-            background:
-              'linear-gradient(to top, var(--bg-editor-aside), transparent)',
+            background: 'linear-gradient(to top, var(--bg-editor-aside), transparent)',
           }}
         />
       </Box>
 
       {/* Context pill */}
-      {showSelectionPill && <Box ml="xs"><SelectionPill onDismiss={dismissSelectionPill} /></Box>}
+      {showSelectionPill && (
+        <Box ml="xs">
+          <SelectionPill onDismiss={dismissSelectionPill} />
+        </Box>
+      )}
 
       {/* Input */}
       <Box
@@ -292,21 +352,13 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = ({
           value={input}
           onChange={(e) => setInput(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
-          placeholder={
-            scope === 'selection'
-              ? 'Ask something about the selected text…'
-              : 'Ask anything…'
-          }
+          placeholder={scope === 'selection' ? 'Ask something about the selected text…' : 'Ask anything…'}
           autosize
           minRows={2}
           maxRows={4}
         />
         <Group justify="flex-end" mt={4}>
-          <Button
-            size="xs"
-            onClick={handleSendClick}
-            disabled={isSending || !input.trim()}
-          >
+          <Button size="xs" onClick={handleSendClick} disabled={isSending || !input.trim()}>
             Ask
           </Button>
         </Group>
