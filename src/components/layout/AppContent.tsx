@@ -12,6 +12,7 @@ import { StoryBriefView } from '../story/StoryBriefView';
 import type { Project, StoryMeta } from '../../api/alineaClient';
 import type { ProseDoc } from '../editor/ProseEditor';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
+import { getSectionConfig, isSectionImplemented, type SectionId } from '../../models/sections';
 
 export interface AppContentProps {
   // Navigation state
@@ -102,51 +103,52 @@ export const AppContent: React.FC<AppContentProps> = ({
 
   // Story view - various sections
   if (appSection === 'story' && selectedProjectId && selectedStoryId) {
-    if (storySection === 'prose') {
-      return (
-        <StoryTextView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-          doc={currentDoc}
-          onChange={handleDocChange}
-          title={currentTitle}
-        />
-      );
+    const sectionConfig = getSectionConfig(storySection as SectionId);
+
+    // Render placeholder for unimplemented sections
+    if (!isSectionImplemented(storySection as SectionId)) {
+      return <Box p="md">{sectionConfig.label} (coming soon)</Box>;
     }
 
-    if (storySection === 'outline') {
-      return (
-        <StoryOutlineView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-        />
-      );
-    }
+    // Map section component name to actual component with props
+    switch (sectionConfig.component) {
+      case 'StoryTextView':
+        return (
+          <StoryTextView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+            doc={currentDoc}
+            onChange={handleDocChange}
+            title={currentTitle}
+          />
+        );
 
-    if (storySection === 'world') {
-      return (
-        <StoryWorldView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-        />
-      );
-    }
+      case 'StoryOutlineView':
+        return (
+          <StoryOutlineView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+          />
+        );
 
-    if (storySection === 'brief') {
-      return (
-        <StoryBriefView
-          projectId={selectedProjectId}
-          storyId={selectedStoryId}
-        />
-      );
-    }
+      case 'StoryWorldView':
+        return (
+          <StoryWorldView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+          />
+        );
 
-    if (storySection === 'characters') {
-      return <Box p="md">Characters (placeholder)</Box>;
-    }
+      case 'StoryBriefView':
+        return (
+          <StoryBriefView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+          />
+        );
 
-    if (storySection === 'locations') {
-      return <Box p="md">Locations (placeholder)</Box>;
+      default:
+        return <Box p="md">{sectionConfig.label} (placeholder)</Box>;
     }
   }
 
