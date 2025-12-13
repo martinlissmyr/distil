@@ -123,7 +123,7 @@ This reflects the LCRF principle that **AI helps construct the layers it later o
 
 ## Architecture Overview
 
-\`\`\`
+```
 alinea/
 ├── electron/              # Main process & IPC
 │   ├── chat.ts           # OpenAI boundary
@@ -147,7 +147,7 @@ alinea/
 │   ├── state/            # Zustand stores
 │   └── hooks/
 └── CLAUDE.md              # Detailed architectural notes
-\`\`\`
+```
 
 ---
 
