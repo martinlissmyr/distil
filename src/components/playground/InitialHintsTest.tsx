@@ -1,89 +1,168 @@
 // src/components/playground/InitialHintsTest.tsx
 import React, { useState, useEffect } from 'react';
-import { Stack, Paper, Text, Group, Badge, Box, SegmentedControl, Switch, Title, Divider } from '@mantine/core';
+import {
+  Stack,
+  Paper,
+  Text,
+  Group,
+  Badge,
+  Box,
+  Switch,
+  Title,
+  Divider,
+  Radio,
+} from '@mantine/core';
 import { Check, AlertTriangle } from 'lucide-react';
-import { getInitialAssistantHint, type AssistantHint } from '../../chat/chatHints';
-import type { EditorKind } from '../../types/chat';
+import {
+  getInitialAssistantHint,
+  type AssistantHint,
+} from '../../chat/chatHints';
 import type { MetaDocKey } from '../../types/metaDoc';
-import { getContextRulesFor, type ContextRules } from '../../docs';
+import {
+  docKinds,
+  type DocKindId,
+  getContextRulesFor,
+  getDocTitle,
+  getDocDescription,
+} from '../../docs';
 
-type ContextSource = 'story' | 'manifest';
+// Mirror what chatHints uses internally
+type DocState = 'empty' | 'hasContent';
 
 export const InitialHintsTest: React.FC = () => {
-  const [contextSource, setContextSource] = useState<ContextSource>('story');
-  const [editorKind, setEditorKind] = useState<EditorKind>('prose');
+  // Target doc kind (mirrors docKinds)
+  const allDocKinds = Object.keys(docKinds) as DocKindId[];
+  const [targetKind, setTargetKind] = useState<DocKindId>('prose');
 
-  // Document state toggles
+  // Target doc "has content?"
   const [isEmpty, setIsEmpty] = useState(true);
-  const [hasBrief, setHasBrief] = useState(false);
-  const [hasOutline, setHasOutline] = useState(false);
-  const [hasManifest, setHasManifest] = useState(true);
+
+  // Initialize all meta-docs as "missing" by default.
+  // These keys come from the doc model, not hard-coded.
+  const initialUpstream: Record<MetaDocKey, boolean> = {};
+
+  for (const key of Object.keys(docKinds) as DocKindId[]) {
+    if (docKinds[key].role === 'meta') {
+      initialUpstream[key as MetaDocKey] = false;
+    }
+  }
+
+  const [upstreamPresence, setUpstreamPresence] =
+    useState<Record<MetaDocKey, boolean>>(initialUpstream);
 
   const [result, setResult] = useState<AssistantHint | null>(null);
 
-  // Reset when context source or editor kind changes
+  // Reset result on targetKind change
   useEffect(() => {
     setResult(null);
-  }, [contextSource, editorKind]);
+  }, [targetKind]);
 
   // Compute the result whenever relevant state changes
   useEffect(() => {
-    const actualEditorKind: EditorKind = contextSource === 'manifest' ? 'manifest' : editorKind;
+    const targetState: DocState = isEmpty ? 'empty' : 'hasContent';
+
+    const upstream = Object.fromEntries(
+      Object.entries(upstreamPresence).map(([key, has]) => [
+        key,
+        has ? 'hasContent' : 'empty',
+      ])
+    ) as Record<MetaDocKey, DocState>;
 
     const hint = getInitialAssistantHint({
-      kind: actualEditorKind,
-      isEmpty,
-      hasBrief,
-      hasOutline,
-      hasManifest,
-    });
+      kind: targetKind,
+      targetState,
+      upstream,
+    } as any);
 
     setResult(hint);
-  }, [contextSource, editorKind, isEmpty, hasBrief, hasOutline, hasManifest]);
+  }, [targetKind, isEmpty, upstreamPresence]);
 
-  // Get relevant metaDocs for the current editor kind
-  const actualEditorKind: EditorKind = contextSource === 'manifest' ? 'manifest' : editorKind;
-  const rules = getContextRulesFor(actualEditorKind);
-
-  // Documents that could be relevant (alwaysInclude or intelligentlySelect)
+  // Context rules derived from the doc model
+  const rules = getContextRulesFor(targetKind);
   const relevantDocs: MetaDocKey[] = [
     ...rules.alwaysInclude,
     ...rules.intelligentlySelect,
   ];
 
-  return (
-    <Group gap="md" style={{ flex: 1, minHeight: 0, height: '100%' }} grow align="flex-start">
-      {/* Left Column - Input */}
-      <Stack gap="lg" p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)' }}>
-        <Stack gap="md">
-          <div>
-            <Text size="sm" fw={500} mb="xs">Context Source</Text>
-            <SegmentedControl
-              value={contextSource}
-              onChange={(value) => setContextSource(value as ContextSource)}
-              data={[
-                { label: 'Story', value: 'story' },
-                { label: 'Manifest', value: 'manifest' },
-              ]}
-              fullWidth
-            />
-          </div>
+  const toggleUpstream = (key: MetaDocKey, value: boolean) => {
+    setUpstreamPresence((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
-          {contextSource === 'story' && (
-            <div>
-              <Text size="sm" fw={500} mb="xs">Editor Kind</Text>
-              <SegmentedControl
-                value={editorKind}
-                onChange={(value) => setEditorKind(value as EditorKind)}
-                data={[
-                  { label: 'Prose', value: 'prose' },
-                  { label: 'Brief', value: 'brief' },
-                  { label: 'Outline', value: 'outline' },
-                ]}
-                fullWidth
-              />
-            </div>
-          )}
+  return (
+    <Group
+      gap="md"
+      style={{ flex: 1, minHeight: 0, height: '100%' }}
+      grow
+      align="flex-start"
+    >
+      {/* Left Column - Input */}
+      <Stack
+        gap="lg"
+        p="sm"
+        style={{
+          minHeight: 0,
+          height: '100%',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'var(--overlay)',
+        }}
+      >
+        <Stack gap="md">
+          {/* Target document selector using Radio.Card */}
+          <Radio.Group
+            value={targetKind}
+            onChange={(value) => setTargetKind(value as DocKindId)}
+            label={
+              <Text size="sm" fw={500} mb="xs">
+                Target document
+              </Text>
+            }
+          >
+            <Group wrap="wrap" gap="xs">
+              {allDocKinds.map((k) => {
+                const isActive = k === targetKind;
+
+                return (
+                  <Radio.Card
+                    key={k}
+                    value={k}
+                    radius="md"
+                    p="xs"
+                    withBorder
+                    style={{
+                      width: 'auto',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      borderColor: isActive
+                        ? 'var(--mantine-color-blue-6)'
+                        : undefined,
+                      backgroundColor: isActive
+                        ? 'var(--mantine-color-blue-light)'
+                        : undefined,
+                      boxShadow: isActive
+                        ? '0 0 0 1px var(--mantine-color-blue-6)'
+                        : 'none',
+                    }}
+                  >
+                    <Text
+                      size="sm"
+                      fw={600}
+                      c={isActive ? 'blue' : undefined}
+                    >
+                      {getDocTitle(k)}
+                    </Text>
+                  </Radio.Card>
+                );
+              })}
+            </Group>
+          </Radio.Group>
         </Stack>
 
         <Paper p="md">
@@ -94,10 +173,13 @@ export const InitialHintsTest: React.FC = () => {
                 {!isEmpty ? (
                   <Check size={16} color="var(--mantine-color-green-6)" />
                 ) : (
-                  <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
+                  <AlertTriangle
+                    size={16}
+                    color="var(--mantine-color-orange-6)"
+                  />
                 )}
                 <Text size="sm" fw={500}>
-                  Main document ({actualEditorKind})
+                  Main document ({getDocTitle(targetKind)})
                 </Text>
               </Group>
               <Switch
@@ -113,68 +195,37 @@ export const InitialHintsTest: React.FC = () => {
               <>
                 <Divider />
 
-                {relevantDocs.includes('manifest' as MetaDocKey) && (
-                  <Group justify="space-between" align="center">
-                    <Group gap="xs">
-                      {hasManifest ? (
-                        <Check size={16} color="var(--mantine-color-green-6)" />
-                      ) : (
-                        <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                      )}
-                      <Text size="sm" fw={500}>Manifest</Text>
-                    </Group>
-                    <Switch
-                      label="Has content"
-                      checked={hasManifest}
-                      onChange={(e) => setHasManifest(e.currentTarget.checked)}
-                      size="xs"
-                    />
-                  </Group>
-                )}
-
-                {relevantDocs.includes('brief' as MetaDocKey) && (
-                  <>
-                    <Divider />
+                {relevantDocs.map((docKey, idx) => (
+                  <React.Fragment key={docKey}>
+                    {idx > 0 && <Divider />}
                     <Group justify="space-between" align="center">
                       <Group gap="xs">
-                        {hasBrief ? (
-                          <Check size={16} color="var(--mantine-color-green-6)" />
+                        {upstreamPresence[docKey] ? (
+                          <Check
+                            size={16}
+                            color="var(--mantine-color-green-6)"
+                          />
                         ) : (
-                          <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
+                          <AlertTriangle
+                            size={16}
+                            color="var(--mantine-color-orange-6)"
+                          />
                         )}
-                        <Text size="sm" fw={500}>Brief</Text>
+                        <Text size="sm" fw={500}>
+                          {getDocTitle(docKey)}
+                        </Text>
                       </Group>
                       <Switch
                         label="Has content"
-                        checked={hasBrief}
-                        onChange={(e) => setHasBrief(e.currentTarget.checked)}
+                        checked={!!upstreamPresence[docKey]}
+                        onChange={(e) =>
+                          toggleUpstream(docKey, e.currentTarget.checked)
+                        }
                         size="xs"
                       />
                     </Group>
-                  </>
-                )}
-
-                {relevantDocs.includes('outline' as MetaDocKey) && (
-                  <>
-                    <Divider />
-                    <Group justify="space-between" align="center">
-                      <Group gap="xs">
-                        {hasOutline ? (
-                          <Check size={16} color="var(--mantine-color-green-6)" />
-                        ) : (
-                          <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                        )}
-                        <Text size="sm" fw={500}>Outline</Text>
-                      </Group>
-                      <Switch
-                        label="Has content"
-                        checked={hasOutline}
-                        onChange={(e) => setHasOutline(e.currentTarget.checked)}
-                        size="xs"
-                      />
-                    </Group>
-                  </>
-                )}
+                  </React.Fragment>
+                ))}
               </>
             )}
           </Stack>
@@ -182,11 +233,28 @@ export const InitialHintsTest: React.FC = () => {
       </Stack>
 
       {/* Right Column - Results */}
-      <Box p="sm" style={{ minHeight: 0, height: "100%", flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--overlay)', overflow: 'auto' }}>
+      <Box
+        p="sm"
+        style={{
+          minHeight: 0,
+          height: '100%',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'var(--overlay)',
+          overflow: 'auto',
+        }}
+      >
         <Stack gap="md">
           {result && (
             <>
-              <Paper p="md" withBorder style={{ borderLeft: '4px solid var(--mantine-color-blue-6)' }}>
+              <Paper
+                p="md"
+                withBorder
+                style={{
+                  borderLeft: '4px solid var(--mantine-color-blue-6)',
+                }}
+              >
                 <Stack gap="sm">
                   <Title order={5}>Intro Message</Title>
                   <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
@@ -196,38 +264,66 @@ export const InitialHintsTest: React.FC = () => {
               </Paper>
 
               {result.actions.length > 0 && (
-                <Paper p="md" withBorder style={{ borderLeft: '4px solid var(--mantine-color-green-6)' }}>
+                <Paper
+                  p="md"
+                  withBorder
+                  style={{
+                    borderLeft: '4px solid var(--mantine-color-green-6)',
+                  }}
+                >
                   <Stack gap="sm">
-                    <Title order={5}>Suggested Actions ({result.actions.length})</Title>
+                    <Title order={5}>
+                      Suggested Actions ({result.actions.length})
+                    </Title>
                     {result.actions.map((action) => (
-                      <Paper key={action.id} p="sm" withBorder style={{ backgroundColor: 'var(--mantine-color-gray-light)' }}>
+                      <Paper
+                        key={action.id}
+                        p="sm"
+                        withBorder
+                        style={{
+                          backgroundColor: 'var(--mantine-color-gray-light)',
+                        }}
+                      >
                         <Stack gap="xs">
                           <Group gap="xs">
-                            <Text size="sm" fw={600}>{action.label}</Text>
+                            <Text size="sm" fw={600}>
+                              {action.label}
+                            </Text>
                             <Badge size="sm">{action.kind}</Badge>
                           </Group>
 
                           {action.kind === 'prompt' && action.prompt && (
-                            <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              style={{
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap',
+                              }}
+                            >
                               Prompt: {action.prompt}
                             </Text>
                           )}
 
-                          {action.kind === 'navigate' && action.command?.type === 'navigateToStorySection' && (
-                            <Text size="xs" c="dimmed">
-                              Navigate to story section: {action.command.section}
-                            </Text>
-                          )}
+                          {action.kind === 'navigate' &&
+                            action.command?.type ===
+                              'navigateToStorySection' && (
+                              <Text size="xs" c="dimmed">
+                                Navigate to story section:{' '}
+                                {action.command.section}
+                              </Text>
+                            )}
 
-                          {action.kind === 'navigate' && action.command?.type === 'navigateToManifest' && (
-                            <Text size="xs" c="dimmed">
-                              Navigate to: Manifest (root)
-                            </Text>
-                          )}
+                          {action.kind === 'navigate' &&
+                            action.command?.type === 'navigateToManifest' && (
+                              <Text size="xs" c="dimmed">
+                                Navigate to: Manifest (root)
+                              </Text>
+                            )}
 
                           {action.kind === 'wizard' && action.command?.type === 'openWizard' && (
                             <Text size="xs" c="dimmed">
-                              Open wizard: {action.command.wizard}
+                              Open wizard: {(action.command as any).wizardId}
                             </Text>
                           )}
                         </Stack>
@@ -238,8 +334,16 @@ export const InitialHintsTest: React.FC = () => {
               )}
 
               {result.actions.length === 0 && (
-                <Paper p="md" withBorder style={{ borderLeft: '4px solid var(--mantine-color-gray-6)' }}>
-                  <Text size="sm" c="dimmed">No suggested actions for this configuration</Text>
+                <Paper
+                  p="md"
+                  withBorder
+                  style={{
+                    borderLeft: '4px solid var(--mantine-color-gray-6)',
+                  }}
+                >
+                  <Text size="sm" c="dimmed">
+                    No suggested actions for this configuration
+                  </Text>
                 </Paper>
               )}
             </>

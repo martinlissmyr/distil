@@ -5,6 +5,14 @@ import type { MetaScope, MetaDocKey } from '../types/metaDoc';
 /**
  * Core wizard configuration
  */
+
+export type WizardId = string;
+
+export type OpenWizardCommand = {
+  type: 'openWizard';
+  wizardId: WizardId;
+};
+
 export type WizardConfig = {
   id: string;
   version: string;

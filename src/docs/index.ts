@@ -85,7 +85,7 @@ export const docKinds = {
     id: 'world',
     scope: 'story' as DocScope,
     role: 'meta' as DocRole,
-    title: 'World',
+    title: 'Story World Description',
     shortDescription: 'World information (setting/worldbuilding)',
     contextTag: 'setting/worldbuilding',
     contextLayer: 'storyWorld' as ContextLayer,
@@ -107,7 +107,7 @@ export const docKinds = {
     id: 'prose',
     scope: 'story' as DocScope,
     role: 'primary' as DocRole,
-    title: 'Prose',
+    title: 'Story Prose',
     shortDescription: 'The story (what the author is currently working on)',
     contextLayer: 'storyText' as ContextLayer,
     isContextDoc: false as const,
@@ -157,6 +157,14 @@ export type DocKindConfig = DocKindConfigMap[DocKindId];
 // Derived unions (MetaDocKey, etc.)
 // ---------------------------------------------------------------------------
 
+export type StoryDocKindId = {
+  [K in DocKindId]: (typeof docKinds)[K]['scope'] extends 'story' ? K : never;
+}[DocKindId];
+
+// Optional convenience, if you want it elsewhere (UI etc.)
+export const storyDocKindIds: StoryDocKindId[] = (Object.keys(docKinds) as DocKindId[])
+  .filter((k) => docKinds[k].scope === 'story') as StoryDocKindId[];
+  
 /**
  * All kinds that are "meta docs" (everything except the actual story text).
  */
