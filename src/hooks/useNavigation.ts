@@ -1,10 +1,11 @@
 // src/hooks/useNavigation.ts
 import { create } from 'zustand';
 import { useEffect, useCallback, useRef } from 'react';
+import type { StorySectionId, RootSectionId } from '../models/sections';
 
 // Types
-export type StorySection = 'prose' | 'outline' | 'world' | 'brief' | 'characters' | 'locations';
-export type RootSection = 'projects' | 'manifest' | 'playground';
+export type StorySection = StorySectionId;
+export type RootSection = RootSectionId;
 export type AppSection = 'root' | 'project' | 'story';
 
 type NavState = {

@@ -11,18 +11,12 @@ import {
 import {
   ArrowLeft,
   SquareLibrary,
-  NotebookPen,
   FileText,
-  Lightbulb,
-  Route,
-  Users,
-  MapPin,
   Settings2,
-  Feather,
-  FlaskConical,
-  Globe,
   Bug
 } from 'lucide-react';
+
+import { getStorySections, getRootSections } from '../../models/sections';
 
 import {
   DndContext,
@@ -42,16 +36,9 @@ import { CSS } from '@dnd-kit/utilities';
 
 import type { Project, StoryMeta } from '../../api/alineaClient';
 import { alineaClient } from '../../api/alineaClient';
+import type { StorySection, RootSection } from '../../hooks/useNavigation';
 
 type SidebarMode = 'projects' | 'project' | 'story';
-export type StorySection =
-  | 'prose'
-  | 'outline'
-  | 'world'
-  | 'brief'
-  | 'characters'
-  | 'locations';
-export type RootSection = 'projects' | 'manifest' | 'assistant' | 'playground';
 
 type SidebarProps = {
   mode: SidebarMode;
@@ -226,20 +213,17 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
       </Group>
 
       <Stack gap="1px">
-        <NavItem
-          Icon={Feather}
-          label="Manifest"
-          active={rootSection === 'manifest'}
-          onClick={() => onSelectRootSection('manifest')}
-        />
-        {isDevMode && (
-          <NavItem
-            Icon={FlaskConical}
-            label="Playground"
-            active={rootSection === 'playground'}
-            onClick={() => onSelectRootSection('playground')}
-          />
-        )}
+        {getRootSections({ isDevMode, implementedOnly: false })
+          .filter(section => section.id !== 'projects') // Projects shown above
+          .map(section => (
+            <NavItem
+              key={section.id}
+              Icon={section.icon}
+              label={section.label}
+              active={rootSection === section.id}
+              onClick={() => onSelectRootSection(section.id as RootSection)}
+            />
+          ))}
       </Stack>
     </SidebarCard>
   );
@@ -367,42 +351,15 @@ const StorySidebar: React.FC<StorySidebarProps> = ({
       </Group>
 
       <Stack gap="1px">
-        <NavItem
-          Icon={NotebookPen}
-          label="Text"
-          active={section === 'prose'}
-          onClick={() => onSelectStorySection('prose')}
-        />
-        <NavItem
-          Icon={Lightbulb}
-          label="Brief / Idea"
-          active={section === 'brief'}
-          onClick={() => onSelectStorySection('brief')}
-        />
-        <NavItem
-          Icon={Route}
-          label="Outline"
-          active={section === 'outline'}
-          onClick={() => onSelectStorySection('outline')}
-        />
-        <NavItem
-          Icon={Globe}
-          label="World"
-          active={section === 'world'}
-          onClick={() => onSelectStorySection('world')}
-        />
-        <NavItem
-          Icon={Users}
-          label="Characters"
-          active={section === 'characters'}
-          onClick={() => onSelectStorySection('characters')}
-        />
-        <NavItem
-          Icon={MapPin}
-          label="Locations"
-          active={section === 'locations'}
-          onClick={() => onSelectStorySection('locations')}
-        />
+        {getStorySections({ implementedOnly: false }).map(storySection => (
+          <NavItem
+            key={storySection.id}
+            Icon={storySection.icon}
+            label={storySection.label}
+            active={section === storySection.id}
+            onClick={() => onSelectStorySection(storySection.id as StorySection)}
+          />
+        ))}
       </Stack>
     </SidebarCard>
   );
