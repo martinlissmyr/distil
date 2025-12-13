@@ -93,8 +93,9 @@ The build process runs: `tsc && vite build && electron-builder`
 **Navigation State**
 - Persisted to localStorage as `alinea:navState:v3`
 - Three-level hierarchy: root → project → story
-- Root sections: projects, manifest, assistant
-- Story sections: prose, outline, brief, characters, locations
+- Section IDs and configuration defined in sections model (`src/models/sections/`)
+- Root sections: projects, manifest, playground
+- Story sections: prose, brief, outline, world, characters, locations
 - App loads last-used navigation state on startup
 
 **Data Model**
@@ -106,6 +107,8 @@ The build process runs: `tsc && vite build && electron-builder`
 **Editor Architecture**
 - Uses TipTap for rich text editing (based on ProseMirror)
 - Two editor types: ProseEditor (main story text) and MetaTextEditor (outline/brief/manifest)
+- Editor behavior driven by EditorConfig from doc model (heading levels, lists, toolbar items)
+- Factory functions convert configs to TipTap extensions and toolbar components
 - Documents stored as TipTap JSONContent format
 - Markdown conversion utilities in `src/helpers/markdownUtils.ts`
 
@@ -117,6 +120,7 @@ The build process runs: `tsc && vite build && electron-builder`
   - **Context Layer**: LCRF layer mapping (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyText)
 - Each doc kind includes:
   - LCRF layer assignment (which layer of the stack it belongs to)
+  - Editor configuration (heading levels, lists, toolbar items, placeholder)
   - Context guidance for AI (criteria, includes, usage hints)
   - System role definitions (loaded from separate .md files via `systemRoles/`)
   - Context keywords for intelligent selection (multi-language support)
@@ -126,6 +130,53 @@ The build process runs: `tsc && vite build && electron-builder`
   - Root-scope docs (Identity & Governance) always included in all contexts
   - Story-scope docs intelligently selected based on relevance to current task
 - This is the technical implementation of LCRF's layered architecture
+
+**Editor Configuration Model** (`src/models/docs/editorConfig.ts`)
+- Data-driven configuration for TipTap editor behavior per document kind
+- Defines what editing features are available for each type of document:
+  - **headingLevels**: Which HTML heading levels to enable (e.g., [2, 3] for H2/H3)
+  - **lists**: Whether to enable bullet and ordered lists
+  - **horizontalRule**: Whether to enable horizontal rule separator
+  - **toolbar**: Ordered array of toolbar button configurations
+  - **placeholder**: Empty editor placeholder text
+- Two default configurations:
+  - **proseEditorConfig**: Restrictive (H2/H3 only, no lists, minimal toolbar) for prose writing
+  - **metaEditorConfig**: Full-featured (H2/H3, lists, horizontal rules, full toolbar) for planning documents
+- **editorConfigFactory.tsx**: Factory functions that convert configs into TipTap extensions and React toolbar components
+  - `createExtensionsFromConfig()`: Generates TipTap extension array from EditorConfig
+  - `createToolbarFromConfig()`: Generates EditorToolbar React element with icons and click handlers
+  - Icon mapping uses explicit labels to ensure correct visual representation (H2 vs H3)
+- Benefits:
+  - Eliminates duplicate toolbar code across ProseEditor and MetaTextEditor (~40 lines saved)
+  - Easy to add new document kinds with different editing capabilities
+  - Consistent editor behavior derived from single source of truth
+
+**Sections Model** (`src/models/sections/`)
+- Centralized registry of all navigation sections in the application
+- Defines section configuration for both story-level and root-level navigation
+- Each section includes:
+  - **id**: Unique identifier (e.g., 'prose', 'brief', 'outline', 'manifest')
+  - **scope**: 'story' or 'root' (determines where section appears in navigation)
+  - **docKind**: Optional mapping to document kind in doc model
+  - **label**: Display label in sidebar
+  - **icon**: Lucide React icon component
+  - **order**: Sort order in navigation
+  - **component**: Which view component to render
+  - **isImplemented**: Whether section is currently functional (shows "coming soon" if false)
+- Type derivation:
+  - `SectionId`: Union of all section IDs
+  - `StorySectionId`: Type-safe subset of story-scope sections
+  - `RootSectionId`: Type-safe subset of root-scope sections
+- Helper functions:
+  - `getStorySections()`: Returns ordered list of story sections, optionally filtered by implementation status
+  - `getRootSections()`: Returns ordered list of root sections, with optional dev-mode filtering
+  - `getSectionConfig()`: Retrieves config for a specific section
+  - `isSectionImplemented()`: Checks if section is fully implemented
+- Benefits:
+  - Sidebar navigation generated dynamically from model (no hardcoded JSX)
+  - AppContent routing simplified using section component mapping
+  - Navigation types derived from model ensure type safety
+  - Easy to add new sections by updating model only
 
 **AI Chat Integration** (`src/chat/`) - **Meta-Level Context Reasoning**
 - **buildPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
@@ -181,7 +232,8 @@ The build process runs: `tsc && vite build && electron-builder`
 
 **Layout** (`src/components/layout/`)
 - `AlineaLayout`: Main split-pane container (sidebar + main)
-- `Sidebar`: Navigation for projects/stories and story sections
+- `Sidebar`: Navigation for projects/stories and story sections, dynamically generated from sections model
+- `AppContent`: Main content area with routing based on section component mapping from sections model
 - `AlineaChrome`: Custom window chrome (minimize/maximize/close buttons)
 
 **Projects** (`src/components/projects/`)
@@ -305,6 +357,22 @@ The build process runs: `tsc && vite build && electron-builder`
 - Conditional navigation, template interpolation, and custom output formatting
 - Currently powers manifest starter and outline builder workflows
 - Reflects LCRF principle that AI helps construct the layers it later operates within
+
+**Sections Model** (Model-Driven Navigation)
+- Introduced centralized section registry (`src/models/sections/`) for all navigation configuration
+- Sidebar navigation now generated dynamically from model instead of hardcoded JSX (eliminated ~11 hardcoded NavItem components)
+- AppContent routing simplified using section-to-component mapping with type-safe section IDs
+- Navigation types (`StorySectionId`, `RootSectionId`) derived from model ensure type safety
+- Each section includes scope, label, icon, component mapping, and implementation status
+- Easy to add new sections by updating model only, no component changes needed
+
+**Editor Configuration Model** (Data-Driven Editor Behavior)
+- Introduced editor configuration system (`src/models/docs/editorConfig.ts`, `editorConfigFactory.tsx`)
+- Each document kind now defines its editor behavior (heading levels, lists, toolbar items) in the doc model
+- Factory functions convert EditorConfig to TipTap extensions and React toolbar components
+- Eliminated ~40 lines of duplicate toolbar code across ProseEditor and MetaTextEditor
+- Fixed toolbar icon bug where heading level logic didn't match prose editor's actual levels
+- Easy to customize editor behavior per document kind without touching component code
 
 ## Development Philosophy
 
