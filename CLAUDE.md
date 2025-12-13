@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Alinea is an Electron-based desktop writing application for fiction authors, built with React, TypeScript, Vite, and Mantine UI. It provides a prose editor with AI-powered writing assistance using OpenAI's API.
+Alinea is a local-first writing environment built on the **Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
+
+It is an Electron-based desktop application for fiction authors, built with React, TypeScript, Vite, and Mantine UI. The system implements LCRF principles where human intention governs structure, and AI operates as a context-bound cognitive amplifier within explicitly defined contextual layers.
 
 ## AI Agent Rules for This Project
 
@@ -12,6 +14,26 @@ Alinea is an Electron-based desktop writing application for fiction authors, bui
 - All TODOs lists, reports, analyses, and auto-generated notes must be placed in `/todos/`.
 - Files must use the following naming format: `description.md`.
 - Do not put reports or TODOs in root or source directories.
+
+## Layered Contextual Relevance Framework (LCRF)
+
+Alinea is a concrete implementation of LCRF, a human-intention–driven architecture for structured collaboration with LLMs. LCRF models creative work as a stack of contextual layers, where each layer constrains and informs the next:
+
+1. **Identity & Governance** — values, voice, tone, constraints (Author Manifest)
+2. **Domain & Methodology** — how work is done (system prompts, editor roles, wizard definitions)
+3. **Project Intent** — goals, audience, scope, creative direction (Story Brief)
+4. **Structured Knowledge** — outlines, worldbuilding, characters, plans
+5. **Task Execution** — moment-to-moment writing and problem-solving (Prose editor with AI)
+
+### Core Principles
+
+- **Human authority flows down the stack**: Upstream layers always govern downstream behavior
+- **AI operates within bounded layers**: The LLM never acts outside the contextual boundaries defined above it
+- **Meta-level context reasoning**: The system determines which layers are relevant for each question
+- **Explicit human control**: Every layer is defined, validated, and modified by the human author
+- **Local-first architecture**: All data stays on the user's machine; no cloud sync or telemetry
+
+This prevents drift, hallucination, and stylistic inconsistency over long creative timelines.
 
 ## Common Commands
 
@@ -87,57 +109,63 @@ The build process runs: `tsc && vite build && electron-builder`
 - Documents stored as TipTap JSONContent format
 - Markdown conversion utilities in `src/helpers/markdownUtils.ts`
 
-**Document Model System** (`src/models/docs/`)
-- Centralized, data-driven document configuration defining all doc types (manifest, brief, outline, world, prose)
+**Document Model System** (`src/models/docs/`) - **LCRF Layer Implementation**
+- Centralized, data-driven document configuration defining all doc types and their position in the LCRF stack
 - Documents organized by three axes:
-  - **Scope**: root / project / story
+  - **Scope**: root / project / story (data organization)
   - **Role**: meta (supporting docs) / primary (the actual story text)
-  - **Context Layer**: hierarchical ordering (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyText)
+  - **Context Layer**: LCRF layer mapping (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyText)
 - Each doc kind includes:
+  - LCRF layer assignment (which layer of the stack it belongs to)
   - Context guidance for AI (criteria, includes, usage hints)
   - System role definitions (loaded from separate .md files via `systemRoles/`)
   - Context keywords for intelligent selection (multi-language support)
   - Context labels and descriptions
-- **Derived Context Rules**: `getContextRulesFor(target)` automatically determines which docs to include when editing a given doc
-  - Upstream docs are "always included" for meta docs
-  - Root-scope docs always included, story-scope docs intelligently selected for prose
-- Replaces scattered hardcoded context logic with a single source of truth
+- **Derived Context Rules**: `getContextRulesFor(target)` implements LCRF authority flow
+  - Upstream layers (higher in the stack) are "always included" for downstream editing
+  - Root-scope docs (Identity & Governance) always included in all contexts
+  - Story-scope docs intelligently selected based on relevance to current task
+- This is the technical implementation of LCRF's layered architecture
 
-**AI Chat Integration** (`src/chat/`)
+**AI Chat Integration** (`src/chat/`) - **Meta-Level Context Reasoning**
 - **buildPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
-  - Calls context selector to get relevant docs
+  - Calls context selector to determine which LCRF layers are relevant
   - Builds from templates with interpolated content
   - Returns structured BuiltPrompt with included context list
-- **contextSelector.ts**: Hybrid intelligent context selection
+- **contextSelector.ts**: Implements meta-level context reasoning (core LCRF principle)
+  - Determines which contextual layers matter for each question
   - Uses `getContextRulesFor()` from doc model to determine always/intelligent inclusion
-  - Two-stage approach: fast keyword heuristics → LLM classification for ambiguous cases
-  - Heuristics check language-specific keywords (via `contextKeywords.ts`)
-  - LLM classification uses GPT-4o-mini with structured JSON output when confidence is low
+  - Three-stage approach implementing LCRF's hybrid strategy:
+    1. **Model-derived context rules** (LCRF layer ordering from document model)
+    2. **Heuristic filtering** (fast keyword signals via `contextKeywords.ts`)
+    3. **LLM-based classification** (GPT-4o-mini with structured JSON for ambiguous cases)
+  - Result: AI receives *just enough context* — no more, no less
   - Loads and assembles markdown from metaDocs via Zustand store
 - **prompts/buildFromTemplates.ts**: Template-based prompt construction
   - System, assistant context, and user prompts built from markdown template files
   - System role varies by doc kind (loaded via `getSystemRoleForDocKind()`)
   - Supports variable interpolation for dynamic content
 - **chatHints.ts**: Context-aware suggestion system
-  - Provides hints and suggested actions when chat opens
+  - Guides users through LCRF layer construction (Identity → Project → Structure → Execution)
   - Adapts based on document state (missing/empty/hasContent) and upstream doc availability
-  - Suggests creating upstream docs (manifest → brief → outline) in proper order
+  - Suggests creating upstream layers in proper LCRF order (manifest → brief → outline → prose)
   - Strategy pattern: different hints per doc kind
 - **actions/**: Reusable suggestion actions (prompts, wizards, navigation commands)
 
-**Wizard System** (`src/wizards/`)
-- Multi-step guided workflow framework for complex document creation tasks
+**Wizard System** (`src/wizards/`) - **Formalized Co-Creation Protocols**
+- Wizards are not UI helpers — they are **structured protocols for building LCRF layers**
+- Help construct the contextual layers that AI later operates within
+- Externalize tacit knowledge and structure complex creative decisions
 - **Core Architecture**:
   - **engine.ts**: Pure functional engine with dependency injection (no direct DOM/store coupling)
   - **registry.ts**: Dynamic loading of wizard configs from JSON files in `configs/`
   - **types.ts**: Comprehensive type system for wizard configuration and state
   - **navigation.ts**: Step traversal with conditional logic (skipIf support)
-  - **promptInterpolator.ts**: Template interpolation with access to answers, llmResults, and metaDocs
   - **storeGlue.ts**: Zustand integration layer
 - **Step Types**:
-  - **question**: User input (text, textarea, scale, single/multi-select)
-  - **llm-processing**: Background AI processing with optional approval UI
-  - **llm-approval**: Show LLM result and get user approval/rejection/edit
+  - **question**: Human-validated input (text, textarea, scale, single/multi-select)
+  - **llm-processing**: AI assistance within explicitly bounded context
+  - **llm-approval**: Human approval/rejection/edit of AI output (maintains human authority)
   - **compound**: Nested sub-steps with progress tracking
 - **Features**:
   - Conditional step skipping based on previous answers
@@ -147,6 +175,7 @@ The build process runs: `tsc && vite build && electron-builder`
   - Insert results directly into editors
   - Unsaved progress warnings
 - **Declarative Configs**: Wizards defined as JSON files, no code changes needed for new wizards
+- **LCRF Alignment**: Wizards help build Identity & Governance (manifest), Project Intent (brief), and Structured Knowledge (outlines) layers
 
 ### Component Structure
 
@@ -244,29 +273,50 @@ The build process runs: `tsc && vite build && electron-builder`
 - Manifest now accessed via unified `loadRootMetaDoc('manifest')`/`saveRootMetaDoc('manifest', doc)` API
 - Eliminated 100+ lines of duplicate code across type definitions, handlers, and client code
 
-**Document Model Refactoring**
-- Introduced centralized document model system (`src/models/docs/`) as single source of truth
-- All document types (manifest, brief, outline, world, prose) now defined via data-driven configuration
-- Context rules automatically derived from document hierarchy (scope, role, context layer)
+**Document Model Refactoring** (LCRF Implementation)
+- Introduced centralized document model system (`src/models/docs/`) as technical implementation of LCRF layers
+- All document types (manifest, brief, outline, world, prose) now defined via data-driven configuration with LCRF layer assignments
+- Context rules automatically derived from LCRF hierarchy (scope, role, context layer)
 - AI guidance (system roles, context criteria, keywords) embedded in model and loaded from markdown files
 - Eliminates hardcoded context logic scattered across codebase
+- Makes LCRF layer structure explicit and enforceable in code
 
-**Intelligent Context Selection**
-- Hybrid approach: fast keyword heuristics + LLM classification for ambiguous cases
+**Intelligent Context Selection** (Meta-Level Context Reasoning)
+- Implements LCRF's core principle: determine which layers matter for each question
+- Hybrid approach: model-derived rules + keyword heuristics + LLM classification for ambiguous cases
 - Uses doc model's context keywords and criteria for consistent behavior
-- Falls back to GPT-4o-mini (gpt-4o-mini) for cases where heuristics show low confidence
-- Reduces token usage by only including relevant context documents
+- Falls back to GPT-4o-mini for cases where heuristics show low confidence
+- Reduces token usage by only including relevant LCRF layers
+- Ensures AI receives just enough context — no more, no less
 
-**Chat Hints & Suggestions**
-- Context-aware suggestion system guides users through document creation workflow
-- Adapts based on document state (missing/empty/hasContent) and upstream dependencies
-- Suggests logical next steps (manifest → brief → outline → prose)
+**Chat Hints & Suggestions** (LCRF Layer Construction Guidance)
+- Context-aware suggestion system guides users through LCRF layer construction
+- Adapts based on document state (missing/empty/hasContent) and upstream layer availability
+- Suggests logical next steps following LCRF order (Identity → Project Intent → Structured Knowledge → Execution)
+- Enforces proper dependency flow: manifest → brief → outline → prose
 - Reusable action system supports prompts, wizards, and navigation commands
 
-**Wizard Framework**
-- Complete multi-step workflow system for guided document creation
+**Wizard Framework** (Formalized Co-Creation Protocols)
+- Complete multi-step workflow system for building LCRF layers
+- Wizards help construct the contextual layers that AI later operates within
 - Pure functional engine with dependency injection for testability
 - Declarative JSON configs enable new wizards without code changes
-- Four step types: question, llm-processing, llm-approval, compound
+- Four step types: question (human input), llm-processing (bounded AI assistance), llm-approval (human authority), compound (nesting)
 - Conditional navigation, template interpolation, and custom output formatting
 - Currently powers manifest starter and outline builder workflows
+- Reflects LCRF principle that AI helps construct the layers it later operates within
+
+## Development Philosophy
+
+Alinea treats AI as:
+
+> A precision instrument — not an autonomous agent — fully governed by human intention.
+
+This aligns with LCRF principles:
+- **Humans provide**: meaning, direction, judgment, authority
+- **LLMs provide**: abstraction, structure, synthesis, cognitive amplification
+- **Authority flows down**: upstream LCRF layers always govern downstream behavior
+- **Bounded operation**: AI never acts outside contextual boundaries defined above it
+- **Explicit control**: every layer defined, validated, and modified by humans
+
+This design prevents drift, hallucination, and stylistic inconsistency over long creative timelines, enabling long-horizon AI-assisted creativity with sustained coherence.
