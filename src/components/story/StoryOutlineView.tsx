@@ -31,7 +31,7 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
     >
       <MetaTextEditor
         mode="bound"
-        scope={{ kind: 'story', projectId, storyId }}
+        scope={{ scope: 'story', projectId, storyId }}
         metaKey="outline"
         title="Story outline"
         placeholder="Sketch the structure of your story…"

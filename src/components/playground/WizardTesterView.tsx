@@ -53,23 +53,23 @@ export const WizardTesterView: React.FC = () => {
     const { startWizard } = useAppStore.getState();
 
     // Use the wizard's targetDoc as the editor kind
-    const editorKind = config.targetDoc as EditorKind;
+    const docKind = config.targetDoc as EditorKind;
 
-    // Determine target scope based on editor kind
-    const targetScope =
-      editorKind === 'manifest'
-        ? { kind: 'root' as const }
-        : editorKind === 'brief' || editorKind === 'outline' || editorKind === 'prose'
+    // Build unified doc ref based on editor kind
+    const ref =
+      docKind === 'manifest'
+        ? { scope: 'root' as const, docKind }
+        : docKind === 'brief' || docKind === 'outline' || docKind === 'prose'
           ? {
-              kind: 'story' as const,
+              scope: 'story' as const,
+              docKind,
               projectId: 'test-project',
               storyId: 'test-story',
             }
-          : { kind: 'root' as const };
+          : { scope: 'root' as const, docKind };
 
     await startWizard(wizardId, {
-      editorKind,
-      targetScope,
+      ref,
       targetKey: config.targetDoc,
       targetEditor: editor, // Pass the editor instance
     });

@@ -40,14 +40,14 @@ function safeText(md: string | null | undefined): string {
 function computeMetaDocState(
   metaDocs: Record<string, any>,
   scope:
-    | { kind: 'root' }
-    | { kind: 'story'; projectId: string; storyId: string },
+    | { scope: 'root' }
+    | { scope: 'story'; projectId: string; storyId: string },
   key: MetaDocKey
 ): DocState {
   const id =
-    scope.kind === 'root'
-      ? metaId({ kind: 'root' }, key)
-      : metaId({ kind: 'story', projectId: scope.projectId, storyId: scope.storyId }, key);
+    scope.scope === 'root'
+      ? metaId({ scope: 'root' }, key)
+      : metaId({ scope: 'story', projectId: scope.projectId, storyId: scope.storyId }, key);
 
   const doc = metaDocs[id];
 
@@ -113,9 +113,9 @@ export function useChatMessages({
 
     for (const key of upstreamKinds) {
       if (key === 'manifest') {
-        upstreamStates[key] = computeMetaDocState(metaDocs, { kind: 'root' }, 'manifest');
+        upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'root' }, 'manifest');
       } else if (projectId && storyId) {
-        upstreamStates[key] = computeMetaDocState(metaDocs, { kind: 'story', projectId, storyId }, key);
+        upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'story', projectId, storyId }, key);
       } else {
         upstreamStates[key] = 'missing';
       }

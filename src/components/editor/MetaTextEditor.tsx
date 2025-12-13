@@ -42,8 +42,8 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
 
   // Stable id for this (scope, key) combo
   const id = useMemo(() => metaId(scope, metaKey), [
-    scope.kind,
-    // these properties only exist for some kinds, but that's fine
+    scope.scope,
+    // these properties only exist for some scopes, but that's fine
     (scope as any).projectId,
     (scope as any).storyId,
     metaKey,

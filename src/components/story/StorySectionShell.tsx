@@ -18,7 +18,7 @@ export const StorySectionShell: React.FC<StorySectionShellProps> = ({
   children,
 }) => {
   usePreloadMetaDocs(
-    { kind: 'story', projectId, storyId },
+    { scope: 'story', projectId, storyId },
     preloadMetaKeys
   );
 

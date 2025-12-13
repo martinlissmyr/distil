@@ -9,7 +9,7 @@ export function usePreloadMetaDocs(scope: MetaScope, keys: MetaDocKey[]) {
   useEffect(() => {
     if (!keys.length) return;
     void ensureMetaDocsLoaded(scope, keys);
-  }, [scope.kind, 
+  }, [scope.scope, 
       'projectId' in scope ? scope.projectId : undefined,
       'storyId' in scope ? (scope as any).storyId : undefined,
       keys.join('|'),

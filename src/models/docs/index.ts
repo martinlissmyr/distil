@@ -20,7 +20,15 @@ export const contextLayerOrder = [
 
 export type ContextLayer = (typeof contextLayerOrder)[number];
 
-export type DocScope = 'root' | 'project' | 'story';
+/**
+ * The hierarchical level where a document kind lives.
+ * - 'root': Global/author-level (e.g., manifest)
+ * - 'project': Project-level (future: project concepts)
+ * - 'story': Story-level (e.g., brief, outline, prose)
+ *
+ * Renamed from DocScope to avoid confusion with runtime DocRef.
+ */
+export type DocScopeLevel = 'root' | 'project' | 'story';
 export type DocRole = 'meta' | 'primary';
 
 // ---------------------------------------------------------------------------
@@ -30,7 +38,7 @@ export type DocRole = 'meta' | 'primary';
 export const docKinds = {
   manifest: {
     id: 'manifest',
-    scope: 'root' as DocScope,
+    scope: 'root' as DocScopeLevel,
     role: 'meta' as DocRole,
     title: 'Author Manifest',
     shortDescription: 'An author manifest (style/tone)',
@@ -41,7 +49,7 @@ export const docKinds = {
   },
   brief: {
     id: 'brief',
-    scope: 'story' as DocScope,
+    scope: 'story' as DocScopeLevel,
     role: 'meta' as DocRole,
     title: 'Story Brief',
     shortDescription: 'A story brief (high-level concept)',
@@ -62,7 +70,7 @@ export const docKinds = {
   },
   outline: {
     id: 'outline',
-    scope: 'story' as DocScope,
+    scope: 'story' as DocScopeLevel,
     role: 'meta' as DocRole,
     title: 'Story Outline',
     shortDescription: 'A story outline (structure/plot)',
@@ -83,7 +91,7 @@ export const docKinds = {
   },
   world: {
     id: 'world',
-    scope: 'story' as DocScope,
+    scope: 'story' as DocScopeLevel,
     role: 'meta' as DocRole,
     title: 'Story World Description',
     shortDescription: 'World information (setting/worldbuilding)',
@@ -105,7 +113,7 @@ export const docKinds = {
   },
   prose: {
     id: 'prose',
-    scope: 'story' as DocScope,
+    scope: 'story' as DocScopeLevel,
     role: 'primary' as DocRole,
     title: 'Story Prose',
     shortDescription: 'The story (what the author is currently working on)',
@@ -116,7 +124,7 @@ export const docKinds = {
 
 export type DocKindConfig = {
   id: DocKindId;
-  scope: DocScope;
+  scope: DocScopeLevel;
   role: DocRole;
 
   title: string;
@@ -214,7 +222,7 @@ export function getDocContextLabel(key: DocKindId): string {
   return base;
 }
 
-export function getDocScope(key: DocKindId): DocScope {
+export function getDocScope(key: DocKindId): DocScopeLevel {
   return docKinds[key]?.scope;
 }
 

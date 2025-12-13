@@ -20,7 +20,7 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
     >
       <MetaTextEditor
         mode="bound"
-        scope={{ kind: 'story', projectId, storyId }}
+        scope={{ scope: 'story', projectId, storyId }}
         metaKey="world"
         title="Story world"
         placeholder="Describe the world of your story: time period, location, world-building details, rules of the world…"

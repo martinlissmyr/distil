@@ -25,7 +25,7 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
   };
 
   const scope: MetaScope = {
-    kind: 'story',
+    scope: 'story',
     projectId,
     storyId,
   };

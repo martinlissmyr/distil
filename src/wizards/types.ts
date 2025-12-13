@@ -1,6 +1,6 @@
 // src/wizards/types.ts
 import type { EditorKind } from '../types/chat';
-import type { MetaScope, MetaDocKey } from '../types/metaDoc';
+import type { DocRef, MetaScope, MetaDocKey } from '../types/metaDoc';
 
 /**
  * Core wizard configuration
@@ -136,15 +136,23 @@ export type ConditionExpression =
   | { type: 'or'; conditions: ConditionExpression[] };
 
 /**
- * Context for wizard launch (where it was triggered from)
+ * Context for wizard launch (where it was triggered from).
+ *
+ * Simplified from previous version which had redundant fields:
+ * - editorKind + projectId + storyId duplicated info in targetScope
+ * - targetKey was redundant with the docKind in a unified ref
+ *
+ * Now uses unified DocRef type with required docKind.
  */
 export type WizardContext = {
-  editorKind: EditorKind;
-  projectId?: string;
-  storyId?: string;
-  targetScope: MetaScope;
-  targetKey: MetaDocKey;
-  targetEditor?: any; // TipTap Editor instance to insert results into
+  /** The document being edited (scope + kind + IDs) */
+  ref: DocRef & { docKind: EditorKind };
+
+  /** Optional: if wizard targets a different doc (usually same as ref) */
+  targetKey?: MetaDocKey;
+
+  /** TipTap Editor instance to insert results into */
+  targetEditor?: any;
 };
 
 /**
