@@ -1,4 +1,4 @@
-// src/state/markdownUtils.ts
+// src/helpers/markdownUtils.ts
 import { Editor } from '@tiptap/core';
 import type { JSONContent } from '@tiptap/core';
 
