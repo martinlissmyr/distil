@@ -5,7 +5,7 @@ import {
   saveStoryMetaDoc,
   loadRootMetaDoc,
   saveRootMetaDoc,
-} from '../fs/alineaFs';
+} from '../fs/fs';
 import {
   validateProjectId,
   validateStoryId,

@@ -1,6 +1,6 @@
 # ENTITIES.md
 
-This document describes the **Entities** subsystem in Alinea: the data model, storage strategy, UI patterns, chat/context integration, and how to evolve the feature safely. It is written as implementation guidance for both humans and coding assistants (Claude/ChatGPT).
+This document describes the **Entities** subsystem in Distil: the data model, storage strategy, UI patterns, chat/context integration, and how to evolve the feature safely. It is written as implementation guidance for both humans and coding assistants (Claude/ChatGPT).
 
 > Scope: **story-scoped entities** (currently `character` and `location`), editable in isolation, persistable on disk, and selectively retrievable as context for chat/wizards.
 
@@ -298,7 +298,7 @@ Entities should be editable in isolation and safe to persist independently of th
 Entities are story-scoped and stored within the story's directory hierarchy:
 
 ```
-~/Alinea/projects/<projectId>/stories/<storyId>/entities/
+~/Distil/projects/<projectId>/stories/<storyId>/entities/
   characters/
     <characterId>.json
   locations/
@@ -313,7 +313,7 @@ Entities are story-scoped and stored within the story's directory hierarchy:
 - `index.json` remains lightweight and can be regenerated from entity docs
 
 ### Write Queue Integration
-Entity saves must use the existing write queue system (implemented in `electron/fs/alineaFs.ts`) to prevent race conditions when multiple entities or the index are saved concurrently.
+Entity saves must use the existing write queue system (implemented in `electron/fs/fs.ts`) to prevent race conditions when multiple entities or the index are saved concurrently.
 
 ---
 
@@ -351,7 +351,7 @@ The entity relevance pipeline (heuristics → rules → optional LLM classificat
 
 ## IPC API Surface
 
-Entity operations follow the standardized IPC patterns established in `electron/fs/alineaFs.ts`:
+Entity operations follow the standardized IPC patterns established in `electron/fs/fs.ts`:
 
 ### Proposed API
 ```typescript
@@ -392,26 +392,26 @@ ipcMain.handle('entity:delete',
 ```
 
 ### Client wrapper
-Add to `src/api/alineaClient.ts`:
+Add to `src/api/client.ts`:
 ```typescript
-export const alineaClient = {
+export const client = {
   // ... existing methods ...
 
   entities: {
     load: (projectId: string, storyId: string, entityType: EntityType, entityId: string) =>
-      window.alinea.invoke('entity:load', projectId, storyId, entityType, entityId),
+      window.distil.invoke('entity:load', projectId, storyId, entityType, entityId),
 
     save: (projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: EntityDoc) =>
-      window.alinea.invoke('entity:save', projectId, storyId, entityType, entityId, doc),
+      window.distil.invoke('entity:save', projectId, storyId, entityType, entityId, doc),
 
     loadIndex: (projectId: string, storyId: string) =>
-      window.alinea.invoke('entity:loadIndex', projectId, storyId),
+      window.distil.invoke('entity:loadIndex', projectId, storyId),
 
     list: (projectId: string, storyId: string, entityType?: EntityType) =>
-      window.alinea.invoke('entity:list', projectId, storyId, entityType),
+      window.distil.invoke('entity:list', projectId, storyId, entityType),
 
     delete: (projectId: string, storyId: string, entityType: EntityType, entityId: string) =>
-      window.alinea.invoke('entity:delete', projectId, storyId, entityType, entityId),
+      window.distil.invoke('entity:delete', projectId, storyId, entityType, entityId),
   },
 };
 ```
@@ -454,7 +454,7 @@ Entity cache keys follow the pattern:
 - Entity indexes: `entityIndex:${storyId}` (e.g., `entityIndex:story-456`)
 
 ### Write Queue
-Entity saves automatically use the existing write queue system in `alineaFs.ts`:
+Entity saves automatically use the existing write queue system in `fs.ts`:
 - Multiple saves to the same entity are serialized
 - Index updates are queued separately
 - Prevents race conditions during concurrent editing
@@ -510,7 +510,7 @@ Entities integrate with the sections model (`src/models/sections/`) by adding ne
 3. User edits character fields
    → Changes tracked in local state
    → Autosave after 1000ms debounce
-   → Calls alineaClient.entities.save()
+   → Calls client.entities.save()
 
 4. User closes editor / goes back
    → If unsaved changes, prompt to save

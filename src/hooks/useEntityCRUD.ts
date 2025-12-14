@@ -1,6 +1,6 @@
 // src/hooks/useEntityCRUD.ts
 import { useState, useCallback } from 'react';
-import type { IpcResponse } from '../api/alineaClient';
+import type { IpcResponse } from '../api/client';
 
 /**
  * Generic CRUD operations interface for any entity type
@@ -35,11 +35,11 @@ export interface EntityCallbacks<T> {
  * @example
  * ```typescript
  * const projects = useEntityCRUD({
- *   list: alineaClient.listProjects,
- *   create: alineaClient.createProject,
- *   update: alineaClient.updateProject,
- *   delete: alineaClient.deleteProject,
- *   reorder: alineaClient.reorderProjects,
+ *   list: client.listProjects,
+ *   create: client.createProject,
+ *   update: client.updateProject,
+ *   delete: client.deleteProject,
+ *   reorder: client.reorderProjects,
  * }, {
  *   onCreate: (project) => goToProject(project.id),
  *   onDelete: (id) => { if (selectedId === id) goToProjects() },

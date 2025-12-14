@@ -1,6 +1,6 @@
 // src/hooks/useStoryEditor.ts
 import { useState, useEffect, useCallback } from 'react';
-import { alineaClient, StoryData } from '../api/alineaClient';
+import { client, StoryData } from '../api/client';
 import type { ProseDoc } from '../components/editor/ProseEditor';
 
 /**
@@ -63,7 +63,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   const save = useCallback(async (projectId: string, storyId: string): Promise<boolean> => {
     if (!currentDoc) return false;
 
-    const response = await alineaClient.saveStory(projectId, storyId, {
+    const response = await client.saveStory(projectId, storyId, {
       id: storyId,
       title: currentTitle || 'Untitled',
       doc: currentDoc,
@@ -88,7 +88,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
     const timeout = setTimeout(() => {
       (async () => {
         try {
-          const response = await alineaClient.saveStory(projectId, storyId, {
+          const response = await client.saveStory(projectId, storyId, {
             id: storyId,
             title: currentTitle || 'Untitled',
             doc: currentDoc,

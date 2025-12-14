@@ -1,6 +1,6 @@
 // src/hooks/useStoryHandlers.ts
 import { useState, useCallback } from 'react';
-import { alineaClient, StoryMeta, StoryData } from '../api/alineaClient';
+import { client, StoryMeta, StoryData } from '../api/client';
 
 // Type for EntityCRUD return value
 interface EntityCRUD<T> {
@@ -80,7 +80,7 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     if (!selectedProjectId) return;
     goToStory(selectedProjectId, id, 'prose');
 
-    const storyResponse = await alineaClient.loadStory(selectedProjectId, id);
+    const storyResponse = await client.loadStory(selectedProjectId, id);
     if (!storyResponse.ok) {
       console.error('Failed to load story:', storyResponse.error);
       return;

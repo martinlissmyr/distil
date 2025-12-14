@@ -1,6 +1,6 @@
 // src/components/projects/ProjectsView.tsx
 import React from 'react';
-import type { Project } from '../../api/alineaClient';
+import type { Project } from '../../api/client';
 import { EntityGrid } from '../common/EntityGrid';
 import { SquareLibrary } from 'lucide-react';
 

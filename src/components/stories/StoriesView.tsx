@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StoryMeta } from '../../api/alineaClient';
+import type { StoryMeta } from '../../api/client';
 import { EntityGrid } from '../common/EntityGrid';
 import { FileText } from 'lucide-react';
 

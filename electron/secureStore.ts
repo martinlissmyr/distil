@@ -1,7 +1,7 @@
 // main/secureStore.ts
 import keytar from 'keytar';
 
-const SERVICE_NAME = 'alinea';
+const SERVICE_NAME = 'distil';
 const ACCOUNT_NAME = 'openai_api_key';
 
 export async function saveApiKey(key: string) {

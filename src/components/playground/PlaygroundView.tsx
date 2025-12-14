@@ -12,7 +12,7 @@ type PlaygroundMode =
   | 'initial-hints-test'
   | 'wizard-tester';
 
-const PLAYGROUND_MODE_KEY = 'alinea:playgroundMode:v1';
+const PLAYGROUND_MODE_KEY = 'distil:playgroundMode:v1';
 
 function loadPlaygroundMode(): PlaygroundMode {
   try {

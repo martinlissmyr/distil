@@ -34,8 +34,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import type { Project, StoryMeta } from '../../api/alineaClient';
-import { alineaClient } from '../../api/alineaClient';
+import type { Project, StoryMeta, client } from '../../api/client';
 import type { StorySection, RootSection } from '../../hooks/useNavigation';
 
 type SidebarMode = 'projects' | 'project' | 'story';
@@ -396,7 +395,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
-    alineaClient.isDevMode().then((response) => {
+    client.isDevMode().then((response) => {
       if (response.ok) setIsDevMode(response.data);
     });
   }, []);

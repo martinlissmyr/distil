@@ -5,7 +5,7 @@ import {
   updateProject,
   deleteProject,
   reorderProjects,
-} from '../fs/alineaFs';
+} from '../fs/fs';
 import { validateProjectId, validateName, validateIdArray } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
 

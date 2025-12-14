@@ -7,7 +7,7 @@ import {
   updateStory,
   deleteStory,
   reorderStories,
-} from '../fs/alineaFs';
+} from '../fs/fs';
 import {
   validateProjectId,
   validateStoryId,

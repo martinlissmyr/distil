@@ -1,15 +1,19 @@
-# Alinea
+# Distil
+
+This app exists to help writers convert rich, complex creative thought into clear, intentional prose — by applying invisible structure and method while keeping authorship fully human.
+
+The app does not add creativity. It increases the fidelity with which the author’s creativity becomes language.
 
 **A local-first writing environment built on the Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
 
-Alinea is not a generic “AI writing app.”  
+Distil is not a generic “AI writing app.”  
 It is a methodological system for long-form creative work, where **human intention governs structure, and AI operates as a context-bound cognitive amplifier**.
 
 ---
 
 ## Conceptual Foundation
 
-Alinea is a concrete implementation of the **Layered Contextual Relevance Framework (LCRF)**, a human-intention–driven architecture for structured collaboration with LLMs.
+Distil is a concrete implementation of the **Layered Contextual Relevance Framework (LCRF)**, a human-intention–driven architecture for structured collaboration with LLMs.
 
 LCRF models creative work as a **stack of contextual layers**, where each layer constrains and informs the next:
 
@@ -19,7 +23,7 @@ LCRF models creative work as a **stack of contextual layers**, where each layer 
 4. **Structured Knowledge** — outlines, worldbuilding, characters, plans  
 5. **Task Execution** — moment-to-moment writing and problem-solving  
 
-In Alinea:
+In Distil:
 - **Humans define and validate every layer**
 - **LLMs assist within explicitly bounded layers**
 - **The AI never acts outside the contextual boundaries defined above it**
@@ -28,15 +32,15 @@ This prevents drift, hallucination, and stylistic inconsistency over long creati
 
 ---
 
-## What Alinea Is (and Is Not)
+## What Distil Is (and Is Not)
 
-### Alinea *is*:
+### Distil *is*:
 - A **local-first creative system** for long-form writing
 - A **layer-governed AI collaboration environment**
 - A tool for **iterative, multi-document creative work**
 - A framework-driven alternative to ad-hoc prompt engineering
 
-### Alinea is *not*:
+### Distil is *not*:
 - A chat UI pasted next to a text editor
 - A prompt-template generator
 - An autonomous agent system
@@ -83,7 +87,7 @@ This prevents drift, hallucination, and stylistic inconsistency over long creati
 
 ## Intelligent Context Selection
 
-Alinea uses **meta-level context reasoning**, a core principle of LCRF:
+Distil uses **meta-level context reasoning**, a core principle of LCRF:
 
 When you ask a question, the system determines:
 - Which contextual layers are relevant
@@ -124,7 +128,7 @@ This reflects the LCRF principle that **AI helps construct the layers it later o
 ## Architecture Overview
 
 ```
-alinea/
+Distil/
 ├── electron/              # Main process & IPC
 │   ├── chat.ts           # OpenAI boundary
 │   ├── secureStore.ts    # API key storage
@@ -160,7 +164,7 @@ alinea/
 ## Data & Privacy
 
 - **Local-first**
-  - All data stored in \`~/Alinea/\`
+  - All data stored in \`~/Distil/\`
 - **No cloud sync**
 - **No telemetry**
 - **API keys stored securely**
@@ -171,7 +175,7 @@ alinea/
 
 ## Development Philosophy
 
-Alinea treats AI as:
+Distil treats AI as:
 
 > A precision instrument — not an autonomous agent — fully governed by human intention.
 
@@ -184,7 +188,7 @@ This aligns with the LCRF principle that:
 
 ## Status
 
-Alinea is a project exploring:
+Distil is a project exploring:
 - Long-horizon AI-assisted creativity
 - Intentional governance of generative systems
 - Practical applications of LCRF in real tools

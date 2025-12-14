@@ -77,7 +77,7 @@ export function safeHandle<TArgs extends any[], TResult>(
  *
  * @example
  * ```typescript
- * const response = await window.alinea.createProject('My Project');
+ * const response = await window.distil.createProject('My Project');
  * if (isSuccess(response)) {
  *   console.log('Created:', response.data);
  * } else {
@@ -105,7 +105,7 @@ export function isError<T>(
  *
  * @example
  * ```typescript
- * const project = unwrap(await window.alinea.createProject('My Project'));
+ * const project = unwrap(await window.distil.createProject('My Project'));
  * // If response was an error, this line won't be reached
  * console.log('Created:', project);
  * ```

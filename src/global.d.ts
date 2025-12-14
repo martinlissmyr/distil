@@ -9,7 +9,7 @@ type IpcResponse<T> =
 
 declare global {
   interface Window {
-    alinea: {
+    distil: {
       // Projects
       listProjects: () => Promise<IpcResponse<{ id: string; name: string; createdAt: string; order: number }[]>>;
       createProject: (name: string) => Promise<IpcResponse<{ id: string; name: string; createdAt: string; order: number }>>;

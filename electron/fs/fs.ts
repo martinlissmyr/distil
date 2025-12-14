@@ -1,4 +1,4 @@
-// electron/fs/alineaFs.ts
+// electron/fs/fs.ts
 import path from 'path'
 import fs from 'fs/promises'
 import { app } from 'electron'
@@ -42,7 +42,7 @@ type StoryFile = {
 const getRootDir = () => {
   const home =
     process.env.HOME || process.env.USERPROFILE || app.getPath('home')
-  return path.join(home, 'Alinea')
+  return path.join(home, 'Distil')
 }
 
 const getManifestFile = () => path.join(getRootDir(), 'manifest.json')

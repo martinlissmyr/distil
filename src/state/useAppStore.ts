@@ -1,6 +1,6 @@
 // src/state/useAppStore.ts
 import { create } from 'zustand';
-import { alineaClient } from '../api/alineaClient';
+import { client } from '../api/client';
 import { metaJsonToMarkdown } from '../helpers/markdownUtils';
 import type { MetaScope, MetaDocKey, MetaDocState } from '../types/metaDoc';
 
@@ -80,7 +80,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         let json: any | null = null;
 
         if (scope.scope === 'root') {
-          const response = await alineaClient.loadRootMetaDoc(key);
+          const response = await client.loadRootMetaDoc(key);
           if (response.ok) {
             json = response.data;
           } else {
@@ -96,7 +96,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           json = null;
         } else {
           // story-level metaDocs (brief, outline, etc)
-          const response = await alineaClient.loadStoryMetaDoc(
+          const response = await client.loadStoryMetaDoc(
             scope.projectId,
             scope.storyId,
             key
@@ -169,7 +169,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!docState?.json) return;
 
     if (scope.scope === 'root') {
-      const response = await alineaClient.saveRootMetaDoc(key, docState.json);
+      const response = await client.saveRootMetaDoc(key, docState.json);
       if (!response.ok) {
         console.error('[useAppStore] saveRootMetaDoc failed:', response.error);
         throw new Error(response.error);
@@ -182,7 +182,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         key
       );
     } else {
-      const response = await alineaClient.saveStoryMetaDoc(
+      const response = await client.saveStoryMetaDoc(
         scope.projectId,
         scope.storyId,
         key,
