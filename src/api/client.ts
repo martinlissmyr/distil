@@ -1,4 +1,4 @@
-// src/api/alineaClient.ts
+// src/api/client.ts
 import type { JSONContent } from '@tiptap/react';
 
 export type Project = {
@@ -35,33 +35,33 @@ export type IpcResponse<T> =
   | { ok: false; error: string };
 
 /**
- * Thin wrapper around window.alinea that passes through IpcResponse.
+ * Thin wrapper around window.distil that passes through IpcResponse.
  * Consumers should check response.ok and handle errors explicitly.
  */
-export const alineaClient = {
+export const.distilClient = {
   // -------- Projects --------
   listProjects() {
-    return window.alinea.listProjects();
+    return window.distil.listProjects();
   },
   createProject(name: string) {
-    return window.alinea.createProject(name);
+    return window.distil.createProject(name);
   },
   updateProject(projectId: string, updates: { name?: string }) {
-    return window.alinea.updateProject(projectId, updates);
+    return window.distil.updateProject(projectId, updates);
   },
   deleteProject(projectId: string) {
-    return window.alinea.deleteProject(projectId);
+    return window.distil.deleteProject(projectId);
   },
   reorderProjects(ids: string[]) {
-    return window.alinea.reorderProjects(ids);
+    return window.distil.reorderProjects(ids);
   },
 
   // -------- Stories --------
   listStories(projectId: string) {
-    return window.alinea.listStories(projectId);
+    return window.distil.listStories(projectId);
   },
   createStory(projectId: string, title: string) {
-    return window.alinea.createStory(projectId, title);
+    return window.distil.createStory(projectId, title);
   },
   updateStory(
     projectId: string,
@@ -72,32 +72,32 @@ export const alineaClient = {
       briefDoc?: JSONContent;
     }
   ) {
-    return window.alinea.updateStory(projectId, storyId, updates);
+    return window.distil.updateStory(projectId, storyId, updates);
   },
   loadStory(projectId: string, storyId: string) {
-    return window.alinea.loadStory(projectId, storyId);
+    return window.distil.loadStory(projectId, storyId);
   },
   saveStory(projectId: string, storyId: string, payload: StoryData) {
-    return window.alinea.saveStory(projectId, storyId, payload);
+    return window.distil.saveStory(projectId, storyId, payload);
   },
   reorderStories(projectId: string, ids: string[]) {
-    return window.alinea.reorderStories(projectId, ids);
+    return window.distil.reorderStories(projectId, ids);
   },
 
   // -------- Story metaDocs (flexible) --------
   loadStoryMetaDoc(projectId: string, storyId: string, key: string) {
-    return window.alinea.loadStoryMetaDoc(projectId, storyId, key);
+    return window.distil.loadStoryMetaDoc(projectId, storyId, key);
   },
   saveStoryMetaDoc(projectId: string, storyId: string, key: string, doc: JSONContent) {
-    return window.alinea.saveStoryMetaDoc(projectId, storyId, key, doc);
+    return window.distil.saveStoryMetaDoc(projectId, storyId, key, doc);
   },
 
   // -------- Root metaDocs (manifest, etc.) --------
   loadRootMetaDoc(key: string) {
-    return window.alinea.loadRootMetaDoc(key);
+    return window.distil.loadRootMetaDoc(key);
   },
   saveRootMetaDoc(key: string, doc: JSONContent) {
-    return window.alinea.saveRootMetaDoc(key, doc);
+    return window.distil.saveRootMetaDoc(key, doc);
   },
 
   // -------- Dev Mode --------

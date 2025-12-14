@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Alinea is a local-first writing environment built on the **Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
+Distil is a local-first writing environment built on the **Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
 
 It is an Electron-based desktop application for fiction authors, built with React, TypeScript, Vite, and Mantine UI. The system implements LCRF principles where human intention governs structure, and AI operates as a context-bound cognitive amplifier within explicitly defined contextual layers.
 
@@ -17,7 +17,7 @@ It is an Electron-based desktop application for fiction authors, built with Reac
 
 ## Layered Contextual Relevance Framework (LCRF)
 
-Alinea is a concrete implementation of LCRF, a human-intention–driven architecture for structured collaboration with LLMs. LCRF models creative work as a stack of contextual layers, where each layer constrains and informs the next:
+Distil is a concrete implementation of LCRF, a human-intention–driven architecture for structured collaboration with LLMs. LCRF models creative work as a stack of contextual layers, where each layer constrains and informs the next:
 
 1. **Identity & Governance** — values, voice, tone, constraints (Author Manifest)
 2. **Domain & Methodology** — how work is done (system prompts, editor roles, wizard definitions)
@@ -70,14 +70,14 @@ The build process runs: `tsc && vite build && electron-builder`
 
 **Secure Storage** (`electron/secureStore.ts`)
 - Uses `keytar` (native credential store) for API key management
-- Service name: "alinea", account: "openai_api_key"
+- Service name: "Distil", account: "openai_api_key"
 - IMPORTANT: keytar is marked as external in vite.config.ts and must not be imported in preload or renderer
 
-**File System** (`electron/fs/alineaFs.ts`)
-- All data stored in `~/Alinea` directory
-- Structure: `~/Alinea/projects/{projectId}/stories/{storyId}.json`
-- MetaDocs stored separately: `~/Alinea/projects/{projectId}/stories/{storyId}-{key}.json`
-- Root-level manifest: `~/Alinea/manifest.json`
+**File System** (`electron/fs/DistilFs.ts`)
+- All data stored in `~/Distil` directory
+- Structure: `~/Distil/projects/{projectId}/stories/{storyId}.json`
+- MetaDocs stored separately: `~/Distil/projects/{projectId}/stories/{storyId}-{key}.json`
+- Root-level manifest: `~/Distil/manifest.json`
 - Handles projects, stories, and "metaDocs" (outline, brief, etc.)
 - **Write Queue**: Serializes writes to the same resource to prevent race conditions
 - **Standardized Error Handling**: All IPC handlers wrapped with `safeHandle` for consistent error responses
@@ -91,7 +91,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - `metaId(scope, key)` generates unique IDs for caching (e.g., "story:project-123:story-456::outline")
 
 **Navigation State**
-- Persisted to localStorage as `alinea:navState:v3`
+- Persisted to localStorage as `Distil:navState:v3`
 - Three-level hierarchy: root → project → story
 - Section IDs and configuration defined in sections model (`src/models/sections/`)
 - Root sections: projects, manifest, playground
@@ -231,10 +231,10 @@ The build process runs: `tsc && vite build && electron-builder`
 ### Component Structure
 
 **Layout** (`src/components/layout/`)
-- `AlineaLayout`: Main split-pane container (sidebar + main)
+- `DistilLayout`: Main split-pane container (sidebar + main)
 - `Sidebar`: Navigation for projects/stories and story sections, dynamically generated from sections model
 - `AppContent`: Main content area with routing based on section component mapping from sections model
-- `AlineaChrome`: Custom window chrome (minimize/maximize/close buttons)
+- `DistilChrome`: Custom window chrome (minimize/maximize/close buttons)
 
 **Projects** (`src/components/projects/`)
 - Grid view of all projects with drag-to-reorder support (@dnd-kit)
@@ -263,8 +263,8 @@ The build process runs: `tsc && vite build && electron-builder`
 - Each metaDoc saves only its own content (~1-10KB) rather than entire story file
 
 **IPC Communication**
-- Frontend calls via `alineaClient` wrapper (`src/api/alineaClient.ts`)
-- All calls go through `window.alinea` API exposed by preload
+- Frontend calls via `DistilClient` wrapper (`src/api/DistilClient.ts`)
+- All calls go through `window.Distil` API exposed by preload
 - Pattern: `ipcMain.handle()` in main process, `ipcRenderer.invoke()` in renderer
 - **Standardized Response Format**: All IPC calls return `IpcResponse<T>`:
   - Success: `{ ok: true, data: T }`
@@ -303,7 +303,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - Only used in main process for secure API key storage
 
 ### Data Persistence
-- No database; all data in JSON files under `~/Alinea`
+- No database; all data in JSON files under `~/Distil`
 - Projects and stories maintain `order` field for user-defined sorting
 - Reordering operations update all affected files atomically
 
@@ -376,7 +376,7 @@ The build process runs: `tsc && vite build && electron-builder`
 
 ## Development Philosophy
 
-Alinea treats AI as:
+Distil treats AI as:
 
 > A precision instrument — not an autonomous agent — fully governed by human intention.
 

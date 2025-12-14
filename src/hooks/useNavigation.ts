@@ -25,7 +25,7 @@ type NavigationStore = NavState & {
   restoreState: (state: NavState) => void;
 };
 
-const NAV_STATE_KEY = 'alinea:navState:v3';
+const NAV_STATE_KEY = 'distil:navState:v3';
 
 // Create Zustand store for navigation
 const useNavigationStore = create<NavigationStore>((set) => ({

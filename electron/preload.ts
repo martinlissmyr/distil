@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('theme', {
   },
 })
 
-contextBridge.exposeInMainWorld('alinea', {
+contextBridge.exposeInMainWorld('distil', {
   // -------- projects ----------
   listProjects: () => ipcRenderer.invoke('projects:list'),
   createProject: (name: string) => ipcRenderer.invoke('projects:create', name),

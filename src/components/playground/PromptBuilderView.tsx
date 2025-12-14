@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { Check, AlertTriangle } from 'lucide-react';
 
-import { alineaClient, type Project, type StoryMeta } from '../../api/alineaClient';
+import { client, type Project, type StoryMeta } from '../../api/client';
 import { buildPrompt, type BuiltPrompt } from '../../chat/buildPrompt';
 import type { QuestionScope } from '../../types/chat';
 import { useAppStore, metaId } from '../../state/useAppStore';
@@ -121,7 +121,7 @@ export const PromptBuilderView: React.FC = () => {
 
   // Load projects on mount
   useEffect(() => {
-    alineaClient.listProjects().then((response) => {
+    client.listProjects().then((response) => {
       if (response.ok) setProjects(response.data);
     });
   }, []);
@@ -134,7 +134,7 @@ export const PromptBuilderView: React.FC = () => {
     }
 
     if (state.selectedProjectId) {
-      alineaClient.listStories(state.selectedProjectId).then((response) => {
+      client.listStories(state.selectedProjectId).then((response) => {
         if (response.ok) setStories(response.data);
       });
     } else {
@@ -199,7 +199,7 @@ export const PromptBuilderView: React.FC = () => {
       const storyId = state.selectedStoryId!;
 
       if (state.kind === 'prose') {
-        const res = await alineaClient.loadStory(projectId, storyId);
+        const res = await client.loadStory(projectId, storyId);
         if (!res.ok) return;
 
         const markdown = jsonToMarkdown(res.data.doc, 'prose');
@@ -224,7 +224,7 @@ export const PromptBuilderView: React.FC = () => {
         const markdown = metaDoc?.markdown ?? '';
 
         // Also load story title to present consistent title
-        const storyRes = await alineaClient.loadStory(projectId, storyId);
+        const storyRes = await client.loadStory(projectId, storyId);
         const storyTitle = storyRes.ok ? storyRes.data.title : '';
 
         setState((s) => ({

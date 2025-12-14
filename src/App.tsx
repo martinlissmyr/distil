@@ -3,11 +3,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './styles/App.scss';
 
 import {
-  alineaClient,
+  client,
   Project,
   StoryMeta,
   StoryData,
-} from './api/alineaClient';
+} from './api/client';
 import { useAppStore } from './state/useAppStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Sidebar } from './components/layout/Sidebar';
@@ -50,11 +50,11 @@ const App: React.FC = () => {
 
   // Entity CRUD hooks
   const projectsCRUD = useEntityCRUD<Project, string, { name: string }>({
-    list: alineaClient.listProjects,
-    create: (name: string) => alineaClient.createProject(name),
-    update: (id, data) => alineaClient.updateProject(id, data),
-    delete: (id) => alineaClient.deleteProject(id),
-    reorder: (ids) => alineaClient.reorderProjects(ids),
+    list: client.listProjects,
+    create: (name: string) => client.createProject(name),
+    update: (id, data) => client.updateProject(id, data),
+    delete: (id) => client.deleteProject(id),
+    reorder: (ids) => client.reorderProjects(ids),
   }, {
     onCreate: async (created) => {
       // Navigate to new project and load its stories
@@ -62,7 +62,7 @@ const App: React.FC = () => {
       clearEditor();
 
       // Load stories for the new project (use created.id directly)
-      const listResponse = await alineaClient.listStories(created.id);
+      const listResponse = await client.listStories(created.id);
       if (listResponse.ok) {
         storiesCRUD.setItems(listResponse.data);
       } else {
@@ -83,31 +83,31 @@ const App: React.FC = () => {
       if (!selectedProjectId) {
         return Promise.resolve({ ok: true, data: [] } as any);
       }
-      return alineaClient.listStories(selectedProjectId);
+      return client.listStories(selectedProjectId);
     },
     create: (title: string) => {
       if (!selectedProjectId) {
         return Promise.reject(new Error('No project selected'));
       }
-      return alineaClient.createStory(selectedProjectId, title);
+      return client.createStory(selectedProjectId, title);
     },
     update: (id, data) => {
       if (!selectedProjectId) {
         return Promise.reject(new Error('No project selected'));
       }
-      return alineaClient.updateStory(selectedProjectId, id, data);
+      return client.updateStory(selectedProjectId, id, data);
     },
     delete: (id) => {
       if (!selectedProjectId) {
         return Promise.reject(new Error('No project selected'));
       }
-      return alineaClient.deleteStory(selectedProjectId, id);
+      return client.deleteStory(selectedProjectId, id);
     },
     reorder: (ids) => {
       if (!selectedProjectId) {
         return Promise.reject(new Error('No project selected'));
       }
-      return alineaClient.reorderStories(selectedProjectId, ids);
+      return client.reorderStories(selectedProjectId, ids);
     },
   }, {
     onCreate: async (created) => {
@@ -115,7 +115,7 @@ const App: React.FC = () => {
       if (!selectedProjectId) return;
       goToStory(selectedProjectId, created.id, 'prose');
 
-      const storyResponse = await alineaClient.loadStory(selectedProjectId, created.id);
+      const storyResponse = await client.loadStory(selectedProjectId, created.id);
       if (!storyResponse.ok) {
         console.error('Failed to load story:', storyResponse.error);
         return;
@@ -248,7 +248,7 @@ const App: React.FC = () => {
       rootSection={rootSection}
       onSelectRootSection={projectHandlers.handleSelectRootSection}
       onOpenSettings={() => setApiKeyModalOpen(true)}
-      onOpenDevTools={() => alineaClient.openDevTools()}
+      onOpenDevTools={() => client.openDevTools()}
     />
   );
 

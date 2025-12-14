@@ -86,12 +86,12 @@ yarn-debug.log*
 pnpm-debug.log*
 
 # -------------------------------------------------
-# Alinea content (if stored outside project)
+# Distil content (if stored outside project)
 # -------------------------------------------------
-# Only uncomment this if you ever mirror ~/Alinea into the project folder.
-# Alinea/
-# Alinea/projects/
-# Alinea/manifest.json
+# Only uncomment this if you ever mirror ~/Distil into the project folder.
+# Distil/
+# Distil/projects/
+# Distil/manifest.json
 
 # -------------------------------------------------
 # Misc

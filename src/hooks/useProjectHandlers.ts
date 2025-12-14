@@ -1,6 +1,6 @@
 // src/hooks/useProjectHandlers.ts
 import { useState, useCallback } from 'react';
-import { alineaClient, Project, StoryMeta } from '../api/alineaClient';
+import { client, Project, StoryMeta } from '../api/client';
 import type { RootSection } from './useNavigation';
 
 // Type for EntityCRUD return value
@@ -99,7 +99,7 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     clearEditor();
 
     // Load stories for this project (use id directly, not selectedProjectId which updates async)
-    const listResponse = await alineaClient.listStories(id);
+    const listResponse = await client.listStories(id);
     if (listResponse.ok) {
       setStories(listResponse.data);
     } else {

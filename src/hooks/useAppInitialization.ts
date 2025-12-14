@@ -1,6 +1,6 @@
 // src/hooks/useAppInitialization.ts
 import { useEffect } from 'react';
-import { alineaClient, Project, StoryMeta, StoryData } from '../api/alineaClient';
+import { client, Project, StoryMeta, StoryData } from '../api/client';
 
 type NavState = {
   appSection: 'root' | 'project' | 'story';
@@ -57,7 +57,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
         const saved = loadSavedState();
 
         // 1. Load projects
-        const projResponse = await alineaClient.listProjects();
+        const projResponse = await client.listProjects();
 
         if (!projResponse.ok) {
           console.error('Failed to load projects:', projResponse.error);
@@ -111,7 +111,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
         }
 
         // 2. Load stories for that project
-        const listResponse = await alineaClient.listStories(saved.projectId!);
+        const listResponse = await client.listStories(saved.projectId!);
         if (!listResponse.ok) {
           console.error('Failed to load stories:', listResponse.error);
           return;
@@ -141,7 +141,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           storySection: saved.storySection ?? 'prose',
         });
 
-        const storyResponse = await alineaClient.loadStory(
+        const storyResponse = await client.loadStory(
           saved.projectId!,
           saved.storyId
         );

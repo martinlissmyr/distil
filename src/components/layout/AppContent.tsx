@@ -9,7 +9,7 @@ import { StoryTextView } from '../story/StoryTextView';
 import { StoryOutlineView } from '../story/StoryOutlineView';
 import { StoryWorldView } from '../story/StoryWorldView';
 import { StoryBriefView } from '../story/StoryBriefView';
-import type { Project, StoryMeta } from '../../api/alineaClient';
+import type { Project, StoryMeta } from '../../api/client';
 import type { ProseDoc } from '../editor/ProseEditor';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
 import { getSectionConfig, isSectionImplemented, type SectionId } from '../../models/sections';
