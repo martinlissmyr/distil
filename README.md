@@ -1,13 +1,12 @@
-# Distil
+# Distil — a writing environment for turning thought into form
 
 This app exists to help writers convert rich, complex creative thought into clear, intentional prose — by applying invisible structure and method while keeping authorship fully human.
 
 The app does not add creativity. It increases the fidelity with which the author’s creativity becomes language.
 
-**A local-first writing environment built on the Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
+**A writing environment built on the Layered Contextual Relevance Framework (LCRF)** — enabling structured, intention-driven co-creation with large language models.
 
-Distil is not a generic “AI writing app.”  
-It is a methodological system for long-form creative work, where **human intention governs structure, and AI operates as a context-bound cognitive amplifier**.
+Distil is not a generic “AI writing app.”. It is a methodological system for long-form creative work, where **human intention governs structure, and AI operates as a context-bound cognitive amplifier**.
 
 ---
 
