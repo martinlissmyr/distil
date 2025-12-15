@@ -26,7 +26,9 @@ export const ProseEditor = ({
 }) => {
   // Get editor config from doc model
   const docKind = getDocKind('prose');
-  const editorConfig = { ...docKind.editorConfig };
+  // 'prose' is always a rich text doc, so editorConfig is guaranteed to exist
+  // TypeScript can't infer this from the literal 'prose', so we assert
+  const editorConfig = { ...(docKind as any).editorConfig };
 
   // Override placeholder if provided as prop
   if (placeholder !== undefined) {

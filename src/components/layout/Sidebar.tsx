@@ -34,7 +34,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import type { Project, StoryMeta, client } from '../../api/client';
+import { type Project, type StoryMeta, client } from '../../api/client';
 import type { StorySection, RootSection } from '../../hooks/useNavigation';
 
 type SidebarMode = 'projects' | 'project' | 'story';
