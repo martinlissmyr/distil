@@ -55,7 +55,7 @@ export type StorySectionConfig = BaseSectionConfig & {
   /** The doc kind this section edits (if any) - using string to allow future doc kinds not yet in model */
   readonly docKind?: DocKindId | string;
   /** View component name for routing */
-  readonly component: 'StoryTextView' | 'StoryOutlineView' | 'StoryBriefView' | 'StoryWorldView' | 'Placeholder';
+  readonly component: 'StoryTextView' | 'StoryOutlineView' | 'StoryBriefView' | 'StoryWorldView' | 'EntityIndexView' | 'Placeholder';
 };
 
 /** Root-scoped section configuration */
@@ -130,8 +130,8 @@ export const sectionConfigs = {
     label: 'Characters',
     icon: Users,
     order: 5,
-    component: 'Placeholder',
-    isImplemented: false,
+    component: 'EntityIndexView',
+    isImplemented: true,
   },
 
   locations: {
@@ -141,8 +141,8 @@ export const sectionConfigs = {
     label: 'Locations',
     icon: MapPin,
     order: 6,
-    component: 'Placeholder',
-    isImplemented: false,
+    component: 'EntityIndexView',
+    isImplemented: true,
   },
 
   // ─── Root Sections ───────────────────────────────────────────────
