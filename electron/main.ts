@@ -8,6 +8,7 @@ import { registerSettingsHandlers } from './handlers/settings';
 import { registerProjectHandlers } from './handlers/projects';
 import { registerStoryHandlers } from './handlers/stories';
 import { registerMetaDocHandlers } from './handlers/metaDocs';
+import { registerEntityHandlers } from './handlers/entities';
 import { registerThemeHandlers, setupThemeChangeListener } from './handlers/theme';
 import { registerChatHandlers } from './chat';
 import { registerDevModeHandlers } from './handlers/devMode';
@@ -77,6 +78,7 @@ function registerAllHandlers(): void {
   registerProjectHandlers();
   registerStoryHandlers();
   registerMetaDocHandlers();
+  registerEntityHandlers();
   registerThemeHandlers();
   registerChatHandlers();
   registerDevModeHandlers();

@@ -51,6 +51,12 @@ contextBridge.exposeInMainWorld('distil', {
     ipcRenderer.invoke('rootMeta:load', key),
   saveRootMetaDoc: (key: string, doc: any) =>
     ipcRenderer.invoke('rootMeta:save', key, doc),
+
+  // -------- entity indices ----------
+  loadEntityIndex: (projectId: string, storyId: string, entityType: 'character' | 'location') =>
+    ipcRenderer.invoke('entity:loadIndex', projectId, storyId, entityType),
+  saveEntityIndex: (projectId: string, storyId: string, entityType: 'character' | 'location', index: any) =>
+    ipcRenderer.invoke('entity:saveIndex', projectId, storyId, entityType, index),
 })
 
 contextBridge.exposeInMainWorld('chat', {

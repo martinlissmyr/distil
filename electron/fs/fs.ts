@@ -457,3 +457,42 @@ export async function saveRootMetaDoc(
   // For unknown keys, you could either no-op or throw.
   // For now, let's just no-op.
 }
+
+// ---- Entity Indices ----
+
+const getEntityIndexFile = (projectId: string, storyId: string, entityType: 'character' | 'location') =>
+  path.join(getStoriesDir(projectId), `${sanitizeId(storyId)}-${entityType}s.json`)
+
+export async function loadEntityIndex(
+  projectId: string,
+  storyId: string,
+  entityType: 'character' | 'location'
+): Promise<any | null> {
+  const file = getEntityIndexFile(projectId, storyId, entityType)
+  try {
+    const raw = await fs.readFile(file, 'utf-8')
+    return JSON.parse(raw)
+  } catch (err: unknown) {
+    // File doesn't exist yet - expected for new stories
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null
+    }
+    throw err
+  }
+}
+
+export async function saveEntityIndex(
+  projectId: string,
+  storyId: string,
+  entityType: 'character' | 'location',
+  index: any
+): Promise<void> {
+  // Use write queue to prevent race conditions
+  const queueKey = `entityIndex:${projectId}:${storyId}:${entityType}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getEntityIndexFile(projectId, storyId, entityType)
+    await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+    await fs.writeFile(file, JSON.stringify(index, null, 2), 'utf-8')
+  })
+}
