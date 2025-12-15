@@ -5,7 +5,7 @@ import { BaseEditor } from './BaseEditor';
 import { useEditorSync } from './useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
-import { getDocKind } from '../../models/docs';
+import { getDocKind, isRichTextDoc } from '../../models/docs';
 import type { ChatConfig } from './ProseEditor';
 
 import { useAppStore, metaId } from '../../state/useAppStore';
@@ -52,13 +52,20 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
   // Get editor config from doc model based on metaKey
   const docKind = getDocKind(metaKey);
   const editorConfig = useMemo(() => {
+    // Type guard: only rich text docs have editorConfig
+    if (!isRichTextDoc(docKind)) {
+      throw new Error(
+        `MetaTextEditor called with non-rich-text doc kind: "${metaKey}". ` +
+        `Entity index docs should use custom entity management UI.`
+      );
+    }
     const config = { ...docKind.editorConfig };
     // Override placeholder if provided as prop
     if (placeholder !== undefined) {
       config.placeholder = placeholder;
     }
     return config;
-  }, [docKind, placeholder]);
+  }, [docKind, placeholder, metaKey]);
 
   const editor = useEditor({
     extensions: createExtensionsFromConfig(editorConfig),

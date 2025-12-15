@@ -1,7 +1,8 @@
 // src/models/entities/entityIndex.ts
+import type { RelationshipDomain } from './characterDoc';
 
 /**
-  - Keep the **EntityIndex** “signals-only” (no full docs inline)
+  - Keep the **EntityIndex** "signals-only" (no full docs inline)
   - Align index projections with the CharacterDoc / LocationDoc structure
   - `RelationshipKind` is a **higher-level relationship model**:
     - `domains` (what kind of bond)
@@ -35,20 +36,6 @@ export type EntityRelationshipSignal = {
   label?: string; // e.g. “dubbelgångare”, “vän till familjen”, “chef”
   dynamics?: string[]; // short, high-signal relational engines
 };
-
-export type RelationshipDomain =
-  | 'romantic'
-  | 'sexual'
-  | 'family'
-  | 'friendship'
-  | 'community'
-  | 'professional'
-  | 'authority'
-  | 'caretaking'
-  | 'power'
-  | 'ideological'
-  | 'mystery'
-  | 'other';
 
 /**
  * "Signals only": tiny, high-signal projections for context selection.

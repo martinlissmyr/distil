@@ -1,6 +1,7 @@
 // src/models/docs/index.ts
 import type { EditorConfig } from './editorConfig';
 import { proseEditorConfig, metaEditorConfig } from './editorConfig';
+import type { EntityType } from '../entities/entityIndex';
 
 // ---------------------------------------------------------------------------
 // Axes & base types
@@ -39,26 +40,28 @@ export type DocRole = 'meta' | 'primary';
 
 export const docKinds = {
   manifest: {
+    storageType: 'richText',
     id: 'manifest',
-    scope: 'root' as DocScopeLevel,
-    role: 'meta' as DocRole,
+    scope: 'root',
+    role: 'meta',
     title: 'Author Manifest',
     shortDescription: 'An author manifest (style/tone)',
     contextTag: 'style/tone',
-    contextLayer: 'author' as ContextLayer,
-    isContextDoc: true as const,
+    contextLayer: 'author',
+    isContextDoc: true,
     editorConfig: metaEditorConfig,
     // No contextCriteria/contextIncludes/contextUsageHint for now
-  },
+  } satisfies RichTextDocConfig,
   brief: {
+    storageType: 'richText',
     id: 'brief',
-    scope: 'story' as DocScopeLevel,
-    role: 'meta' as DocRole,
+    scope: 'story',
+    role: 'meta',
     title: 'Story Brief',
     shortDescription: 'A story brief (high-level concept)',
     contextTag: 'high-level concept',
-    contextLayer: 'storyConcept' as ContextLayer,
-    isContextDoc: true as const,
+    contextLayer: 'storyConcept',
+    isContextDoc: true,
     editorConfig: metaEditorConfig,
     contextCriteria:
       "Required if understanding the story's core idea, themes, tone, or principal character concepts would inform or improve the answer.",
@@ -71,16 +74,17 @@ export const docKinds = {
     ],
     contextUsageHint:
       'these qualities would shape the requested writing style or substance.',
-  },
+  } satisfies RichTextDocConfig,
   outline: {
+    storageType: 'richText',
     id: 'outline',
-    scope: 'story' as DocScopeLevel,
-    role: 'meta' as DocRole,
+    scope: 'story',
+    role: 'meta',
     title: 'Story Outline',
     shortDescription: 'A story outline (structure/plot)',
     contextTag: 'structure/plot',
-    contextLayer: 'storyStructure' as ContextLayer,
-    isContextDoc: true as const,
+    contextLayer: 'storyStructure',
+    isContextDoc: true,
     editorConfig: metaEditorConfig,
     contextCriteria:
       'Required if knowledge of the plot structure, narrative flow, character arcs, or story events is needed to influence or enhance the response.',
@@ -93,16 +97,17 @@ export const docKinds = {
     ],
     contextUsageHint:
       'context involving story events—past or future—is necessary.',
-  },
+  } satisfies RichTextDocConfig,
   world: {
+    storageType: 'richText',
     id: 'world',
-    scope: 'story' as DocScopeLevel,
-    role: 'meta' as DocRole,
+    scope: 'story',
+    role: 'meta',
     title: 'Story World Description',
     shortDescription: 'World information (setting/worldbuilding)',
     contextTag: 'setting/worldbuilding',
-    contextLayer: 'storyWorld' as ContextLayer,
-    isContextDoc: true as const,
+    contextLayer: 'storyWorld',
+    isContextDoc: true,
     editorConfig: metaEditorConfig,
     contextCriteria:
       'Required if familiarity with the setting, period, world-building details, rules, geography, culture, or historical background is essential for completing the request.',
@@ -116,63 +121,130 @@ export const docKinds = {
     ],
     contextUsageHint:
       'the request calls for a detailed depiction of locations, eras, or world-specific characteristics.',
-  },
+  } satisfies RichTextDocConfig,
   prose: {
+    storageType: 'richText',
     id: 'prose',
-    scope: 'story' as DocScopeLevel,
-    role: 'primary' as DocRole,
+    scope: 'story',
+    role: 'primary',
     title: 'Story Prose',
     shortDescription: 'The story (what the author is currently working on)',
-    contextLayer: 'storyText' as ContextLayer,
-    isContextDoc: false as const,
+    contextLayer: 'storyText',
+    isContextDoc: false,
     editorConfig: proseEditorConfig,
-  },
+  } satisfies RichTextDocConfig,
+  characters: {
+    storageType: 'entityIndex',
+    id: 'characters',
+    entityType: 'character',
+    scope: 'story',
+    role: 'meta',
+    title: 'Characters',
+    shortDescription: 'Character information (identities/relationships/behaviors)',
+    contextTag: 'characters/relationships',
+    contextLayer: 'storyEntities',
+    isContextDoc: true,
+    contextCriteria: 'Required if knowledge of character identities, relationships, behaviors, voices, or arcs would inform or enhance the response.',
+    contextIncludes: [
+      'Character identities and roles',
+      'Relationships and dynamics',
+      'Behaviors and voices',
+      'Character arcs and motivations',
+      'Physical descriptions and tells',
+    ],
+    contextUsageHint: 'the request involves character-specific details, dialogue, or relationship dynamics.',
+  } satisfies EntityIndexDocConfig,
+  locations: {
+    storageType: 'entityIndex',
+    id: 'locations',
+    entityType: 'location',
+    scope: 'story',
+    role: 'meta',
+    title: 'Locations',
+    shortDescription: 'Location information (settings/atmosphere/function)',
+    contextTag: 'locations/settings',
+    contextLayer: 'storyEntities',
+    isContextDoc: true,
+    contextCriteria: 'Required if specific location details, atmosphere, function, or spatial relationships would inform or enhance the response.',
+    contextIncludes: [
+      'Location kinds and purposes',
+      'Atmosphere and mood',
+      'Function in story',
+      'Hazards and constraints',
+      'Spatial relationships',
+    ],
+    contextUsageHint: 'the request involves scene-setting, location-specific details, or spatial context.',
+  } satisfies EntityIndexDocConfig,
 } as const;
 
-export type DocKindConfig = {
-  id: DocKindId;
+type DocKindConfigMap = typeof docKinds;
+export type DocKindId = keyof DocKindConfigMap;
+
+/**
+ * Rich text documents store TipTap JSONContent and use standard editors.
+ */
+export interface RichTextDocConfig {
+  storageType: 'richText';
+  id: string;
   scope: DocScopeLevel;
   role: DocRole;
-
   title: string;
   shortDescription: string;
-
-  /**
-   * Short label for the kind of context this doc provides,
-   * e.g. "style/tone", "high-level concept", "structure/plot".
-   */
   contextTag?: string;
-
   contextLayer: ContextLayer;
   isContextDoc: boolean;
-
-  /**
-   * Editor configuration for this document kind.
-   * Defines TipTap extensions, toolbar items, and formatting options.
-   */
   editorConfig: EditorConfig;
-
-  /**
-   * One-line criterion describing when this doc is needed as context.
-   * Used in the LLM context-classification "criteria" list.
-   */
   contextCriteria?: string;
-
-  /**
-   * Bullet list of what this doc contains, used to explain it to the LLM.
-   */
   contextIncludes?: string[];
-
-  /**
-   * One-line hint for when to use this doc, appended after "Use when ".
-   */
   contextUsageHint?: string;
-};
+}
 
-type DocKindConfigMap = typeof docKinds;
+/**
+ * Entity index documents store entity metadata and use custom UI.
+ * No editorConfig - entity indices use custom entity management interfaces.
+ */
+export interface EntityIndexDocConfig {
+  storageType: 'entityIndex';
+  id: string;
+  entityType: EntityType;
+  scope: DocScopeLevel;
+  role: DocRole;
+  title: string;
+  shortDescription: string;
+  contextTag?: string;
+  contextLayer: ContextLayer;
+  isContextDoc: boolean;
+  contextCriteria?: string;
+  contextIncludes?: string[];
+  contextUsageHint?: string;
+  // NO editorConfig - entity indices use custom UI
+}
 
-export type DocKindId = keyof DocKindConfigMap;
-export type DocKindConfig = DocKindConfigMap[DocKindId];
+/**
+ * Discriminated union of all document configurations.
+ * Use type guards (isRichTextDoc, isEntityIndexDoc) to narrow types.
+ */
+export type DocKindConfig = RichTextDocConfig | EntityIndexDocConfig;
+
+// ---------------------------------------------------------------------------
+// Type guards
+// ---------------------------------------------------------------------------
+
+/**
+ * Type guard to check if a document configuration is a rich text document.
+ * Use this to safely access editorConfig.
+ */
+export function isRichTextDoc(config: DocKindConfig): config is RichTextDocConfig {
+  return config.storageType === 'richText';
+}
+
+/**
+ * Type guard to check if a document configuration is an entity index document.
+ * Use this to safely access entityType.
+ */
+export function isEntityIndexDoc(config: DocKindConfig): config is EntityIndexDocConfig {
+  return config.storageType === 'entityIndex';
+}
 
 // ---------------------------------------------------------------------------
 // Derived unions (MetaDocKey, etc.)
@@ -219,12 +291,12 @@ export function getDocTitle(key: DocKindId): string {
  * "STORY OUTLINE (structure/plot)"
  */
 export function getDocContextLabel(key: DocKindId): string {
-  const cfg = docKinds[key];
+  const cfg = docKinds[key] as DocKindConfig;
   if (!cfg) return String(key).toUpperCase();
 
   const base = cfg.title ? cfg.title.toUpperCase() : String(key).toUpperCase();
 
-  if (cfg.contextTag) {
+  if ('contextTag' in cfg && cfg.contextTag) {
     return `${base} (${cfg.contextTag})`;
   }
 
@@ -248,15 +320,15 @@ export function isMetaDocKey(key: DocKindId): key is MetaDocKey {
 }
 
 export function getContextCriteriaLine(key: MetaDocKey): string | null {
-  const cfg = docKinds[key];
-  if (!cfg?.contextCriteria) return null;
+  const cfg = docKinds[key] as DocKindConfig;
+  if (!cfg || !('contextCriteria' in cfg) || !cfg.contextCriteria) return null;
 
   // Keep the id (brief/outline/world) bolded like before
   return `  - **${key}**: ${cfg.contextCriteria}`;
 }
 
 export function getContextDefinitionBlock(key: MetaDocKey): string | null {
-  const cfg = docKinds[key];
+  const cfg = docKinds[key] as DocKindConfig;
   if (!cfg) return null;
 
   const title = cfg.title ?? key[0].toUpperCase() + key.slice(1);
@@ -264,14 +336,14 @@ export function getContextDefinitionBlock(key: MetaDocKey): string | null {
 
   parts.push(`## ${title}`);
 
-  if (cfg.contextIncludes && cfg.contextIncludes.length > 0) {
+  if ('contextIncludes' in cfg && cfg.contextIncludes && cfg.contextIncludes.length > 0) {
     parts.push('Includes:');
     parts.push(
       ...cfg.contextIncludes.map((item) => `- ${item}`)
     );
   }
 
-  if (cfg.contextUsageHint) {
+  if ('contextUsageHint' in cfg && cfg.contextUsageHint) {
     parts.push('');
     parts.push(`Use when ${cfg.contextUsageHint}`);
   }
@@ -280,12 +352,16 @@ export function getContextDefinitionBlock(key: MetaDocKey): string | null {
 }
 
 export function assertContextGuidanceAvailable(key: MetaDocKey): void {
-  const cfg = docKinds[key];
+  const cfg = docKinds[key] as DocKindConfig;
   if (!cfg) {
     throw new Error(`Unknown DocKindId: "${key}" used for context classification.`);
   }
 
-  if (!cfg.contextCriteria || !cfg.contextIncludes || !cfg.contextUsageHint) {
+  const hasContextCriteria = 'contextCriteria' in cfg && cfg.contextCriteria;
+  const hasContextIncludes = 'contextIncludes' in cfg && cfg.contextIncludes;
+  const hasContextUsageHint = 'contextUsageHint' in cfg && cfg.contextUsageHint;
+
+  if (!hasContextCriteria || !hasContextIncludes || !hasContextUsageHint) {
     throw new Error(
       `DocKind "${key}" is missing required context guidance.\n` +
         `Add contextCriteria, contextIncludes, and contextUsageHint to docKinds["${key}"]`

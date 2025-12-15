@@ -38,7 +38,7 @@ export type IpcResponse<T> =
  * Thin wrapper around window.distil that passes through IpcResponse.
  * Consumers should check response.ok and handle errors explicitly.
  */
-export const.distilClient = {
+export const client = {
   // -------- Projects --------
   listProjects() {
     return window.distil.listProjects();
