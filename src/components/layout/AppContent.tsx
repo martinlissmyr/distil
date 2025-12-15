@@ -9,10 +9,12 @@ import { StoryTextView } from '../story/StoryTextView';
 import { StoryOutlineView } from '../story/StoryOutlineView';
 import { StoryWorldView } from '../story/StoryWorldView';
 import { StoryBriefView } from '../story/StoryBriefView';
+import { EntityIndexView } from '../story/EntityIndexView';
 import type { Project, StoryMeta } from '../../api/client';
 import type { ProseDoc } from '../editor/ProseEditor';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
 import { getSectionConfig, isSectionImplemented, type SectionId } from '../../models/sections';
+import type { DocKindId } from '../../models/docs';
 
 export interface AppContentProps {
   // Navigation state
@@ -144,6 +146,20 @@ export const AppContent: React.FC<AppContentProps> = ({
           <StoryBriefView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
+          />
+        );
+
+      case 'EntityIndexView':
+        // Type guard: only characters and locations use EntityIndexView
+        const docKind = sectionConfig.docKind as DocKindId;
+        if (docKind !== 'characters' && docKind !== 'locations') {
+          return <Box p="md">Invalid entity type</Box>;
+        }
+        return (
+          <EntityIndexView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+            docKind={docKind}
           />
         );
 
