@@ -676,3 +676,89 @@ Wizard outputs should:
 - **Nothing should surprise the author or the model.**
 
 ---
+
+## Implementation Status
+
+### ✅ IMPLEMENTED
+
+**Core Data Model**:
+- ✅ EntityIndex type with EntityIndexEntry structure
+- ✅ Basic CharacterDoc structure (id, name, role, tier)
+- ✅ Entity integration into document model via discriminated union
+- ✅ EntityIndexDocConfig distinguishes entity indices from rich text docs
+- ✅ Characters and locations registered as DocKindIds at `storyEntities` LCRF layer
+
+**Storage & Persistence**:
+- ✅ Entity index storage at `{storyId}-characters.json` and `{storyId}-locations.json`
+- ✅ Write queue integration for atomic saves
+- ✅ File system handlers in `electron/fs/DistilFs.ts`
+
+**IPC Layer**:
+- ✅ `entity:loadIndex` handler (loads entity index from disk)
+- ✅ `entity:saveIndex` handler (saves entity index with write queue protection)
+- ✅ Standardized error handling with `IpcResponse<T>` pattern
+- ✅ Client wrapper in `src/api/DistilClient.ts`
+
+**State Management**:
+- ✅ Zustand store integration for entity indices
+- ✅ Loading/caching with unique entity index IDs
+- ✅ `loadEntityIndex` and `saveEntityIndex` actions
+
+**UI Components**:
+- ✅ EntityIndexView component (generic list/edit view)
+- ✅ CharacterEditView (full-screen character editing form)
+- ✅ Character cards in grid view
+- ✅ Navigation integration (Characters section in story sidebar)
+- ✅ Basic character fields: name, role, tier
+
+**Current Implementation**:
+- Character creation and editing fully functional
+- Entity indices store lightweight projections for list view
+- Characters properly positioned at `storyEntities` layer in LCRF hierarchy
+- Discriminated union (RichTextDocConfig vs EntityIndexDocConfig) enables type-safe document model
+- File storage using same patterns as metaDocs, with write queue protection
+
+---
+
+## 🚧 FUTURE WORK
+
+**Extended CharacterDoc Fields** (not yet implemented):
+- Surface traits and appearance
+- Inner traits and psychology
+- Goals and desires
+- Behavior patterns
+- Voice and dialogue characteristics
+- Character arc (startState, changeVector, endState, keyTurns)
+- Relationships (domain, valence, strength, dynamic)
+- Triggers and avoids
+- Facts and background
+
+**Full Entity Storage**:
+- Separate storage for full CharacterDoc beyond index entries
+- Storage pattern: `~/Distil/projects/{projectId}/stories/{storyId}/entities/characters/{characterId}.json`
+- IPC handlers: `entity:load`, `entity:save`, `entity:delete`
+
+**Location Implementation**:
+- LocationDoc structure
+- Location editing UI
+- Location index storage and retrieval
+
+**Relationship Management**:
+- Relationship graph visualization
+- Relationship editor with domain, valence, strength
+- Bidirectional relationship consistency
+
+**Advanced Features**:
+- Serialization modes (structured, fullMarkdown, projection)
+- Entity-specific context selection for AI prompts
+- Entity wizards (character voice builder, relationship mapper)
+- Entity consistency checking
+- Entity search and filtering
+
+**Context Integration**:
+- Entity context formatting for AI prompts
+- Heuristic filtering based on entity relevance
+- LLM-based entity selection for ambiguous cases
+- Entity-specific ephemeral messages and hints
+
+---
