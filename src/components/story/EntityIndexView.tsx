@@ -5,6 +5,7 @@ import { StorySectionShell } from './StorySectionShell';
 import { Plus } from 'lucide-react';
 import { getDocKind } from '../../models/docs';
 import type { DocKindId } from '../../models/docs';
+import styles from './EntityIndexView.module.scss';
 
 type EntityIndexViewProps = {
   projectId: string;
@@ -25,12 +26,9 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       storyId={storyId}
       preloadMetaKeys={[]}
     >
-      <Box p="xl">
+      <Box p="xl" className={styles.root}>
         <Stack gap="lg">
-          <Box>
-            <Title order={2}>{docConfig.title}</Title>
-            <Text c="dimmed" size="sm">{docConfig.shortDescription}</Text>
-          </Box>
+          <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
 
           <Button
             leftSection={<Plus size={16} />}
@@ -43,11 +41,6 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
             Add {docKind === 'characters' ? 'Character' : 'Location'}
           </Button>
 
-          <Box>
-            <Text c="dimmed" size="sm">
-              No {docKind} yet. Click the button above to create your first one.
-            </Text>
-          </Box>
         </Stack>
       </Box>
     </StorySectionShell>
