@@ -1,17 +1,22 @@
 $width: 220px;
 $height: 260px;
 
-:root .entityCard {
+.entityCardWrapper {
   cursor: pointer;
-  width: $width;
-  height: $height;
-  position: relative;
-  background-color: var(--card-subtle);
-  border-radius: 16px;
-  align-items: center;
-  justify-content: center;
+
+  .entityCard {
+    width: $width;
+    height: $height;
+    position: relative;
+    border-radius: 16px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--card-subtle);
+  }
 
   &:hover {
-    background: var(--card-subtle-hover);
+    .entityCard {
+      background: var(--card-subtle-hover);
+    }
   }
 }

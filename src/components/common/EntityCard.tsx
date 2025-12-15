@@ -24,33 +24,32 @@ export function EntityCard<T>({
   Icon,
 }: EntityCardProps<T>) {
   return (
-    <Card
-      onClick={() => onSelect(id)}
-      className={styles.entityCard}
-    >
-      {onEdit && (
-        <ActionIcon
-          variant="subtle"
-          size="md"
-          style={{ position: 'absolute', top: 12, right: 12 }}
-          onClick={(e) => {
-            e.stopPropagation(); // don’t also select
-            onEdit(id);
-          }}
-        >
-          <Pencil size={16} />
-        </ActionIcon>
-      )}
+    <Stack space={1} onClick={() => onSelect(id)} className={styles.entityCardWrapper}>
+      <Card className={styles.entityCard}>
+        {onEdit && (
+          <ActionIcon
+            variant="subtle"
+            size="md"
+            style={{ position: 'absolute', top: 12, right: 12 }}
+            onClick={(e) => {
+              e.stopPropagation(); // don’t also select
+              onEdit(id);
+            }}
+          >
+            <Pencil size={16} />
+          </ActionIcon>
+        )}
 
-      <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
-        <Box>
-          <Icon size={60} strokeWidth={1} style={{opacity: .3}}/>
-        </Box>
-        <Text fw={700} ta="center">
-          {label}
-        </Text>
-      </Stack>
-    </Card>
+        <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
+          <Box>
+            <Icon size={60} strokeWidth={1} style={{opacity: .3}}/>
+          </Box>
+        </Stack>
+      </Card>
+      <Text fw={700} ta="center">
+        {label}
+      </Text>
+    </Stack>
   );
 }
 
@@ -58,11 +57,13 @@ export function CreateEntityCard<T>({
   onCreate,
 }: CreateEntityCardProps<T>) {
   return (
-    <Card
-      onClick={onCreate}
-      classNames={{ root: styles.entityCard }}
-    >
-      <Plus size={60} strokeWidth={1}/>
-    </Card>
+    <Stack space={1} onClick={onCreate} className={styles.entityCardWrapper}>
+      <Card className={styles.entityCard}>
+        <Plus size={60} strokeWidth={1}/>
+      </Card>
+      <Text fw={700} ta="center">
+        New
+      </Text>
+    </Stack>
   );
 }
