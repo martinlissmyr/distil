@@ -1,14 +1,14 @@
 // src/components/story/CharacterEditView.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Title, TextInput, Select, Stack, Group, Button } from '@mantine/core';
 import { ArrowLeft } from 'lucide-react';
-import type { CharacterDoc, CharacterTier } from '../../models/entities';
+import type { CharacterDoc, CharacterTier, EntityIndexEntry } from '../../models/entities';
 import styles from './EntityIndexView.module.scss';
 
 type CharacterEditViewProps = {
   projectId: string;
   storyId: string;
-  characterId: string | null; // null = creating new character
+  character: EntityIndexEntry | null; // null = creating new character
   onBack: () => void;
   onSave: (character: Partial<CharacterDoc>) => Promise<void>;
 };
@@ -16,11 +16,11 @@ type CharacterEditViewProps = {
 export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
   projectId,
   storyId,
-  characterId,
+  character,
   onBack,
   onSave,
 }) => {
-  const isNew = characterId === null;
+  const isNew = character === null;
 
   // Basic form state
   const [name, setName] = useState('');
@@ -28,13 +28,29 @@ export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
   const [tier, setTier] = useState<CharacterTier>('secondary');
   const [saving, setSaving] = useState(false);
 
+  // Load character data when editing
+  useEffect(() => {
+    if (character) {
+      setName(character.name);
+      setTier(character.tier);
+      if (character.type === 'character' && character.projection.roleInStory) {
+        setRoleInStory(character.projection.roleInStory);
+      }
+    } else {
+      // Reset form for new character
+      setName('');
+      setRoleInStory('');
+      setTier('secondary');
+    }
+  }, [character]);
+
   const handleSave = async () => {
     if (!name.trim()) return;
 
     setSaving(true);
     try {
       await onSave({
-        id: characterId || `character-${Date.now()}`,
+        id: character?.id || `character-${Date.now()}`,
         version: 2,
         tier,
         identity: {
@@ -42,6 +58,7 @@ export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
           roleInStory: roleInStory.trim() || undefined,
         },
         updatedAt: new Date().toISOString(),
+        createdAt: character?.createdAt,
       });
       onBack();
     } catch (error) {
