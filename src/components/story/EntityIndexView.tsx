@@ -145,7 +145,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 
             {loading && <Text c="dimmed">Loading...</Text>}
 
-            {!loading && characters.length > 0 && (
+            {!loading && (
               <Group gap="lg">
                 {characters.map((char) => {
                   const id = char.id;
@@ -181,30 +181,4 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
     </StorySectionShell>
   );
 };
-
-/*
-              <Stack gap="md">
-                {characters.map((char) => (
-                  <Card
-                    key={char.id}
-                    shadow="xs"
-                    padding="md"
-                    radius="md"
-                    withBorder
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => handleEditCharacter(char.id)}
-                  >
-                    <Group justify="space-between">
-                      <Box>
-                        <Text fw={600} size="lg">{char.name}</Text>
-                        {char.type === 'character' && char.projection.roleInStory && (
-                          <Text c="dimmed" size="sm">{char.projection.roleInStory}</Text>
-                        )}
-                      </Box>
-                      <Text size="xs" c="dimmed" tt="capitalize">{char.tier}</Text>
-                    </Group>
-                  </Card>
-                ))}
-              </Stack>
-*/
 

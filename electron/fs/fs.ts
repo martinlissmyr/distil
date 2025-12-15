@@ -158,6 +158,12 @@ export async function listStories(projectId: string): Promise<StoryMeta[]> {
     const stories: StoryMeta[] = []
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.json')) continue
+
+      // Skip entity index files (e.g., story-123-characters.json, story-123-locations.json)
+      if (entry.name.includes('-characters.json') || entry.name.includes('-locations.json')) {
+        continue
+      }
+
       const fullPath = path.join(dir, entry.name)
       try {
         const raw = await fs.readFile(fullPath, 'utf-8')
