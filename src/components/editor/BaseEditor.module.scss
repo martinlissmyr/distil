@@ -15,12 +15,7 @@
 
 /* Keep these local and reference via styles.editor/styles.editorTitle in JSX */
 .editor {
-  -webkit-font-smoothing: antialiased;
   font-family: 'Source Serif', Georgia, serif;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: 'liga' 1, 'kern' 1;
-  font-optical-sizing: auto;
-  backface-visibility: hidden;
   font-size: 18.5px;
   line-height: 1.52;
   font-weight: 480;
@@ -34,6 +29,7 @@
 
 .editorTitle {
   margin: 0 0 0.8em;
+  font-size: 2em;
   letter-spacing: -0.02em;
   font-weight: 720;
   font-variation-settings: 'wght' 720, 'opsz' 36;
