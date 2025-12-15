@@ -9,6 +9,8 @@ import type { CharacterDoc, EntityIndex, EntityIndexEntry } from '../../models/e
 import { CharacterEditView } from './CharacterEditView';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
+import { EntityCard, CreateEntityCard } from '../common/EntityCard';
+import { SquareLibrary } from 'lucide-react';
 
 type EntityIndexViewProps = {
   projectId: string;
@@ -27,7 +29,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 
   // Local navigation state
   const [mode, setMode] = useState<ViewMode>('list');
-  const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
+  const [editingCharacter, setEditingCharacter] = useState<EntityIndexEntry | null>(null);
 
   // Entity data
   const [entityIndex, setEntityIndex] = useState<EntityIndex | null>(null);
@@ -57,13 +59,13 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   };
 
   const handleAddCharacter = () => {
-    setEditingEntityId(null);
+    setEditingCharacter(null);
     setMode('edit');
   };
 
   const handleBackToList = () => {
     setMode('list');
-    setEditingEntityId(null);
+    setEditingCharacter(null);
   };
 
   const handleSaveCharacter = async (character: Partial<CharacterDoc>) => {
@@ -121,8 +123,11 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   };
 
   const handleEditCharacter = (characterId: string) => {
-    setEditingEntityId(characterId);
-    setMode('edit');
+    const character = characters.find(c => c.id === characterId);
+    if (character) {
+      setEditingCharacter(character);
+      setMode('edit');
+    }
   };
 
   const characters = entityIndex?.entities || [];
@@ -136,42 +141,48 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       {mode === 'list' && (
         <Box p="xl" className={styles.root}>
           <Stack gap="lg">
-            <Group justify="space-between">
-              <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
-
-              {docKind === 'characters' && (
-                <Button
-                  leftSection={<Plus size={16} />}
-                  variant="light"
-                  onClick={handleAddCharacter}
-                >
-                  Add Character
-                </Button>
-              )}
-
-              {docKind === 'locations' && (
-                <Button
-                  leftSection={<Plus size={16} />}
-                  variant="light"
-                  onClick={() => {
-                    // TODO: Implement location editing
-                    console.log('Add location - not implemented yet');
-                  }}
-                >
-                  Add Location
-                </Button>
-              )}
-            </Group>
+            <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
 
             {loading && <Text c="dimmed">Loading...</Text>}
 
-            {!loading && characters.length === 0 && (
-              <Text c="dimmed" size="sm">
-                No characters yet. Click "Add Character" to create your first one.
-              </Text>
-            )}
-
             {!loading && characters.length > 0 && (
+              <Group gap="lg">
+                {characters.map((char) => {
+                  const id = char.id;
+                  return (
+                    <EntityCard
+                      key={id}
+                      id={id}
+                      label={char.name}
+                      onSelect={() => handleEditCharacter(id)}
+                      Icon={SquareLibrary}
+                    />
+                  );
+                })}
+
+                <CreateEntityCard
+                  onCreate={handleAddCharacter}
+                />
+              </Group>
+            )}
+          </Stack>
+        </Box>
+      )}
+
+      {mode === 'edit' && docKind === 'characters' && (
+        <CharacterEditView
+          projectId={projectId}
+          storyId={storyId}
+          character={editingCharacter}
+          onBack={handleBackToList}
+          onSave={handleSaveCharacter}
+        />
+      )}
+    </StorySectionShell>
+  );
+};
+
+/*
               <Stack gap="md">
                 {characters.map((char) => (
                   <Card
@@ -195,20 +206,5 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
                   </Card>
                 ))}
               </Stack>
-            )}
-          </Stack>
-        </Box>
-      )}
+*/
 
-      {mode === 'edit' && docKind === 'characters' && (
-        <CharacterEditView
-          projectId={projectId}
-          storyId={storyId}
-          characterId={editingEntityId}
-          onBack={handleBackToList}
-          onSave={handleSaveCharacter}
-        />
-      )}
-    </StorySectionShell>
-  );
-};
