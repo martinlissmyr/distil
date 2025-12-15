@@ -108,4 +108,12 @@ export const client = {
     return window.devMode.openDevTools();
   },
 
+  // -------- Entity Indices --------
+  loadEntityIndex(projectId: string, storyId: string, entityType: 'character' | 'location') {
+    return window.distil.loadEntityIndex(projectId, storyId, entityType);
+  },
+  saveEntityIndex(projectId: string, storyId: string, entityType: 'character' | 'location', index: any) {
+    return window.distil.saveEntityIndex(projectId, storyId, entityType, index);
+  },
+
 };

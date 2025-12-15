@@ -61,6 +61,19 @@ declare global {
       ) => Promise<IpcResponse<undefined>>;
       loadRootMetaDoc: (key: string) => Promise<IpcResponse<any | null>>;
       saveRootMetaDoc: (key: string, doc: any) => Promise<IpcResponse<undefined>>;
+
+      // Entity Indices
+      loadEntityIndex: (
+        projectId: string,
+        storyId: string,
+        entityType: 'character' | 'location'
+      ) => Promise<IpcResponse<any | null>>;
+      saveEntityIndex: (
+        projectId: string,
+        storyId: string,
+        entityType: 'character' | 'location',
+        index: any
+      ) => Promise<IpcResponse<undefined>>;
     };
 
     chat: {

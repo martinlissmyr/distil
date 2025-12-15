@@ -1,10 +1,13 @@
 // src/components/story/EntityIndexView.tsx
-import React from 'react';
-import { Box, Title, Text, Button, Stack } from '@mantine/core';
+import React, { useState, useEffect } from 'react';
+import { Box, Title, Button, Stack, Card, Text, Group } from '@mantine/core';
 import { StorySectionShell } from './StorySectionShell';
 import { Plus } from 'lucide-react';
 import { getDocKind } from '../../models/docs';
 import type { DocKindId } from '../../models/docs';
+import type { CharacterDoc, EntityIndex, EntityIndexEntry } from '../../models/entities';
+import { CharacterEditView } from './CharacterEditView';
+import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 
 type EntityIndexViewProps = {
@@ -13,6 +16,8 @@ type EntityIndexViewProps = {
   docKind: Extract<DocKindId, 'characters' | 'locations'>;
 };
 
+type ViewMode = 'list' | 'edit';
+
 export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   projectId,
   storyId,
@@ -20,29 +25,190 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 }) => {
   const docConfig = getDocKind(docKind);
 
+  // Local navigation state
+  const [mode, setMode] = useState<ViewMode>('list');
+  const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
+
+  // Entity data
+  const [entityIndex, setEntityIndex] = useState<EntityIndex | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load entity index on mount
+  useEffect(() => {
+    loadIndex();
+  }, [projectId, storyId, docKind]);
+
+  const loadIndex = async () => {
+    setLoading(true);
+    try {
+      const entityType = docKind === 'characters' ? 'character' : 'location';
+      const response = await client.loadEntityIndex(projectId, storyId, entityType);
+
+      if (response.ok) {
+        setEntityIndex(response.data);
+      } else {
+        console.error('Failed to load entity index:', response.error);
+      }
+    } catch (error) {
+      console.error('Error loading entity index:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCharacter = () => {
+    setEditingEntityId(null);
+    setMode('edit');
+  };
+
+  const handleBackToList = () => {
+    setMode('list');
+    setEditingEntityId(null);
+  };
+
+  const handleSaveCharacter = async (character: Partial<CharacterDoc>) => {
+    try {
+      const entityType = docKind === 'characters' ? 'character' : 'location';
+
+      // Create or update index
+      const currentIndex: EntityIndex = entityIndex || {
+        version: 1,
+        scope: { kind: 'story', projectId, storyId },
+        entities: [],
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Create entity index entry from character doc
+      const entry: EntityIndexEntry = {
+        id: character.id!,
+        name: character.identity!.name,
+        tier: character.tier!,
+        type: 'character',
+        projection: {
+          roleInStory: character.identity!.roleInStory,
+        },
+        docRef: {
+          type: 'character',
+          id: character.id!,
+        },
+        updatedAt: new Date().toISOString(),
+        createdAt: character.createdAt || new Date().toISOString(),
+      };
+
+      // Add or update entry
+      const existingIndex = currentIndex.entities.findIndex(e => e.id === entry.id);
+      if (existingIndex >= 0) {
+        currentIndex.entities[existingIndex] = entry;
+      } else {
+        currentIndex.entities.push(entry);
+      }
+
+      currentIndex.updatedAt = new Date().toISOString();
+
+      // Save to disk
+      const response = await client.saveEntityIndex(projectId, storyId, entityType, currentIndex);
+
+      if (response.ok) {
+        setEntityIndex(currentIndex);
+        handleBackToList();
+      } else {
+        console.error('Failed to save entity index:', response.error);
+      }
+    } catch (error) {
+      console.error('Error saving character:', error);
+      throw error;
+    }
+  };
+
+  const handleEditCharacter = (characterId: string) => {
+    setEditingEntityId(characterId);
+    setMode('edit');
+  };
+
+  const characters = entityIndex?.entities || [];
+
   return (
     <StorySectionShell
       projectId={projectId}
       storyId={storyId}
       preloadMetaKeys={[]}
     >
-      <Box p="xl" className={styles.root}>
-        <Stack gap="lg">
-          <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
+      {mode === 'list' && (
+        <Box p="xl" className={styles.root}>
+          <Stack gap="lg">
+            <Group justify="space-between">
+              <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
 
-          <Button
-            leftSection={<Plus size={16} />}
-            variant="light"
-            onClick={() => {
-              // TODO: Implement entity creation
-              console.log('Create new', docKind);
-            }}
-          >
-            Add {docKind === 'characters' ? 'Character' : 'Location'}
-          </Button>
+              {docKind === 'characters' && (
+                <Button
+                  leftSection={<Plus size={16} />}
+                  variant="light"
+                  onClick={handleAddCharacter}
+                >
+                  Add Character
+                </Button>
+              )}
 
-        </Stack>
-      </Box>
+              {docKind === 'locations' && (
+                <Button
+                  leftSection={<Plus size={16} />}
+                  variant="light"
+                  onClick={() => {
+                    // TODO: Implement location editing
+                    console.log('Add location - not implemented yet');
+                  }}
+                >
+                  Add Location
+                </Button>
+              )}
+            </Group>
+
+            {loading && <Text c="dimmed">Loading...</Text>}
+
+            {!loading && characters.length === 0 && (
+              <Text c="dimmed" size="sm">
+                No characters yet. Click "Add Character" to create your first one.
+              </Text>
+            )}
+
+            {!loading && characters.length > 0 && (
+              <Stack gap="md">
+                {characters.map((char) => (
+                  <Card
+                    key={char.id}
+                    shadow="xs"
+                    padding="md"
+                    radius="md"
+                    withBorder
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleEditCharacter(char.id)}
+                  >
+                    <Group justify="space-between">
+                      <Box>
+                        <Text fw={600} size="lg">{char.name}</Text>
+                        {char.type === 'character' && char.projection.roleInStory && (
+                          <Text c="dimmed" size="sm">{char.projection.roleInStory}</Text>
+                        )}
+                      </Box>
+                      <Text size="xs" c="dimmed" tt="capitalize">{char.tier}</Text>
+                    </Group>
+                  </Card>
+                ))}
+              </Stack>
+            )}
+          </Stack>
+        </Box>
+      )}
+
+      {mode === 'edit' && docKind === 'characters' && (
+        <CharacterEditView
+          projectId={projectId}
+          storyId={storyId}
+          characterId={editingEntityId}
+          onBack={handleBackToList}
+          onSave={handleSaveCharacter}
+        />
+      )}
     </StorySectionShell>
   );
 };
