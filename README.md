@@ -70,8 +70,11 @@ This prevents drift, hallucination, and stylistic inconsistency over long creati
 ### 4. Structured Knowledge Layer
 - **Outlines**
 - **World descriptions**
-- **Characters & entities** (extensible)
-- These documents act as the project’s operational memory
+- **Characters & entities**
+  - Character management with entity indices
+  - Lightweight projections for efficient list views
+  - Characters section in story navigation
+- These documents act as the project's operational memory
 
 ### 5. Task Execution Layer
 - **Prose editor with AI side-panel**
@@ -139,7 +142,8 @@ Distil/
 │   │   │   ├── editorConfig.ts     # TipTap editor configurations
 │   │   │   ├── contextKeywords.ts  # Multi-language keyword signals
 │   │   │   └── systemRoles/        # System prompt templates
-│   │   └── sections/     # Navigation section registry
+│   │   ├── sections/     # Navigation section registry
+│   │   └── entities/     # Entity data model (characters, locations)
 │   ├── chat/
 │   │   ├── buildPrompt.ts
 │   │   ├── contextSelector.ts
@@ -151,12 +155,33 @@ Distil/
 │   ├── components/
 │   │   ├── editor/
 │   │   │   └── editorConfigFactory.tsx  # Extension & toolbar factories
+│   │   ├── entities/     # Entity UI components
 │   │   ├── layout/
 │   │   └── playground/
 │   ├── state/            # Zustand stores
 │   └── hooks/
 └── CLAUDE.md              # Detailed architectural notes
 ```
+
+---
+
+## Key Architectural Patterns
+
+### MetaDocs vs Entity Indices
+
+Distil uses two parallel storage patterns for different types of story data:
+
+**MetaDocs** (for rich text documents):
+- TipTap JSONContent format
+- Examples: outline, brief, world, manifest
+- Storage: `{storyId}-{key}.json`
+
+**Entity Indices** (for structured entities):
+- Lightweight JSON projections (EntityIndex/EntityIndexEntry)
+- Examples: characters, locations
+- Storage: `{storyId}-characters.json`, `{storyId}-locations.json`
+- NOT TipTap documents — structured data with typed interfaces
+- Future: Full EntityDoc storage for detailed character/location profiles
 
 ---
 
