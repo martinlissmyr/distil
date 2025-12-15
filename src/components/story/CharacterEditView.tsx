@@ -1,7 +1,7 @@
 // src/components/story/CharacterEditView.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Title, TextInput, Select, Stack, Group, Button } from '@mantine/core';
-import { ArrowLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import type { CharacterDoc, CharacterTier, EntityIndexEntry } from '../../models/entities';
 import styles from './EntityIndexView.module.scss';
 
@@ -74,64 +74,61 @@ export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
         {/* Header with back button */}
         <Group>
           <Button
-            variant="subtle"
+            variant="light"
+            radius="xl"
             size="sm"
-            leftSection={<ArrowLeft size={16} />}
+            leftSection={<ChevronLeft size={20} />}
             onClick={onBack}
           >
-            Back to Characters
+            Back
           </Button>
         </Group>
 
-        <Title order={1} className={styles.pageTitle}>
-          {isNew ? 'New Character' : 'Edit Character'}
-        </Title>
+        <Box w={600} ml="auto" mr="auto">
 
-        {/* Form fields */}
-        <Stack gap="md" maw={600}>
-          <TextInput
-            label="Name"
-            placeholder="Character name"
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-            required
-            size="md"
-          />
+          {/* Form fields */}
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="Character name"
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              required
+              size="md"
+            />
 
-          <TextInput
-            label="Role in Story"
-            placeholder="e.g., protagonist, antagonist, mentor"
-            value={roleInStory}
-            onChange={(e) => setRoleInStory(e.currentTarget.value)}
-            size="md"
-          />
+            <TextInput
+              label="Role in Story"
+              placeholder="e.g., protagonist, antagonist, mentor"
+              value={roleInStory}
+              onChange={(e) => setRoleInStory(e.currentTarget.value)}
+              size="md"
+            />
 
-          <Select
-            label="Importance"
-            value={tier}
-            onChange={(value) => setTier(value as CharacterTier)}
-            data={[
-              { value: 'primary', label: 'Primary' },
-              { value: 'significant', label: 'Significant' },
-              { value: 'secondary', label: 'Secondary' },
-            ]}
-            size="md"
-          />
+            <Select
+              label="Importance"
+              value={tier}
+              onChange={(value) => setTier(value as CharacterTier)}
+              data={[
+                { value: 'primary', label: 'Primary' },
+                { value: 'significant', label: 'Significant' },
+                { value: 'secondary', label: 'Secondary' },
+              ]}
+              size="md"
+            />
 
-          {/* Save button */}
-          <Group mt="md">
-            <Button
-              onClick={handleSave}
-              disabled={!name.trim() || saving}
-              loading={saving}
-            >
-              {isNew ? 'Create Character' : 'Save Changes'}
-            </Button>
-            <Button variant="subtle" onClick={onBack}>
-              Cancel
-            </Button>
-          </Group>
-        </Stack>
+            {/* Save button */}
+            <Group mt="md">
+              <Button
+                onClick={handleSave}
+                disabled={!name.trim() || saving}
+                loading={saving}
+              >
+                {isNew ? 'Create Character' : 'Save Changes'}
+              </Button>
+            </Group>
+          </Stack>
+        </Box>
       </Stack>
     </Box>
   );
