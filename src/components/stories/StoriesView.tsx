@@ -1,14 +1,14 @@
 import React from 'react';
 import type { StoryMeta } from '../../api/client';
 import { EntityGrid } from '../common/EntityGrid';
-import { FileText } from 'lucide-react';
 
 type StoriesViewProps = {
   stories: StoryMeta[];
   currentProject: string;
   onSelectStory: (id: string) => void;
   onCreateStory: () => void;
-  onEditStory: (id: string) => void;   // hook up later to a story modal
+  onEditStory: (id: string) => void;
+  onReorderStories: (ids: string[]) => void;
 };
 
 export const StoriesView: React.FC<StoriesViewProps> = ({
@@ -17,6 +17,7 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
   onSelectStory,
   onCreateStory,
   onEditStory,
+  onReorderStories
 }) => {
   return (
     <EntityGrid
@@ -26,8 +27,9 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
       onSelect={onSelectStory}
       onEdit={onEditStory}
       onCreate={onCreateStory}
-      Icon={FileText}
+      icon="story"
       title={currentProject.name}
+      onReorderEntities={onReorderStories}
     />
   );
 };

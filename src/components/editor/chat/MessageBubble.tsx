@@ -1,7 +1,7 @@
 // src/components/editor/chat/MessageBubble.tsx
 import React, { useState, useEffect } from 'react';
+import { Icon } from '../../common/Icon';
 import { Box, Group, Text, Button, Stack } from '@mantine/core';
-import { MessageCircleMore, SquareMousePointer, WandSparkles } from 'lucide-react';
 import type { SuggestionAction } from '../../../chat/chatHints';
 import type { ChatMessage } from './useChatMessages';
 import { MarkdownContent } from './MarkdownContent';
@@ -9,19 +9,6 @@ import { MarkdownContent } from './MarkdownContent';
 type MessageBubbleProps = {
   message: ChatMessage;
   onSuggestionClick?: (action: SuggestionAction) => void;
-};
-
-const getActionIcon = (kind: SuggestionAction['kind']) => {
-  switch (kind) {
-    case 'prompt':
-      return <MessageCircleMore size={14} />;
-    case 'navigate':
-      return <SquareMousePointer size={14} />;
-    case 'wizard':
-      return <WandSparkles size={14} />;
-    default:
-      return null;
-  }
 };
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -158,7 +145,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                       variant="outline"
                       radius="xl"
                       onClick={() => onSuggestionClick?.(action)}
-                      leftSection={getActionIcon(action.kind)}
+                      leftSection={<Icon type={action.kind}/>}
                     >
                       {action.label}
                     </Button>

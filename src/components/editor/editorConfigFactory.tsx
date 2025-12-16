@@ -13,8 +13,7 @@ import type { Editor } from '@tiptap/react';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { Heading2, Heading3, List as ListIcon, ListOrdered, Minus } from 'lucide-react';
-
+import { Icon } from '../common/Icon';
 import { createBaseExtensions } from './extensions/sharedExtensions';
 import { EditorToolbar } from './EditorToolbar';
 import type { EditorConfig, ToolbarItem } from '../../models/docs/editorConfig';
@@ -65,14 +64,19 @@ function getToolbarItemIcon(item: ToolbarItem): React.ReactNode {
   switch (item.type) {
     case 'heading': {
       const label = getToolbarItemLabel(item);
-      return label === 'H2' ? <Heading2 /> : <Heading3 />;
+      switch (label) {
+        case 'H2':
+          return <Icon type="h2" />
+        case 'H3':
+          return <Icon type="h3" />
+      }
     }
     case 'bulletList':
-      return <ListIcon />;
+      return <Icon type="bulletList" />;
     case 'orderedList':
-      return <ListOrdered />;
+      return <Icon type="orderedList" />;
     case 'horizontalRule':
-      return <Minus />;
+      return <Icon type="horizontalRule" />;
     default:
       return null;
   }

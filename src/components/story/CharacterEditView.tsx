@@ -1,7 +1,7 @@
 // src/components/story/CharacterEditView.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Title, TextInput, Select, Stack, Group, Button } from '@mantine/core';
-import { ChevronLeft } from 'lucide-react';
+import { Icon } from '../common/Icon';
 import type { CharacterDoc, CharacterTier, EntityIndexEntry } from '../../models/entities';
 import styles from './EntityIndexView.module.scss';
 
@@ -77,7 +77,7 @@ export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
             variant="light"
             radius="xl"
             size="sm"
-            leftSection={<ChevronLeft size={20} />}
+            leftSection={<Icon type="back" size={20} />}
             onClick={onBack}
           >
             Back

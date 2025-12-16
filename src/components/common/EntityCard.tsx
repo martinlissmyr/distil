@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, ActionIcon, Group, Card, Box, Stack } from '@mantine/core';
-import { Pencil, Plus } from 'lucide-react';
 import styles from './EntityCard.module.scss';
+import {Icon} from './Icon'
 
 type EntityCardProps<T> = {
   id: string;
@@ -11,17 +11,12 @@ type EntityCardProps<T> = {
   Icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: any }>;
 };
 
-type CreateEntityCardProps<T> = {
-  /** called when the “+” card is clicked */
-  onCreate: () => void;
-};
-
 export function EntityCard<T>({
   id,
   label,
   onSelect,
   onEdit,
-  Icon,
+  icon,
 }: EntityCardProps<T>) {
   return (
     <Stack space={1} onClick={() => onSelect(id)} className={styles.entityCardWrapper}>
@@ -36,13 +31,13 @@ export function EntityCard<T>({
               onEdit(id);
             }}
           >
-            <Pencil size={16} />
+            <Icon type="edit" size={16} />
           </ActionIcon>
         )}
 
         <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
           <Box>
-            <Icon size={60} strokeWidth={1} style={{opacity: .3}}/>
+            <Icon type={icon} size={60} strokeWidth={1} style={{opacity: .3}}/>
           </Box>
         </Stack>
       </Card>
@@ -53,16 +48,22 @@ export function EntityCard<T>({
   );
 }
 
+type CreateEntityCardProps<T> = {
+  onCreate: () => void;
+  label?: string;
+};
+
 export function CreateEntityCard<T>({
   onCreate,
+  label = "New"
 }: CreateEntityCardProps<T>) {
   return (
     <Stack space={1} onClick={onCreate} className={styles.entityCardWrapper}>
       <Card className={styles.entityCard}>
-        <Plus size={60} strokeWidth={1}/>
+        <Icon type="add" size={60} strokeWidth={1}/>
       </Card>
       <Text fw={700} ta="center">
-        New
+        {label}
       </Text>
     </Stack>
   );

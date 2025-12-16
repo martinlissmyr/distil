@@ -1,7 +1,7 @@
 // src/components/editor/chat/SelectionPill.tsx
 import React from 'react';
 import { Box, Group, Text, ActionIcon } from '@mantine/core';
-import { X, TextSelect } from 'lucide-react';
+import { Icon } from '../../common/Icon';
 
 type SelectionPillProps = {
   onDismiss: () => void;
@@ -22,7 +22,7 @@ export const SelectionPill: React.FC<SelectionPillProps> = ({ onDismiss }) => {
         }}
       >
         <Group gap="4px">
-          <TextSelect size={14} strokeWidth={2} />
+          <Icon type="selection" size={14} />
           <Text size="xs" fw={500}>
             Using selected text as context
           </Text>
@@ -33,7 +33,7 @@ export const SelectionPill: React.FC<SelectionPillProps> = ({ onDismiss }) => {
           variant="subtle"
           onClick={onDismiss}
         >
-          <X size={12} />
+          <Icon type="close" size={12} />
         </ActionIcon>
       </Box>
     </Group>

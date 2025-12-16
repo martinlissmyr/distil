@@ -1,7 +1,7 @@
 // src/components/wizard/steps/LlmProcessingStepView.tsx
 import React from 'react';
 import { Stack, Text, Loader, Alert, Paper, Title } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { Icon } from '../../common/Icon';
 import type { LlmProcessingStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
 
@@ -34,7 +34,7 @@ export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ st
 
       {/* Processing states */}
       {error ? (
-        <Alert icon={<AlertCircle size={16} />} title="Error" color="red">
+        <Alert icon={<Icon type="error" size={16} />} title="Error" color="red">
           <Text size="sm">{error}</Text>
         </Alert>
       ) : isProcessing ? (

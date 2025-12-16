@@ -480,7 +480,6 @@ Entities integrate with the sections model (`src/models/sections/`) by adding ne
   scope: 'story',
   docKind: undefined, // No single docKind — multiple character docs exist
   label: 'Characters',
-  icon: Users, // from lucide-react
   order: 50,
   component: StoryCharactersView,
   isImplemented: true,
@@ -490,7 +489,6 @@ Entities integrate with the sections model (`src/models/sections/`) by adding ne
   scope: 'story',
   docKind: undefined,
   label: 'Locations',
-  icon: MapPin, // from lucide-react
   order: 60,
   component: StoryLocationsView,
   isImplemented: true,

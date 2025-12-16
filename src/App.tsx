@@ -237,11 +237,9 @@ const App: React.FC = () => {
       onSelectProject={projectHandlers.handleSelectProject}
       onCreateProject={projectHandlers.handleCreateProject}
       onBackToProjects={projectHandlers.handleBackToProjects}
-      onReorderProjects={projectHandlers.handleReorderProjects}
       stories={stories}
       selectedStoryId={selectedStoryId}
       onSelectStory={storyHandlers.handleSelectStory}
-      onReorderStories={storyHandlers.handleReorderStories}
       storySection={storySection}
       onSelectStorySection={setStorySection}
       onBackToProjectFromStory={storyHandlers.handleBackToProjectFromStory}
@@ -269,10 +267,12 @@ const App: React.FC = () => {
       currentTitle={currentTitle}
       handleSelectProject={projectHandlers.handleSelectProject}
       handleCreateProject={projectHandlers.handleCreateProject}
+      onReorderProjects={projectHandlers.handleReorderProjects}
       handleOpenEditProject={projectHandlers.handleOpenEditProject}
       handleSelectStory={storyHandlers.handleSelectStory}
       handleCreateStory={storyHandlers.handleCreateStory}
       handleOpenEditStory={storyHandlers.handleOpenEditStory}
+      onReorderStories={storyHandlers.handleReorderStories}
       handleDocChange={handleDocChange}
     />
   );

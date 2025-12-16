@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Title, Button, Stack, Card, Text, Group } from '@mantine/core';
 import { StorySectionShell } from './StorySectionShell';
-import { Plus } from 'lucide-react';
 import { getDocKind } from '../../models/docs';
 import type { DocKindId } from '../../models/docs';
 import type { CharacterDoc, EntityIndex, EntityIndexEntry } from '../../models/entities';
@@ -10,7 +9,6 @@ import { CharacterEditView } from './CharacterEditView';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 import { EntityCard, CreateEntityCard } from '../common/EntityCard';
-import { SquareLibrary } from 'lucide-react';
 
 type EntityIndexViewProps = {
   projectId: string;
@@ -155,7 +153,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
                       id={id}
                       label={char.name}
                       onSelect={() => handleEditCharacter(id)}
-                      Icon={SquareLibrary}
+                      icon="character"
                     />
                   );
                 })}
