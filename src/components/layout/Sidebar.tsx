@@ -8,32 +8,9 @@ import {
   Stack,
 } from '@mantine/core';
 
-import {
-  ArrowLeft,
-  SquareLibrary,
-  FileText,
-  Settings2,
-  Bug
-} from 'lucide-react';
+import {Icon} from '../common/Icon';
 
 import { getStorySections, getRootSections } from '../../models/sections';
-
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-
-import {
-  SortableContext,
-  useSortable,
-  arrayMove,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
 import { type Project, type StoryMeta, client } from '../../api/client';
 import type { StorySection, RootSection } from '../../hooks/useNavigation';
 
@@ -45,14 +22,11 @@ type SidebarProps = {
   projects: Project[];
   selectedProjectId: string | null;
   onSelectProject: (id: string) => void;
-  onCreateProject: () => void;
   onBackToProjects: () => void;
-  onReorderProjects: (ids: string[]) => void;
 
   stories: StoryMeta[];
   selectedStoryId: string | null;
   onSelectStory: (id: string) => void;
-  onReorderStories: (ids: string[]) => void;
 
   storySection: StorySection;
   onSelectStorySection: (section: StorySection) => void;
@@ -66,31 +40,6 @@ type SidebarProps = {
   onOpenDevTools: () => void;
 };
 
-// ─────────────────────────────────────────────────────────────
-// Sortable item wrapper
-// ─────────────────────────────────────────────────────────────
-function SortableItem({
-  id,
-  children,
-}: {
-  id: string;
-  children: React.ReactNode;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
-    </div>
-  );
-}
-
 const SidebarCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <Box p="xs">{children}</Box>;
 };
@@ -100,37 +49,61 @@ const SidebarCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // ─────────────────────────────────────────────────────────────
 
 type NavItemProps = Omit<React.ComponentProps<typeof NavLink>, 'leftSection'> & {
-  /** Lucide icon component, e.g. SquareLibrary, Bot, NotebookPen */
-  Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-
-  /** Optional overrides for default icon props */
-  iconProps?: React.SVGProps<SVGSVGElement>;
+  icon?: string;
 };
 
 const NavItem: React.FC<NavItemProps> = ({
-  Icon,
-  iconProps,
-  style,
+  icon,
   ...props
 }) => {
   return (
     <NavLink
       {...props}
       leftSection={
-        Icon ? (
+        icon ? (
           <Icon
-            strokeWidth={1.5}
+            type={icon}
             size={20}
             style={{ opacity: 0.2 }}
-            {...iconProps}
           />
         ) : null
       }
       style={{
         borderRadius: '24px',
-        ...style,
       }}
     />
+  );
+};
+
+const NavGroupLabel = ({
+  title
+}) => {
+  return (
+    <Group m="xs" mt="lg">
+      <Text size="sm" fw={700}>
+        {title}
+      </Text>
+    </Group>
+  );
+};
+
+const BackButton = ({
+  onBack,
+  label = "Back"
+}) => {
+  return (
+    <Group p="xs">
+      <Button
+        justify="left"
+        leftSection={<Icon type="back" size={16} />}
+        variant="transparent"
+        size="s"
+        onClick={onBack}
+        flex={1}
+      >
+        {label}
+      </Button>
+    </Group>
   );
 };
 
@@ -142,9 +115,6 @@ type ProjectsSidebarProps = {
   projects: Project[];
   selectedProjectId: string | null;
   onSelectProject: (id: string) => void;
-  onCreateProject: () => void;
-  onReorderProjects: (ids: string[]) => void;
-  sensors: any;
   rootSection: RootSection;
   onSelectRootSection: (section: RootSection) => void;
   isDevMode: boolean;
@@ -154,70 +124,29 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
   projects,
   selectedProjectId,
   onSelectProject,
-  onCreateProject,
-  onReorderProjects,
-  sensors,
   rootSection,
   onSelectRootSection,
   isDevMode,
 }) => {
   return (
     <SidebarCard>
-      {/* PROJECTS */}
-      <Group m="xs" mt="lg">
-        <Text size="sm" fw={700}>
-          Projects
-        </Text>
-      </Group>
-
+      <NavGroupLabel title="Distil"/>
       <Stack gap="1px">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={({ active, over }) => {
-            if (!over || active.id === over.id) return;
-            const oldIndex = projects.findIndex((p) => p.id === active.id);
-            const newIndex = projects.findIndex((p) => p.id === over.id);
-            const reordered = arrayMove(projects, oldIndex, newIndex);
-            onReorderProjects(reordered.map((p) => p.id));
+        <NavItem
+          icon="project"
+          label="Projects"
+          active={rootSection === 'projects'}
+          p="xs"
+          onClick={() => {
+            onSelectRootSection('projects');
           }}
-        >
-          <SortableContext
-            items={projects.map((p) => p.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {projects.map((p) => (
-              <SortableItem key={p.id} id={p.id}>
-                <NavItem
-                  Icon={SquareLibrary}
-                  label={p.name}
-                  active={rootSection === 'projects' && p.id === selectedProjectId}
-                  p="xs"
-                  onClick={() => {
-                    onSelectRootSection('projects');
-                    onSelectProject(p.id);
-                  }}
-                />
-              </SortableItem>
-            ))}
-          </SortableContext>
-        </DndContext>
-      </Stack>
-
-      {/* SETTINGS */}
-      <Group m="xs" mt="lg">
-        <Text size="sm" fw={700}>
-          Settings
-        </Text>
-      </Group>
-
-      <Stack gap="1px">
+        />
         {getRootSections({ isDevMode, implementedOnly: false })
           .filter(section => section.id !== 'projects') // Projects shown above
           .map(section => (
             <NavItem
               key={section.id}
-              Icon={section.icon}
+              icon={section.id}
               label={section.label}
               active={rootSection === section.id}
               onClick={() => onSelectRootSection(section.id as RootSection)}
@@ -238,8 +167,6 @@ type ProjectSidebarProps = {
   selectedStoryId: string | null;
   onBackToProjects: () => void;
   onSelectStory: (id: string) => void;
-  onReorderStories: (ids: string[]) => void;
-  sensors: any;
 };
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
@@ -248,62 +175,21 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   selectedStoryId,
   onBackToProjects,
   onSelectStory,
-  onReorderStories,
-  sensors,
 }) => {
   return (
     <SidebarCard>
       {/* Back to PROJECTS */}
-      <Group p="xs">
-        <Button
-          justify="left"
-          leftSection={<ArrowLeft size={16} />}
-          variant="transparent"
-          size="s"
-          onClick={onBackToProjects}
-          flex={1}
-        >
-          Projects
-        </Button>
-      </Group>
+      <BackButton onBack={onBackToProjects}/>
 
-      <Group m="xs" mt="lg">
-        <Text size="sm" fw={700} flex={1}>
-          {currentProject?.name ?? 'Project'}
-        </Text>
-      </Group>
-
+      <NavGroupLabel title={currentProject?.name ?? 'Untitled project'}/>
       <Stack gap="1px">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={({ active, over }) => {
-            if (!over || active.id === over.id) return;
-            const oldIndex = stories.findIndex((s) => s.id === active.id);
-            const newIndex = stories.findIndex((s) => s.id === over.id);
-            const reordered = arrayMove(stories, oldIndex, newIndex);
-            onReorderStories(reordered.map((s) => s.id));
-          }}
-        >
-          <SortableContext
-            items={stories.map((s) => s.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {stories.map((s) => (
-              <SortableItem key={s.id} id={s.id}>
-                <NavItem
-                  Icon={FileText}
-                  label={s.title}
-                  active={s.id === selectedStoryId}
-                  p="xs"
-                  onClick={() => {
-                    onSelectStory(s.id);
-                  }}
-                />
-              </SortableItem>
-            ))}
-          </SortableContext>
-        </DndContext>
+        <NavItem
+          icon='stories'
+          label="Stories"
+          active={true}
+          p="xs"
+          onClick={() => onSelectRootSection(section.id as RootSection)}
+        />
       </Stack>
     </SidebarCard>
   );
@@ -330,30 +216,15 @@ const StorySidebar: React.FC<StorySidebarProps> = ({
 }) => {
   return (
     <SidebarCard>
-      <Group p="xs">
-        <Button
-          justify="left"
-          leftSection={<ArrowLeft size={16} />}
-          variant="transparent"
-          size="s"
-          onClick={onBackToProjectFromStory}
-          flex={1}
-        >
-          {currentProject?.name ?? 'Untitled story'}
-        </Button>
-      </Group>
+      <BackButton onBack={onBackToProjectFromStory}/>
 
-      <Group m="xs" mt="lg">
-        <Text size="sm" fw={700}>
-          {currentStory?.title ?? 'Untitled story'}
-        </Text>
-      </Group>
+      <NavGroupLabel title={currentStory?.title ?? 'Untitled story'}/>
 
       <Stack gap="1px">
         {getStorySections({ implementedOnly: false }).map(storySection => (
           <NavItem
             key={storySection.id}
-            Icon={storySection.icon}
+            icon={storySection.id}
             label={storySection.label}
             active={section === storySection.id}
             onClick={() => onSelectStorySection(storySection.id as StorySection)}
@@ -373,14 +244,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   projects,
   selectedProjectId,
   onSelectProject,
-  onCreateProject,
   onBackToProjects,
-  onReorderProjects,
 
   stories,
   selectedStoryId,
   onSelectStory,
-  onReorderStories,
 
   storySection,
   onSelectStorySection,
@@ -400,12 +268,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   }, []);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    })
-  );
-
   const currentProject = projects.find((p) => p.id === selectedProjectId);
   const currentStory = stories.find((s) => s.id === selectedStoryId);
 
@@ -418,9 +280,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         projects={projects}
         selectedProjectId={selectedProjectId}
         onSelectProject={onSelectProject}
-        onCreateProject={onCreateProject}
-        onReorderProjects={onReorderProjects}
-        sensors={sensors}
         rootSection={rootSection}
         onSelectRootSection={onSelectRootSection}
         isDevMode={isDevMode}
@@ -446,8 +305,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         selectedStoryId={selectedStoryId}
         onBackToProjects={onBackToProjects}
         onSelectStory={onSelectStory}
-        onReorderStories={onReorderStories}
-        sensors={sensors}
       />
     );
   }
@@ -470,7 +327,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenSettings}
           p="xs"
         >
-          <Settings2 size={20} />
+          <Icon type="settings" size={20} />
         </Button>
         {isDevMode && (
           <Button
@@ -478,7 +335,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onOpenDevTools}
             p="xs"
           >
-            <Bug size={20} />
+            <Icon type="console" size={20} />
           </Button>
         )}
       </Group>

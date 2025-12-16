@@ -7,20 +7,6 @@
  */
 
 import type { DocKindId } from '../docs';
-import type { LucideIcon } from 'lucide-react';
-
-// Re-export from lucide-react for convenience
-import {
-  NotebookPen,
-  Lightbulb,
-  Route,
-  Globe,
-  Users,
-  MapPin,
-  SquareLibrary,
-  Feather,
-  FlaskConical,
-} from 'lucide-react';
 
 /** Scope determines where a section appears in the navigation hierarchy */
 export type SectionScope = 'root' | 'story';
@@ -35,9 +21,6 @@ type BaseSectionConfig = {
 
   /** Display label in navigation */
   readonly label: string;
-
-  /** Lucide icon component */
-  readonly icon: LucideIcon;
 
   /** Display order (lower = earlier) */
   readonly order: number;
@@ -84,7 +67,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'prose',
     label: 'Text',
-    icon: NotebookPen,
     order: 1,
     component: 'StoryTextView',
     isImplemented: true,
@@ -95,7 +77,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'brief',
     label: 'Brief / Idea',
-    icon: Lightbulb,
     order: 2,
     component: 'StoryBriefView',
     isImplemented: true,
@@ -106,7 +87,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'outline',
     label: 'Outline',
-    icon: Route,
     order: 3,
     component: 'StoryOutlineView',
     isImplemented: true,
@@ -117,7 +97,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'world',
     label: 'World',
-    icon: Globe,
     order: 4,
     component: 'StoryWorldView',
     isImplemented: true,
@@ -128,7 +107,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'characters',
     label: 'Characters',
-    icon: Users,
     order: 5,
     component: 'EntityIndexView',
     isImplemented: true,
@@ -139,7 +117,6 @@ export const sectionConfigs = {
     scope: 'story',
     docKind: 'locations',
     label: 'Locations',
-    icon: MapPin,
     order: 6,
     component: 'EntityIndexView',
     isImplemented: true,
@@ -151,7 +128,6 @@ export const sectionConfigs = {
     id: 'projects',
     scope: 'root',
     label: 'Projects',
-    icon: SquareLibrary,
     order: 1,
     component: 'ProjectsView',
     isImplemented: true,
@@ -162,7 +138,6 @@ export const sectionConfigs = {
     scope: 'root',
     docKind: 'manifest',
     label: 'Manifest',
-    icon: Feather,
     order: 2,
     component: 'ManifestView',
     isImplemented: true,
@@ -172,7 +147,6 @@ export const sectionConfigs = {
     id: 'playground',
     scope: 'root',
     label: 'Playground',
-    icon: FlaskConical,
     order: 3,
     component: 'PlaygroundView',
     isImplemented: true,

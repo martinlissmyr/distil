@@ -1,7 +1,7 @@
 // src/components/wizard/steps/LlmApprovalStepView.tsx
 import React from 'react';
 import { Stack, Text, Paper, Group, Button, List, Code, Box, Title } from '@mantine/core';
-import { Check, X, Edit } from 'lucide-react';
+import { Icon } from '../../common/Icon';
 import type { LlmApprovalStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
 
@@ -132,7 +132,7 @@ export const LlmApprovalStepView: React.FC<LlmApprovalStepViewProps> = ({ step }
         {step.approvalOptions?.editLabel && (
           <Button
             variant="subtle"
-            leftSection={<Edit size={16} />}
+            leftSection={<Icon type="edit" size={16} />}
             onClick={handleEdit}
           >
             {editLabel}
@@ -140,14 +140,14 @@ export const LlmApprovalStepView: React.FC<LlmApprovalStepViewProps> = ({ step }
         )}
         <Button
           variant="default"
-          leftSection={<X size={16} />}
+          leftSection={<Icon type="close" size={16} />}
           onClick={handleReject}
           color="red"
         >
           {rejectLabel}
         </Button>
         <Button
-          leftSection={<Check size={16} />}
+          leftSection={<Icon type="check" size={16} />}
           onClick={handleApprove}
           color="green"
         >

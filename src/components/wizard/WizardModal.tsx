@@ -1,7 +1,7 @@
 // src/components/wizard/WizardModal.tsx
 import React, { useEffect, useRef } from 'react';
 import { Box, Stack, Text, Button, Group, ActionIcon, ScrollArea } from '@mantine/core';
-import { Check, X } from 'lucide-react';
+import { Icon } from '../common/Icon';
 import { Modal } from '../common/Modal';
 import { useAppStore } from '../../state/useAppStore';
 import { getCurrentStep } from '../../wizards/navigation';
@@ -348,7 +348,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
               zIndex: 1,
             }}
           >
-            <X />
+            <Icon type="close" />
           </ActionIcon>
 
           <Box
@@ -436,7 +436,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
                         : 'var(--mantine-color-dark-2)',
                     }}
                   >
-                    {isCompleted ? <Check size={16} /> : index + 1}
+                    {isCompleted ? <Icon type="check" size={16} /> : index + 1}
                   </Box>
 
                   <Text

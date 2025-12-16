@@ -69,6 +69,8 @@ export const AppContent: React.FC<AppContentProps> = ({
   handleCreateStory,
   handleOpenEditStory,
   handleDocChange,
+  onReorderProjects,
+  onReorderStories,
 }) => {
   // Root section views
   if (appSection === 'root' && rootSection === 'projects') {
@@ -78,6 +80,7 @@ export const AppContent: React.FC<AppContentProps> = ({
         onSelectProject={handleSelectProject}
         onCreateProject={handleCreateProject}
         onEditProject={handleOpenEditProject}
+        onReorderProjects={onReorderProjects}
       />
     );
   }
@@ -99,6 +102,7 @@ export const AppContent: React.FC<AppContentProps> = ({
         onSelectStory={handleSelectStory}
         onCreateStory={handleCreateStory}
         onEditStory={handleOpenEditStory}
+        onReorderStories={onReorderStories}
       />
     );
   }

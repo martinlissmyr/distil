@@ -2,13 +2,13 @@
 import React from 'react';
 import type { Project } from '../../api/client';
 import { EntityGrid } from '../common/EntityGrid';
-import { SquareLibrary } from 'lucide-react';
 
 type ProjectsViewProps = {
   projects: Project[];
   onSelectProject: (id: string) => void;
   onCreateProject: () => void;
   onEditProject: (id: string) => void;
+  onReorderProjects: (ids: string[]) => void;
 };
 
 export const ProjectsView: React.FC<ProjectsViewProps> = ({
@@ -16,6 +16,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   onSelectProject,
   onCreateProject,
   onEditProject,
+  onReorderProjects,
 }) => {
   return (
     <EntityGrid
@@ -25,8 +26,10 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
       onSelect={onSelectProject}
       onEdit={onEditProject}
       onCreate={onCreateProject}
-      Icon={SquareLibrary}
+      icon="project"
       title="Projects"
+      createLabel="New Project"
+      onReorderEntities={onReorderProjects}
     />
   );
 };
