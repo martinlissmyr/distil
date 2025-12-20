@@ -60,41 +60,41 @@
     margin-bottom: 24px;
   }
 
-  h2 {
+  h1 {
+    // Communicated as H2 in the editor toolbar
     margin-top: 48px;
     margin-bottom: 24px;
     letter-spacing: -0.015em;
-    font-weight: 650;
-    font-size: 34px;
+    font-weight: 600;
+    font-size: 32px;
     line-height: 1.3;
-    font-variation-settings: 'wght' 650, 'opsz' 34;
+    font-variation-settings: 'wght' 600, 'opsz' 32;
   }
 
-  h3 {
+  h2 {
+    // Communicated as H3 in the editor toolbar
     margin-top: 48px;
     margin-bottom: 24px;
-    font-size: 1.2rem;
-    font-weight: 650;
+    letter-spacing: -0.015em;
+    font-weight: 600;
     font-size: 26px;
-    font-variation-settings: 'wght' 650;
+    line-height: 1.3;
+    font-variation-settings: 'wght' 600, 'opsz' 26;
   }
 
   h1:first-child,
-  h2:first-child,
-  h3:first-child {
+  h2:first-child {
     margin-top: 0;
   }
 
   h1 *,
-  h2 *,
-  h3 * {
+  h2 * {
     font-weight: inherit !important;
     font-variation-settings: inherit !important;
   }
 
   h1 strong,
-  h2 strong,
-  h3 strong {
+  h2 strong{
     font-weight: inherit !important;
     font-variation-settings: inherit !important;
   }
@@ -161,8 +161,13 @@
   hr {
     border: none;
     border-top: 1px solid var(--border-subtle);
-    margin-top: 2.5em;
-    margin-bottom: 1.5em;
+    margin-top: 2em;
+    margin-bottom: 1.8em;
+
+    & + h1,
+    & + h2 {
+      margin-top: 0;
+    }
   }
 
   a {
@@ -177,8 +182,7 @@
   }
 
   h1 + p,
-  h2 + p,
-  h3 + p {
+  h2 + p, {
     margin-top: 0;
   }
 

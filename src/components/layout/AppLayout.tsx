@@ -25,7 +25,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ sidebar, main }) => {
           height: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          background: 'var(--bg-main)',
           overflow: 'hidden',
         },
         header: {

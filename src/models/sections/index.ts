@@ -7,6 +7,7 @@
  */
 
 import type { DocKindId } from '../docs';
+import type { uiMode } from '../../types/ui';
 
 /** Scope determines where a section appears in the navigation hierarchy */
 export type SectionScope = 'root' | 'story';
@@ -15,6 +16,9 @@ export type SectionScope = 'root' | 'story';
 type BaseSectionConfig = {
   /** Unique identifier for the section */
   readonly id: string;
+
+  /** Unique identifier for the section */
+  readonly uiMode: uiMode;
 
   /** Scope determines navigation hierarchy level */
   readonly scope: SectionScope;
@@ -64,6 +68,7 @@ export const sectionConfigs = {
 
   prose: {
     id: 'prose',
+    uiMode: 'prose',
     scope: 'story',
     docKind: 'prose',
     label: 'Text',
@@ -74,6 +79,7 @@ export const sectionConfigs = {
 
   brief: {
     id: 'brief',
+    uiMode: 'meta',
     scope: 'story',
     docKind: 'brief',
     label: 'Brief / Idea',
@@ -84,6 +90,7 @@ export const sectionConfigs = {
 
   outline: {
     id: 'outline',
+    uiMode: 'meta',
     scope: 'story',
     docKind: 'outline',
     label: 'Outline',
@@ -94,6 +101,7 @@ export const sectionConfigs = {
 
   world: {
     id: 'world',
+    uiMode: 'meta',
     scope: 'story',
     docKind: 'world',
     label: 'World',
@@ -104,6 +112,7 @@ export const sectionConfigs = {
 
   characters: {
     id: 'characters',
+    uiMode: 'meta',
     scope: 'story',
     docKind: 'characters',
     label: 'Characters',
@@ -114,6 +123,7 @@ export const sectionConfigs = {
 
   locations: {
     id: 'locations',
+    uiMode: 'meta',
     scope: 'story',
     docKind: 'locations',
     label: 'Locations',
@@ -126,6 +136,7 @@ export const sectionConfigs = {
 
   projects: {
     id: 'projects',
+    uiMode: 'default',
     scope: 'root',
     label: 'Projects',
     order: 1,
@@ -135,6 +146,7 @@ export const sectionConfigs = {
 
   manifest: {
     id: 'manifest',
+    uiMode: 'meta',
     scope: 'root',
     docKind: 'manifest',
     label: 'Manifest',
@@ -145,6 +157,7 @@ export const sectionConfigs = {
 
   playground: {
     id: 'playground',
+    uiMode: 'default',
     scope: 'root',
     label: 'Playground',
     order: 3,
