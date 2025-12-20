@@ -352,6 +352,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
           autosize
           minRows={2}
           maxRows={4}
+          radius={0}
         />
         <Group justify="flex-end" mt={4}>
           <Button size="xs" onClick={handleSendClick} disabled={isSending || !input.trim()}>

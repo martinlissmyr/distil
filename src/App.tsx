@@ -176,22 +176,6 @@ const App: React.FC = () => {
   // Theme setup
   useThemeSetup();
 
-  // ---- Editor mode attribute (for styling) ----
-  useEffect(() => {
-    let editorMode: 'prose' | 'meta' | 'none' = 'none';
-
-    if (appSection === 'story' && storySection === 'prose' && selectedStoryId) {
-      editorMode = 'prose';
-    } else if (
-      (appSection === 'root' && rootSection === 'manifest') ||
-      (appSection === 'story' && storySection != 'prose')
-    ) {
-      editorMode = 'meta';
-    }
-
-    document.documentElement.dataset.editorMode = editorMode;
-  }, [appSection, storySection, rootSection, selectedStoryId]);
-
   // ---- Project handlers ----
   const projectHandlers = useProjectHandlers({
     goToProjects,

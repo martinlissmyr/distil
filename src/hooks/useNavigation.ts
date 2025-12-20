@@ -76,6 +76,21 @@ function saveNavState(state: NavState) {
   }
 }
 
+export type NavigationLeaf =
+  | { kind: 'root'; id: RootSection }
+  | { kind: 'project'; id: 'projects' } // or ProjectSectionId if you add it later
+  | { kind: 'story'; id: StorySection };
+
+function computeLeaf(
+  appSection: AppSection,
+  rootSection: RootSection,
+  storySection: StorySection
+): NavigationLeaf {
+  if (appSection === 'story') return { kind: 'story', id: storySection };
+  if (appSection === 'project') return { kind: 'project', id: 'projects' };
+  return { kind: 'root', id: rootSection };
+}
+
 /**
  * Custom hook to manage application navigation state and localStorage persistence
  *
@@ -98,6 +113,7 @@ export function useNavigation() {
   const setSelectedProjectId = useNavigationStore((s) => s.setSelectedProjectId);
   const setSelectedStoryId = useNavigationStore((s) => s.setSelectedStoryId);
   const restoreStateToStore = useNavigationStore((s) => s.restoreState);
+  const leaf = computeLeaf(appSection, rootSection, storySection);
 
   // Track if we're in the initialization phase (don't persist during restoration)
   const isInitializing = useRef(true);
@@ -175,6 +191,8 @@ export function useNavigation() {
     storySection,
     selectedProjectId,
     selectedStoryId,
+    leaf,
+    leafId: leaf.id, // convenience for getSectionConfig()
 
     // Actions
     goToProjects,

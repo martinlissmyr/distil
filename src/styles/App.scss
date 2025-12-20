@@ -1,3 +1,5 @@
+@use "sass:map";
+
 /* ==============================
    Fonts
    ============================== */
@@ -29,144 +31,224 @@ body {
   backface-visibility: hidden;
 }
 
-// ============================================================================
-// LIGHT THEME
-// ============================================================================
+/* ============================================================================
+   Token-first, mode-second structure:
 
-:root[data-mantine-color-scheme='light'] {
+   $tokens: (
+     token-name: (
+       default: (light: ..., dark: ...),     // REQUIRED
+       meta:    (light: ..., dark: ...),     // OPTIONAL
+       prose:   (light: ..., dark: ...)      // OPTIONAL
+     ),
+     ...
+   )
 
-  // --------------------------------------------------------------------------
-  // Base Colors
-  // --------------------------------------------------------------------------
-  --text: #1a1715;
+   Output:
+   :root[data-mantine-color-scheme='light'] { --token: <default.light> ... }
+   :root[data-mantine-color-scheme='dark']  { --token: <default.dark>  ... }
 
-  // --------------------------------------------------------------------------
-  // Backgrounds - Main App
-  // --------------------------------------------------------------------------
-  --bg-main: rgba(255, 255, 255, 1);
-  --bg-sidebar: rgba(239, 239, 239, 1);
+   Then overrides:
+   :root[data-mantine-color-scheme='light'] [data-ui-mode='meta'] { --token: <meta.light> }
+   :root[data-mantine-color-scheme='dark']  [data-ui-mode='meta'] { --token: <meta.dark>  }
+   (same for prose)
 
-  // Generic overlays (used for cards, modals, etc.)
-  --overlay: rgba(250, 250, 250, 1);
-  --overlay-hover: rgba(245, 245, 245, 1);
-  --overlay-subtle: rgba(250, 250, 250, .8);
+   Guarantees:
+   - every token has default.light + default.dark
+   - any mode override that exists must have BOTH light + dark
+   ============================================================================ */
 
-  --card-subtle: rgba(0,0,0,.2);
-  --card-subtle-hover: rgba(0,0,0,.3);
+$schemes: (light, dark);
+$modes: (meta, prose); // “default” handled separately, always emitted at root
 
-  // --------------------------------------------------------------------------
-  // Borders
-  // --------------------------------------------------------------------------
-  --border-subtlest: rgba(15, 23, 42, 0.03);
-  --border-subtle: rgba(15, 23, 42, 0.05);
+/* --------------------------------
+   1) Tokens map
+   -------------------------------- */
 
-  // --------------------------------------------------------------------------
-  // Chat Aside (AI Assistant Panel)
-  // --------------------------------------------------------------------------
-  --aside-input: rgba(0, 0, 0, 0.02);
-  --aside-bubble: rgba(0, 0, 0, 0.04);
-  --aside-button: rgba(0, 0, 0, 0.06);
+$ui-tokens: (
+  text: (
+    default: (light: #1a1715, dark: #efefef)
+  ),
 
-  // --------------------------------------------------------------------------
-  // Editor Mode Variations
-  // --------------------------------------------------------------------------
+  bg-sidebar: (
+    default: (light: rgba(239, 239, 239, 1), dark: rgba(255, 255, 255, 0.02)),
+    meta:    (light: rgba(249, 239, 235, 1), dark: rgba(26, 20, 16, 1)),
+    prose:   (light: rgba(239, 239, 239, 1), dark: rgba(12, 18, 34, 1))
+  ),
 
-  --editor-text-color: rgba(15, 15, 15, .9);
-  --editor-text-color-dimmed: rgba(15, 15, 15, .2);
-  --editor-highlighted-text: rgba(10, 10, 10, 1);
-  --editor-highlighted-text-bg: rgba(255, 235, 80, 0.45);
+  overlay: (
+    default: (light: rgba(250, 250, 250, 1), dark: rgba(20, 20, 23, 1))
+  ),
 
-  // Meta editor mode (manifest, outline, brief)
-  &[data-editor-mode='meta'] {
-    --bg-sidebar: rgba(249, 239, 235, 1);
+  overlay-subtle: (
+    default: (light: rgba(250, 250, 250, 0.8), dark: rgba(45, 45, 45, 1))
+  ),
 
-    --bg-editor: rgba(255, 246, 240, 1);
-    --bg-editor-faded: rgba(255, 246, 240, 0.8);
-    --bg-editor-transparent: rgba(255, 246, 240, 0);
-    --editor-overlay: rgba(255, 255, 250, 0.94);
-    --bg-editor-aside: rgba(255, 250, 246, 0.94);
+  overlay-subtle-hover: (
+    default: (light: rgba(245, 245, 245, 0.9), dark: rgba(48, 48, 48, 1))
+  ),
+
+  overlay-highlighted: (
+    default: (light: rgba(235, 235, 235, 1), dark: rgba(65, 65, 65, 1))
+  ),
+
+  card-subtle: (
+    default: (light: rgba(0, 0, 0, 0.2), dark: rgba(0, 0, 0, 0.2))
+  ),
+
+  card-subtle-hover: (
+    default: (light: rgba(0, 0, 0, 0.3), dark: rgba(0, 0, 0, 0.3))
+  ),
+
+  border-subtle: (
+    default: (light: rgba(15, 23, 42, 0.05), dark: rgba(148, 163, 184, 0.25))
+  ),
+
+  border-subtlest: (
+    default: (light: rgba(15, 23, 42, 0.03), dark: rgba(148, 163, 184, 0.05))
+  ),
+
+  aside-input: (
+    default: (light: rgba(0, 0, 0, 0.02), dark: rgba(255, 255, 255, 0.02))
+  ),
+
+  aside-bubble: (
+    default: (light: rgba(0, 0, 0, 0.04), dark: rgba(0, 0, 0, 0.1))
+  ),
+
+  aside-button: (
+    default: (light: rgba(0, 0, 0, 0.06), dark: rgba(255, 255, 255, 0.09))
+  ),
+
+  editor-text-color: (
+    default: (light: rgba(15, 15, 15, 0.9), dark: rgba(235, 235, 235, 0.9))
+  ),
+
+  editor-text-color-dimmed: (
+    default: (light: rgba(15, 15, 15, 0.2), dark: rgba(235, 235, 235, 0.2))
+  ),
+
+  editor-highlighted-text: (
+    default: (light: rgba(10, 10, 10, 1), dark: rgba(245, 245, 245, 1))
+  ),
+
+  editor-highlighted-text-bg: (
+    default: (light: rgba(255, 235, 80, 0.45), dark: rgba(255, 235, 80, 0.45))
+  ),
+
+  bg-editor: (
+    default: (light: rgba(245, 245, 245, 1), dark: rgba(20, 20, 23, 1)),
+    meta:    (light: rgba(255, 246, 240, 1), dark: rgba(30, 24, 20, 1)),
+    prose:   (light: rgba(245, 245, 245, 1), dark: rgba(16, 24, 39, 1))
+  ),
+
+  bg-editor-faded: (
+    default: (light: rgba(245, 245, 245, 0.8), dark: rgba(20, 20, 23, 0.8)),
+    meta:    (light: rgba(255, 246, 240, 0.8), dark: rgba(30, 24, 20, 0.8)),
+    prose:   (light: rgba(245, 245, 245, 0.8), dark: rgba(16, 24, 39, 0.8))
+  ),
+
+  bg-editor-transparent: (
+    default: (light: rgba(245, 245, 245, 0), dark: rgba(20, 20, 23, 0)),
+    meta:    (light: rgba(255, 246, 240, 0), dark: rgba(30, 24, 20, 0)),
+    prose:   (light: rgba(245, 245, 245, 0), dark: rgba(16, 24, 39, 0))
+  ),
+
+  editor-overlay: (
+    default: (light: rgba(255, 255, 255, 0.94), dark: rgba(23, 23, 26, 0.94)),
+    meta:    (light: rgba(255, 255, 250, 0.94), dark: rgba(22, 18, 15, 0.94)),
+    prose:   (light: rgba(255, 255, 255, 0.94), dark: rgba(12, 18, 34, 0.94))
+  ),
+
+  bg-editor-aside: (
+    default: (light: rgba(239, 239, 239, 1), dark: rgba(45, 45, 45, 1)),
+    meta:    (light: rgba(255, 250, 246, 0.94), dark: rgba(34, 28, 24, 0.94)),
+    prose:   (light: rgba(239, 239, 239, 1), dark: rgba(18, 28, 43, 1))
+  )
+);
+
+/* --------------------------------
+   2) Validation
+   -------------------------------- */
+
+@mixin _assert_pair($pair, $name) {
+  @if $pair == null {
+    @error "Missing '#{$name}'.";
   }
-
-  // Prose editor mode (story text)
-  &[data-editor-mode='prose'] {
-    --bg-sidebar: red; // TODO: set proper light mode prose sidebar color
-
-    --bg-editor: rgba(245, 245, 245, 1);
-    --bg-editor-faded: rgba(245, 245, 245, 0.8);
-    --bg-editor-transparent: rgba(245, 245, 245, 0);
-    --editor-overlay: rgba(255, 255, 255, 0.94);
-    --bg-editor-aside: red; // TODO: set proper light mode prose aside color
+  @each $scheme in $schemes {
+    @if map.has-key($pair, $scheme) == false {
+      @error "Missing scheme '#{$scheme}' in '#{$name}'.";
+    }
   }
 }
 
-// ============================================================================
-// DARK THEME
-// ============================================================================
+@mixin _validate_tokens($tokens) {
+  @each $token, $modesMap in $tokens {
+    // default required
+    @if map.has-key($modesMap, default) == false {
+      @error "Token '#{$token}' is missing required 'default' entry.";
+    }
+    @include _assert_pair(map.get($modesMap, default), "#{$token}.default");
 
-:root[data-mantine-color-scheme='dark'] {
-
-  // --------------------------------------------------------------------------
-  // Base Colors
-  // --------------------------------------------------------------------------
-  --text: #efefef;
-
-  // --------------------------------------------------------------------------
-  // Backgrounds - Main App
-  // --------------------------------------------------------------------------
-  --bg-main: rgba(27, 27, 31, 1);
-  --bg-sidebar: rgba(255, 255, 255, 0.02);
-
-  // Generic overlays (used for cards, modals, etc.)
-  --overlay: rgba(20, 20, 23, 1);
-  --overlay-hover: rgba(23, 23, 26, 1);
-  --overlay-subtle: rgba(45, 45, 45, 1);
-  --overlay-subtle-hover: rgba(48, 48, 48, 1);
-  --overlay-highlighted: rgba(65, 65, 65, 1);
-
-  --card-subtle: rgba(0,0,0,.2);
-  --card-subtle-hover: rgba(0,0,0,.3);
-
-  // --------------------------------------------------------------------------
-  // Borders
-  // --------------------------------------------------------------------------
-  --border-subtlest: rgba(148, 163, 184, 0.05);
-  --border-subtle: rgba(148, 163, 184, 0.25);
-
-  // --------------------------------------------------------------------------
-  // Chat Aside (AI Assistant Panel)
-  // --------------------------------------------------------------------------
-  --aside-input: rgba(255, 255, 255, 0.02);
-  --aside-bubble: rgba(0, 0, 0, 0.1);
-  --aside-button: rgba(255, 255, 255, 0.09);
-
-  // --------------------------------------------------------------------------
-  // Editor Mode Variations
-  // --------------------------------------------------------------------------
-
-  --editor-text-color: rgba(235, 235, 235, .9);
-  --editor-text-color-dimmed: rgba(235, 235, 235, .2);
-  --editor-highlighted-text: rgba(245, 245, 245, 1);
-  --editor-highlighted-text-bg: rgba(255, 235, 80, 0.45);
-
-  // Meta editor mode (manifest, outline, brief)
-  &[data-editor-mode='meta'] {
-    --bg-sidebar: rgba(26, 20, 16, 1);
-
-    --bg-editor: rgba(30, 24, 20, 1);
-    --bg-editor-faded: rgba(30, 24, 20, 0.8);
-    --bg-editor-transparent: rgba(30, 24, 20, 0);
-    --editor-overlay: rgba(22, 18, 15, 0.94);
-    --bg-editor-aside: rgba(34, 28, 24, 0.94);
-  }
-
-  // Prose editor mode (story text)
-  &[data-editor-mode='prose'] {
-    --bg-sidebar: rgba(12, 18, 34, 1);
-
-    --bg-editor: rgba(16, 24, 39, 1);
-    --bg-editor-faded: rgba(16, 24, 39, 0.8);
-    --bg-editor-transparent: rgba(16, 24, 39, 0);
-    --editor-overlay: rgba(12, 18, 34, 0.94);
-    --bg-editor-aside: rgba(18, 28, 43, 1);
+    // optional overrides must be complete if present
+    @each $mode in $modes {
+      @if map.has-key($modesMap, $mode) {
+        @include _assert_pair(map.get($modesMap, $mode), "#{$token}.#{$mode}");
+      }
+    }
   }
 }
+
+/* --------------------------------
+   3) Accessors
+   -------------------------------- */
+
+@function token-value($token, $scheme, $mode: default) {
+  $modesMap: map.get($ui-tokens, $token);
+  @if $modesMap == null {
+    @error "Unknown token '#{$token}'.";
+  }
+
+  $pair: null;
+
+  @if $mode != default and map.has-key($modesMap, $mode) {
+    $pair: map.get($modesMap, $mode);
+  } @else {
+    $pair: map.get($modesMap, default);
+  }
+
+  @return map.get($pair, $scheme);
+}
+
+/* --------------------------------
+   4) Emission
+   -------------------------------- */
+
+@mixin _emit_mode($scheme, $mode: default) {
+  @each $token, $modesMap in $ui-tokens {
+    --#{$token}: #{token-value($token, $scheme, $mode)};
+  }
+}
+
+@mixin emit-ui-css-vars() {
+  @include _validate_tokens($ui-tokens);
+
+  @each $scheme in $schemes {
+    :root[data-mantine-color-scheme='#{$scheme}'] {
+      // Always emit default at root
+      @include _emit_mode($scheme, default);
+
+      // Emit per-mode override blocks (only affects tokens that have that mode)
+      @each $mode in $modes {
+        [data-ui-mode='#{$mode}'] {
+          @include _emit_mode($scheme, $mode);
+        }
+      }
+    }
+  }
+}
+
+/* --------------------------------
+   5) Usage
+   -------------------------------- */
+
+@include emit-ui-css-vars();
