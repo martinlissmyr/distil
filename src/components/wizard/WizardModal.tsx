@@ -460,11 +460,10 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
         {/* Middle: ScrollArea should take remaining space */}
         <ScrollArea
           pb="20"
-          px="30"
           style={{ flex: 1, minHeight: 0 }}
         >
           {currentStep ? (
-            <Box pt="150">
+            <Box pt={150} px={30}>
               {currentStep.type === 'question' && (
                 <QuestionStepView key={currentStep.id} step={currentStep as QuestionStep} />
               )}

@@ -1,0 +1,10 @@
+.input {
+  --input-radius: 8px;
+  overflow: hidden;
+  padding-bottom: 32px;
+
+  &[data-counter="true"],
+  &[data-error="true"] {
+      padding-right: 85px;
+  }
+}
