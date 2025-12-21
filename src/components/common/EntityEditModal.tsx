@@ -1,6 +1,9 @@
 // src/components/common/EntityEditModal.tsx
 import React, { useEffect, useState } from 'react';
-import { Modal, Stack, TextInput, Group, Button } from '@mantine/core';
+import { Stack, TextInput, Group, Button, Box } from '@mantine/core';
+import { BaseModal } from '../common/BaseModal';
+import { TopNavigation } from '../common/TopNavigation';
+import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
 
 type EntityEditModalProps = {
   opened: boolean;
@@ -50,43 +53,49 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
     await onDelete();
   };
 
+  const settingsItems: SettingItem[] = [
+    { 
+      id: 'name',
+      type: 'text',
+      label: fieldLabel,
+      value: name,
+      onChange: setName,
+      placeholder: "Project name",
+    },
+    {
+      id: 'pw',
+      type: 'button',
+      label: 'Password',
+      buttonLabel: deleteConfirm
+              ? 'Click again to delete'
+              : `Delete ${deleteLabel}`,
+      onClick: handleDeleteClick,
+    }
+  ];
+
   return (
-    <Modal
+    <BaseModal
       opened={opened}
       onClose={onClose}
-      title={title}
-      radius="lg"
-      centered
-    >
-      <Stack gap="sm">
-        <TextInput
-          label={fieldLabel}
-          value={name}
-          onChange={(e) => setName(e.currentTarget.value)}
-          autoFocus
-        />
-
-        <Group justify="space-between" mt="sm">
-          <Button
-            variant={deleteConfirm ? 'filled' : 'outline'}
-            color="red"
-            onClick={handleDeleteClick}
-          >
-            {deleteConfirm
-              ? 'Click again to delete'
-              : `Delete ${deleteLabel}`}
+      variant="dialog"
+      overlayPreset="glassLight"
+      header={<Box p={12}><TopNavigation title={title} onClose={onClose} /></Box>}
+      footer={
+        <Group justify="flex-end" p={12}>
+          <Button onClick={handleSave} disabled={!name.trim()}>
+            Save
           </Button>
-
-          <Group>
-            <Button variant="subtle" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={!name.trim()}>
-              Save
-            </Button>
-          </Group>
         </Group>
-      </Stack>
-    </Modal>
+      }
+    >
+      <Box p={20}>
+        <Stack gap="sm">
+          <SettingsGroup 
+            items={settingsItems} 
+            ariaLabel="System settings group"
+          />
+        </Stack>
+      </Box>
+    </BaseModal>
   );
 };

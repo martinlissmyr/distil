@@ -9,6 +9,7 @@ import { QuestionStepView } from './steps/QuestionStepView';
 import { LlmProcessingStepView } from './steps/LlmProcessingStepView';
 import { LlmApprovalStepView } from './steps/LlmApprovalStepView';
 import type { QuestionStep, LlmProcessingStep, LlmApprovalStep } from '../../wizards/types';
+import { TopNavigation } from '../common/TopNavigation';
 
 type WizardModalProps = {
   opened: boolean;
@@ -115,6 +116,8 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
   // Calculate step info
   const currentStepIndex = activeWizard.currentStepPath[0];
   const totalSteps = activeWizard.config.steps.length;
+  const stepTitle = currentStep.title ?? activeWizard.config.steps[currentStepIndex]?.title ?? 'Step';
+  const topTitle = `${stepTitle} (${currentStepIndex + 1}/${totalSteps})`;
 
   // Check if we can go back
   const canGoBack = currentStepIndex > 0;
@@ -276,6 +279,11 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       centered={false}
       withCloseButton={false}
       padding="0"
+      overlayProps={{
+        backgroundOpacity: 0.28,
+        blur: '22px',
+        saturate: '160%',
+      }}
       styles={{
         content: {
           height: '90vh',
@@ -310,151 +318,21 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
 
         {/* Top header */}
         <Box
-          pt="30px"
-          pl="0"
-          pr="70px"
-          mb="20px"
+          px={30}
+          py={10}
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            overflow: 'hidden',
-            zIndex: 100
+            zIndex: 100,
           }}
         >
-          <Box
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 50,
-              background: 'linear-gradient(to right, var(--mantine-color-body) 0%, transparent 100%)',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
+          <TopNavigation
+            title={topTitle}
+            onBack={canGoBack ? handleBack : undefined}
+            onClose={handleClose}
           />
-
-          <ActionIcon
-            aria-label="Close"
-            variant="subtle"
-            color="var(--text)"
-            onClick={handleClose}
-            style={{
-              position: 'absolute',
-              right: 30,
-              top: 37,
-              zIndex: 1,
-            }}
-          >
-            <Icon type="close" />
-          </ActionIcon>
-
-          <Box
-            style={{
-              position: 'absolute',
-              right: 70,
-              top: 0,
-              bottom: 0,
-              width: 70,
-              background: 'linear-gradient(to left, var(--mantine-color-body) 0%, transparent 100%)',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
-          />
-
-          <Group
-            wrap="nowrap"
-            gap="10"
-            pl="30"
-            pr="60"
-            style={{
-              overflow: 'hidden',
-            }}
-            ref={(node) => {
-              if (node) {
-                // Scroll current step into view
-                const currentStepElement = node.children[currentStepIndex] as HTMLElement;
-                if (currentStepElement) {
-                  currentStepElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'center',
-                  });
-                }
-              }
-            }}
-          >
-            {activeWizard.config.steps.map((step, index) => {
-              const isCompleted = index < currentStepIndex;
-              const isCurrent = index === currentStepIndex;
-              const isFuture = index > currentStepIndex;
-
-              return (
-                <Group
-                  key={step.id}
-                  pl="4"
-                  pr="14"
-                  py="4"
-                  gap={6}
-                  wrap="nowrap"
-                  style={{
-                    borderRadius: 20,
-                    flex: '0 0 auto',
-                    backgroundColor: isCompleted
-                      ? 'var(--mantine-color-dark-8)'
-                      : isCurrent
-                      ? 'var(--mantine-color-dark-4)'
-                      : 'var(--mantine-color-dark-8)',
-                    color: isCompleted
-                      ? 'rgba(0,0,0,.3)'
-                      : isCurrent
-                      ? 'white'
-                      : 'var(--mantine-color-dark-2)',
-                  }}>
-                  <Box
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 600,
-                      fontSize: 14,
-                      flexShrink: 0,
-                      backgroundColor: isCompleted
-                        ? 'rgba(0,0,0,.05)'
-                        : isCurrent
-                        ? 'rgba(255,255,255,.15)'
-                        : 'rgba(255,255,255,.05)',
-                      color: isCompleted
-                        ? 'rgba(0,0,0,.3)'
-                        : isCurrent
-                        ? 'white'
-                        : 'var(--mantine-color-dark-2)',
-                    }}
-                  >
-                    {isCompleted ? <Icon type="check" size={16} /> : index + 1}
-                  </Box>
-
-                  <Text
-                    size="sm"
-                    fw={isCurrent ? 600 : 400}
-                    c={isFuture ? 'dimmed' : undefined}
-                    style={{
-                      whiteSpace: 'nowrap',
-                      opacity: isFuture ? 0.5 : 1,
-                      color: isCompleted ? 'var(--mantine-color-green-10)' : undefined,
-                    }}
-                  >
-                    {step.title}
-                  </Text>
-                </Group>
-              );
-            })}
-          </Group>
         </Box>
 
         {/* Middle: ScrollArea should take remaining space */}
@@ -499,18 +377,13 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
 
         {/* Bottom buttons */}
         <Group
-          justify={canGoBack ? 'space-between' : 'flex-end'}
+          justify={'flex-end'}
           mx="30"
           mb="20"
           style={{
             flex: '0 0 auto'
           }}
         >
-          {canGoBack && (
-            <Button variant="light" onClick={handleBack}>
-              Back
-            </Button>
-          )}
           {!usesApprovalButtons ? (
             <Button onClick={handleNext} disabled={!canGoNext}>
               {isLastStep ? 'Finish' : 'Next'}
