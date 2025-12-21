@@ -1,0 +1,24 @@
+.track {
+  background-color: var(--mantine-color-dark-6) !important;
+  &::before {
+    background-color: var(--mantine-color-dark-6) !important;
+  }
+}
+
+.bar {
+  background-color: var(--mantine-color-dark-6) !important;
+}
+
+.mark {
+  opacity: .1 !important;
+}
+
+.markLabel {
+  textAlign: center !important;
+}
+
+.thumb {
+  border: 0 !important;
+  background-color: var(--mantine-color-white) !important;
+  width: 30px !important;
+}

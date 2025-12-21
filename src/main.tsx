@@ -28,8 +28,8 @@ function Root() {
   return (
     <MantineProvider
       theme={themeByUiMode}
-      defaultColorScheme="light"
-      forceColorScheme={window.theme ? undefined : 'light'}
+      defaultColorScheme="dark"
+      forceColorScheme={window.theme ? undefined : 'dark'}
     >
       <div data-ui-mode={uiMode} style={{ height: '100%' }}>
         <App />

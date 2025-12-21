@@ -1,0 +1,13 @@
+.card {
+	background-color: var(--mantine-color-gray-8) !important;
+	border-radius: 48px !important;
+	padding: 15px 10px !important;
+
+	&[data-checked="true"] {
+		background-color: var(--mantine-color-gray-7) !important;
+	}
+}
+
+.indicator {
+  background-color: var(--mantine-color-dark-7) !important;
+}

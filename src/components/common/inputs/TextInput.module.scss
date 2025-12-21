@@ -1,0 +1,8 @@
+input {
+  --input-radius: 8px;
+
+  &[data-counter="true"],
+  &[data-error="true"] {
+      padding-right: 85px;
+  }
+}

@@ -3,11 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Stack, 
   Text, 
-  Textarea, 
-  TextInput, 
   Group, 
   Badge, 
-  Slider, 
   Radio, 
   Checkbox, 
   Box, 
@@ -17,6 +14,13 @@ import {
 } from '@mantine/core';
 import type { QuestionStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
+
+import { ScaleSlider } from '../../common/inputs/ScaleSlider';
+import { Textarea } from '../../common/inputs/Textarea';
+import { TextInput } from '../../common/inputs/TextInput';
+import { RadioGroup } from '../../common/inputs/RadioGroup';
+import { CheckboxGroup } from '../../common/inputs/CheckboxGroup';
+
 
 type QuestionStepViewProps = {
   step: QuestionStep;
@@ -156,219 +160,55 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
 
       {/* Input based on question type */}
       {step.questionType === 'textarea' && (
-        <div style={{ position: 'relative' }}>
-          <Textarea
-            value={value}
-            onChange={handleTextChange}
-            placeholder={step.placeholder}
-            minRows={4}
-            maxRows={10}
-            autosize
-            styles={{
-              input: {
-                paddingBottom: '32px',
-                paddingRight: error || showCounter ? '85px' : undefined,
-              },
-            }}
-          />
-          {error ? (
-            <Badge
-              size="xs"
-              variant="light"
-              color="gray"
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                right: 8,
-                pointerEvents: 'none',
-              }}
-            >
-              {error}
-            </Badge>
-          ) : showCounter ? (
-            <Badge
-              size="xs"
-              variant="light"
-              color={charCount > (step.maxLength || 0) ? 'red' : 'gray'}
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                right: 8,
-                pointerEvents: 'none',
-              }}
-            >
-              {charCount} / {step.maxLength}
-            </Badge>
-          ) : null}
-        </div>
+        <Textarea
+          value={String(value ?? '')}
+          onChange={setValue}
+          placeholder={step.placeholder}
+          required={step.required}
+          minLength={step.minLength}
+          maxLength={step.maxLength}
+        />
       )}
 
       {step.questionType === 'text' && (
-        <div style={{ position: 'relative' }}>
-          <TextInput
-            value={value}
-            onChange={(e) => setValue(e.currentTarget.value)}
-            placeholder={step.placeholder}
-            styles={{
-              input: {
-                paddingRight: error || showCounter ? '85px' : undefined,
-              },
-            }}
-          />
-          {error ? (
-            <Badge
-              size="xs"
-              variant="light"
-              color="gray"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                right: 8,
-                pointerEvents: 'none',
-              }}
-            >
-              {error}
-            </Badge>
-          ) : showCounter ? (
-            <Badge
-              size="xs"
-              variant="light"
-              color={charCount > (step.maxLength || 0) ? 'red' : 'gray'}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                right: 8,
-                pointerEvents: 'none',
-              }}
-            >
-              {charCount} / {step.maxLength}
-            </Badge>
-          ) : null}
-        </div>
+        <TextInput
+          value={String(value ?? '')}
+          onChange={setValue}
+          placeholder={step.placeholder}
+          required={step.required}
+          minLength={step.minLength}
+          maxLength={step.maxLength}
+        />
       )}
 
       {step.questionType === 'scale' && (
-        <div>
-          <Slider
-            value={value}
-            restrictToMarks
-            onChange={handleScaleChange}
-            min={step.min ?? 0}
-            max={step.max ?? 10}
-            marks={Array.from({ length: ((step.max ?? 10) - (step.min ?? 0) + 1) }).map((_, index) => ({ value: ((step.min ?? 0) + index), label: String((step.min ?? 0) + index) }))}
-            size="xl"
-            label={null}
-            styles={{
-              markLabel: {
-                textAlign: 'center'
-              }
-            }}
-          />
-          <Group justify="space-between" mt="28" ml="6" mr="6">
-            <Box style={{
-              opacity: Math.max(0.2, Math.min(1, 1 - ((value - step.min) / (step.max - step.min)) * 0.8))
-            }}>
-              <Text size="sm">{step.scaleLabels.min}</Text>
-            </Box>
-            <Box style={{
-              opacity: Math.max(0.2, Math.min(1, 0.2 + ((value - step.min) / (step.max - step.min)) * 0.8))
-            }}>
-              <Text size="sm">{step.scaleLabels.max}</Text>
-            </Box>
-          </Group>
-        </div>
+        <ScaleSlider
+          value={Number(value ?? step.min ?? 0)}
+          onChange={handleScaleChange}
+          min={step.min ?? 0}
+          max={step.max ?? 10}
+          labels={step.scaleLabels}
+        />
       )}
 
       {step.questionType === 'single-select' && (
-        <div>
-          <Radio.Group value={value} onChange={handleSingleSelectChange}>
-            <SimpleGrid cols={2} gap="sm" overflow="hidden">
-              {options.map((option) => (
-                <Box key={option.value}>
-                  <Radio.Card
-                    radius="48"
-                    px="15"
-                    py="10"
-                    value={option.value}
-                    withBorder={false}
-                    bg={value == option.value ? `var(--overlay-highlighted` : `var(--overlay-subtle`}
-                  >
-                    <Flex gap="10" align="center">
-                      <Radio.Indicator
-                        variant="outline"
-                        radius="xl"
-                        size="lg"
-                      />
-                      <Stack gap="0">
-                        <Text size="sm" fw={500}>{option.label}</Text>
-                        {option.description && (
-                          <Text size="sm" c="dimmed">{option.description}</Text>
-                        )}
-                      </Stack>
-                    </Flex>
-                  </Radio.Card>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Radio.Group>
-        </div>
+        <RadioGroup
+          value={String(value ?? '')}
+          onChange={handleSingleSelectChange}
+          options={options}
+          required={step.required}
+        />
       )}
 
       {step.questionType === 'multi-select' && (
-        <div>
-          {step.minSelections && step.maxSelections && (
-            <Badge
-              size="xs"
-              variant="light"
-              color="gray"
-              mb="md"
-            >
-              Select{" "}
-              {step.maxSelections-step.minSelections > 1 && (
-                <>
-                {step.minSelections}-{step.maxSelections} options
-                </>
-              )}
-              {step.maxSelections-step.minSelections == 1 && (
-                <>
-                1 option
-                </>
-              )}
-            </Badge>
-          )}
-          <SimpleGrid cols={2} gap="sm" overflow="hidden">
-            {options.map((option) => (
-              <Box key={option.value}>
-                <Checkbox.Card
-                  radius="48"
-                  px="15"
-                  py="10"
-                  value={option.value}
-                  checked={Array.isArray(value) && value.includes(option.value)}
-                  onChange={() => handleMultiSelectToggle(option.value)}
-                  withBorder={false}
-                  bg={Array.isArray(value) && value.includes(option.value) ? `var(--overlay-highlighted` : `var(--overlay-subtle`}
-                >
-                  <Flex gap="10" align="center">
-                    <Checkbox.Indicator
-                      variant="outline"
-                      radius="xl"
-                      size="lg"
-                    />
-                    <Stack gap="0">
-                      <Text size="sm" fw={500}>{option.label}</Text>
-                      {option.description && (
-                        <Text size="sm" c="dimmed">{option.description}</Text>
-                      )}
-                    </Stack>
-                  </Flex>
-                </Checkbox.Card>
-              </Box>
-            ))}
-          </SimpleGrid>
-        </div>
+        <CheckboxGroup
+          value={Array.isArray(value) ? value : []}
+          onChange={setValue}
+          options={options}
+          required={step.required}
+          minSelections={step.minSelections}
+          maxSelections={step.maxSelections}
+        />
       )}
     </Stack>
   );
