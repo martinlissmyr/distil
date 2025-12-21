@@ -4,6 +4,7 @@ import { Box, Title, TextInput, Select, Stack, Group, Button } from '@mantine/co
 import { Icon } from '../common/Icon';
 import type { CharacterDoc, CharacterTier, EntityIndexEntry } from '../../models/entities';
 import styles from './EntityIndexView.module.scss';
+import { TopNavigation } from '../common/TopNavigation';
 
 type CharacterEditViewProps = {
   projectId: string;
@@ -69,67 +70,62 @@ export const CharacterEditView: React.FC<CharacterEditViewProps> = ({
   };
 
   return (
-    <Box p="xl" className={styles.root}>
-      <Stack gap="lg">
-        {/* Header with back button */}
-        <Group>
-          <Button
-            variant="light"
-            radius="xl"
-            size="sm"
-            leftSection={<Icon type="back" size={20} />}
-            onClick={onBack}
-          >
-            Back
-          </Button>
-        </Group>
+    <Box className={styles.root}>
+      <Box py={20} px={30}>
+        <TopNavigation
+          title={name}
+          onBack={onBack}
+        />
+      </Box>
+      <Box p="xl" className={styles.root}>
+        <Stack gap="lg">
+          <Box w={600} ml="auto" mr="auto">
 
-        <Box w={600} ml="auto" mr="auto">
+            {/* Form fields */}
+            <Stack gap="md">
+              <TextInput
+                label="Name"
+                placeholder="Character name"
+                value={name}
+                onChange={(e) => setName(e.currentTarget.value)}
+                required
+                size="md"
+              />
 
-          {/* Form fields */}
-          <Stack gap="md">
-            <TextInput
-              label="Name"
-              placeholder="Character name"
-              value={name}
-              onChange={(e) => setName(e.currentTarget.value)}
-              required
-              size="md"
-            />
+              <TextInput
+                label="Role in Story"
+                placeholder="e.g., protagonist, antagonist, mentor"
+                value={roleInStory}
+                onChange={(e) => setRoleInStory(e.currentTarget.value)}
+                size="md"
+              />
 
-            <TextInput
-              label="Role in Story"
-              placeholder="e.g., protagonist, antagonist, mentor"
-              value={roleInStory}
-              onChange={(e) => setRoleInStory(e.currentTarget.value)}
-              size="md"
-            />
+              <Select
+                label="Importance"
+                value={tier}
+                onChange={(value) => setTier(value as CharacterTier)}
+                data={[
+                  { value: 'primary', label: 'Primary' },
+                  { value: 'significant', label: 'Significant' },
+                  { value: 'secondary', label: 'Secondary' },
+                ]}
+                size="md"
+              />
 
-            <Select
-              label="Importance"
-              value={tier}
-              onChange={(value) => setTier(value as CharacterTier)}
-              data={[
-                { value: 'primary', label: 'Primary' },
-                { value: 'significant', label: 'Significant' },
-                { value: 'secondary', label: 'Secondary' },
-              ]}
-              size="md"
-            />
-
-            {/* Save button */}
-            <Group mt="md">
-              <Button
-                onClick={handleSave}
-                disabled={!name.trim() || saving}
-                loading={saving}
-              >
-                {isNew ? 'Create Character' : 'Save Changes'}
-              </Button>
-            </Group>
-          </Stack>
-        </Box>
-      </Stack>
+              {/* Save button */}
+              <Group mt="md">
+                <Button
+                  onClick={handleSave}
+                  disabled={!name.trim() || saving}
+                  loading={saving}
+                >
+                  {isNew ? 'Create Character' : 'Save Changes'}
+                </Button>
+              </Group>
+            </Stack>
+          </Box>
+        </Stack>
+      </Box>
     </Box>
   );
 };

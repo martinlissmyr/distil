@@ -1,0 +1,130 @@
+/* src/components/common/SettingsGroup.module.scss */
+
+.group {
+  border-radius: var(--mantine-radius-lg);
+  background: color-mix(in srgb, var(--mantine-color-body) 60%, rgba(255, 255, 255, 0.06));
+  overflow: hidden;
+
+  /* subtle macOS-ish “panel” depth */
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.row,
+.rowButton {
+  width: 100%;
+  padding: 6px 16px;
+}
+
+.rowButton {
+  display: block;
+  text-align: left;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 16px; /* align like macOS (not full bleed) */
+}
+
+.left {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leftIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  flex: 0 0 auto;
+
+  svg {
+    opacity: 0.9;
+  }
+}
+
+.right {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  min-width: 0;
+  margin-left: 10px;
+}
+
+.rightText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.navChevron {
+  opacity: 0.5;
+  flex: 0 0 auto;
+}
+
+.unstyledInputRoot {
+  flex: 1 1 auto;
+}
+
+.unstyledInput {
+  text-align: right !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: inherit;
+
+  &::placeholder {
+    opacity: 0.45;
+  }
+}
+
+.labelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.subLabel {
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Optional: make dropdown match the panel vibe */
+.dropdown {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: color-mix(in srgb, var(--mantine-color-body) 92%, rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(16px);
+}
+
+.option {
+  border-radius: 10px;
+}

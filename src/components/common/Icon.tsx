@@ -86,6 +86,9 @@ export const Icon = ({type, size = 20, ...props}) => {
 		case 'back': {
 			return <ChevronLeft {...iconProps}/>
 		}
+		case 'forward': {
+			return <ChevronRight {...iconProps}/>
+		}
 		case 'edit': {
 			return <Pencil {...iconProps}/>
 		}

@@ -1,31 +1,27 @@
 // src/components/settings/ApiKeyModal.tsx
 import React, { useEffect, useState } from 'react';
-import {
-  Stack,
-  PasswordInput,
-  Group,
-  Button,
-  Text,
-} from '@mantine/core';
-import { Modal } from '../common/Modal';
+import { Stack, Group, Button, Box } from '@mantine/core';
+import { BaseModal } from '../common/BaseModal';
+import { TopNavigation } from '../common/TopNavigation';
+import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
 
 type ApiKeyModalProps = {
   opened: boolean;
   onClose: () => void;
 };
 
-export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
-  opened,
-  onClose,
-}) => {
+export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ opened, onClose }) => {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  // Load existing key when modal opens
+  // Load key on open
   useEffect(() => {
     if (!opened) return;
+
+    setDeleteConfirm(false);
 
     let cancelled = false;
 
@@ -33,12 +29,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       try {
         setLoading(true);
         const response = await window.settings?.getApiKey?.();
-        if (!cancelled && response) {
-          if (response.ok && typeof response.data === 'string') {
-            setApiKey(response.data);
-          } else if (!response.ok) {
-            console.error('Failed to load API key:', response.error);
-          }
+        if (!cancelled && response?.ok && typeof response.data === 'string') {
+          setApiKey(response.data);
         }
       } catch (e) {
         console.error('Failed to load API key', e);
@@ -48,7 +40,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     };
 
     load();
-
     return () => {
       cancelled = true;
     };
@@ -61,11 +52,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     try {
       setSaving(true);
       const response = await window.settings?.setApiKey?.(trimmed);
-      if (response && !response.ok) {
-        console.error('Failed to save API key:', response.error);
-        return;
-      }
-      onClose();
+      if (response?.ok) onClose();
     } catch (e) {
       console.error('Failed to save API key', e);
     } finally {
@@ -73,68 +60,96 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     }
   };
 
-  const handleClear = async () => {
+  const handleClearClick = async () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+
     try {
       setClearing(true);
       const response = await window.settings?.clearApiKey?.();
-      if (response && !response.ok) {
-        console.error('Failed to clear API key:', response.error);
-        return;
+      if (response?.ok) {
+        setApiKey('');
+        onClose();
       }
-      setApiKey('');
-      onClose();
     } catch (e) {
       console.error('Failed to clear API key', e);
     } finally {
       setClearing(false);
+      setDeleteConfirm(false);
     }
   };
 
+  const disabled = loading || saving || clearing;
+
+  const settingsItems: SettingItem[] = [
+    {
+      id: 'api-key',
+      type: 'text',
+      label: 'API key',
+      value: apiKey,
+      masked: true,
+      placeholder: 'sk-...',
+      disabled,
+      onChange: (v) => {
+        setApiKey(v);
+        if (deleteConfirm) setDeleteConfirm(false);
+      },
+    },
+    ...(apiKey
+      ? [
+          {
+            id: 'delete',
+            type: 'button',
+            label: ' ',
+            buttonLabel: deleteConfirm
+              ? 'Click again to remove'
+              : 'Remove key',
+            onClick: handleClearClick,
+            color: 'red',
+            variant: deleteConfirm ? 'filled' : 'subtle',
+            disabled,
+          } as SettingItem,
+        ]
+      : []),
+  ];
+
   return (
-    <Modal
+    <BaseModal
       opened={opened}
       onClose={onClose}
-      title="OpenAI API key"
-      subtitle={
-        <Text size="xs" c="dimmed">
-          Stored securely in your system keychain on this device.
-          You can change or remove it at any time.
-        </Text>
+      variant="dialog"
+      overlayPreset="glassLight"
+      header={
+        <Box p={12}>
+          <TopNavigation title="Settings" onClose={onClose} />
+        </Box>
+      }
+      footer={
+        <Group justify="flex-end" p={12}>
+          <Button
+            onClick={handleSave}
+            disabled={!apiKey.trim() || disabled}
+          >
+            Save
+          </Button>
+        </Group>
       }
     >
-      <Stack gap="sm">
-        <PasswordInput
-          label="API key"
-          placeholder="sk-..."
-          value={apiKey}
-          onChange={(e) => setApiKey(e.currentTarget.value)}
-          disabled={loading}
-          autoComplete="off"
-        />
-
-        <Group justify="space-between" mt="sm">
-          <Button
-            variant="subtle"
-            color="red"
-            onClick={handleClear}
-            disabled={clearing || loading}
-          >
-            Remove key
-          </Button>
-
-          <Group>
-            <Button variant="subtle" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!apiKey.trim() || saving || loading}
-            >
-              Save
-            </Button>
-          </Group>
-        </Group>
-      </Stack>
-    </Modal>
+      <Box p={20}>
+        <Stack gap="sm">
+          <SettingsGroupLabel
+            label="OpenAI API key"
+            description="Stored securely in your system keychain on this device. You can change or remove it at any time."
+          />
+          <SettingsGroup
+            items={settingsItems}
+            ariaLabel="OpenAI API key settings"
+            disabled={loading}
+          />
+        </Stack>
+      </Box>
+    </BaseModal>
   );
 };

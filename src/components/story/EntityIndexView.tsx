@@ -9,6 +9,7 @@ import { CharacterEditView } from './CharacterEditView';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 import { EntityCard, CreateEntityCard } from '../common/EntityCard';
+import { TopNavigation } from '../common/TopNavigation';
 
 type EntityIndexViewProps = {
   projectId: string;
@@ -137,33 +138,39 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       preloadMetaKeys={[]}
     >
       {mode === 'list' && (
-        <Box p="xl" className={styles.root}>
-          <Stack gap="lg">
-            <Title order={1} className={styles.pageTitle}>{docConfig.title}</Title>
+        <Box className={styles.root}>
+          <Box py={20} px={30}>
+            <TopNavigation
+              title={docConfig.title}
+            />
+          </Box>
+          <Box p="xl">
+            <Stack gap="lg">
 
-            {loading && <Text c="dimmed">Loading...</Text>}
+              {loading && <Text c="dimmed">Loading...</Text>}
 
-            {!loading && (
-              <Group gap="lg">
-                {characters.map((char) => {
-                  const id = char.id;
-                  return (
-                    <EntityCard
-                      key={id}
-                      id={id}
-                      label={char.name}
-                      onSelect={() => handleEditCharacter(id)}
-                      icon="character"
-                    />
-                  );
-                })}
+              {!loading && (
+                <Group gap="lg">
+                  {characters.map((char) => {
+                    const id = char.id;
+                    return (
+                      <EntityCard
+                        key={id}
+                        id={id}
+                        label={char.name}
+                        onSelect={() => handleEditCharacter(id)}
+                        icon="character"
+                      />
+                    );
+                  })}
 
-                <CreateEntityCard
-                  onCreate={handleAddCharacter}
-                />
-              </Group>
-            )}
-          </Stack>
+                  <CreateEntityCard
+                    onCreate={handleAddCharacter}
+                  />
+                </Group>
+              )}
+            </Stack>
+          </Box>
         </Box>
       )}
 

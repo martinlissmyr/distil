@@ -54,7 +54,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
       <EntityEditModal
         opened={!!editingProject}
         title="Edit project"
-        fieldLabel="Name"
+        fieldLabel="Project Name"
         deleteLabel="project"
         initialName={editingProject?.name ?? ''}
         onClose={onCloseEditProject}
@@ -81,7 +81,10 @@ export const AppModals: React.FC<AppModalsProps> = ({
       />
 
       {/* Wizard Modal */}
-      <WizardModal opened={wizardModalOpen} onClose={onCloseWizardModal} />
+      <WizardModal
+        opened={wizardModalOpen}
+        onClose={onCloseWizardModal}
+      />
     </>
   );
 };
