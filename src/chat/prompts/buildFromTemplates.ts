@@ -1,5 +1,6 @@
 // src/chat/prompts/buildFromTemplates.ts
 import type { EditorKind } from '../../types/chat';
+import { type WritingLanguage, DEFAULT_WRITING_LANGUAGE, WRITING_LANGUAGE_LABEL } from '../../types/language';
 
 // Import markdown files as raw strings
 import systemMd from './system/system.md?raw';
@@ -14,14 +15,15 @@ import { getSystemRoleForDocKind } from '../../models/docs';
  */
 export function buildSystemPrompt(params: {
   kind: EditorKind;
+  language: WritingLanguage;
 }): string {
-  const { kind } = params;
+  const { kind, language = DEFAULT_WRITING_LANGUAGE } = params;
 
   const roleMd = getSystemRoleForDocKind(kind);
 
   return interpolate(systemMd, {
     role: roleMd,
-    responseLanguage: 'swedish',
+    responseLanguage: WRITING_LANGUAGE_LABEL[language],
   });
 }
 

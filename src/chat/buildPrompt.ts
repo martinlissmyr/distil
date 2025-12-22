@@ -1,6 +1,8 @@
 // src/chat/buildPrompt.ts
 import type { EditorKind, QuestionScope } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
+import type { WritingLanguage, DEFAULT_WRITING_LANGUAGE } from '../types/language';
+
 import {
   buildSystemPrompt,
   buildAssistantContext,
@@ -26,7 +28,7 @@ type BuildPromptArgs = {
   // Optional: For intelligent context selection
   projectId?: string;
   storyId?: string;
-  language?: 'sv' | 'en';
+  language?: WritingLanguage;
 };
 
 export async function buildPrompt({
@@ -38,7 +40,7 @@ export async function buildPrompt({
   selectionMarkdown = '',
   projectId,
   storyId,
-  language = 'sv',
+  language = DEFAULT_WRITING_LANGUAGE,
 }: BuildPromptArgs): Promise<BuiltPrompt> {
   const {
     kinds: contextKinds,
@@ -92,6 +94,7 @@ export async function buildPrompt({
   // System prompt
   prompt.system = buildSystemPrompt({
     kind,
+    language
   });
 
   // User prompt

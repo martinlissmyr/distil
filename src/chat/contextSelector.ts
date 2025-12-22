@@ -2,6 +2,7 @@
 import { useAppStore, metaId } from '../state/useAppStore';
 import type { EditorKind } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
+import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
 import type { WritingLanguage } from '../types/language';
 import {
   getContextRulesFor,
@@ -13,6 +14,7 @@ import {
 } from '../models/docs';
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
+
 
 // -------------------------------------------------------------
 // Load & assemble context docs
@@ -27,7 +29,7 @@ export async function getContextDocs(
     language?: WritingLanguage;
   } = {}
 ) {
-  const { language = 'sv' } = options;
+  const { language = DEFAULT_WRITING_LANGUAGE } = options;
 
   const state = useAppStore.getState();
 
@@ -287,7 +289,7 @@ export async function determineContextNeeds(
     language?: WritingLanguage;
   } = {}
 ): Promise<ContextNeedsResult> {
-  const { language = 'sv' } = options;
+  const { language = DEFAULT_WRITING_LANGUAGE } = options;
 
   const relevantContexts: MetaDocKey[] = [];
   const ambiguousNeededContexts: MetaDocKey[] = [];
