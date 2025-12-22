@@ -2,7 +2,7 @@
 import { useAppStore, metaId } from '../state/useAppStore';
 import type { EditorKind } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
-import type { SupportedLanguage } from '../types/language';
+import type { WritingLanguage } from '../types/language';
 import {
   getContextRulesFor,
   getDocContextLabel,
@@ -24,7 +24,7 @@ export async function getContextDocs(
   projectId?: string,
   storyId?: string,
   options: {
-    language?: SupportedLanguage;
+    language?: WritingLanguage;
   } = {}
 ) {
   const { language = 'sv' } = options;
@@ -120,7 +120,7 @@ export type HeuristicCheckResult = {
 export function quickHeuristicCheck(
   userPrompt: string,
   kinds: ContextKind[],
-  language: SupportedLanguage = 'sv'
+  language: WritingLanguage = 'sv'
 ): HeuristicCheckResult[] {
   const lowerPrompt = userPrompt.toLowerCase();
 
@@ -284,7 +284,7 @@ export async function determineContextNeeds(
   userPrompt: string,
   kinds: MetaDocKey[],
   options: {
-    language?: SupportedLanguage;
+    language?: WritingLanguage;
   } = {}
 ): Promise<ContextNeedsResult> {
   const { language = 'sv' } = options;

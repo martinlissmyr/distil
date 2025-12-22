@@ -1,5 +1,7 @@
 // src/api/client.ts
 import type { JSONContent } from '@tiptap/react';
+import type { WritingLanguage } from '../types/language';
+import type { EntityType } from '../models/entityIndex';
 
 export type Project = {
   id: string;
@@ -35,7 +37,7 @@ export type IpcResponse<T> =
   | { ok: false; error: string };
 
 /**
- * Thin wrapper around window.distil that passes through IpcResponse.
+ * Thin wrapper around window.distil/window.settings that passes through IpcResponse.
  * Consumers should check response.ok and handle errors explicitly.
  */
 export const client = {
@@ -72,7 +74,10 @@ export const client = {
       briefDoc?: JSONContent;
     }
   ) {
-    return window.distil.updateStory(projectId, storyId, updates);
+    // NOTE: your global.d.ts types updateStory as { title?: string }
+    // but you appear to pass outline/brief too. If your IPC handler supports it,
+    // you should update global.d.ts accordingly. Leaving this as-is for runtime parity.
+    return window.distil.updateStory(projectId, storyId, updates as any);
   },
   loadStory(projectId: string, storyId: string) {
     return window.distil.loadStory(projectId, storyId);
@@ -100,6 +105,23 @@ export const client = {
     return window.distil.saveRootMetaDoc(key, doc);
   },
 
+  // -------- Writing language --------
+  getWritingLanguage() {
+    return window.settings.getWritingLanguage();
+  },
+  setWritingLanguage(lang: WritingLanguage) {
+    return window.settings.setWritingLanguage(lang);
+  },
+
+  // -------- apiKey --------
+  getApiKey() {
+    return window.settings.getApiKey();
+  },
+  setApiKey(key: string) {
+    return window.settings.setApiKey(key);
+  },
+
+
   // -------- Dev Mode --------
   isDevMode() {
     return window.devMode.isDevMode();
@@ -109,11 +131,10 @@ export const client = {
   },
 
   // -------- Entity Indices --------
-  loadEntityIndex(projectId: string, storyId: string, entityType: 'character' | 'location') {
+  loadEntityIndex(projectId: string, storyId: string, entityType: EntityType) {
     return window.distil.loadEntityIndex(projectId, storyId, entityType);
   },
-  saveEntityIndex(projectId: string, storyId: string, entityType: 'character' | 'location', index: any) {
+  saveEntityIndex(projectId: string, storyId: string, entityType: EntityType, index: any) {
     return window.distil.saveEntityIndex(projectId, storyId, entityType, index);
   },
-
 };

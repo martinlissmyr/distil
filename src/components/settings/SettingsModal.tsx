@@ -4,6 +4,9 @@ import { Stack, Box } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
 import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
+import type { WritingLanguage } from '../../types/language';
+import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE } from '../../types/language';
+import { client } from '../../api/client';
 
 type SettingsModalProps = {
   opened: boolean;
@@ -92,6 +95,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   const [apiKeySaved, setApiKeySaved] = useState(''); // last saved/loaded value
   const [apiKeyDraft, setApiKeyDraft] = useState(''); // what user edits in apiKey view
 
+  // ---- Writing language ----
+  const [writingLanguage, setWritingLanguage] = useState<WritingLanguage>(DEFAULT_WRITING_LANGUAGE);
+  const [writingLanguageSaving, setWritingLanguageSaving] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -158,7 +165,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   // ✅ debouncer AFTER saveApiKey is defined
   const debouncedSaveApiKey = useDebouncedCallback(saveApiKey, 450);
 
-  // Load key on open
+  // Load settings on open (API key + writing language)
   useEffect(() => {
     if (!opened) return;
 
@@ -167,21 +174,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
     const load = async () => {
       try {
         setLoading(true);
-        const response = await window.settings?.getApiKey?.();
-        if (!cancelled && response?.ok && typeof response.data === 'string') {
-          setApiKeySaved(response.data);
-          setApiKeyDraft(response.data);
+
+        // Reset transient UI state on open
+        setDeleteConfirm(false);
+        setApiKeySaveError('');
+
+        const [apiKeyResp, langResp] = await Promise.all([
+          client.getApiKey(),
+          client.getWritingLanguage(),
+        ]);
+
+        if (cancelled) return;
+
+        // ---- API key ----
+        if (apiKeyResp.ok) {
+          const key = typeof apiKeyResp.data === 'string' ? apiKeyResp.data : '';
+          setApiKeySaved(key);
+          setApiKeyDraft(key);
+        } else {
+          console.error('Failed to load API key:', apiKeyResp.error);
+          // keep defaults
+          setApiKeySaved('');
+          setApiKeyDraft('');
+        }
+
+        // ---- Writing language ----
+        if (langResp.ok) {
+          setWritingLanguage(langResp.data ?? DEFAULT_WRITING_LANGUAGE);
+        } else {
+          console.error('Failed to load writing language:', langResp.error);
+          setWritingLanguage(DEFAULT_WRITING_LANGUAGE);
         }
       } catch (e) {
-        console.error('Failed to load API key', e);
+        console.error('Failed to load settings', e);
+        if (!cancelled) {
+          // Safe fallbacks
+          setApiKeySaved('');
+          setApiKeyDraft('');
+          setWritingLanguage(DEFAULT_WRITING_LANGUAGE);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    setDeleteConfirm(false);
-    setApiKeySaveError('');
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -236,8 +273,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
     }
   };
 
+  const handleWritingLanguageChange = async (lang: WritingLanguage | null) => {
+    if (!lang) return;
+
+    const prev = writingLanguage;
+
+    // Optimistic UI
+    setWritingLanguage(lang);
+
+    try {
+      setWritingLanguageSaving(true);
+
+      const resp = await client.setWritingLanguage(lang);
+      if (!resp.ok) {
+        console.error('Failed to save writing language:', resp.error);
+        setWritingLanguage(prev); // revert
+        return;
+      }
+
+      // Optional: keep local state in sync with persisted value
+      const reload = await client.getWritingLanguage();
+      if (reload.ok) setWritingLanguage(reload.data ?? lang);
+    } catch (e) {
+      console.error('Failed to save writing language', e);
+      setWritingLanguage(prev); // revert
+    } finally {
+      setWritingLanguageSaving(false);
+    }
+  };
+
   // Root view items (navigation)
   const rootItems: SettingItem[] = useMemo(() => {
+    const langDisabled = loading || writingLanguageSaving;
+
     return [
       {
         id: 'api-key-settings-nav',
@@ -246,8 +314,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
         rightText: apiKeySaved.trim() ? 'sk-*********************' : 'Add a key',
         onClick: () => push('apiKey'),
       },
+      {
+        id: 'lang-setting',
+        type: 'select',
+        label: 'Writing language',
+        value: writingLanguage,
+        onChange: handleWritingLanguageChange,
+        disabled: langDisabled,
+        data: [
+          { value: 'sv', label: WRITING_LANGUAGE_LABEL.sv ?? 'Swedish' },
+          { value: 'en', label: WRITING_LANGUAGE_LABEL.en ?? 'English' },
+        ],
+      },
     ];
-  }, [apiKeySaved]);
+  }, [apiKeySaved, writingLanguage, loading, writingLanguageSaving]);
 
   // Validation for the UI icon/tooltip:
   // - we show "save error" if present
@@ -302,11 +382,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
 
       return (
         <Stack gap="sm">
-          <SettingsGroup
-            items={apiKeyItems}
-            ariaLabel="OpenAI API key settings"
-            disabled={loading}
-          />
+          <SettingsGroup items={apiKeyItems} ariaLabel="OpenAI API key settings" disabled={loading} />
           <SettingsGroupLabel description="The API Key is stored securely in your system keychain on this device. Changes are saved automatically." />
         </Stack>
       );

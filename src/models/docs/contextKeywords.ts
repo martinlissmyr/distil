@@ -1,11 +1,11 @@
 // src/models/docs/contextKeywords.ts
 import type { MetaDocKey } from '../types/metaDoc';
-import type SupportedLanguage from '../types/language';
+import type WritingLanguage from '../types/language';
 
 // Keywords that suggest the user needs context documents
 // Organized by language and doc kind
 const CONTEXT_KEYWORDS: Record<
-  SupportedLanguage,
+  WritingLanguage,
   Partial<Record<MetaDocKey, string[]>>
 > = {
   sv: {
@@ -49,13 +49,13 @@ const CONTEXT_KEYWORDS: Record<
 };
 
 export function getContextKeywordsForLanguage(
-  language: SupportedLanguage
+  language: WritingLanguage
 ): Partial<Record<MetaDocKey, string[]>> {
   return CONTEXT_KEYWORDS[language] ?? CONTEXT_KEYWORDS.sv;
 }
 
 export function getKeywordsForDocKind(
-  language: SupportedLanguage,
+  language: WritingLanguage,
   kind: MetaDocKey
 ): string[] {
   const langMap = getContextKeywordsForLanguage(language);

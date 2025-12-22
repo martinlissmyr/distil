@@ -1,7 +1,7 @@
 // src/components/common/BaseModal.tsx
 import React from 'react';
 import { Box, ScrollArea } from '@mantine/core';
-import { Modal } from './Modal';
+import { Modal, type ModalProps } from '@mantine/core';
 import type { ModalProps as MantineModalProps } from '@mantine/core';
 
 export type BaseModalVariant = 'dialog' | 'sheet';
@@ -65,7 +65,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   closeOnClickOutside = false,
   closeOnEscape = true,
 
-  size = 'lg',
+  size = 'md',
   sheetSize = '90%',
   sheetHeight = '90vh',
 
@@ -111,13 +111,13 @@ export const BaseModal: React.FC<BaseModalProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      centered
       radius="xl"
       padding="0"
       withCloseButton={false}
       closeOnClickOutside={closeOnClickOutside}
       closeOnEscape={closeOnEscape}
       overlayProps={resolvedOverlayProps}
+      yOffset={'5%'}
       size={isSheet ? sheetSize : size}
       styles={{ ...(baseStyles ?? {}), ...(styles ?? {}) }}
     >

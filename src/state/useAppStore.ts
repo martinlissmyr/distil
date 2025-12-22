@@ -12,12 +12,24 @@ import type {
 } from '../wizards/types';
 import { createWizardActions } from '../wizards/storeGlue';
 
+import type { WritingLanguage } from '../types/language';
+import {
+  DEFAULT_WRITING_LANGUAGE,
+  SUPPORTED_WRITING_LANGUAGES,
+} from '../types/language';
+
 type ApiState = { hasApiKey: boolean | null };
 
 type AppStore = {
   api: ApiState;
   metaDocs: Record<string, MetaDocState>; // id -> state
   wizardResult: string | null; // Result from completed wizard
+
+  // ---- Writing language ----
+  writingLanguage: WritingLanguage;
+  writingLanguageLoaded: boolean;
+  loadWritingLanguage: () => Promise<void>;
+  setWritingLanguage: (lang: WritingLanguage) => Promise<void>;
 
   setHasApiKey: (v: boolean) => void;
 
@@ -38,6 +50,13 @@ export const metaId = (scope: MetaScope, key: MetaDocKey) => {
   return `story:${scope.projectId}:${scope.storyId}::${key}`;
 };
 
+const isSupportedWritingLanguage = (v: unknown): v is WritingLanguage => {
+  return (
+    typeof v === 'string' &&
+    (SUPPORTED_WRITING_LANGUAGES as readonly string[]).includes(v)
+  );
+};
+
 export const useAppStore = create<AppStore>((set, get) => ({
   api: { hasApiKey: null },
 
@@ -48,6 +67,68 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // Wizard state (kept in the store)
   activeWizard: null,
   wizardContext: null,
+
+  // ---- Writing language (default sv) ----
+  writingLanguage: DEFAULT_WRITING_LANGUAGE,
+  writingLanguageLoaded: false,
+
+  async loadWritingLanguage() {
+    // Avoid re-loading if already loaded
+    if (get().writingLanguageLoaded) return;
+
+    try {
+      const response = await client.getWritingLanguage();
+      if (response.ok) {
+        const value = response.data;
+        if (isSupportedWritingLanguage(value)) {
+          set({ writingLanguage: value, writingLanguageLoaded: true });
+        } else {
+          // Unexpected persisted value -> fallback
+          set({
+            writingLanguage: DEFAULT_WRITING_LANGUAGE,
+            writingLanguageLoaded: true,
+          });
+        }
+      } else {
+        console.error(
+          '[useAppStore] getWritingLanguage failed:',
+          response.error
+        );
+        set({
+          writingLanguage: DEFAULT_WRITING_LANGUAGE,
+          writingLanguageLoaded: true,
+        });
+      }
+    } catch (e) {
+      console.error('[useAppStore] Failed to load writingLanguage', e);
+      set({ writingLanguage: DEFAULT_WRITING_LANGUAGE, writingLanguageLoaded: true });
+    }
+  },
+
+  async setWritingLanguage(lang) {
+    // Guard (also helps if callers cast incorrectly)
+    if (!isSupportedWritingLanguage(lang)) {
+      throw new Error(`Unsupported writing language: ${String(lang)}`);
+    }
+
+    const prev = get().writingLanguage;
+
+    // Optimistic update so UI reacts instantly
+    set({ writingLanguage: lang, writingLanguageLoaded: true });
+
+    try {
+      const response = await client.setWritingLanguage(lang);
+      if (!response.ok) {
+        // Revert on failure
+        set({ writingLanguage: prev, writingLanguageLoaded: true });
+        throw new Error(response.error);
+      }
+    } catch (e) {
+      // Revert on failure
+      set({ writingLanguage: prev, writingLanguageLoaded: true });
+      throw e instanceof Error ? e : new Error('Failed to set writing language');
+    }
+  },
 
   setHasApiKey: (hasApiKey) => set({ api: { hasApiKey } }),
 

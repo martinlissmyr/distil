@@ -1,4 +1,4 @@
-// preload.ts
+// electron/preload.ts
 import { ipcRenderer, contextBridge } from 'electron'
 
 contextBridge.exposeInMainWorld('theme', {
@@ -72,10 +72,17 @@ contextBridge.exposeInMainWorld('chat', {
 })
 
 contextBridge.exposeInMainWorld('settings', {
+  // ---- API key ----
   getApiKey: () => ipcRenderer.invoke('settings:getApiKey'),
   setApiKey: (key: string) => ipcRenderer.invoke('settings:setApiKey', key),
   clearApiKey: () => ipcRenderer.invoke('settings:clearApiKey'),
+
+  // ---- writing language ----
+  getWritingLanguage: () => ipcRenderer.invoke('settings:getWritingLanguage'),
+  setWritingLanguage: (lang: string) =>
+    ipcRenderer.invoke('settings:setWritingLanguage', lang),
 })
+
 
 contextBridge.exposeInMainWorld('devMode', {
   isDevMode: () => ipcRenderer.invoke('devMode:isDevMode'),

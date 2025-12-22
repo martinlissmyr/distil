@@ -278,7 +278,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
             radius={0}
             classNames={{
               root: classes.unstyledInputRoot,
-              input: classes.unstyledInput,
+              input: classes.unstyledTextarea,
             }}
           />
         ) : item.masked ? (
@@ -379,10 +379,13 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
           value={item.value}
           placeholder={item.placeholder}
           data={item.data}
-          onChange={item.onChange}
+          onChange={(item.onChange)}
           disabled={disabled}
           variant="unstyled"
-          rightSection={<Icon type="forward" size={16} style={{ opacity: 0.5 }} />}
+          comboboxProps={{ 
+            dropdownPadding: 6,
+            radius: 24,
+          }}
           classNames={{
             input: classes.unstyledInput,
             dropdown: classes.dropdown,
