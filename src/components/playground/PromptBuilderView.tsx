@@ -21,6 +21,7 @@ import { buildPrompt, type BuiltPrompt } from '../../chat/buildPrompt';
 import type { QuestionScope } from '../../types/chat';
 import { useAppStore, metaId } from '../../state/useAppStore';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
+import { DEFAULT_WRITING_LANGUAGE } from '../../types/language';
 
 import { PlaygroundOutput } from './PlaygroundOutput';
 
@@ -341,7 +342,7 @@ export const PromptBuilderView: React.FC = () => {
         selectionMarkdown: selection,
         projectId: needsStory ? state.selectedProjectId || undefined : undefined,
         storyId: needsStory ? state.selectedStoryId || undefined : undefined,
-        language: 'sv',
+        language: DEFAULT_WRITING_LANGUAGE,
       } as any);
 
       setBuiltPrompt(prompt);

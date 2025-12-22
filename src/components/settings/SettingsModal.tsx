@@ -5,7 +5,7 @@ import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
 import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
 import type { WritingLanguage } from '../../types/language';
-import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE } from '../../types/language';
+import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE, SUPPORTED_WRITING_LANGUAGES } from '../../types/language';
 import { client } from '../../api/client';
 
 type SettingsModalProps = {
@@ -305,6 +305,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   // Root view items (navigation)
   const rootItems: SettingItem[] = useMemo(() => {
     const langDisabled = loading || writingLanguageSaving;
+    const languageOptions = SUPPORTED_WRITING_LANGUAGES.map((lang) => ({
+      value: lang,
+      label: WRITING_LANGUAGE_LABEL[lang] ?? lang,
+    }));
 
     return [
       {
@@ -321,10 +325,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
         value: writingLanguage,
         onChange: handleWritingLanguageChange,
         disabled: langDisabled,
-        data: [
-          { value: 'sv', label: WRITING_LANGUAGE_LABEL.sv ?? 'Swedish' },
-          { value: 'en', label: WRITING_LANGUAGE_LABEL.en ?? 'English' },
-        ],
+        data: languageOptions,
       },
     ];
   }, [apiKeySaved, writingLanguage, loading, writingLanguageSaving]);

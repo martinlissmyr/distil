@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { buildPrompt } from '../../../chat/buildPrompt';
 import type { EditorKind, QuestionScope } from '../../../types/chat';
 import type { ChatMessage } from './useChatMessages';
+import { useAppStore } from '../../../state/useAppStore';
 
 const MAX_TURNS = 4;
 
@@ -39,6 +40,9 @@ export function useChatSend({
 }: UseChatSendOptions): UseChatSendResult {
   const [isSending, setIsSending] = useState(false);
 
+  // ✅ Read writing language from app store (single in-app source of truth)
+  const writingLanguage = useAppStore((s) => s.writingLanguage);
+
   const handleSend = useCallback(
     async (promptOverride?: string, displayMessage?: string) => {
       const rawInput = promptOverride ?? '';
@@ -67,7 +71,7 @@ export function useChatSend({
 
         const turns = history.slice(-MAX_TURNS);
 
-        // Build prompt with context
+        // Build prompt with context + configured writing language
         const prompt = await buildPrompt({
           rawUserPrompt,
           kind,
@@ -77,7 +81,7 @@ export function useChatSend({
           selectionMarkdown,
           projectId,
           storyId,
-          language: 'sv', // TODO: detect or configure language
+          language: writingLanguage,
         });
 
         // Construct API payload
@@ -115,8 +119,7 @@ export function useChatSend({
           id: `m-${Date.now()}-assistant`,
           role: 'assistant',
           content:
-            response.data.output_text ||
-            'Sorry, I could not generate a response.',
+            response.data.output_text || 'Sorry, I could not generate a response.',
         });
       } catch (err) {
         console.error('Chat error', err);
@@ -140,6 +143,7 @@ export function useChatSend({
       selectionMarkdown,
       projectId,
       storyId,
+      writingLanguage,
     ]
   );
 
