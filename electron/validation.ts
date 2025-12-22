@@ -134,3 +134,26 @@ export function sanitizeId(id: string): string {
   }
   return id;
 }
+
+/**
+ * Validates a writing language.
+ * UI language is always English, but writing output can be in supported languages.
+ */
+export function validateWritingLanguage(lang: unknown): asserts lang is string {
+  if (typeof lang !== 'string') {
+    throw new Error('Writing language must be a string');
+  }
+
+  const trimmed = lang.trim();
+  if (!trimmed) {
+    throw new Error('Writing language cannot be empty');
+  }
+
+  // Keep this intentionally simple and explicit.
+  // Add more later (e.g. 'no', 'da', etc).
+  const supported = new Set(['sv', 'en']);
+
+  if (!supported.has(trimmed)) {
+    throw new Error(`Unsupported writing language: ${trimmed}`);
+  }
+}

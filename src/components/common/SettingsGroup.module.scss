@@ -114,6 +114,19 @@
   }
 }
 
+.unstyledTextarea {
+  text-align: left !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: inherit;
+
+  &::placeholder {
+    opacity: 0.45;
+  }
+}
+
 .labelStack {
   display: flex;
   flex-direction: column;
