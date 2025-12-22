@@ -26,6 +26,9 @@ import {
   List,
   ListOrdered,
   Minus,
+  CircleAlert,
+  CircleCheck,
+  Circle,
 } from 'lucide-react';
 
 export const Icon = ({type, size = 20, ...props}) => {
@@ -35,6 +38,15 @@ export const Icon = ({type, size = 20, ...props}) => {
     ...props
 	}
 	switch (type) {
+		case 'validationError': {
+			return <CircleAlert {...iconProps}/>
+		}
+		case 'validationOk': {
+			return <CircleAlert {...iconProps}/>
+		}
+		case 'validationEmpty': {
+			return <Circle {...iconProps}/>
+		}
 		case 'projects': {
 			return <SquareLibrary {...iconProps}/>
 		}

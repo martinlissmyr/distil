@@ -154,7 +154,7 @@ const App: React.FC = () => {
   // They autosave independently without needing App-level state
 
   // API Key Modal
-  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   // Wizard Modal
   const [wizardModalOpen, setWizardModalOpen] = useState(false);
@@ -229,7 +229,7 @@ const App: React.FC = () => {
       onBackToProjectFromStory={storyHandlers.handleBackToProjectFromStory}
       rootSection={rootSection}
       onSelectRootSection={projectHandlers.handleSelectRootSection}
-      onOpenSettings={() => setApiKeyModalOpen(true)}
+      onOpenSettings={() => setSettingsModalOpen(true)}
       onOpenDevTools={() => client.openDevTools()}
     />
   );
@@ -274,8 +274,8 @@ const App: React.FC = () => {
         onCloseEditStory={storyHandlers.handleCloseEditStory}
         onRenameStory={storyHandlers.handleRenameStory}
         onDeleteStory={storyHandlers.handleDeleteStory}
-        apiKeyModalOpen={apiKeyModalOpen}
-        onCloseApiKeyModal={() => setApiKeyModalOpen(false)}
+        settingsModalOpen={settingsModalOpen}
+        onCloseSettingsModal={() => setSettingsModalOpen(false)}
         wizardModalOpen={wizardModalOpen}
         onCloseWizardModal={handleCloseWizardModal}
       />

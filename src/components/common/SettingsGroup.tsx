@@ -8,9 +8,11 @@ import {
   Select,
   TextInput,
   PasswordInput,
+  Textarea,
   UnstyledButton,
   Flex,
   Button,
+  Tooltip,
 } from '@mantine/core';
 import classes from './SettingsGroup.module.scss';
 import { Icon } from './Icon';
@@ -41,17 +43,37 @@ export type InfoSettingItem = BaseSettingItem & {
   value: React.ReactNode;
 };
 
-export type TextSettingItem = BaseSettingItem & {
+export type ValidationState = 'ok' | 'error' | 'empty' | 'unknown';
+
+export type ValidationResult = {
+  state: ValidationState;
+  text?: string; // tooltip text
+};
+
+type TextItemBase = BaseSettingItem & {
   type: 'text';
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
 
-  /**
-   * If true, renders a PasswordInput (masked) but styled like the normal unstyled input.
-   */
-  masked?: boolean;
+  /** Optional validation callback. If provided, always shows status icon. */
+  validate?: (value: string) => ValidationResult;
 };
+
+export type TextSettingItem =
+  | (TextItemBase & {
+      multiline?: false;
+      /**
+       * If true, renders a PasswordInput (masked) but styled like the normal unstyled input.
+       * (only valid for single-line)
+       */
+      masked?: boolean;
+    })
+  | (TextItemBase & {
+      multiline: true;
+      /** Textarea autosize controls */
+      masked?: never;
+    });
 
 export type SelectSettingItem = BaseSettingItem & {
   type: 'select';
@@ -182,15 +204,21 @@ const SettingRow: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
             {leftIcon}
             {leftLabel}
           </Group>
-          <Group className={classes.right} wrap="nowrap" gap="sm">
+          <Group className={classes.right} flex={1} justify="flex-end" align="center" wrap="nowrap" gap="sm">
             {item.rightText ? (
-              <Text className={classes.rightText} c="dimmed">
+              <Text size="sm" className={classes.rightText} c="dimmed">
                 {item.rightText}
               </Text>
             ) : null}
-            <div className={classes.navChevron}>
-              <Icon type="forward" size={18} />
-            </div>
+            <Flex
+              align="center"
+              className={classes.navChevron}
+              style={{
+                minHeight: '40px',
+              }}
+            >
+              <Icon type="forward" size={28} />
+            </Flex>
           </Group>
         </Group>
       </UnstyledButton>
@@ -232,36 +260,119 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         </Text>
       );
 
-    case 'text': {
-      const common = {
-        value: item.value,
-        placeholder: item.placeholder,
-        disabled,
-        variant: 'unstyled' as const,
-        autoComplete: 'off',
-      };
+      case 'text': {
+        const common = {
+          value: item.value,
+          placeholder: item.placeholder,
+          disabled,
+          variant: 'unstyled' as const,
+          autoComplete: 'off',
+        };
 
-      return item.masked ? (
-        <PasswordInput
-          {...common}
-          onChange={(e) => item.onChange(e.currentTarget.value)}
-          classNames={{
-            root: classes.unstyledInputRoot,
-            innerInput: classes.unstyledInput,
-          }}
-        />
-      ) : (
-        <TextInput
-          {...common}
-          onChange={(e) => item.onChange(e.currentTarget.value)}
-          classNames={{
-            root: classes.unstyledInputRoot,
-            input: classes.unstyledInput,
-          }}
-        />
-      );
-    }
+        const input = item.multiline ? (
+          <Textarea
+            {...common}
+            autosize
+            minRows={1}
+            onChange={(e) => item.onChange(e.currentTarget.value)}
+            radius={0}
+            classNames={{
+              root: classes.unstyledInputRoot,
+              input: classes.unstyledInput,
+            }}
+          />
+        ) : item.masked ? (
+          <PasswordInput
+            {...common}
+            onChange={(e) => item.onChange(e.currentTarget.value)}
+            radius={0}
+            classNames={{
+              root: classes.unstyledInputRoot,
+              innerInput: classes.unstyledInput,
+            }}
+          />
+        ) : (
+          <TextInput
+            {...common}
+            onChange={(e) => item.onChange(e.currentTarget.value)}
+            radius={0}
+            classNames={{
+              root: classes.unstyledInputRoot,
+              input: classes.unstyledInput,
+            }}
+          />
+        );
 
+        // ---- validation handling ----
+        const hasValidate = typeof item.validate === 'function';
+
+        const validation = (() => {
+          if (!hasValidate) return null;
+
+          const v = String(item.value ?? '');
+          if (!v.trim()) return { state: 'empty' as const };
+
+          try {
+            const res = item.validate!(v);
+            // If validate returns something unexpected, treat as "empty/toned down"
+            if (!res || typeof res !== 'object' || !('state' in res)) return { state: 'unknown' as const };
+            return res;
+          } catch (e) {
+            return { state: 'error' as const, text: e instanceof Error ? e.message : 'Validation failed' };
+          }
+        })();
+
+        const iconSpec = (() => {
+          if (!hasValidate) return null;
+
+          if (!validation || validation.state === 'empty' || validation.state === 'unknown') {
+            return { type: 'validationEmpty' as const, color: undefined };
+          }
+          if (validation.state === 'ok') {
+            return { type: 'validationOk' as const, color: 'green' as const };
+          }
+          if (validation.state === 'error') {
+            return { type: 'validationError' as const, color: 'red' as const };
+          }
+          // fallback
+          return { type: 'validationEmpty' as const, color: undefined };
+        })();
+
+        const iconNode = iconSpec ? (
+          <Box
+            className={classes.validationIcon}
+            aria-label={validation?.text || validation?.state || 'Validation'}
+            c={iconSpec.color}
+            style={{
+              opacity: iconSpec.type === 'validationEmpty' ? 0.5 : 1,
+            }}
+          >
+            <Icon type={iconSpec.type} size={18} />
+          </Box>
+        ) : null;
+
+        const iconWithTooltip =
+          iconNode && validation?.text ? (
+            <Tooltip
+              label={validation.text}
+              withArrow
+              position="left"
+              withinPortal
+              openDelay={150}
+            >
+              {iconNode}
+            </Tooltip>
+          ) : (
+            iconNode
+          );
+
+        return (
+          <Group wrap="nowrap" gap={8} align="center" className={classes.rightGroup}>
+            {input}
+            {iconWithTooltip}
+          </Group>
+        );
+      }
     case 'select':
       return (
         <Select

@@ -1,7 +1,7 @@
 // src/components/common/AppModals.tsx
 import React from 'react';
 import { EntityEditModal } from './EntityEditModal';
-import { ApiKeyModal } from '../settings/ApiKeyModal';
+import { SettingsModal } from '../settings/SettingsModal';
 import { WizardModal } from '../wizard/WizardModal';
 
 export interface AppModalsProps {
@@ -18,8 +18,8 @@ export interface AppModalsProps {
   onDeleteStory: () => void;
 
   // API Key modal
-  apiKeyModalOpen: boolean;
-  onCloseApiKeyModal: () => void;
+  settingsModalOpen: boolean;
+  onCloseSettingsModal: () => void;
 
   // Wizard modal
   wizardModalOpen: boolean;
@@ -43,8 +43,8 @@ export const AppModals: React.FC<AppModalsProps> = ({
   onCloseEditStory,
   onRenameStory,
   onDeleteStory,
-  apiKeyModalOpen,
-  onCloseApiKeyModal,
+  settingsModalOpen,
+  onCloseSettingsModal,
   wizardModalOpen,
   onCloseWizardModal,
 }) => {
@@ -75,9 +75,9 @@ export const AppModals: React.FC<AppModalsProps> = ({
       />
 
       {/* API Key Modal */}
-      <ApiKeyModal
-        opened={apiKeyModalOpen}
-        onClose={onCloseApiKeyModal}
+      <SettingsModal
+        opened={settingsModalOpen}
+        onClose={onCloseSettingsModal}
       />
 
       {/* Wizard Modal */}

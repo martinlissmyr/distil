@@ -49,6 +49,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 700;
 }
 
 .leftIcon {
@@ -71,7 +72,11 @@
   min-width: 0;
   justify-content: flex-end;
   min-width: 0;
-  margin-left: 10px;
+  margin-left: 20px;
+}
+
+.rightGroup {
+  flex: 1 1 auto;
 }
 
 .rightText {
@@ -79,6 +84,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0.75;
+}
+
+.validationIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .navChevron {
