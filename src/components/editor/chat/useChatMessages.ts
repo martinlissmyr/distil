@@ -59,7 +59,7 @@ function computeMetaDocState(
   return 'hasContent';
 }
 
-function computeTargetState(isTextLoaded: boolean, fullTextMarkdown: string | null): DocState {
+function computeSelfState(isTextLoaded: boolean, fullTextMarkdown: string | null): DocState {
   if (!isTextLoaded) return 'missing';
   const text = safeText(fullTextMarkdown);
   if (!text.trim()) return 'empty';
@@ -78,8 +78,9 @@ export function useChatMessages({
   const hasInitialisedRef = useRef(false);
   const previousMarkdownLength = useRef(0);
   const metaDocs = useAppStore((s) => s.metaDocs);
+  const writingLanguage = useAppStore((s) => s.writingLanguage);
 
-  // ✅ Reset completely when switching thread/doc
+  // Reset completely when switching thread/doc
   useEffect(() => {
     setMessages([]);
     hasInitialisedRef.current = false;
@@ -98,49 +99,76 @@ export function useChatMessages({
     previousMarkdownLength.current = currentLength;
   }, [fullTextMarkdown]);
 
-  // ✅ Seed initial assistant hint (visible, but ephemeral => excluded from LLM history)
+  // Seed initial assistant hint (visible, but ephemeral => excluded from LLM history)
   useEffect(() => {
     if (!isTextLoaded || hasInitialisedRef.current) return;
 
-    const docKind = kind as DocKindId;
-    const targetState = computeTargetState(isTextLoaded, fullTextMarkdown);
-    const rules = getContextRulesFor(docKind);
-    const upstreamKinds = Array.from(
-      new Set<MetaDocKey>([...rules.alwaysInclude, ...rules.intelligentlySelect])
-    );
+    let cancelled = false;
 
-    const upstreamStates: Partial<Record<MetaDocKey, DocState>> = {};
+    (async () => {
+      const docKind = kind as DocKindId;
+      const selfState = computeSelfState(isTextLoaded, fullTextMarkdown);
+      const rules = getContextRulesFor(docKind);
 
-    for (const key of upstreamKinds) {
-      if (key === 'manifest') {
-        upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'root' }, 'manifest');
-      } else if (projectId && storyId) {
-        upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'story', projectId, storyId }, key);
-      } else {
-        upstreamStates[key] = 'missing';
+      const upstreamKinds = Array.from(
+        new Set<MetaDocKey>([...rules.alwaysInclude, ...rules.intelligentlySelect])
+      );
+
+      const upstreamStates: Partial<Record<MetaDocKey, DocState>> = {};
+
+      for (const key of upstreamKinds) {
+        if (key === 'manifest') {
+          upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'root' }, 'manifest');
+        } else if (projectId && storyId) {
+          upstreamStates[key] = computeMetaDocState(
+            metaDocs,
+            { scope: 'story', projectId, storyId },
+            key
+          );
+        } else {
+          upstreamStates[key] = 'missing';
+        }
       }
-    }
 
-    const hint = getInitialAssistantHint({
-      kind: docKind,
-      targetState,
-      upstream: upstreamStates,
+      const hint = await getInitialAssistantHint({
+        kind: docKind,
+        selfState,
+        upstream: upstreamStates,
+        language: writingLanguage,
+      });
+
+      if (cancelled) return;
+
+      if (hint) {
+        setMessages([
+          {
+            id: `hint:${threadId}`,
+            role: 'assistant',
+            content: hint.introMessage,
+            suggestions: hint.actions,
+            ephemeral: true,
+          },
+        ]);
+      }
+
+      hasInitialisedRef.current = true;
+    })().catch((err) => {
+      console.error('[useChatMessages] Failed to seed initial hint:', err);
     });
 
-    if (hint) {
-      setMessages([
-        {
-          id: `hint:${threadId}`,
-          role: 'assistant',
-          content: hint.introMessage,
-          suggestions: hint.actions,
-          ephemeral: true, // ✅ render but exclude from LLM history (your intended meaning)
-        },
-      ]);
-    }
-
-    hasInitialisedRef.current = true;
-  }, [threadId, kind, isTextLoaded, fullTextMarkdown, metaDocs, projectId, storyId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    threadId,
+    kind,
+    isTextLoaded,
+    fullTextMarkdown,
+    metaDocs,
+    projectId,
+    storyId,
+    writingLanguage, // <-- you use it, so include it
+  ]);
 
   const addMessage = (message: ChatMessage) => setMessages((prev) => [...prev, message]);
   const addMessages = (newMessages: ChatMessage[]) => setMessages((prev) => [...prev, ...newMessages]);

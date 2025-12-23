@@ -3,40 +3,126 @@
  * Simple template interpolator
  * Supports:
  * - {{variable}} - simple variable replacement
- * - {{#if variable}}...{{/if}} - conditional blocks
- * - {{#if !variable}}...{{/if}} - negation with !
- * - {{#if var1 && var2}}...{{/if}} - AND conditions with &&
+ * - {{#if expression}}...{{/if}} - conditional blocks (nested supported)
+ * - expressions support:
+ *    - variable
+ *    - !variable
+ *    - var1 && var2
  */
-export function interpolate(template: string, vars: Record<string, any>): string {
-  let result = template;
+type HasContentResolver = (key: string) => boolean;
 
-  // Handle conditional blocks: {{#if expression}}...{{/if}}
-  // Also capture leading and trailing newlines to remove them when condition is false
-  result = result.replace(
-    /(\n?)\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}(\n?)/g,
-    (_match, leadingNewline, expression, content, _trailingNewline) => {
-      const condition = evaluateCondition(expression.trim(), vars);
-      if (condition) {
-        // Keep the content and the leading newline
-        return leadingNewline + content;
-      } else {
-        // Remove everything including leading and trailing newlines
-        return '';
-      }
-    }
-  );
-
-  // Handle simple variables: {{key}}
-  result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    const value = vars[key];
-    return value !== undefined && value !== null ? formatValue(value) : '';
-  });
+export function interpolate(
+  template: string,
+  vars: Record<string, any>,
+  resolveHasContent?: HasContentResolver
+): string {
+  const ast = parseTemplate(template);
+  let result = renderNodes(ast, vars, resolveHasContent);
 
   // Collapse multiple consecutive blank lines into a single blank line
   result = result.replace(/\n\s*\n\s*\n+/g, '\n\n');
 
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// AST
+// ---------------------------------------------------------------------------
+
+type Node =
+  | { type: 'text'; value: string }
+  | { type: 'var'; key: string }
+  | { type: 'if'; expr: string; children: Node[] };
+
+function parseTemplate(input: string): Node[] {
+  const root: Node[] = [];
+  const stack: Array<{ expr: string; children: Node[] }> = [];
+  const tokenRe = /\{\{#if\s+([^}]+)\}\}|\{\{\/if\}\}|\{\{(\w+)\}\}/g;
+
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+
+  const pushNode = (node: Node) => {
+    if (stack.length > 0) stack[stack.length - 1]!.children.push(node);
+    else root.push(node);
+  };
+
+  while ((m = tokenRe.exec(input)) !== null) {
+    const idx = m.index;
+
+    if (idx > lastIndex) {
+      pushNode({ type: 'text', value: input.slice(lastIndex, idx) });
+    }
+
+    if (m[1] != null) {
+      stack.push({ expr: m[1].trim(), children: [] });
+    } else if (m[0] === '{{/if}}') {
+      const block = stack.pop();
+      if (!block) pushNode({ type: 'text', value: m[0] });
+      else pushNode({ type: 'if', expr: block.expr, children: block.children });
+    } else if (m[2] != null) {
+      pushNode({ type: 'var', key: m[2] });
+    }
+
+    lastIndex = tokenRe.lastIndex;
+  }
+
+  if (lastIndex < input.length) {
+    pushNode({ type: 'text', value: input.slice(lastIndex) });
+  }
+
+  // ✅ IMPORTANT: don't render here (no vars/resolver available reliably).
+  // Fail-soft by re-emitting the raw markup literally.
+  while (stack.length > 0) {
+    const block = stack.shift()!;
+    root.push({
+      type: 'text',
+      value: `{{#if ${block.expr}}}${stringifyNodesAsLiteral(block.children)}{{/if}}`,
+    });
+  }
+
+  return root;
+}
+
+function stringifyNodesAsLiteral(nodes: Node[]): string {
+  // Preserve original-ish text when unbalanced.
+  // We can't perfectly reconstruct, but this avoids silently "evaluating" without a resolver.
+  return nodes
+    .map((n) => {
+      if (n.type === 'text') return n.value;
+      if (n.type === 'var') return `{{${n.key}}}`;
+      // nested if
+      return `{{#if ${n.expr}}}${stringifyNodesAsLiteral(n.children)}{{/if}}`;
+    })
+    .join('');
+}
+
+function renderNodes(
+  nodes: Node[],
+  vars: Record<string, any>,
+  resolveHasContent?: HasContentResolver
+): string {
+  let out = '';
+
+  for (const n of nodes) {
+    if (n.type === 'text') out += n.value;
+    else if (n.type === 'var') {
+      const value = vars[n.key];
+      out += value !== undefined && value !== null ? formatValue(value) : '';
+    } else if (n.type === 'if') {
+      if (evaluateCondition(n.expr, vars, resolveHasContent)) {
+        out += renderNodes(n.children, vars, resolveHasContent);
+      }
+    }
+  }
+
+  return out;
+}
+
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 /**
  * Formats a value for insertion into a template.
@@ -46,22 +132,10 @@ export function interpolate(template: string, vars: Record<string, any>): string
  * - Objects: JSON.stringify with formatting
  */
 function formatValue(value: any): string {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    return value.join(', ');
-  }
-
-  if (typeof value === 'object') {
-    return JSON.stringify(value, null, 2);
-  }
-
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
 }
 
@@ -69,21 +143,40 @@ function formatValue(value: any): string {
  * Evaluate a conditional expression
  * Supports: variable, !variable, var1 && var2, !var1 && var2, etc.
  */
-function evaluateCondition(expression: string, vars: Record<string, any>): boolean {
-  // Split by && operator
-  const andParts = expression.split('&&').map(part => part.trim());
+function evaluateCondition(
+  expression: string,
+  vars: Record<string, any>,
+  resolveHasContent?: HasContentResolver
+): boolean {
+  const andParts = expression
+    .split('&&')
+    .map((p) => p.trim())
+    .filter(Boolean);
 
-  // All parts must be true for the whole expression to be true
-  return andParts.every(part => {
-    // Check for negation
-    if (part.startsWith('!')) {
-      const varName = part.slice(1).trim();
-      return !isTruthy(vars[varName]);
-    }
+  return andParts.every((part) => evaluateTerm(part, vars, resolveHasContent));
+}
 
-    // Simple variable check
-    return isTruthy(vars[part]);
-  });
+function evaluateTerm(
+  part: string,
+  vars: Record<string, any>,
+  resolveHasContent?: HasContentResolver
+): boolean {
+  if (part.startsWith('!')) {
+    return !evaluateTerm(part.slice(1).trim(), vars, resolveHasContent);
+  }
+
+  // hasContent(key)
+  const fnMatch = part.match(/^hasContent\(\s*([a-zA-Z0-9_]+)\s*\)$/);
+  if (fnMatch) {
+    const key = fnMatch[1];
+    if (resolveHasContent) return !!resolveHasContent(key);
+
+    // Optional fallback if no resolver provided:
+    return isTruthy(vars[key]);
+  }
+
+  // plain variable
+  return isTruthy(vars[part]);
 }
 
 /**
