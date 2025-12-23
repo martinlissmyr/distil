@@ -251,6 +251,7 @@ export const InitialHintsTest: React.FC = () => {
               <Paper
                 p="md"
                 withBorder
+                radius="sm"
                 style={{
                   borderLeft: '4px solid var(--mantine-color-blue-6)',
                 }}
@@ -266,6 +267,7 @@ export const InitialHintsTest: React.FC = () => {
               {result.actions.length > 0 && (
                 <Paper
                   p="md"
+                  radius="sm"
                   withBorder
                   style={{
                     borderLeft: '4px solid var(--mantine-color-green-6)',
@@ -279,6 +281,7 @@ export const InitialHintsTest: React.FC = () => {
                       <Paper
                         key={action.id}
                         p="sm"
+                        radius="sm"
                         withBorder
                         style={{
                           backgroundColor: 'var(--mantine-color-gray-light)',

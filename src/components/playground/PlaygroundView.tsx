@@ -53,7 +53,6 @@ export const PlaygroundView: React.FC = () => {
     <Box p="md" h="100vh" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* Top Navigation */}
       <Stack gap="sm" mb="sm">
-        <Title order={3}>Playground</Title>
         <SegmentedControl
           value={mode}
           onChange={(value) => setMode(value as PlaygroundMode)}
