@@ -59,6 +59,7 @@ export const EntityCreateModal: React.FC<EntityCreateModalProps> = ({
       onChange: setValue,
       placeholder,
       autoFocus: true,
+      onCmdEnter: handleCreate,
     },
   ];
 
