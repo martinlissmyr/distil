@@ -59,22 +59,35 @@ export const InitialHintsTest: React.FC = () => {
 
   // Compute the result whenever relevant state changes
   useEffect(() => {
-    const targetState: DocState = isEmpty ? 'empty' : 'hasContent';
+    let cancelled = false;
 
-    const upstream = Object.fromEntries(
-      Object.entries(upstreamPresence).map(([key, has]) => [
-        key,
-        has ? 'hasContent' : 'empty',
-      ])
-    ) as Record<MetaDocKey, DocState>;
+    (async () => {
+      const selfState: DocState = isEmpty ? 'empty' : 'hasContent';
 
-    const hint = getInitialAssistantHint({
-      kind: targetKind,
-      targetState,
-      upstream,
-    } as any);
+      const upstream = Object.fromEntries(
+        Object.entries(upstreamPresence).map(([key, has]) => [
+          key,
+          has ? 'hasContent' : 'empty',
+        ])
+      ) as Record<MetaDocKey, DocState>;
 
-    setResult(hint);
+      const hint = await getInitialAssistantHint({
+        kind: targetKind,
+        selfState,
+        upstream,
+        // include these if your HintContext requires them:
+        // language,
+      } as any);
+
+      if (cancelled) return;
+      setResult(hint);
+    })().catch((err) => {
+      console.error('[hint] Failed to compute hint:', err);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [targetKind, isEmpty, upstreamPresence]);
 
   // Context rules derived from the doc model
