@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { client, Project, StoryMeta } from '../api/client';
 import type { RootSection } from './useNavigation';
 
-// Type for EntityCRUD return value
 interface EntityCRUD<T> {
   items: T[];
   isLoading: boolean;
@@ -16,32 +15,32 @@ interface EntityCRUD<T> {
 }
 
 export interface ProjectHandlersParams {
-  // Navigation methods
   goToProjects: () => void;
   goToManifest: () => void;
   goToPlayground: () => void;
   goToProject: (projectId: string) => void;
   clearEditor: () => void;
 
-  // CRUD operations
   projectsCRUD: EntityCRUD<Project>;
   projects: Project[];
 
-  // Story operations (for loading stories when selecting project)
   setStories: (stories: StoryMeta[]) => void;
 }
 
 export interface ProjectHandlers {
-  // Navigation handlers
   handleSelectRootSection: (section: RootSection) => void;
   handleBackToProjects: () => void;
 
-  // Project CRUD handlers
-  handleCreateProject: () => Promise<void>;
+  // Create flow (NEW)
+  creatingProject: boolean;
+  handleCreateProject: () => void; // opens modal
+  handleCloseCreateProject: () => void;
+  handleConfirmCreateProject: (name: string) => Promise<void>;
+
+  // Existing
   handleSelectProject: (id: string) => Promise<void>;
   handleReorderProjects: (ids: string[]) => Promise<void>;
 
-  // Edit modal state and handlers
   editingProject: { id: string; name: string } | null;
   handleOpenEditProject: (projectId: string) => void;
   handleCloseEditProject: () => void;
@@ -49,11 +48,6 @@ export interface ProjectHandlers {
   handleDeleteProject: () => Promise<void>;
 }
 
-/**
- * Custom hook to manage all project-related handlers and modal state
- *
- * Consolidates project CRUD operations, navigation, and edit modal management
- */
 export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandlers {
   const {
     goToProjects,
@@ -66,10 +60,11 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     setStories,
   } = params;
 
-  // Edit modal state
   const [editingProject, setEditingProject] = useState<{ id: string; name: string } | null>(null);
 
-  // Navigation handlers
+  // NEW: create modal state
+  const [creatingProject, setCreatingProject] = useState(false);
+
   const handleSelectRootSection = useCallback((section: RootSection) => {
     if (section === 'manifest') {
       goToManifest();
@@ -89,16 +84,31 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     clearEditor();
   }, [goToProjects, clearEditor]);
 
-  // Project CRUD handlers
-  const handleCreateProject = useCallback(async () => {
-    await projectsCRUD.create('New project');
+  // ---- Create flow (NEW) ----
+  const handleCreateProject = useCallback(() => {
+    setCreatingProject(true);
+  }, []);
+
+  const handleCloseCreateProject = useCallback(() => {
+    setCreatingProject(false);
+  }, []);
+
+  const handleConfirmCreateProject = useCallback(async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    const created = await projectsCRUD.create(trimmed);
+    // onCreate side-effects (navigate + load stories) still happen via useEntityCRUD options in App.tsx
+    if (created) {
+      setCreatingProject(false);
+    }
   }, [projectsCRUD]);
 
+  // ---- Existing behavior ----
   const handleSelectProject = useCallback(async (id: string) => {
     goToProject(id);
     clearEditor();
 
-    // Load stories for this project (use id directly, not selectedProjectId which updates async)
     const listResponse = await client.listStories(id);
     if (listResponse.ok) {
       setStories(listResponse.data);
@@ -111,7 +121,7 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     await projectsCRUD.reorder(ids);
   }, [projectsCRUD]);
 
-  // Edit modal handlers
+  // ---- Edit modal handlers ----
   const handleOpenEditProject = useCallback((projectId: string) => {
     const proj = projects.find((p) => p.id === projectId);
     if (!proj) return;
@@ -124,11 +134,16 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
 
   const handleRenameProject = useCallback(async (newName: string) => {
     if (!editingProject) return;
+
     const trimmed = newName.trim();
     if (!trimmed) return;
 
     await projectsCRUD.update(editingProject.id, { name: trimmed });
-    setEditingProject(null);
+
+    // ✅ Keep modal open; sync local modal state
+    setEditingProject((prev) =>
+      prev ? { ...prev, name: trimmed } : prev
+    );
   }, [editingProject, projectsCRUD]);
 
   const handleDeleteProject = useCallback(async () => {
@@ -140,9 +155,15 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
   return {
     handleSelectRootSection,
     handleBackToProjects,
+
+    creatingProject,
     handleCreateProject,
+    handleCloseCreateProject,
+    handleConfirmCreateProject,
+
     handleSelectProject,
     handleReorderProjects,
+
     editingProject,
     handleOpenEditProject,
     handleCloseEditProject,

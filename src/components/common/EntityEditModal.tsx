@@ -1,15 +1,23 @@
 // src/components/common/EntityEditModal.tsx
-import React, { useEffect, useState } from 'react';
-import { Stack, TextInput, Group, Button, Box } from '@mantine/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { Stack, Box } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
-import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
+import { SettingsGroup, type SettingItem } from '../common/SettingsGroup';
+import {
+  generateProjectName,
+  generateStoryTitle,
+} from '../../helpers/nameGenerator';
+
+type EntityType = 'project' | 'story';
 
 type EntityEditModalProps = {
   opened: boolean;
   title: string;            // "Edit project", "Edit story"
-  fieldLabel?: string;      // label for the text field, defaults to "Name"
-  deleteLabel?: string;     // word used in delete button, e.g. "project", "story"
+  entityType: EntityType;
+
+  fieldLabel?: string;      // defaults to "Name"
+  deleteLabel?: string;     // "project", "story"
 
   initialName: string;
 
@@ -21,6 +29,7 @@ type EntityEditModalProps = {
 export const EntityEditModal: React.FC<EntityEditModalProps> = ({
   opened,
   title,
+  entityType,
   fieldLabel = 'Name',
   deleteLabel = 'item',
   initialName,
@@ -28,22 +37,41 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
   onSave,
   onDelete,
 }) => {
-  const [name, setName] = useState(initialName);
+  /** What the user is typing (may be empty) */
+  const [draftName, setDraftName] = useState(initialName);
+
+  /** Last name we actually saved (prevents loops) */
+  const lastSavedRef = useRef<string>(initialName);
+
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  // When the modal opens (or the entity changes), reset local state
+  // Reset state when modal opens
   useEffect(() => {
-    if (opened) {
-      setName(initialName);
-      setDeleteConfirm(false);
-    }
+    if (!opened) return;
+
+    setDraftName(initialName);
+    lastSavedRef.current = initialName;
+    setDeleteConfirm(false);
   }, [opened, initialName]);
 
-  const handleSave = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    await onSave(trimmed);
-  };
+  // Auto-save when effective name changes
+  useEffect(() => {
+    if (!opened) return;
+
+    const trimmed = draftName.trim();
+
+    const generated =
+      entityType === 'project'
+        ? generateProjectName()
+        : generateStoryTitle();
+
+    const effectiveName = trimmed || generated;
+
+    if (effectiveName === lastSavedRef.current) return;
+
+    lastSavedRef.current = effectiveName;
+    void onSave(effectiveName);
+  }, [draftName, entityType, opened, onSave]);
 
   const handleDeleteClick = async () => {
     if (!deleteConfirm) {
@@ -54,22 +82,24 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
   };
 
   const settingsItems: SettingItem[] = [
-    { 
+    {
       id: 'name',
       type: 'text',
       label: fieldLabel,
-      value: name,
-      onChange: setName,
-      placeholder: "Project name",
+      value: draftName,
+      onChange: setDraftName,
+      placeholder:
+        entityType === 'project' ? 'Project name' : 'Story title',
+      autoFocus: true,
     },
     {
-      id: 'pw',
+      id: 'delete',
       type: 'button',
       buttonLabel: deleteConfirm
-              ? 'Click again to delete'
-              : `Delete ${deleteLabel}`,
+        ? 'Click again to delete'
+        : `Delete ${deleteLabel}`,
       onClick: handleDeleteClick,
-    }
+    },
   ];
 
   return (
@@ -78,20 +108,17 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
       onClose={onClose}
       variant="dialog"
       overlayPreset="glassLight"
-      header={<Box p={12}><TopNavigation title={title} onClose={onClose} /></Box>}
-      footer={
-        <Group justify="flex-end" p={12}>
-          <Button onClick={handleSave} disabled={!name.trim()}>
-            Save
-          </Button>
-        </Group>
+      header={
+        <Box p={12}>
+          <TopNavigation title={title} onClose={onClose} />
+        </Box>
       }
     >
       <Box p={20}>
         <Stack gap="sm">
-          <SettingsGroup 
-            items={settingsItems} 
-            ariaLabel="System settings group"
+          <SettingsGroup
+            items={settingsItems}
+            ariaLabel={`${title} settings`}
           />
         </Stack>
       </Box>
