@@ -1,6 +1,8 @@
 import React from 'react';
+import { Box } from '@mantine/core';
 import type { StoryMeta } from '../../api/client';
 import { EntityGrid } from '../common/EntityGrid';
+import { TopNavigation } from '../common/TopNavigation';
 
 type StoriesViewProps = {
   stories: StoryMeta[];
@@ -20,16 +22,24 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
   onReorderStories
 }) => {
   return (
-    <EntityGrid
-      items={stories}
-      getId={(s) => s.id}
-      getLabel={(s) => s.title}
-      onSelect={onSelectStory}
-      onEdit={onEditStory}
-      onCreate={onCreateStory}
-      icon="story"
-      title={currentProject.name}
-      onReorderEntities={onReorderStories}
-    />
+    <Box>
+      <Box py={20} px={30}>
+        <TopNavigation
+          title={currentProject.name}
+        />
+      </Box>
+
+      <EntityGrid
+        items={stories}
+        getId={(s) => s.id}
+        getLabel={(s) => s.title}
+        onSelect={onSelectStory}
+        onEdit={onEditStory}
+        onCreate={onCreateStory}
+        icon="story"
+        title={currentProject.name}
+        onReorderEntities={onReorderStories}
+      />
+    </Box>
   );
 };

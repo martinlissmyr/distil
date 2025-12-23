@@ -1,6 +1,6 @@
 // src/components/common/EntityGrid.tsx
 import React from 'react';
-import { Box, Group } from '@mantine/core';
+import { Box, Group, Flex } from '@mantine/core';
 import { EntityCard, CreateEntityCard } from './EntityCard';
 import {
   SortableContext,
@@ -107,7 +107,12 @@ export function EntityGrid<T>({
 
   return (
     <Box p="xl">
-      <Group gap="lg">
+      <Flex
+        gap="lg"
+        justify="center"
+        direction="row"
+        wrap="wrap"
+      >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -132,7 +137,7 @@ export function EntityGrid<T>({
         </DndContext>
 
         <CreateEntityCard onCreate={onCreate} label={createLabel} />
-      </Group>
+      </Flex>
     </Box>
   );
 }
