@@ -356,7 +356,7 @@ export const PromptBuilderView: React.FC = () => {
   return (
     <Group gap="md" style={{ flex: 1, minHeight: 0 }} grow align="flex-start">
       <Stack
-        gap="lg"
+        gap="sm"
         p="sm"
         style={{
           minHeight: 0,
@@ -368,7 +368,7 @@ export const PromptBuilderView: React.FC = () => {
         }}
       >
         {/* Target Selection */}
-        <Paper p="md">
+        <Paper p="md" radius="sm">
           <Title order={4} mb="sm">
             Target Document
           </Title>
@@ -432,7 +432,7 @@ export const PromptBuilderView: React.FC = () => {
         {canConfigure && (
           <>
             {/* Main Document Status */}
-            <Paper p="md">
+            <Paper p="md" radius="sm">
               <Stack gap="md">
                 {mainHasContent ? (
                   <>
@@ -469,6 +469,7 @@ export const PromptBuilderView: React.FC = () => {
                             value={state.loadedSelection}
                             onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
                             minRows={4}
+                            radius="sm"
                             mt="md"
                           />
                         )}
@@ -487,7 +488,7 @@ export const PromptBuilderView: React.FC = () => {
             </Paper>
 
             {/* Derived Context Status (from docs model rules) */}
-            <Paper p="md">
+            <Paper p="md" radius="sm">
               <Stack gap="md">
                 <Title order={5}>Derived Context Docs</Title>
 
@@ -560,6 +561,7 @@ export const PromptBuilderView: React.FC = () => {
               value={state.userPrompt}
               onChange={(e) => setState((s) => ({ ...s, userPrompt: e.currentTarget.value }))}
               minRows={3}
+              radius="sm"
             />
 
             <Button onClick={handleBuildPrompt} disabled={needsStory && !state.selectedStoryId}>
@@ -571,7 +573,6 @@ export const PromptBuilderView: React.FC = () => {
 
       {/* Right Column - Output */}
       <Box
-        p="sm"
         style={{
           minHeight: 0,
           height: '100%',
@@ -589,20 +590,13 @@ export const PromptBuilderView: React.FC = () => {
             includedContexts={builtPrompt.includedContexts}
           />
         ) : (
-          <Paper
+          <Box
             p="md"
-            style={{
-              flex: 1,
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
           >
-            <Text c="dimmed" size="sm">
+            <Text c="dimmed" size="sm" style={{fontFamily: 'monospace'}}>
               Configure settings and click "Build Prompt" to see the output
             </Text>
-          </Paper>
+          </Box>
         )}
       </Box>
     </Group>

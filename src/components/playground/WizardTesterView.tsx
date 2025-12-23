@@ -90,7 +90,7 @@ export const WizardTesterView: React.FC = () => {
           backgroundColor: 'var(--overlay)',
         }}
       >
-        <Paper p="md">
+        <Paper p="md" radius="sm">
           <Stack gap="md">
             <Title order={5}>Available Wizards</Title>
             <ScrollArea style={{ maxHeight: 300 }}>
@@ -103,6 +103,7 @@ export const WizardTesterView: React.FC = () => {
                     <Paper
                       key={wizardId}
                       p="sm"
+                      radius="sm"
                       withBorder
                       style={{
                         cursor: activeWizard ? 'not-allowed' : 'pointer',

@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, Stack, Text, Button, Group, ActionIcon, ScrollArea } from '@mantine/core';
 import { Icon } from '../common/Icon';
-import { Modal } from '../common/Modal';
+import { BaseModal } from '../common/BaseModal';
 import { useAppStore } from '../../state/useAppStore';
 import { getCurrentStep } from '../../wizards/navigation';
 import { QuestionStepView } from './steps/QuestionStepView';
@@ -269,38 +269,71 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     return true;
   })();
 
+  const Header = () => {
+    return (
+      <Box
+        px={20}
+        py={20}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+        }}
+      >
+        <TopNavigation
+          title={topTitle}
+          onBack={canGoBack ? handleBack : undefined}
+          onClose={handleClose}
+        />
+      </Box>
+    );
+  }
+
+  const Footer = () => {
+    return (
+      <Group
+        justify={'flex-end'}
+        mx="20"
+        mb="20"
+        style={{
+          flex: '0 0 auto'
+        }}
+      >
+        {!usesApprovalButtons ? (
+          <Button onClick={handleNext} disabled={!canGoNext}>
+            {isLastStep ? 'Finish' : 'Next'}
+          </Button>
+        ) : (
+          <Group gap="sm">
+            <Button variant="default" onClick={handleReject} disabled={approvalButtonsDisabled}>
+              {(() => {
+                if (currentStep?.type === 'llm-processing') {
+                  return (currentStep as LlmProcessingStep).approvalOptions?.rejectLabel ?? 'Regenerate';
+                } else if (currentStep?.type === 'llm-approval') {
+                  return (currentStep as LlmApprovalStep).approvalOptions?.rejectLabel ?? 'Reject';
+                }
+                return 'Reject';
+              })()}
+            </Button>
+            <Button onClick={handleApprove} disabled={approvalButtonsDisabled}>
+              {isLastStep ? 'Finish' : 'Next'}
+            </Button>
+          </Group>
+        )}
+      </Group>
+    );
+  }
+
   return (
-    <Modal
+    <BaseModal
       opened={opened}
       onClose={handleClose}
-      size="90%"
-      closeOnClickOutside={false}
-      closeOnEscape={false}
-      centered={false}
-      withCloseButton={false}
-      padding="0"
-      overlayProps={{
-        backgroundOpacity: 0.28,
-        blur: '22px',
-        saturate: '160%',
-      }}
-      styles={{
-        content: {
-          height: '90vh',
-          maxHeight: '90vh',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-        body: {
-          padding: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
-        },
-      }}
+      variant="sheet"
+      overlayPreset="glassLight"
+      header={<Header/>}
+      footer={<Footer/>}
     >
         {/* Top Shader */}
         <Box
@@ -317,23 +350,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
         />
 
         {/* Top header */}
-        <Box
-          px={30}
-          py={10}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-          }}
-        >
-          <TopNavigation
-            title={topTitle}
-            onBack={canGoBack ? handleBack : undefined}
-            onClose={handleClose}
-          />
-        </Box>
 
         {/* Middle: ScrollArea should take remaining space */}
         <ScrollArea
@@ -376,36 +392,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
         </ScrollArea>
 
         {/* Bottom buttons */}
-        <Group
-          justify={'flex-end'}
-          mx="30"
-          mb="20"
-          style={{
-            flex: '0 0 auto'
-          }}
-        >
-          {!usesApprovalButtons ? (
-            <Button onClick={handleNext} disabled={!canGoNext}>
-              {isLastStep ? 'Finish' : 'Next'}
-            </Button>
-          ) : (
-            <Group gap="sm">
-              <Button variant="default" onClick={handleReject} disabled={approvalButtonsDisabled}>
-                {(() => {
-                  if (currentStep?.type === 'llm-processing') {
-                    return (currentStep as LlmProcessingStep).approvalOptions?.rejectLabel ?? 'Regenerate';
-                  } else if (currentStep?.type === 'llm-approval') {
-                    return (currentStep as LlmApprovalStep).approvalOptions?.rejectLabel ?? 'Reject';
-                  }
-                  return 'Reject';
-                })()}
-              </Button>
-              <Button onClick={handleApprove} disabled={approvalButtonsDisabled}>
-                {isLastStep ? 'Finish' : 'Next'}
-              </Button>
-            </Group>
-          )}
-        </Group>
-    </Modal>
+    </BaseModal>
   );
 };

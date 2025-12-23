@@ -80,11 +80,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
 
   const baseStyles: MantineModalProps['styles'] = isSheet
     ? {
-        root: {
-          border: '1px solid red',
-        },
         content: {
-          border: '1px solid red',
           height: sheetHeight,
           maxHeight: sheetHeight,
           overflow: 'hidden',
@@ -117,7 +113,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       closeOnClickOutside={closeOnClickOutside}
       closeOnEscape={closeOnEscape}
       overlayProps={resolvedOverlayProps}
-      yOffset={'5%'}
+      yOffset={'5vh'}
       size={isSheet ? sheetSize : size}
       styles={{ ...(baseStyles ?? {}), ...(styles ?? {}) }}
     >

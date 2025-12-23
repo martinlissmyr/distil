@@ -1,6 +1,6 @@
 // src/components/playground/PlaygroundOutput.tsx
 import React, { useState } from 'react';
-import { Title, SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack, Badge } from '@mantine/core';
+import { Title, SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack, Badge, Paper } from '@mantine/core';
 import { Copy, Check } from 'lucide-react';
 
 type PlaygroundOutputProps = {
@@ -34,45 +34,61 @@ export const PlaygroundOutput: React.FC<PlaygroundOutputProps> = ({
 
   return (
     <Stack gap="sm" style={{ flexGrow: 1, minHeight: 0 }}>
-      <Stack gap="sm">
-        <Title order={4}>Built Prompt Output</Title>
-        {includedContexts.length > 0 && (
-          <Group gap="xs">
-            <Text size="xs" c="dimmed">Included contexts:</Text>
-            {includedContexts.map(ctx => (
-              <Badge key={ctx} size="sm" variant="light">{ctx}</Badge>
-            ))}
-          </Group>
-        )}
-        <SegmentedControl
-          value={activeTab}
-          onChange={setActiveTab}
-          data={[
-            { label: 'System Message', value: 'system' },
-            { label: 'Assistant Context', value: 'assistant' },
-            { label: 'User Message', value: 'user' },
-          ]}
-        />
-        <Group justify="space-between">
-          <Text size="sm" c="dimmed">
-            Character count: {renderContent().length}
-          </Text>
-          <CopyButton value={renderContent()}>
-            {({ copied, copy }) => (
-              <Button
-                size="xs"
-                variant="subtle"
-                leftSection={copied ? <Check size={14} /> : <Copy size={14} />}
-                onClick={copy}
-              >
-                {copied ? 'Copied' : 'Copy'}
-              </Button>
+      <Box
+        radius="none"
+        p={10}
+      >
+
+        <Paper
+          radius="sm"
+          p={10}
+        >
+          <Stack gap="sm">
+            {includedContexts.length > 0 && (
+              <Group gap="xs">
+                <Text size="xs" c="dimmed">Included contexts:</Text>
+                {includedContexts.map(ctx => (
+                  <Badge key={ctx} size="sm" variant="light">{ctx}</Badge>
+                ))}
+              </Group>
             )}
-          </CopyButton>
-        </Group>
-      </Stack>
+            <SegmentedControl
+              value={activeTab}
+              onChange={setActiveTab}
+              data={[
+                { label: 'System Message', value: 'system' },
+                { label: 'Assistant Context', value: 'assistant' },
+                { label: 'User Message', value: 'user' },
+              ]}
+            />
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Character count: {renderContent().length}
+              </Text>
+              <CopyButton value={renderContent()}>
+                {({ copied, copy }) => (
+                  <Button
+                    size="xs"
+                    variant="subtle"
+                    leftSection={copied ? <Check size={14} /> : <Copy size={14} />}
+                    onClick={copy}
+                  >
+                    {copied ? 'Copied' : 'Copy'}
+                  </Button>
+                )}
+              </CopyButton>
+            </Group>
+          </Stack>
+        </Paper>
+      </Box>
       <Box style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Code block style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{renderContent()}</Code>
+        <Code
+          block
+          p={15}
+          bg="transparent"
+          style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}>
+          {renderContent()}
+        </Code>
       </Box>
     </Stack>
   );

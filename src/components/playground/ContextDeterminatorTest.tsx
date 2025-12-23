@@ -199,6 +199,7 @@ export const ContextDeterminatorTest: React.FC = () => {
           value={userPrompt}
           onChange={(e) => setUserPrompt(e.currentTarget.value)}
           minRows={3}
+          radius="sm"
           autosize
         />
 
@@ -248,6 +249,7 @@ export const ContextDeterminatorTest: React.FC = () => {
               <Paper
                 p="md"
                 withBorder
+                radius="sm"
                 style={{ borderLeft: '4px solid var(--mantine-color-indigo-6)' }}
               >
                 <Stack gap="sm">
@@ -272,7 +274,7 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           {heuristicResults && (() => {
             return (
-              <Paper p="md" withBorder>
+              <Paper p="md" withBorder radius="sm">
                 <Stack gap="sm">
                   <Title order={5}>Quick Heuristic Check</Title>
                   <Text size="sm" fw={500}>
@@ -296,7 +298,7 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           {remainingContexts && (() => {
             return (
-              <Paper p="md" withBorder>
+              <Paper p="md" withBorder radius="sm"> 
                 <Stack gap="sm">
                   <Title order={5}>LLM Classification</Title>
                   <Text size="sm" fw={500}>
@@ -331,7 +333,7 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           {finalResult && (() => {
             return (
-              <Paper p="md" withBorder>
+              <Paper p="md" withBorder radius="sm">
                 <Stack gap="sm">
                   <Title order={5}>Final Result</Title>
                   <Stack gap="xs">
