@@ -57,6 +57,12 @@ type TextItemBase = BaseSettingItem & {
   onChange: (value: string) => void;
   autoFocus?: boolean;
 
+  /**
+   * Optional: triggered when this input is focused and the user presses Cmd+Enter
+   * (also supports Ctrl+Enter on non-mac keyboards).
+   */
+  onCmdEnter?: () => void | Promise<void>;
+
   /** Optional validation callback. If provided, always shows status icon. */
   validate?: (value: string) => ValidationResult;
 };
@@ -266,38 +272,65 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
       );
 
     case 'text': {
-      const focusProps = item.autoFocus
+      const t = item as TextSettingItem;
+
+      const focusProps = t.autoFocus
         ? ({ autoFocus: true, 'data-autofocus': true } as const)
         : {};
 
+      const handleKeyDown: React.KeyboardEventHandler<
+        HTMLInputElement | HTMLTextAreaElement
+      > = async (e) => {
+        if (disabled) return;
+        if (!t.onCmdEnter) return;
+
+        // Don’t trigger while composing (IME)
+        // (nativeEvent.isComposing exists on KeyboardEvent)
+        // @ts-expect-error - isComposing exists at runtime
+        if (e.nativeEvent?.isComposing) return;
+
+        const isEnter = e.key === 'Enter';
+        const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+
+        if (isEnter && isCmdOrCtrl) {
+          e.preventDefault();
+          e.stopPropagation();
+          await t.onCmdEnter();
+        }
+      };
+
       const common = {
-        value: item.value,
-        placeholder: item.placeholder,
+        value: t.value,
+        placeholder: t.placeholder,
         disabled,
         variant: 'unstyled' as const,
         autoComplete: 'off',
+        onKeyDown: handleKeyDown,
       };
 
-      const input = item.multiline ? (
+      const input = t.multiline ? (
         <Textarea
           {...common}
           {...focusProps}
           autosize
           minRows={1}
-          onChange={(e) => item.onChange(e.currentTarget.value)}
+          onChange={(e) => t.onChange(e.currentTarget.value)}
           radius={0}
           classNames={{
             root: classes.unstyledInputRoot,
             input: classes.unstyledTextarea,
           }}
         />
-      ) : item.masked ? (
+      ) : t.masked ? (
         <PasswordInput
           {...common}
           // PasswordInput doesn't always forward unknown props to the <input>.
-          // inputProps is the safe place for autofocus/data-autofocus.
-          inputProps={focusProps}
-          onChange={(e) => item.onChange(e.currentTarget.value)}
+          // inputProps is the safe place for autofocus/data-autofocus AND key handling.
+          inputProps={{
+            ...focusProps,
+            onKeyDown: handleKeyDown,
+          }}
+          onChange={(e) => t.onChange(e.currentTarget.value)}
           radius={0}
           classNames={{
             root: classes.unstyledInputRoot,
@@ -308,7 +341,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         <TextInput
           {...common}
           {...focusProps}
-          onChange={(e) => item.onChange(e.currentTarget.value)}
+          onChange={(e) => t.onChange(e.currentTarget.value)}
           radius={0}
           classNames={{
             root: classes.unstyledInputRoot,
@@ -318,16 +351,16 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
       );
 
       // ---- validation handling ----
-      const hasValidate = typeof item.validate === 'function';
+      const hasValidate = typeof t.validate === 'function';
 
       const validation = (() => {
         if (!hasValidate) return null;
 
-        const v = String(item.value ?? '');
+        const v = String(t.value ?? '');
         if (!v.trim()) return { state: 'empty' as const };
 
         try {
-          const res = item.validate!(v);
+          const res = t.validate!(v);
           if (!res || typeof res !== 'object' || !('state' in res)) {
             return { state: 'unknown' as const };
           }
@@ -343,7 +376,11 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
       const iconSpec = (() => {
         if (!hasValidate) return null;
 
-        if (!validation || validation.state === 'empty' || validation.state === 'unknown') {
+        if (
+          !validation ||
+          validation.state === 'empty' ||
+          validation.state === 'unknown'
+        ) {
           return { type: 'validationEmpty' as const, color: undefined };
         }
         if (validation.state === 'ok') {
@@ -382,7 +419,12 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         );
 
       return (
-        <Group wrap="nowrap" gap={8} align="center" className={classes.rightGroup}>
+        <Group
+          wrap="nowrap"
+          gap={8}
+          align="center"
+          className={classes.rightGroup}
+        >
           {input}
           {iconWithTooltip}
         </Group>

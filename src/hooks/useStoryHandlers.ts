@@ -43,7 +43,13 @@ export interface StoryHandlers {
   editingStory: { id: string; title: string } | null;
   handleOpenEditStory: (storyId: string) => void;
   handleCloseEditStory: () => void;
-  handleRenameStory: (newTitle: string) => Promise<void>;
+
+  /**
+   * Called by EntityEditModal ON CLOSE ONLY.
+   * Receives the final title (already trimmed/fallback-applied by the modal).
+   */
+  handleRenameStory: (finalTitle: string) => Promise<void>;
+
   handleDeleteStory: () => Promise<void>;
 }
 
@@ -81,7 +87,6 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     if (!trimmed) return;
 
     const created = await storiesCRUD.create(trimmed);
-    // onCreate side-effects (navigate + load story) still happen via useEntityCRUD options in App.tsx
     if (created) {
       setCreatingStory(false);
     }
@@ -121,24 +126,36 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     setEditingStory(null);
   }, []);
 
-  const handleRenameStory = useCallback(async (newTitle: string) => {
-    if (!editingStory || !selectedProjectId) return;
+  // IMPORTANT: no trimming here; modal owns trimming/fallback-on-close.
+  const handleRenameStory = useCallback(async (finalTitle: string) => {
+    if (!selectedProjectId) return;
 
-    const trimmed = newTitle.trim();
-    if (!trimmed) return;
+    // Use functional update to avoid stale closure bugs
+    let storyId: string | null = null;
+    let prevTitle: string | null = null;
 
-    await storiesCRUD.update(editingStory.id, { title: trimmed });
+    setEditingStory((prev) => {
+      if (!prev) return prev;
+      storyId = prev.id;
+      prevTitle = prev.title;
+      return prev; // no UI change yet; we update after save below
+    });
 
-    // If this is the currently open story, keep editor title in sync
-    if (selectedStoryId === editingStory.id) {
-      setCurrentTitle(trimmed);
+    if (!storyId) return;
+
+    // Avoid redundant writes
+    if (prevTitle === finalTitle) return;
+
+    await storiesCRUD.update(storyId, { title: finalTitle });
+
+    // Sync modal state (keep it open)
+    setEditingStory((prev) => (prev && prev.id === storyId ? { ...prev, title: finalTitle } : prev));
+
+    // Sync editor title if open
+    if (selectedStoryId === storyId) {
+      setCurrentTitle(finalTitle);
     }
-
-    // ✅ Keep modal open; just sync local modal state
-    setEditingStory((prev) =>
-      prev ? { ...prev, title: trimmed } : prev
-    );
-  }, [editingStory, selectedProjectId, selectedStoryId, storiesCRUD, setCurrentTitle]);
+  }, [selectedProjectId, selectedStoryId, storiesCRUD, setCurrentTitle]);
 
   const handleDeleteStory = useCallback(async () => {
     if (!editingStory || !selectedProjectId) return;

@@ -44,7 +44,13 @@ export interface ProjectHandlers {
   editingProject: { id: string; name: string } | null;
   handleOpenEditProject: (projectId: string) => void;
   handleCloseEditProject: () => void;
-  handleRenameProject: (newName: string) => Promise<void>;
+
+  /**
+   * Called by EntityEditModal ON CLOSE ONLY.
+   * Receives the final name (already trimmed/fallback-applied by the modal).
+   */
+  handleRenameProject: (finalName: string) => Promise<void>;
+
   handleDeleteProject: () => Promise<void>;
 }
 
@@ -98,7 +104,6 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     if (!trimmed) return;
 
     const created = await projectsCRUD.create(trimmed);
-    // onCreate side-effects (navigate + load stories) still happen via useEntityCRUD options in App.tsx
     if (created) {
       setCreatingProject(false);
     }
@@ -132,19 +137,28 @@ export function useProjectHandlers(params: ProjectHandlersParams): ProjectHandle
     setEditingProject(null);
   }, []);
 
-  const handleRenameProject = useCallback(async (newName: string) => {
-    if (!editingProject) return;
+  // IMPORTANT: no trimming here; modal owns trimming/fallback-on-close.
+  const handleRenameProject = useCallback(async (finalName: string) => {
+    let projectId: string | null = null;
+    let prevName: string | null = null;
 
-    const trimmed = newName.trim();
-    if (!trimmed) return;
+    setEditingProject((prev) => {
+      if (!prev) return prev;
+      projectId = prev.id;
+      prevName = prev.name;
+      return prev;
+    });
 
-    await projectsCRUD.update(editingProject.id, { name: trimmed });
+    if (!projectId) return;
 
-    // ✅ Keep modal open; sync local modal state
-    setEditingProject((prev) =>
-      prev ? { ...prev, name: trimmed } : prev
-    );
-  }, [editingProject, projectsCRUD]);
+    // Avoid redundant writes
+    if (prevName === finalName) return;
+
+    await projectsCRUD.update(projectId, { name: finalName });
+
+    // Keep modal open; sync local modal state
+    setEditingProject((prev) => (prev && prev.id === projectId ? { ...prev, name: finalName } : prev));
+  }, [projectsCRUD]);
 
   const handleDeleteProject = useCallback(async () => {
     if (!editingProject) return;
