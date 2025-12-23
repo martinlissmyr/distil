@@ -55,6 +55,7 @@ type TextItemBase = BaseSettingItem & {
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
+  autoFocus?: boolean;
 
   /** Optional validation callback. If provided, always shows status icon. */
   validate?: (value: string) => ValidationResult;
@@ -81,6 +82,7 @@ export type SelectSettingItem = BaseSettingItem & {
   placeholder?: string;
   data: { value: string; label: string }[];
   onChange: (value: string | null) => void;
+  autoFocus?: boolean;
 };
 
 export type ToggleSettingItem = BaseSettingItem & {
@@ -204,7 +206,14 @@ const SettingRow: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
             {leftIcon}
             {leftLabel}
           </Group>
-          <Group className={classes.right} flex={1} justify="flex-end" align="center" wrap="nowrap" gap="sm">
+          <Group
+            className={classes.right}
+            flex={1}
+            justify="flex-end"
+            align="center"
+            wrap="nowrap"
+            gap="sm"
+          >
             {item.rightText ? (
               <Text size="sm" className={classes.rightText} c="dimmed">
                 {item.rightText}
@@ -213,9 +222,7 @@ const SettingRow: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
             <Flex
               align="center"
               className={classes.navChevron}
-              style={{
-                minHeight: '40px',
-              }}
+              style={{ minHeight: '40px' }}
             >
               <Icon type="forward" size={28} />
             </Flex>
@@ -238,9 +245,7 @@ const SettingRow: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         gap="sm"
         align="center"
         justify="flex-end"
-        style={{
-          minHeight: '40px',
-        }}
+        style={{ minHeight: '40px' }}
       >
         {right}
       </Group>
@@ -260,129 +265,146 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         </Text>
       );
 
-      case 'text': {
-        const common = {
-          value: item.value,
-          placeholder: item.placeholder,
-          disabled,
-          variant: 'unstyled' as const,
-          autoComplete: 'off',
-        };
+    case 'text': {
+      const focusProps = item.autoFocus
+        ? ({ autoFocus: true, 'data-autofocus': true } as const)
+        : {};
 
-        const input = item.multiline ? (
-          <Textarea
-            {...common}
-            autosize
-            minRows={1}
-            onChange={(e) => item.onChange(e.currentTarget.value)}
-            radius={0}
-            classNames={{
-              root: classes.unstyledInputRoot,
-              input: classes.unstyledTextarea,
-            }}
-          />
-        ) : item.masked ? (
-          <PasswordInput
-            {...common}
-            onChange={(e) => item.onChange(e.currentTarget.value)}
-            radius={0}
-            classNames={{
-              root: classes.unstyledInputRoot,
-              innerInput: classes.unstyledInput,
-            }}
-          />
-        ) : (
-          <TextInput
-            {...common}
-            onChange={(e) => item.onChange(e.currentTarget.value)}
-            radius={0}
-            classNames={{
-              root: classes.unstyledInputRoot,
-              input: classes.unstyledInput,
-            }}
-          />
-        );
+      const common = {
+        value: item.value,
+        placeholder: item.placeholder,
+        disabled,
+        variant: 'unstyled' as const,
+        autoComplete: 'off',
+      };
 
-        // ---- validation handling ----
-        const hasValidate = typeof item.validate === 'function';
+      const input = item.multiline ? (
+        <Textarea
+          {...common}
+          {...focusProps}
+          autosize
+          minRows={1}
+          onChange={(e) => item.onChange(e.currentTarget.value)}
+          radius={0}
+          classNames={{
+            root: classes.unstyledInputRoot,
+            input: classes.unstyledTextarea,
+          }}
+        />
+      ) : item.masked ? (
+        <PasswordInput
+          {...common}
+          // PasswordInput doesn't always forward unknown props to the <input>.
+          // inputProps is the safe place for autofocus/data-autofocus.
+          inputProps={focusProps}
+          onChange={(e) => item.onChange(e.currentTarget.value)}
+          radius={0}
+          classNames={{
+            root: classes.unstyledInputRoot,
+            innerInput: classes.unstyledInput,
+          }}
+        />
+      ) : (
+        <TextInput
+          {...common}
+          {...focusProps}
+          onChange={(e) => item.onChange(e.currentTarget.value)}
+          radius={0}
+          classNames={{
+            root: classes.unstyledInputRoot,
+            input: classes.unstyledInput,
+          }}
+        />
+      );
 
-        const validation = (() => {
-          if (!hasValidate) return null;
+      // ---- validation handling ----
+      const hasValidate = typeof item.validate === 'function';
 
-          const v = String(item.value ?? '');
-          if (!v.trim()) return { state: 'empty' as const };
+      const validation = (() => {
+        if (!hasValidate) return null;
 
-          try {
-            const res = item.validate!(v);
-            // If validate returns something unexpected, treat as "empty/toned down"
-            if (!res || typeof res !== 'object' || !('state' in res)) return { state: 'unknown' as const };
-            return res;
-          } catch (e) {
-            return { state: 'error' as const, text: e instanceof Error ? e.message : 'Validation failed' };
+        const v = String(item.value ?? '');
+        if (!v.trim()) return { state: 'empty' as const };
+
+        try {
+          const res = item.validate!(v);
+          if (!res || typeof res !== 'object' || !('state' in res)) {
+            return { state: 'unknown' as const };
           }
-        })();
+          return res;
+        } catch (e) {
+          return {
+            state: 'error' as const,
+            text: e instanceof Error ? e.message : 'Validation failed',
+          };
+        }
+      })();
 
-        const iconSpec = (() => {
-          if (!hasValidate) return null;
+      const iconSpec = (() => {
+        if (!hasValidate) return null;
 
-          if (!validation || validation.state === 'empty' || validation.state === 'unknown') {
-            return { type: 'validationEmpty' as const, color: undefined };
-          }
-          if (validation.state === 'ok') {
-            return { type: 'validationOk' as const, color: 'green' as const };
-          }
-          if (validation.state === 'error') {
-            return { type: 'validationError' as const, color: 'red' as const };
-          }
-          // fallback
+        if (!validation || validation.state === 'empty' || validation.state === 'unknown') {
           return { type: 'validationEmpty' as const, color: undefined };
-        })();
+        }
+        if (validation.state === 'ok') {
+          return { type: 'validationOk' as const, color: 'green' as const };
+        }
+        if (validation.state === 'error') {
+          return { type: 'validationError' as const, color: 'red' as const };
+        }
+        return { type: 'validationEmpty' as const, color: undefined };
+      })();
 
-        const iconNode = iconSpec ? (
-          <Box
-            className={classes.validationIcon}
-            aria-label={validation?.text || validation?.state || 'Validation'}
-            c={iconSpec.color}
-            style={{
-              opacity: iconSpec.type === 'validationEmpty' ? 0.5 : 1,
-            }}
+      const iconNode = iconSpec ? (
+        <Box
+          className={classes.validationIcon}
+          aria-label={validation?.text || validation?.state || 'Validation'}
+          c={iconSpec.color}
+          style={{ opacity: iconSpec.type === 'validationEmpty' ? 0.5 : 1 }}
+        >
+          <Icon type={iconSpec.type} size={18} />
+        </Box>
+      ) : null;
+
+      const iconWithTooltip =
+        iconNode && validation?.text ? (
+          <Tooltip
+            label={validation.text}
+            withArrow
+            position="left"
+            withinPortal
+            openDelay={150}
           >
-            <Icon type={iconSpec.type} size={18} />
-          </Box>
-        ) : null;
-
-        const iconWithTooltip =
-          iconNode && validation?.text ? (
-            <Tooltip
-              label={validation.text}
-              withArrow
-              position="left"
-              withinPortal
-              openDelay={150}
-            >
-              {iconNode}
-            </Tooltip>
-          ) : (
-            iconNode
-          );
-
-        return (
-          <Group wrap="nowrap" gap={8} align="center" className={classes.rightGroup}>
-            {input}
-            {iconWithTooltip}
-          </Group>
+            {iconNode}
+          </Tooltip>
+        ) : (
+          iconNode
         );
-      }
-    case 'select':
+
+      return (
+        <Group wrap="nowrap" gap={8} align="center" className={classes.rightGroup}>
+          {input}
+          {iconWithTooltip}
+        </Group>
+      );
+    }
+
+    case 'select': {
+      const s = item as SelectSettingItem;
+      const focusProps = s.autoFocus
+        ? ({ autoFocus: true, 'data-autofocus': true } as const)
+        : {};
+
       return (
         <Select
-          value={item.value}
-          placeholder={item.placeholder}
-          data={item.data}
-          onChange={(item.onChange)}
+          value={s.value}
+          placeholder={s.placeholder}
+          data={s.data}
+          onChange={s.onChange}
           disabled={disabled}
           variant="unstyled"
-          comboboxProps={{ 
+          {...focusProps}
+          comboboxProps={{
             dropdownPadding: 6,
             radius: 24,
           }}
@@ -393,12 +415,14 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
           }}
         />
       );
+    }
 
-    case 'toggle':
+    case 'toggle': {
+      const t = item as ToggleSettingItem;
       return (
         <Switch
-          checked={item.checked}
-          onChange={(e) => item.onChange(e.currentTarget.checked)}
+          checked={t.checked}
+          onChange={(e) => t.onChange(e.currentTarget.checked)}
           disabled={disabled}
           size="md"
           styles={{
@@ -406,6 +430,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
           }}
         />
       );
+    }
 
     case 'button': {
       const btn = item as ButtonSettingItem;
@@ -413,7 +438,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         <Button
           variant={btn.buttonVariant ?? 'light'}
           color={btn.buttonColor}
-          size={"compact-xs"}
+          size="compact-xs"
           radius="sm"
           onClick={disabled ? undefined : btn.onClick}
           disabled={disabled}

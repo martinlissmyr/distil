@@ -270,12 +270,23 @@ const App: React.FC = () => {
         onCloseEditProject={projectHandlers.handleCloseEditProject}
         onRenameProject={projectHandlers.handleRenameProject}
         onDeleteProject={projectHandlers.handleDeleteProject}
+
         editingStory={storyHandlers.editingStory}
         onCloseEditStory={storyHandlers.handleCloseEditStory}
         onRenameStory={storyHandlers.handleRenameStory}
         onDeleteStory={storyHandlers.handleDeleteStory}
+
+        creatingProject={projectHandlers.creatingProject}
+        onCloseCreateProject={projectHandlers.handleCloseCreateProject}
+        onConfirmCreateProject={projectHandlers.handleConfirmCreateProject}
+
+        creatingStory={storyHandlers.creatingStory}
+        onCloseCreateStory={storyHandlers.handleCloseCreateStory}
+        onConfirmCreateStory={storyHandlers.handleConfirmCreateStory}
+
         settingsModalOpen={settingsModalOpen}
         onCloseSettingsModal={() => setSettingsModalOpen(false)}
+
         wizardModalOpen={wizardModalOpen}
         onCloseWizardModal={handleCloseWizardModal}
       />

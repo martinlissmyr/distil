@@ -2,7 +2,6 @@
 import { useState, useCallback } from 'react';
 import { client, StoryMeta, StoryData } from '../api/client';
 
-// Type for EntityCRUD return value
 interface EntityCRUD<T> {
   items: T[];
   isLoading: boolean;
@@ -15,32 +14,32 @@ interface EntityCRUD<T> {
 }
 
 export interface StoryHandlersParams {
-  // Navigation methods
   goToProject: (projectId: string) => void;
   goToStory: (projectId: string, storyId: string, section?: string) => void;
   clearEditor: () => void;
 
-  // Story editor methods
   loadStory: (story: StoryData) => void;
   setCurrentTitle: (title: string) => void;
 
-  // CRUD operations
   storiesCRUD: EntityCRUD<StoryMeta>;
   stories: StoryMeta[];
 
-  // Current state
   selectedProjectId: string | null;
   selectedStoryId: string | null;
 }
 
 export interface StoryHandlers {
-  // Story CRUD handlers
-  handleCreateStory: () => Promise<void>;
+  // Create flow (NEW)
+  creatingStory: boolean;
+  handleCreateStory: () => void; // opens modal
+  handleCloseCreateStory: () => void;
+  handleConfirmCreateStory: (title: string) => Promise<void>;
+
+  // Existing
   handleSelectStory: (id: string) => Promise<void>;
   handleBackToProjectFromStory: () => void;
   handleReorderStories: (ids: string[]) => Promise<void>;
 
-  // Edit modal state and handlers
   editingStory: { id: string; title: string } | null;
   handleOpenEditStory: (storyId: string) => void;
   handleCloseEditStory: () => void;
@@ -48,11 +47,6 @@ export interface StoryHandlers {
   handleDeleteStory: () => Promise<void>;
 }
 
-/**
- * Custom hook to manage all story-related handlers and modal state
- *
- * Consolidates story CRUD operations, navigation, and edit modal management
- */
 export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
   const {
     goToProject,
@@ -66,16 +60,34 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     selectedStoryId,
   } = params;
 
-  // Edit modal state
   const [editingStory, setEditingStory] = useState<{ id: string; title: string } | null>(null);
 
-  // Story CRUD handlers
-  const handleCreateStory = useCallback(async () => {
-    if (!selectedProjectId) return;
-    const title = `Untitled ${stories.length + 1}`;
-    await storiesCRUD.create(title);
-  }, [selectedProjectId, stories.length, storiesCRUD]);
+  // NEW: create modal state
+  const [creatingStory, setCreatingStory] = useState(false);
 
+  // ---- Create flow (NEW) ----
+  const handleCreateStory = useCallback(() => {
+    if (!selectedProjectId) return;
+    setCreatingStory(true);
+  }, [selectedProjectId]);
+
+  const handleCloseCreateStory = useCallback(() => {
+    setCreatingStory(false);
+  }, []);
+
+  const handleConfirmCreateStory = useCallback(async (title: string) => {
+    if (!selectedProjectId) return;
+    const trimmed = title.trim();
+    if (!trimmed) return;
+
+    const created = await storiesCRUD.create(trimmed);
+    // onCreate side-effects (navigate + load story) still happen via useEntityCRUD options in App.tsx
+    if (created) {
+      setCreatingStory(false);
+    }
+  }, [selectedProjectId, storiesCRUD]);
+
+  // ---- Existing behavior ----
   const handleSelectStory = useCallback(async (id: string) => {
     if (!selectedProjectId) return;
     goToStory(selectedProjectId, id, 'prose');
@@ -98,7 +110,7 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     await storiesCRUD.reorder(ids);
   }, [storiesCRUD]);
 
-  // Edit modal handlers
+  // ---- Edit modal handlers ----
   const handleOpenEditStory = useCallback((storyId: string) => {
     const story = stories.find((s) => s.id === storyId);
     if (!story) return;
@@ -111,17 +123,21 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
 
   const handleRenameStory = useCallback(async (newTitle: string) => {
     if (!editingStory || !selectedProjectId) return;
+
     const trimmed = newTitle.trim();
     if (!trimmed) return;
 
     await storiesCRUD.update(editingStory.id, { title: trimmed });
 
-    // Update current title if this is the currently open story
+    // If this is the currently open story, keep editor title in sync
     if (selectedStoryId === editingStory.id) {
       setCurrentTitle(trimmed);
     }
 
-    setEditingStory(null);
+    // ✅ Keep modal open; just sync local modal state
+    setEditingStory((prev) =>
+      prev ? { ...prev, title: trimmed } : prev
+    );
   }, [editingStory, selectedProjectId, selectedStoryId, storiesCRUD, setCurrentTitle]);
 
   const handleDeleteStory = useCallback(async () => {
@@ -131,10 +147,15 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
   }, [editingStory, selectedProjectId, storiesCRUD]);
 
   return {
+    creatingStory,
     handleCreateStory,
+    handleCloseCreateStory,
+    handleConfirmCreateStory,
+
     handleSelectStory,
     handleBackToProjectFromStory,
     handleReorderStories,
+
     editingStory,
     handleOpenEditStory,
     handleCloseEditStory,
