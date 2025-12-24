@@ -7,21 +7,23 @@ function openWizard(wizardId: WizardId): OpenWizardCommand {
   return { type: 'openWizard', wizardId };
 }
 
-// ---------------------------------------------------------------------------
-// Reusable action definitions
-// ---------------------------------------------------------------------------
-
 export const actions = {
   writeManifest: {
     id: 'write-manifest',
-    label: 'Write a manifest',
+    label: {
+      en: 'Write a manifest',
+      sv: 'Skriv ett manifest',
+    },
     kind: 'navigate',
     command: { type: 'navigateToManifest' },
   } satisfies SuggestionAction,
 
   writeBrief: {
     id: 'write-brief',
-    label: 'Write a brief',
+    label: {
+      en: 'Write a brief',
+      sv: 'Skriv en brief',
+    },
     kind: 'navigate',
     command: {
       type: 'navigateToStorySection',
@@ -31,17 +33,25 @@ export const actions = {
 
   briefGaps: {
     id: 'brief-gaps',
-    label: 'Analyse Brief',
+    label: {
+      en: 'Suggest enhancements',
+      sv: 'Föreslå förbättringar',
+    },
     kind: 'prompt',
     prompt:
       'Please analyze my brief. It is meant to provide conceptual guidance for later documents such as outlines, character sheets and worldbuilding dossiers. Please analyze the brief for missing elements, unclear concepts or contradictions. Focus on creative intention, thematic alignment, emotional goals, tone, core conflict and conceptual world direction—not plot details. Identify gaps that could hinder downstream development. Organize your feedback into: Missing Elements, Conceptual Weak Spots, Opportunities to Strengthen the Vision, and Clarifying Questions.',
-    displayMessage:
-      'Can you look over this brief and tell me what’s missing or unclear?',
+    displayMessage: {
+      en: 'Can you look over this brief and tell me what’s missing or unclear?',
+      sv: 'Kan du titta igenom min brief och säga vad som saknas eller är oklart?',
+    },
   } satisfies SuggestionAction,
 
   writeOutline: {
     id: 'write-outline',
-    label: 'Write an outline',
+    label: {
+      en: 'Write an outline',
+      sv: 'Skriv en disposition',
+    },
     kind: 'navigate',
     command: {
       type: 'navigateToStorySection',
@@ -51,58 +61,90 @@ export const actions = {
 
   proseImproveParagraph: {
     id: 'prose-improve-paragraph',
-    label: 'Polish a paragraph',
+    label: {
+      en: 'Polish a paragraph',
+      sv: 'Putsa ett stycke',
+    },
     kind: 'prompt',
     prompt:
       'Improve the paragraph where the cursor is: make it clearer and more vivid without changing the meaning.',
-    displayMessage: 'Polish a paragraph',
+    displayMessage: {
+      en: 'Polish this paragraph',
+      sv: 'Putsa det här stycket',
+    },
   } satisfies SuggestionAction,
 
   manifestStart: {
     id: 'manifest-start',
-    label: 'Get started',
+    label: {
+      en: 'Get started',
+      sv: 'Kom igång',
+    },
     kind: 'wizard',
     command: openWizard('manifest-starter'),
   } satisfies SuggestionAction,
 
   manifestGaps: {
     id: 'manifest-gaps',
-    label: 'Analyse the manifest',
+    label: {
+      en: 'Analyse the manifest',
+      sv: 'Analysera manifestet',
+    },
     kind: 'prompt',
     prompt:
       'Please review the following Author Manifest and assess how well it expresses the author’s voice, values, themes, and creative principles. Identify strengths as well as areas that could be clarified or expanded. Keep the tone supportive and focus on how effectively the manifest communicates the author’s intended identity and storytelling approach. The audience is the author herself and an AI Assistant, not the public.',
-    displayMessage:
-      'Can you take a look at my manifest and tell me how well it communicates my voice and values?',
+    displayMessage: {
+      en: 'Can you review my manifest and tell me how well it communicates my voice and values?',
+      sv: 'Kan du granska mitt manifest och säga hur väl det förmedlar min röst och mina värderingar?',
+    },
   } satisfies SuggestionAction,
 
   outlineWizard: {
     id: 'outline-wizard',
-    label: 'Build an outline',
+    label: {
+      en: 'Build an outline',
+      sv: 'Bygg en disposition',
+    },
     kind: 'wizard',
     command: openWizard('outline-builder'),
   } satisfies SuggestionAction,
 
   outlineGaps: {
     id: 'outline-gaps',
-    label: 'Find weak points',
+    label: {
+      en: 'Find weak points',
+      sv: 'Hitta svagheter',
+    },
     kind: 'prompt',
     prompt:
       'Look for weak points in my outline: where is preparation, payoff, or clear conflict missing?',
-    displayMessage: 'Find weak points',
+    displayMessage: {
+      en: 'Find weak points in my outline',
+      sv: 'Hitta svagheter i min disposition',
+    },
   } satisfies SuggestionAction,
 
   briefIdeaShortStory: {
     id: 'brief-idea-short-story',
-    label: 'Generate a brief for a short story',
+    label: {
+      en: 'Generate a short story brief',
+      sv: 'Skapa en novell-brief',
+    },
     kind: 'prompt',
     prompt:
-      'Generate a random idea for a short story, based on the concepts, ideals and values in the Author Manifest if available.',
-    displayMessage: 'Generate a brief for a short story',
+      'Generate a random idea for a short story, based on the concepts, ideals and values in the Author Manifest.',
+    displayMessage: {
+      en: 'Generate a brief for a short story based on my author manifest',
+      sv: 'Skapa en brief för en novell baserat på mitt författarmanifest',
+    },
   } satisfies SuggestionAction,
 
   testWizard: {
     id: 'test-wizard',
-    label: 'Launch Test Wizard',
+    label: {
+      en: 'Launch test wizard',
+      sv: 'Starta testguide',
+    },
     kind: 'wizard',
     command: openWizard('test-wizard'),
   } satisfies SuggestionAction,
