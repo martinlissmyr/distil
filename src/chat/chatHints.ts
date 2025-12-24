@@ -40,6 +40,8 @@ export type HintContext = {
   language: WritingLanguage;
 };
 
+type LocalizedText = string | Partial<Record<WritingLanguage, string>>;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -59,13 +61,34 @@ function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   return null;
 }
 
+function pickLang(text: LocalizedText | undefined, lang: WritingLanguage): string | undefined {
+  if (!text) return undefined;
+  if (typeof text === 'string') return text;
+
+  // fallback order: exact lang -> default lang -> any existing -> undefined
+  return (
+    text[lang] ??
+    text[DEFAULT_WRITING_LANGUAGE] ??
+    Object.values(text).find((v) => typeof v === 'string' && v.length > 0)
+  );
+}
+
+function localizeAction(action: any, lang: WritingLanguage): SuggestionAction {
+  return {
+    ...action,
+    label: pickLang(action.label, lang) ?? action.id,
+    displayMessage: pickLang(action.displayMessage, lang),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Vite template loading
 // ---------------------------------------------------------------------------
 
 // Loads *any* ./hints/<key>-<lang>.md as raw string, lazily.
 const templateLoaders = import.meta.glob('./hints/*.md', {
-  as: 'raw',
+  query: '?raw',
+  import: 'default',
 });
 
 async function loadTemplate(
@@ -109,28 +132,28 @@ async function renderIntro(
 
 type ActionStrategy = (ctx: HintContext) => SuggestionAction[];
 
-const proseActions: ActionStrategy = ({ selfState, upstream }) => {
+const proseActions: ActionStrategy = ({ selfState, upstream, language }) => {
   const out: SuggestionAction[] = [];
 
   if (isEmpty(selfState)) {
     if (!hasContent(upstream.manifest)) {
-      out.push(actions.writeManifest);
+      out.push(localizeAction(actions.writeManifest, language));
     } else {
-      if (!hasContent(upstream.brief)) out.push(actions.writeBrief);
+      if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
       if (!hasContent(upstream.outline) && hasContent(upstream.brief)) {
-        out.push(actions.writeOutline);
+        out.push(localizeAction(actions.writeOutline, language));
       }
     }
-    out.push(actions.testWizard);
+    out.push(localizeAction(actions.testWizard, language));
   }
 
   if (hasContent(selfState)) {
     if (!hasContent(upstream.manifest)) {
-      out.push(actions.writeManifest);
+      out.push(localizeAction(actions.writeManifest, language));
     } else {
-      if (!hasContent(upstream.brief)) out.push(actions.writeBrief);
+      if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
       if (!hasContent(upstream.outline) && hasContent(upstream.brief)) {
-        out.push(actions.writeOutline);
+        out.push(localizeAction(actions.writeOutline, language));
       }
     }
   }
@@ -138,30 +161,32 @@ const proseActions: ActionStrategy = ({ selfState, upstream }) => {
   return out;
 };
 
-const manifestActions: ActionStrategy = ({ selfState }) => {
+const manifestActions: ActionStrategy = ({ selfState, language }) => {
   const out: SuggestionAction[] = [];
-  if (isEmpty(selfState)) out.push(actions.manifestStart);
-  if (hasContent(selfState)) out.push(actions.manifestGaps);
+  if (isEmpty(selfState)) out.push(localizeAction(actions.manifestStart, language));
+  if (hasContent(selfState)) out.push(localizeAction(actions.manifestGaps, language));
   return out;
 };
 
-const outlineActions: ActionStrategy = ({ selfState, upstream }) => {
+const outlineActions: ActionStrategy = ({ selfState, upstream, language }) => {
   const out: SuggestionAction[] = [];
 
   if (isEmpty(selfState)) {
-    if (!hasContent(upstream.brief)) out.push(actions.writeBrief);
-    if (hasContent(upstream.brief)) out.push(actions.outlineWizard);
+    if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
+    if (hasContent(upstream.brief)) out.push(localizeAction(actions.outlineWizard, language));
   }
 
-  if (hasContent(selfState)) out.push(actions.outlineGaps);
+  if (hasContent(selfState)) out.push(localizeAction(actions.outlineGaps, language));
 
   return out;
 };
 
-const briefActions: ActionStrategy = ({ selfState }) => {
+const briefActions: ActionStrategy = ({ selfState, upstream, language }) => {
   const out: SuggestionAction[] = [];
-  if (isEmpty(selfState)) out.push(actions.briefIdeaShortStory);
-  if (hasContent(selfState)) out.push(actions.briefGaps);
+  if (isEmpty(selfState) && hasContent(upstream.manifest)) {
+    out.push(localizeAction(actions.briefIdeaShortStory, language));
+  }
+  if (hasContent(selfState)) out.push(localizeAction(actions.briefGaps, language));
   return out;
 };
 

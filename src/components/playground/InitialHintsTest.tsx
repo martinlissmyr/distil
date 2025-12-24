@@ -309,16 +309,24 @@ export const InitialHintsTest: React.FC = () => {
                           </Group>
 
                           {action.kind === 'prompt' && action.prompt && (
-                            <Text
-                              size="xs"
-                              c="dimmed"
-                              style={{
-                                fontFamily: 'monospace',
-                                whiteSpace: 'pre-wrap',
-                              }}
-                            >
-                              Prompt: {action.prompt}
-                            </Text>
+                            <>
+                              <Text
+                                size="xs"
+                                c="dimmed"
+                                style={{
+                                  fontFamily: 'monospace',
+                                  whiteSpace: 'pre-wrap',
+                                }}
+                              >
+                                Prompt: {action.prompt}
+                              </Text>
+                              <Text
+                                size="xs"
+                                c="dimmed"
+                              >
+                                Message: {action.displayMessage}
+                              </Text>
+                            </>
                           )}
 
                           {action.kind === 'navigate' &&
