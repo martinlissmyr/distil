@@ -40,6 +40,12 @@ type AppStore = {
   updateMetaDoc: (scope: MetaScope, key: MetaDocKey, json: any) => void;
 
   saveMetaDoc: (scope: MetaScope, key: MetaDocKey) => Promise<void>;
+
+  // ---- Per-document revision (used to trigger hint reseeds etc.) ----
+  docRevision: Record<string, number>;
+  bumpDocRevision: (docId: string) => void;
+  getDocRevision: (docId: string) => number;
+
 } & WizardState &
   WizardActions;
 
@@ -48,6 +54,21 @@ export const metaId = (scope: MetaScope, key: MetaDocKey) => {
   if (scope.scope === 'root') return `root::${key}`;
   if (scope.scope === 'project') return `project:${scope.projectId}::${key}`;
   return `story:${scope.projectId}:${scope.storyId}::${key}`;
+};
+
+// ✅ Use this for revisions for meta docs (same id)
+export const docIdForMeta = metaId;
+
+// ✅ Use this for primary docs (prose etc.) – adjust if you have a better canonical id
+export const docIdForPrimary = (args: {
+  kind: string; // e.g. 'prose'
+  projectId?: string;
+  storyId?: string;
+}) => {
+  const { kind, projectId, storyId } = args;
+  if (projectId && storyId) return `story:${projectId}:${storyId}::${kind}`;
+  // fallback (should be rare)
+  return `root::${kind}`;
 };
 
 const isSupportedWritingLanguage = (v: unknown): v is WritingLanguage => {
@@ -72,6 +93,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
   writingLanguage: DEFAULT_WRITING_LANGUAGE,
   writingLanguageLoaded: false,
 
+  // ---- Per-document revision ----
+  docRevision: {},
+
+  bumpDocRevision: (docId) =>
+    set((s) => ({
+      docRevision: {
+        ...s.docRevision,
+        [docId]: (s.docRevision[docId] ?? 0) + 1,
+      },
+    })),
+
+  getDocRevision: (docId) => get().docRevision[docId] ?? 0,
+  
   async loadWritingLanguage() {
     // Avoid re-loading if already loaded
     if (get().writingLanguageLoaded) return;

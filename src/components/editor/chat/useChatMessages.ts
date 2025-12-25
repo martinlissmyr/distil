@@ -1,5 +1,5 @@
 // src/components/editor/chat/useChatMessages.ts
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { EditorKind } from '../../../types/chat';
 import {
   getInitialAssistantHint,
@@ -66,6 +66,13 @@ function computeSelfState(isTextLoaded: boolean, fullTextMarkdown: string | null
   return 'hasContent';
 }
 
+// NOTE: keep this aligned with whatever you use when bumping docRevision.
+// If the current editor is always story scoped, this is fine.
+function docIdForCurrentDoc(kind: EditorKind, projectId?: string, storyId?: string): string {
+  if (projectId && storyId) return `story:${projectId}:${storyId}::${kind}`;
+  return `root::${kind}`;
+}
+
 export function useChatMessages({
   threadId,
   kind,
@@ -77,8 +84,18 @@ export function useChatMessages({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const hasInitialisedRef = useRef(false);
   const previousMarkdownLength = useRef(0);
+
   const metaDocs = useAppStore((s) => s.metaDocs);
   const writingLanguage = useAppStore((s) => s.writingLanguage);
+
+  // Stable doc id for per-doc revision triggers
+  const docId = useMemo(
+    () => docIdForCurrentDoc(kind, projectId, storyId),
+    [kind, projectId, storyId]
+  );
+
+  // Subscribe to per-doc revision; bumping this should re-seed hint
+  const docRevision = useAppStore((s) => s.docRevision?.[docId] ?? 0);
 
   // Reset completely when switching thread/doc
   useEffect(() => {
@@ -86,6 +103,17 @@ export function useChatMessages({
     hasInitialisedRef.current = false;
     previousMarkdownLength.current = 0;
   }, [threadId]);
+
+  // If docRevision bumps (e.g. wizard inserted content), allow reseed for same thread
+  useEffect(() => {
+    if (!isTextLoaded) return;
+
+    // Allow the seeding effect below to run again
+    hasInitialisedRef.current = false;
+
+    // Avoid "empty -> content" guard interfering (safe reset)
+    previousMarkdownLength.current = 0;
+  }, [docRevision, isTextLoaded]);
 
   // If we previously initialised while empty, but now got content, allow reseed (same thread)
   useEffect(() => {
@@ -167,7 +195,8 @@ export function useChatMessages({
     metaDocs,
     projectId,
     storyId,
-    writingLanguage, // <-- you use it, so include it
+    writingLanguage,
+    docRevision, // ✅ important: re-run when wizard bumps revision
   ]);
 
   const addMessage = (message: ChatMessage) => setMessages((prev) => [...prev, message]);
