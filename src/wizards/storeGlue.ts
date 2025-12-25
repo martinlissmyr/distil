@@ -2,7 +2,7 @@
 import type { MetaDocKey } from '../types/metaDoc';
 import type { WizardActions, WizardContext, WizardState, LlmProcessingStep } from './types';
 import { createWizardEngine } from './engine';
-import { metaId } from '../state/useAppStore';
+import { docIdForMeta, metaId } from '../state/useAppStore';
 import type { MetaDocState } from '../types/metaDoc';
 import { docKinds } from '../models/docs';
 
@@ -50,6 +50,19 @@ export function createWizardActions(args: {
         const merged = current.trim() ? `${current}\n\n${text}` : text;
         const json = editor.markdown.parse(merged);
         editor.commands.setContent(json);
+
+        // Signal that this marks a revision
+        // Chat will listen to this and emit a new
+        // initial hint
+        const scope =
+          ctx.ref.scope === 'story'
+            ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
+            : ({ scope: 'root' } as const);
+
+        // if this wizard targets the "brief" meta doc:
+        const docId = docIdForMeta(scope, 'brief');
+        args.get().bumpDocRevision(docId);
+
       } catch {
         args.set((s: any) => ({ wizardResult: text }));
       }

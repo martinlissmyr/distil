@@ -41,7 +41,7 @@
       "id": "genre_tone_audience",
       "type": "question",
       "title": "Genre, ton och målgrupp",
-      "description": "Håll det öppet. Några få ord räcker. Om du har en specifik målgrupp eller ålderskategori i åtanke kan du ta med det här. Exempel: ”Litterär deckare för vuxna”, ”Stillmäld sci-fi för unga vuxna”, ”Mörk folklig skräck (18+)”, ”Hoppfull fantasy för mellanåldern”.",
+      "description": "Håll det öppet. Några få ord räcker. Om du har en specifik målgrupp eller ålderskategori i åtanke kan du ta med det här. Exempel: ”Litterär deckare för vuxna”, ”Lågmäld sci-fi för unga vuxna”, ”Mörk folklig skräck (18+)”, ”Hoppfull fantasy för mellanåldern”.",
       "questionType": "text",
       "question": "Hur skulle du beskriva berättelsens genre och ton – och vem är den till för?",
       "placeholder": "",
