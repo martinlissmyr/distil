@@ -1,0 +1,105 @@
+{
+  "id": "brief-starter",
+  "version": "1.0.0",
+  "title": "Skapa ett utkast på en brief",
+  "description": "En snabb guide som hjälper dig att skapa en första story brief i fem steg.",
+  "targetDoc": "brief",
+  "outputTemplate": "{{brief_draft}}",
+  "steps": [
+    {
+      "id": "story_form",
+      "type": "question",
+      "title": "Berättelsens form",
+      "description": "Detta hjälper till att sätta förväntningar kring omfång, tempo och narrativ tyngd.",
+      "questionType": "single-select",
+      "question": "Vilken typ av berättelse föreställer du dig?",
+      "required": true,
+      "options": [
+        {
+          "value": "novel",
+          "label": "Roman",
+          "description": "En lång berättelse med utrymme för djup, utveckling och sidospår."
+        },
+        {
+          "value": "novella",
+          "label": "Kortroman",
+          "description": "Någonstans mellan en roman och novell – fokuserad, men med visst utrymme att andas."
+        },
+        {
+          "value": "short_story",
+          "label": "Novell",
+          "description": "Kompakt form – ofta ett huvudspår eller en central konflikt."
+        },
+        {
+          "value": "other",
+          "label": "Other",
+          "description": "Manus, experimentell text etc."
+        }
+      ]
+    },
+    {
+      "id": "genre_tone_audience",
+      "type": "question",
+      "title": "Genre, ton och målgrupp",
+      "description": "Håll det öppet. Några få ord räcker. Om du har en specifik målgrupp eller ålderskategori i åtanke kan du ta med det här. Exempel: ”Litterär deckare för vuxna”, ”Stillmäld sci-fi för unga vuxna”, ”Mörk folklig skräck (18+)”, ”Hoppfull fantasy för mellanåldern”.",
+      "questionType": "text",
+      "question": "Hur skulle du beskriva berättelsens genre och ton – och vem är den till för?",
+      "placeholder": "",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 140
+    },
+    {
+      "id": "core_idea",
+      "type": "question",
+      "title": "Kärnidé",
+      "description": "Med en eller ett par meningar – fånga snabbt den centrala situationen, spänningen eller frågan som berättelsen utforskar.",
+      "questionType": "textarea",
+      "question": "Vad är berättelsens grundidé eller premiss?",
+      "placeholder": "En central situation, konflikt, fråga eller motsägelse du vill utforska…",
+      "required": true,
+      "minLength": 0,
+      "maxLength": 1200
+    },
+    {
+      "id": "inspiration",
+      "type": "question",
+      "title": "Var kom idén ifrån?",
+      "description": "Föreställ dig att du blir intervjuad om berättelsen. Hur skulle du svara på frågan: ”Vad gav dig idén till den här historien?” Det här hjälper till att fånga de bakomliggande tankarna och intentionen.",
+      "questionType": "textarea",
+      "question": "Vad gav dig idén till den här berättelsen?",
+      "placeholder": "Ett ögonblick, en fråga, en känsla, en besatthet, något du läst eller upplevt, ett tema du inte kan släppa…",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 1200
+    },
+    {
+      "id": "elements",
+      "type": "question",
+      "title": "Berättelsens element och läsarupplevelse",
+      "description": "Röriga anteckningar är helt okej. Tänk på stämning, atmosfär, emotionell tyngd, textur, energi, eftersmak eller teman. Detta hjälper till att styra röst, tempo och vad läsaren ska känna eller bära med sig.",
+      "questionType": "textarea",
+      "question": "Något mer?",
+      "placeholder": "Skriv ner alla tankar eller idéer du har, stora som små.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 2000
+    },
+    {
+      "id": "brief_draft_step",
+      "type": "llm-processing",
+      "title": "Utkast till brief",
+      "description": "Här är ett kort arbetsutkast som du kan vidareutveckla senare.",
+      "hidden": false,
+      "prompt": {
+        "system": "brief-starter-system",
+        "user": "brief-starter-user"
+      },
+      "resultKey": "brief_draft",
+      "extractJson": false,
+      "approvalOptions": {
+        "rejectLabel": "Regenerate"
+      }
+    }
+  ]
+}

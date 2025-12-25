@@ -1,16 +1,32 @@
 // src/wizards/engine.ts
-import type { MetaDocKey, MetaScope } from '../types/metaDoc';
-import type { WizardContext, WizardConfig, WizardStep, LlmProcessingStep, WizardState, ActiveWizard } from './types';
+import type { MetaDocKey } from '../types/metaDoc';
+import type {
+  WizardContext,
+  WizardStep,
+  LlmProcessingStep,
+  WizardState,
+} from './types';
 import { getWizardConfig } from './registry';
-import { getCurrentStep, getNextStepPath, getPreviousStepPath, isStepComplete } from './navigation';
+import {
+  getCurrentStep,
+  getNextStepPath,
+  getPreviousStepPath,
+  isStepComplete,
+} from './navigation';
 import { interpolate } from '../helpers/interpolate';
+import { useAppStore } from '../state/useAppStore';
+import { WRITING_LANGUAGE_LABEL } from '../types/language';
 
 export type WizardDeps = {
   // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)
-  resolveMetaDocsMarkdown: (ctx: WizardContext) => Promise<Partial<Record<MetaDocKey, string | null>>>;
+  resolveMetaDocsMarkdown: (
+    ctx: WizardContext
+  ) => Promise<Partial<Record<MetaDocKey, string | null>>>;
 
   // Chat boundary
-  sendChat: (args: { messages: Array<{ role: 'system' | 'user'; content: string }> }) => Promise<{
+  sendChat: (args: {
+    messages: Array<{ role: 'system' | 'user'; content: string }>;
+  }) => Promise<{
     ok: boolean;
     data?: { output_text: string };
     error?: string;
@@ -28,8 +44,44 @@ export type WizardDeps = {
   mockDelayMs?: number;
 };
 
+// ---------------------------------------------------------------------------
+// Vite prompt loading (./prompts/<key>.md)
+// step.prompt.system / step.prompt.user are now KEYS, not full prompt strings.
+// ---------------------------------------------------------------------------
+
+const promptLoaders = import.meta.glob('./configs/prompts/*.md', {
+  query: '?raw',
+  import: 'default',
+});
+
+// cache by full path: "./prompts/<key>.md"
+const promptCache = new Map<string, string>();
+
+async function loadPromptByKey(key: string): Promise<string> {
+  const file = key.endsWith('.md') ? key : `${key}.md`;
+  const path = `./configs/prompts/${file}`;
+
+  const cached = promptCache.get(path);
+  if (cached != null) return cached;
+
+  const loader = promptLoaders[path];
+  if (!loader) {
+    console.warn(`[wizard engine] Missing prompt file: ${path}`);
+    return '';
+  }
+
+  const content = (await loader()) as string;
+  promptCache.set(path, content);
+
+  return content;
+}
+
+// ---------------------------------------------------------------------------
 
 export function createWizardEngine(deps: WizardDeps) {
+  // NOTE: do NOT use zustand hook inside here. Use getState().
+  const getWritingLanguage = () => useAppStore.getState().writingLanguage;
+
   async function startWizard(
     wizardId: string,
     context: WizardContext
@@ -52,6 +104,7 @@ export function createWizardEngine(deps: WizardDeps) {
       wizardContext: context,
     };
   }
+
   function goToStep(state: WizardState, stepPath: number[]): WizardState {
     const { activeWizard } = state;
     if (!activeWizard) return state;
@@ -69,7 +122,10 @@ export function createWizardEngine(deps: WizardDeps) {
     const { activeWizard } = state;
     if (!activeWizard) return state;
 
-    const prev = getPreviousStepPath(activeWizard.config, activeWizard.currentStepPath);
+    const prev = getPreviousStepPath(
+      activeWizard.config,
+      activeWizard.currentStepPath
+    );
     if (!prev) return state;
 
     return {
@@ -105,7 +161,10 @@ export function createWizardEngine(deps: WizardDeps) {
     };
   }
 
-  async function processLlmStep(state: WizardState, step: LlmProcessingStep): Promise<WizardState> {
+  async function processLlmStep(
+    state: WizardState,
+    step: LlmProcessingStep
+  ): Promise<WizardState> {
     const { activeWizard, wizardContext } = state;
     if (!activeWizard || !wizardContext) return state;
 
@@ -116,13 +175,61 @@ export function createWizardEngine(deps: WizardDeps) {
     };
 
     try {
-      // mock mode
+      const metaDocsMarkdown = await deps.resolveMetaDocsMarkdown(wizardContext);
+
+      const writingLanguage = getWritingLanguage();
+      const writingLanguageName =
+        WRITING_LANGUAGE_LABEL[writingLanguage] || 'Swedish';
+
+      // Merge contexts: answers, llmResults, and non-null metaDocs
+      const vars = {
+        ...activeWizard.answers,
+        ...activeWizard.llmResults,
+        ...Object.fromEntries(
+          Object.entries(metaDocsMarkdown).filter(([_, v]) => v !== null)
+        ),
+        writingLanguageName,
+      };
+
+      // step.prompt.* are KEYS now
+      const systemTemplateKey = step.prompt.system;
+      const userTemplateKey = step.prompt.user;
+
+      const systemTemplate = systemTemplateKey
+        ? await loadPromptByKey(systemTemplateKey)
+        : '';
+      const userTemplate = await loadPromptByKey(userTemplateKey);
+
+      // Interpolate system and user separately
+      const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
+
+      if (systemTemplate.trim()) {
+        messages.push({
+          role: 'system',
+          content: interpolate(systemTemplate, vars),
+        });
+      }
+
+      messages.push({
+        role: 'user',
+        content: interpolate(userTemplate, vars),
+      });
+
       if (deps.mockMode) {
+        // mock mode
         await new Promise((r) => setTimeout(r, deps.mockDelayMs ?? 800));
+
+        // Build a readable mock output from the generated messages
+        const promptSummary = messages
+          .map((m) => {
+            const header = m.role === 'system' ? 'SYSTEM PROMPT' : 'USER PROMPT';
+            return `## ${header}\n\n${m.content}`;
+          })
+          .join('\n\n---\n\n');
+
         const mock: Record<string, string> = {
           writing_tip: "Show, don't tell—use action and sensory detail.",
-          project_summary: 'Mock summary (2–3 sentences).',
-          default: 'Mock result.',
+          default: promptSummary,
         };
         const value = mock[step.resultKey] ?? mock.default;
 
@@ -138,26 +245,9 @@ export function createWizardEngine(deps: WizardDeps) {
         };
       }
 
-      const metaDocsMarkdown = await deps.resolveMetaDocsMarkdown(wizardContext);
-
-      // Merge contexts: answers, llmResults, and non-null metaDocs
-      const vars = {
-        ...activeWizard.answers,
-        ...activeWizard.llmResults,
-        ...Object.fromEntries(
-          Object.entries(metaDocsMarkdown).filter(([_, v]) => v !== null)
-        ),
-      };
-
-      // Interpolate system and user separately
-      const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
-      if (step.prompt.system) {
-        messages.push({ role: 'system', content: interpolate(step.prompt.system, vars) });
-      }
-      messages.push({ role: 'user', content: interpolate(step.prompt.user, vars) });
-
       const res = await deps.sendChat({ messages });
-      if (!res.ok || !res.data?.output_text) throw new Error(res.error || 'Chat error');
+      if (!res.ok || !res.data?.output_text)
+        throw new Error(res.error || 'Chat error');
 
       let result: any = res.data.output_text;
       if (step.extractJson) {
@@ -219,7 +309,11 @@ export function createWizardEngine(deps: WizardDeps) {
     return lines.join('\n');
   }
 
-  async function nextStep(state: WizardState): Promise<{ state: WizardState; completed?: boolean; bakedText?: string }> {
+  async function nextStep(state: WizardState): Promise<{
+    state: WizardState;
+    completed?: boolean;
+    bakedText?: string;
+  }> {
     const w = state.activeWizard;
     if (!w) return { state };
 
@@ -253,15 +347,6 @@ export function createWizardEngine(deps: WizardDeps) {
       },
     };
 
-    const next = getCurrentStep(w.config, nextPath);
-    if (next?.type === 'llm-processing') {
-      state = await processLlmStep(state, next);
-      if (next.hidden) {
-        // auto-advance
-        return nextStep(state);
-      }
-    }
-
     return { state };
   }
 
@@ -272,11 +357,16 @@ export function createWizardEngine(deps: WizardDeps) {
       if (!w) return { state, closed: true };
 
       if (!force && w.hasUnsavedProgress) {
-        const ok = deps.confirm?.('You have unsaved progress in this wizard. Close anyway?');
+        const ok = deps.confirm?.(
+          'You have unsaved progress in this wizard. Close anyway?'
+        );
         if (ok === false) return { state, closed: false };
       }
 
-      return { state: { ...state, activeWizard: null, wizardContext: null }, closed: true };
+      return {
+        state: { ...state, activeWizard: null, wizardContext: null },
+        closed: true,
+      };
     },
     goToStep,
     previousStep,

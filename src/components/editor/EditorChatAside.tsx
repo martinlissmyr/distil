@@ -20,7 +20,7 @@ import { getDocScope } from '../../models/docs';
 
 type EditorChatAsideProps = {
   /**
-   * New preferred API: pass a doc-ref and let parent own routing/wizard wiring.
+   * Preferred API: pass a doc-ref and let parent own routing/wizard wiring.
    */
   doc?: DocRefWithKind;
 
@@ -49,7 +49,7 @@ type EditorChatAsideProps = {
   onNavigate?: (target: string) => void;
 
   /**
-   * NEW: wizard boundary. Parent decides how to start wizard (engine/store/etc).
+   * Wizard boundary. Parent decides how to start wizard (engine/store/etc).
    */
   onOpenWizard?: (args: { wizardId: string; doc: DocRefWithKind; editor?: any }) => void;
 

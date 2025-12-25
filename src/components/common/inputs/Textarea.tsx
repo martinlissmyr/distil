@@ -47,7 +47,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   value,
   onChange,
   placeholder,
-  minRows = 4,
+  minRows = 12,
   maxRows,
   required,
   minLength,

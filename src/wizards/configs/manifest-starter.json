@@ -532,13 +532,12 @@
       "description": "Creating a draft based on your answers",
       "hidden": false,
       "prompt": {
-        "system": "You are an expert writing coach helping authors articulate their creative vision. Generate a thoughtful, personal Author Manifest based on the writer's responses. The manifest should feel authentic to their voice and aspirations, organized into clear sections: Purpose & Mission, Voice & Tone, Core Themes & Questions, Worlds & Characters, Principles & Non-Negotiables, Audience, and Aspirations for Growth. Write in second person ('you', 'your') as if speaking directly to the author. Be specific, drawing from their actual answers. Avoid generic advice.",
-        "user": "Based on these responses, create an Author Manifest:\n\nINFLUENCES:\n{{step1a_influences}}\n\nASPIRATIONAL QUALITIES:\n{{step1b_traits}}\n\nEMOTIONAL INTENSITY (1-7): {{step2a_intensity}}\nEMOTIONAL AFTERTASTE: {{step2b_aftertaste}}\nCORE THEMES: {{step2c_themes}}\n\nWORLD REALISM (1-7): {{step3a_world_tilt}}\nWORLD SETTINGS: {{step3b_world_flavour}}\nCHARACTER TYPES: {{step3c_characters}}\nHUMAN STRUGGLES: {{step3d_struggles}}\n\nPRIORITIES: {{step4a_priorities}}\nTHINGS TO AVOID: {{step4b_avoid}}\nPRINCIPLES: {{step4c_principles}}\n\nREADER TEMPERAMENT: {{step5a_reader_temperament}}\nCOMPLEXITY LEVEL: {{step5b_complexity}}\nWHO NEEDS THIS: {{step5c_who_needs_this}}\n\nVOICE CLOSENESS (1-7): {{step6a_voice_closeness}}\nFUTURE SELF: {{step6b_future_self}}\nPROCESS ASPIRATION: {{step6c_process}}\n\nCreate a cohesive, inspiring Author Manifest organized into these sections:\n\n# Purpose & Mission\n# Voice & Tone\n# Core Themes & Questions\n# Worlds & Characters\n# Principles & Non-Negotiables\n# Your Reader\n# Aspirations for Growth"
+        "system": "manifest-starter-summary-system",
+        "user": "manifest-starter-summary-user"
       },
       "resultKey": "manifest_draft",
       "extractJson": false,
       "approvalOptions": {
-        "approveLabel": "This feels like me",
         "rejectLabel": "Try again"
       }
     }

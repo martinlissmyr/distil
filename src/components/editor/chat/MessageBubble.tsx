@@ -1,10 +1,10 @@
 // src/components/editor/chat/MessageBubble.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '../../common/Icon';
 import { Box, Group, Text, Button, Stack } from '@mantine/core';
 import type { SuggestionAction } from '../../../chat/chatHints';
 import type { ChatMessage } from './useChatMessages';
-import { MarkdownContent } from './MarkdownContent';
+import { MarkdownContent } from '../../common/MarkdownContent';
 
 type MessageBubbleProps = {
   message: ChatMessage;
@@ -20,6 +20,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [isTypingComplete, setIsTypingComplete] = useState(isUser);
   const [visibleActions, setVisibleActions] = useState<number>(0);
 
+  // Track which suggestion buttons are still shown (per message)
+  const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState<Set<string>>(new Set());
+
+  // Compute suggestions that are still visible
+  const visibleSuggestions = useMemo(() => {
+    const list = message.suggestions ?? [];
+    if (list.length === 0) return [];
+    return list.filter((a) => !hiddenSuggestionIds.has(a.id));
+  }, [message.suggestions, hiddenSuggestionIds]);
+
   // Typing animation for assistant messages
   useEffect(() => {
     if (isUser) {
@@ -31,6 +41,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     setDisplayedContent('');
     setIsTypingComplete(false);
     setVisibleActions(0);
+
+    // Reset hidden suggestions whenever this message changes
+    setHiddenSuggestionIds(new Set());
 
     const content = message.content;
     const typingSpeed = 10; // ms per character
@@ -47,16 +60,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }, typingSpeed);
 
     return () => clearInterval(interval);
-  }, [message.content, isUser]);
+  }, [message.id, message.content, isUser]);
 
-  // Staggered animation for action buttons
+  // Staggered animation for action buttons (based on *remaining* suggestions)
   useEffect(() => {
-    if (!isTypingComplete || !message.suggestions || message.suggestions.length === 0) {
-      return;
-    }
+    if (!isTypingComplete || visibleSuggestions.length === 0) return;
 
     setVisibleActions(0);
-    const totalActions = message.suggestions.length;
+    const totalActions = visibleSuggestions.length;
     let currentAction = 0;
 
     const staggerDelay = 80; // ms between each button
@@ -70,7 +81,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }, staggerDelay);
 
     return () => clearInterval(interval);
-  }, [isTypingComplete, message.suggestions]);
+  }, [isTypingComplete, visibleSuggestions.length]);
+
+  const handleSuggestionClick = (action: SuggestionAction) => {
+    // Remove button locally immediately
+    setHiddenSuggestionIds((prev) => {
+      const next = new Set(prev);
+      next.add(action.id);
+      return next;
+    });
+
+    onSuggestionClick?.(action);
+  };
 
   return (
     <Group
@@ -88,15 +110,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             width: '75%',
           }}
         >
-          <Text size="sm" mb="2" c="dimmed" style={{
-            textTransform: "uppercase",
-            letterSpacing: "0.8px",
-            fontSize: "10px",
-            textAlign: "right"
-          }}>
+          <Text
+            size="sm"
+            mb="2"
+            c="dimmed"
+            style={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.8px',
+              fontSize: '10px',
+              textAlign: 'right',
+            }}
+          >
             You:
           </Text>
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap', textAlign: "right" }}>
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', textAlign: 'right' }}>
             {message.content}
           </Text>
         </Box>
@@ -107,13 +134,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             lineHeight: 1.5,
           }}
         >
-          <Text size="sm" mb="2" style={{
-            textStyle: "italic",
-            textTransform: "uppercase",
-            letterSpacing: "0.8px",
-            fontSize: "10px",
-            opacity: "0.5"
-          }}>
+          <Text
+            size="sm"
+            mb="2"
+            style={{
+              textStyle: 'italic',
+              textTransform: 'uppercase',
+              letterSpacing: '0.8px',
+              fontSize: '10px',
+              opacity: '0.5',
+            }}
+          >
             Assistant:
           </Text>
           <Box
@@ -127,32 +158,33 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <MarkdownContent content={displayedContent} />
           </Box>
 
-          {isTypingComplete &&
-            message.suggestions &&
-            message.suggestions.length > 0 && (
-              <Stack mt="sm" gap="sm" align="flex-end" style={{ overflow: 'hidden' }}>
-                {message.suggestions.map((action, index) => (
-                  <Box
-                    key={action.id}
-                    style={{
-                      opacity: index < visibleActions ? 1 : 0,
-                      transform: index < visibleActions ? 'translateX(0) scale(1)' : 'translateX(20px) scale(0.95)',
-                      transition: 'opacity 200ms ease-out, transform 200ms ease-out',
-                    }}
+          {isTypingComplete && visibleSuggestions.length > 0 && (
+            <Stack mt="sm" gap="sm" align="flex-end" style={{ overflow: 'hidden' }}>
+              {visibleSuggestions.map((action, index) => (
+                <Box
+                  key={action.id}
+                  style={{
+                    opacity: index < visibleActions ? 1 : 0,
+                    transform:
+                      index < visibleActions
+                        ? 'translateX(0) scale(1)'
+                        : 'translateX(20px) scale(0.95)',
+                    transition: 'opacity 200ms ease-out, transform 200ms ease-out',
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    radius="xl"
+                    onClick={() => handleSuggestionClick(action)}
+                    rightSection={<Icon type={action.kind} />}
                   >
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      radius="xl"
-                      onClick={() => onSuggestionClick?.(action)}
-                      leftSection={<Icon type={action.kind}/>}
-                    >
-                      {action.label}
-                    </Button>
-                  </Box>
-                ))}
-              </Stack>
-            )}
+                    {action.label}
+                  </Button>
+                </Box>
+              ))}
+            </Stack>
+          )}
         </Box>
       )}
     </Group>

@@ -87,24 +87,8 @@ export type LlmProcessingStep = BaseStep & {
   extractJson?: boolean;
   retryOnError?: number;
   approvalOptions?: {
-    approveLabel?: string;
     rejectLabel?: string;
   };
-};
-
-/**
- * Show LLM result and get user approval
- */
-export type LlmApprovalStep = BaseStep & {
-  type: 'llm-approval';
-  sourceKey: string;
-  displayFormat: 'text' | 'list' | 'json';
-  approvalOptions?: {
-    approveLabel?: string;
-    rejectLabel?: string;
-    editLabel?: string;
-  };
-  onReject?: 'retry-previous' | 'skip';
 };
 
 /**
@@ -121,8 +105,8 @@ export type CompoundStep = BaseStep & {
  * Variables referenced like: {{step1_question}}, {{manifest}}, {{extracted_traits}}
  */
 export type PromptTemplate = {
-  system?: string;
-  user: string;
+  system?: string; // key, not content
+  user: string; // key, not content
 };
 
 /**

@@ -2,6 +2,7 @@
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
 import { StorySectionShell } from './StorySectionShell';
+import { useNavigation } from '../../hooks/useNavigation';
 
 type StoryWorldViewProps = {
   projectId: string;
@@ -12,11 +13,21 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
   projectId,
   storyId,
 }) => {
+  const { setStorySection, goToManifest } = useNavigation();
+
+  const handleNavigate = (target: string) => {
+    if (target === 'manifest') {
+      goToManifest();
+    } else {
+      setStorySection(target as any);
+    }
+  };
+
   return (
     <StorySectionShell
       projectId={projectId}
       storyId={storyId}
-      preloadMetaKeys={['world']}
+      preloadMetaKeys={['world', 'brief', 'outline']}
     >
       <MetaTextEditor
         mode="bound"
@@ -25,6 +36,12 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
         title="Story world"
         placeholder="Describe the world of your story: time period, location, world-building details, rules of the world…"
         withChat
+        chatConfig={{
+          kind: 'world',
+          storyId,
+          projectId,
+          onNavigate: handleNavigate,
+        }}
       />
     </StorySectionShell>
   );

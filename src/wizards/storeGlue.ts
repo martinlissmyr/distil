@@ -13,7 +13,7 @@ export function createWizardActions(args: {
 }) {
   const service = createWizardEngine({
     sendChat: args.sendChat,
-    mockMode: true,
+    mockMode: false,
     mockDelayMs: 800,
 
     resolveMetaDocsMarkdown: async (ctx) => {
@@ -104,7 +104,17 @@ export function createWizardActions(args: {
     getAnswer: (stepId) => args.get().activeWizard?.answers?.[stepId],
 
     processLlmStep: async (step: LlmProcessingStep) => {
-      const state: WizardState = { activeWizard: args.get().activeWizard, wizardContext: args.get().wizardContext };
+      args.set((s: any) => ({
+        activeWizard: s.activeWizard
+          ? { ...s.activeWizard, isLlmProcessing: true, error: undefined }
+          : s.activeWizard,
+      }));
+
+      const state: WizardState = {
+        activeWizard: args.get().activeWizard,
+        wizardContext: args.get().wizardContext,
+      };
+
       const next = await service.processLlmStep(state, step);
       args.set(() => next);
     },

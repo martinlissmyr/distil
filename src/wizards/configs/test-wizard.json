@@ -13,13 +13,12 @@
       "description": "Getting a helpful tip from AI",
       "hidden": false,
       "prompt": {
-        "system": "You are a helpful writing assistant. Provide concise, practical writing tips.",
-        "user": "Give me one practical writing tip for fiction authors in 1-2 sentences."
+        "system": "test-wizard-lt-system",
+        "user": "test-wizard-lt-user"
       },
       "resultKey": "writing_tip",
       "extractJson": false,
       "approvalOptions": {
-        "approveLabel": "Keep This Tip",
         "rejectLabel": "Try Again"
       }
     },
@@ -138,13 +137,12 @@
       "description": "Creating a concise summary based on your responses",
       "hidden": false,
       "prompt": {
-        "system": "You are a helpful writing assistant. Generate concise, engaging summaries for creative writing projects.",
-        "user": "Based on the following information, create a brief project summary (2-3 sentences):\n\nProject Name: {{step2_text}}\nWriting Goals: {{step1_textarea}}\nGenre: {{step4_single_select}}\nExperience Level: {{step3_scale}}/10\nChallenges: {{step5_multi_select}}\n\nProvide only the summary, no additional commentary."
+        "system": "test-wizard-summary-system",
+        "user": "test-wizard-summary-user"
       },
       "resultKey": "project_summary",
       "extractJson": false,
       "approvalOptions": {
-        "approveLabel": "Looks Good!",
         "rejectLabel": "Try Again"
       }
     }

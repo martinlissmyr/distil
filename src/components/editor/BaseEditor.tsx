@@ -1,5 +1,5 @@
 // src/components/editor/BaseEditor.tsx
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react';
 import { Box, Group } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
@@ -7,6 +7,10 @@ import { EditorChatAside } from './EditorChatAside';
 import type { ChatConfig } from './ProseEditor';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import styles from './BaseEditor.module.scss';
+
+import type { OpenWizardCommand } from '../../wizards/types';
+import type { WizardContext } from '../../wizards/types';
+import { useAppStore } from '../../state/useAppStore';
 
 export type BaseEditorProps = {
   editor: Editor | null;
@@ -36,6 +40,38 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   // Determine schema based on editor kind
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
 
+  // ✅ Wizard opener (shared for all BaseEditor usage)
+  const startWizard = useAppStore((s) => (s as any).startWizard);
+
+  const handleOpenWizard = useCallback(
+    (cmd: OpenWizardCommand) => {
+      if (!editor) return;
+
+      if (!startWizard || typeof startWizard !== 'function') {
+        console.warn('[BaseEditor] startWizard not found on store');
+        return;
+      }
+
+      // Build ctx.ref in the shape your storeGlue expects.
+      // Assumes chatConfig carries projectId/storyId when in story scope.
+      const projectId = (chatConfig as any)?.projectId as string | undefined;
+      const storyId = (chatConfig as any)?.storyId as string | undefined;
+
+      const ref =
+        projectId && storyId
+          ? ({ scope: 'story', projectId, storyId } as const)
+          : ({ scope: 'root' } as const);
+
+      const ctx: WizardContext = {
+        ref,
+        targetEditor: editor,
+      } as any;
+
+      startWizard(cmd.wizardId, ctx);
+    },
+    [startWizard, editor, chatConfig]
+  );
+
   // Extract full text markdown when editor content changes
   useEffect(() => {
     if (!editor) return;
@@ -51,14 +87,9 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       }
     };
 
-    // Initial extraction
     updateMarkdown();
 
-    // Listen to editor updates
-    const handleUpdate = () => {
-      updateMarkdown();
-    };
-
+    const handleUpdate = () => updateMarkdown();
     editor.on('update', handleUpdate);
 
     return () => {
@@ -77,7 +108,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
 
       if (hasActiveSelection) {
         try {
-          // Get only the selected content
           const slice = editor.state.doc.slice(from, to);
           const selectedContent = slice.content.toJSON();
           const markdown = jsonToMarkdown({ type: 'doc', content: selectedContent }, schema);
@@ -91,14 +121,9 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       }
     };
 
-    // Initial check
     updateSelection();
 
-    // Listen to selection updates
-    const handleSelectionUpdate = () => {
-      updateSelection();
-    };
-
+    const handleSelectionUpdate = () => updateSelection();
     editor.on('selectionUpdate', handleSelectionUpdate);
 
     return () => {
@@ -132,9 +157,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   return (
     <Box
       className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
-      style={{
-        '--aside-offset': `${asideOffset}px`,
-      } as React.CSSProperties}
+      style={{ '--aside-offset': `${asideOffset}px` } as React.CSSProperties}
     >
       <Group className={styles.toolbarPill} p="xs">
         {toolbar}
@@ -163,6 +186,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
             title={title}
             isTextLoaded={fullTextMarkdown !== null}
             editor={editor}
+            onOpenWizard={handleOpenWizard} // ✅ always wired when chat is on
           />
         </Box>
       )}

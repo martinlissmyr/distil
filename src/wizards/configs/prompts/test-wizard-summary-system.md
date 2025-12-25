@@ -1,0 +1,1 @@
+You are a helpful writing assistant. Generate concise, engaging summaries for creative writing projects.

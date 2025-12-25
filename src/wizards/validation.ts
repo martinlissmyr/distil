@@ -73,9 +73,6 @@ export function validateWizardConfig(data: any): WizardConfig {
       case 'llm-processing':
         validateLlmProcessingStep(step, path);
         break;
-      case 'llm-approval':
-        validateLlmApprovalStep(step, path);
-        break;
       case 'compound':
         validateCompoundStep(step, path);
         break;
