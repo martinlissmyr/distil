@@ -2,15 +2,15 @@
 Det är här du skriver du din berättelse.
 
 {{#if !hasContent(manifest)}}
-Innan du börjar kan du skapa ett författarmanifest — en personlig stilguide som beskriver din röst, dina värderingar och din skrivstil.
+Innan du börjar är det starkt rekommenderat att du skapat ett författarmanifest — en personlig stilguide som beskriver din röst, dina värderingar och din stil som författare.
 {{/if}}
 
 {{#if hasContent(manifest) && !hasContent(brief)}}
-Innan du börjar skriva kan du skapa en brief (kärnidén, premiss, teman).
+Innan du börjar skriva är det en god idé att skapa en brief där du beskriver kärnidé, premiss och teman.
 {{/if}}
 
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
-Innan du börjar kan du skapa en outline där du beskriver berättelsens struktur, karaktärsbågar och progression som stöd i skrivandet.
+Innan du börjar är det effektivt att skapa en outline där du beskriver berättelsens struktur och framåtrörelse. Denna fungerar sedan som ett effektivt stöd i skrivandet.
 {{/if}}
 {{/if}}
 

@@ -53,7 +53,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   const effectiveError = error ?? internalError;
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }} className={classes.group}>
       <Radio.Group value={value} onChange={onChange}>
         <SimpleGrid cols={cols} gap="sm" overflow="hidden">
           {options.map((option) => (
@@ -94,8 +94,8 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           color="gray"
           style={{
             position: 'absolute',
-            top: 8,
-            right: 8,
+            bottom: 0,
+            left: 12,
             pointerEvents: 'none',
           }}
         >

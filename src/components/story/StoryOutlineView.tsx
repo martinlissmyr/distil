@@ -27,7 +27,7 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
     <StorySectionShell
       projectId={projectId}
       storyId={storyId}
-      preloadMetaKeys={['outline']}
+      preloadMetaKeys={['outline', 'brief']}
     >
       <MetaTextEditor
         mode="bound"

@@ -15,8 +15,8 @@ import {
   FlaskConical,
   Pencil,
   Plus,
-  MessageCircleMore,
-  SquareMousePointer,
+  MessageCircleQuestionMark,
+  ExternalLink,
   WandSparkles,
   X,
   TextSelect,
@@ -108,9 +108,9 @@ export const Icon = ({type, size = 20, ...props}) => {
 			return <Plus {...iconProps}/>
 		}
     case 'prompt':
-      return <MessageCircleMore {...iconProps}/>
+      return <MessageCircleQuestionMark {...iconProps}/>
     case 'navigate':
-      return <SquareMousePointer {...iconProps}/>
+      return <ExternalLink {...iconProps}/>
     case 'wizard':
       return <WandSparkles {...iconProps}/>
     case 'close':

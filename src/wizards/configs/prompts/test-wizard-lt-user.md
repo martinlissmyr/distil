@@ -1,0 +1,1 @@
+Give me one practical writing tip for fiction authors in 1-2 sentences.

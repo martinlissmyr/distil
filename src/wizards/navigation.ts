@@ -206,7 +206,7 @@ export function isStepComplete(
   step: WizardStep,
   answers: Record<string, any>
 ): boolean {
-  if (step.type === 'llm-processing' || step.type === 'llm-approval') {
+  if (step.type === 'llm-processing') {
     // LLM steps are considered complete when they have a result
     return true; // Will be validated elsewhere
   }

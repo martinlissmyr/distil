@@ -86,10 +86,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       const processingStep = currentStep as LlmProcessingStep;
       setAnswer(processingStep.id, 'approved');
       await nextStep();
-    } else if (currentStep.type === 'llm-approval') {
-      const approvalStep = currentStep as LlmApprovalStep;
-      setAnswer(approvalStep.id, 'approved');
-      await nextStep();
     }
   };
 
@@ -100,16 +96,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       const processingStep = currentStep as LlmProcessingStep;
       setAnswer(processingStep.id, 'rejected');
       clearLlmResult(processingStep.resultKey);
-    } else if (currentStep.type === 'llm-approval') {
-      const approvalStep = currentStep as LlmApprovalStep;
-      setAnswer(approvalStep.id, 'rejected');
-
-      if (approvalStep.onReject === 'retry-previous') {
-        clearLlmResult(approvalStep.sourceKey);
-        previousStep();
-      } else if (approvalStep.onReject === 'skip') {
-        nextStep();
-      }
     }
   };
 
@@ -133,10 +119,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       return !!(currentStep as LlmProcessingStep).approvalOptions;
     }
 
-    if (currentStep.type === 'llm-approval') {
-      return true;
-    }
-
     return false;
   })();
 
@@ -151,12 +133,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     if (currentStep.type === 'llm-processing') {
       const processingStep = currentStep as LlmProcessingStep;
       return !activeWizard.llmResults[processingStep.resultKey];
-    }
-
-    // For llm-approval steps, disable if no result in source
-    if (currentStep.type === 'llm-approval') {
-      const approvalStep = currentStep as LlmApprovalStep;
-      return !activeWizard.llmResults[approvalStep.sourceKey];
     }
 
     return false;
@@ -259,13 +235,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       return false;
     }
 
-    // For LLM approval steps
-    if (currentStep.type === 'llm-approval') {
-      // Approval steps handle their own navigation via approve/reject buttons
-      // So we disable the standard Next button
-      return false;
-    }
-
     return true;
   })();
 
@@ -311,8 +280,6 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
               {(() => {
                 if (currentStep?.type === 'llm-processing') {
                   return (currentStep as LlmProcessingStep).approvalOptions?.rejectLabel ?? 'Regenerate';
-                } else if (currentStep?.type === 'llm-approval') {
-                  return (currentStep as LlmApprovalStep).approvalOptions?.rejectLabel ?? 'Reject';
                 }
                 return 'Reject';
               })()}
@@ -349,7 +316,19 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
           }}
         />
 
-        {/* Top header */}
+        {/* Bottom Shader */}
+        <Box
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 0,
+            right: 0,
+            height: 150,
+            background: 'linear-gradient(to top, var(--mantine-color-body) 0%, transparent 100%)',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
 
         {/* Middle: ScrollArea should take remaining space */}
         <ScrollArea
@@ -357,17 +336,13 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
           style={{ flex: 1, minHeight: 0 }}
         >
           {currentStep ? (
-            <Box pt={150} px={30}>
+            <Box pt={50} px={30}>
               {currentStep.type === 'question' && (
                 <QuestionStepView key={currentStep.id} step={currentStep as QuestionStep} />
               )}
 
               {currentStep.type === 'llm-processing' && (
                 <LlmProcessingStepView step={currentStep as LlmProcessingStep} />
-              )}
-
-              {currentStep.type === 'llm-approval' && (
-                <LlmApprovalStepView step={currentStep as LlmApprovalStep} />
               )}
 
               {currentStep.type === 'compound' && (

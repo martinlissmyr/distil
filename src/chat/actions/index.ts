@@ -46,31 +46,26 @@ export const actions = {
     },
   } satisfies SuggestionAction,
 
+  briefDrafter: {
+    id: 'brief-drafter',
+    label: {
+      en: 'Create a draft brief',
+      sv: 'Skapa ett brief-utkast',
+    },
+    kind: 'wizard',
+    command: openWizard('brief-starter'),
+  } satisfies SuggestionAction,
+
   writeOutline: {
     id: 'write-outline',
     label: {
       en: 'Write an outline',
-      sv: 'Skriv en disposition',
+      sv: 'Skriv en outline',
     },
     kind: 'navigate',
     command: {
       type: 'navigateToStorySection',
       section: 'outline',
-    },
-  } satisfies SuggestionAction,
-
-  proseImproveParagraph: {
-    id: 'prose-improve-paragraph',
-    label: {
-      en: 'Polish a paragraph',
-      sv: 'Putsa ett stycke',
-    },
-    kind: 'prompt',
-    prompt:
-      'Improve the paragraph where the cursor is: make it clearer and more vivid without changing the meaning.',
-    displayMessage: {
-      en: 'Polish this paragraph',
-      sv: 'Putsa det här stycket',
     },
   } satisfies SuggestionAction,
 
@@ -87,65 +82,45 @@ export const actions = {
   manifestGaps: {
     id: 'manifest-gaps',
     label: {
-      en: 'Analyse the manifest',
-      sv: 'Analysera manifestet',
+      en: 'Suggest enhancements',
+      sv: 'Föreslå förbättringar',
     },
     kind: 'prompt',
     prompt:
-      'Please review the following Author Manifest and assess how well it expresses the author’s voice, values, themes, and creative principles. Identify strengths as well as areas that could be clarified or expanded. Keep the tone supportive and focus on how effectively the manifest communicates the author’s intended identity and storytelling approach. The audience is the author herself and an AI Assistant, not the public.',
+      'Please review the following Author Manifest and assess how well it expresses the author’s voice, values, themes, and creative principles. Identify strengths as well as areas that could be clarified or expanded. Keep the tone supportive and focus on how effectively the manifest communicates the author’s intended identity and storytelling approach. The audience is the author herself and an AI Assistant, not the public. It doesn\'t have to be personal or relatable. This is a tool, not an end product.',
     displayMessage: {
-      en: 'Can you review my manifest and tell me how well it communicates my voice and values?',
-      sv: 'Kan du granska mitt manifest och säga hur väl det förmedlar min röst och mina värderingar?',
+      en: 'Can you review my manifest and tell me how well it communicates my voice and values as an author?',
+      sv: 'Kan du granska mitt manifest och säga hur väl det förmedlar min röst och mina värderingar som författare?',
     },
-  } satisfies SuggestionAction,
-
-  outlineWizard: {
-    id: 'outline-wizard',
-    label: {
-      en: 'Build an outline',
-      sv: 'Bygg en disposition',
-    },
-    kind: 'wizard',
-    command: openWizard('outline-builder'),
   } satisfies SuggestionAction,
 
   outlineGaps: {
     id: 'outline-gaps',
     label: {
-      en: 'Find weak points',
-      sv: 'Hitta svagheter',
+      en: 'Suggest enhancements',
+      sv: 'Föreslå förbättringar',
     },
     kind: 'prompt',
     prompt:
-      'Look for weak points in my outline: where is preparation, payoff, or clear conflict missing?',
+      'Please review and look for weak points in my outline: where is preparation, payoff, or clear conflict missing?',
     displayMessage: {
-      en: 'Find weak points in my outline',
-      sv: 'Hitta svagheter i min disposition',
+      en: 'Suggest enhancements and clarifications in my outline',
+      sv: 'Föreslå förbättringar och förtydliganden i min outline',
     },
   } satisfies SuggestionAction,
 
-  briefIdeaShortStory: {
-    id: 'brief-idea-short-story',
+  outlineHints: {
+    id: 'outline-hints',
     label: {
-      en: 'Generate a short story brief',
-      sv: 'Skapa en novell-brief',
+      en: 'How do you write a good outline?',
+      sv: 'Hur skriver man en bra outline?',
     },
     kind: 'prompt',
     prompt:
-      'Generate a random idea for a short story, based on the concepts, ideals and values in the Author Manifest.',
+      'You are an editorial writing assistant. Explain, at a high and universal level, which components a story outline should consist of and how it should be structured to best support the writing process, using the author manifest and project brief only as contextual guidance for the type of story.\n\nThe outline should:\n– Be practical and usable as a working document\n– Reflect intended tone, scope, and constraints without referencing specific story details\n– Support narrative coherence, pacing, and thematic clarity\n\nDescribe the outline at a structural level (sections, hierarchy, and level of detail), not as story content. Use clear headings and concise bullet points. Assume separate documents exist for concept overview, characters, locations, and world description.\n\nConclude by acknowledging that stories do not all progress in the same way, briefly reference a few established narrative structures or methodologies (without going into detail), and ask whether the reader would like to explore or apply any of them to their story idea.',
     displayMessage: {
-      en: 'Generate a brief for a short story based on my author manifest',
-      sv: 'Skapa en brief för en novell baserat på mitt författarmanifest',
+      en: 'Explain which components an outline should consist of and how it should be structured to support the writing process.',
+      sv: 'Förklara vilka delar en outline ska bestå av och hur den struktureras för att stödja skrivprocessen.',
     },
-  } satisfies SuggestionAction,
-
-  testWizard: {
-    id: 'test-wizard',
-    label: {
-      en: 'Launch test wizard',
-      sv: 'Starta testguide',
-    },
-    kind: 'wizard',
-    command: openWizard('test-wizard'),
   } satisfies SuggestionAction,
 };

@@ -4,9 +4,15 @@ import { Stack, Text, Loader, Alert, Paper, Title } from '@mantine/core';
 import { Icon } from '../../common/Icon';
 import type { LlmProcessingStep } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
+import { MarkdownContent } from '../../common/MarkdownContent';
 
 type LlmProcessingStepViewProps = {
   step: LlmProcessingStep;
+};
+
+const RenderedResult: React.FC<{ content: unknown }> = ({ content }) => {
+  if (typeof content === 'string') return <MarkdownContent content={content} />;
+  return <MarkdownContent content={JSON.stringify(content, null, 2)} />;
 };
 
 export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ step }) => {
@@ -20,45 +26,33 @@ export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ st
 
   return (
     <Stack gap="md">
-      {/* Step header */}
-      <Stack gap="20" mb="2">
-        <Title order={1} size="h2" fw={600}>
-          {step.title}
-        </Title>
-        {step.description && (
-          <Text size="sm" c="dimmed">
-            {step.description}
-          </Text>
-        )}
-      </Stack>
-
-      {/* Processing states */}
+       {/* Processing states */}
       {error ? (
         <Alert icon={<Icon type="error" size={16} />} title="Error" color="red">
           <Text size="sm">{error}</Text>
         </Alert>
       ) : isProcessing ? (
         <Stack gap="md" align="center" style={{ minHeight: 200, justifyContent: 'center' }}>
-          <Loader size="lg" />
+          <Loader size="xl" />
           <Text size="sm" c="dimmed">
-            Processing with AI...
+            Processing...
           </Text>
         </Stack>
       ) : showResult ? (
         <>
-          {/* Result display */}
-          <Paper p="md" withBorder>
-            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-              {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-            </Text>
+          <Stack gap="20" mb="2">
+            <Title order={1} size="h2" fw={600}>
+              {step.title}
+            </Title>
+            {step.description && (
+              <Text size="sm" c="dimmed">
+                {step.description}
+              </Text>
+            )}
+          </Stack>
+          <Paper p="md" radius="sm" withBorder>
+            <RenderedResult content={result} />
           </Paper>
-
-          {/* Approval buttons shown in bottom navigation when approvalOptions provided */}
-          {!step.approvalOptions && (
-            <Text size="xs" c="dimmed" ta="center">
-              Click Next to continue
-            </Text>
-          )}
         </>
       ) : (
         <Stack gap="md" align="center" style={{ minHeight: 200, justifyContent: 'center' }}>

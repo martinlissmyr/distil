@@ -58,6 +58,7 @@ function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'manifest') return 'manifest';
   if (kind === 'outline') return 'outline';
   if (kind === 'brief') return 'brief';
+  if (kind === 'world') return 'world';
   return null;
 }
 
@@ -112,7 +113,6 @@ async function renderIntro(
 ): Promise<string> {
   const templateKey = kindToTemplateKey(ctx.kind);
   if (!templateKey) return '';
-
   const template = await loadTemplate(ctx.language, templateKey);
   if (!template) return '';
 
@@ -144,7 +144,6 @@ const proseActions: ActionStrategy = ({ selfState, upstream, language }) => {
         out.push(localizeAction(actions.writeOutline, language));
       }
     }
-    out.push(localizeAction(actions.testWizard, language));
   }
 
   if (hasContent(selfState)) {
@@ -172,8 +171,11 @@ const outlineActions: ActionStrategy = ({ selfState, upstream, language }) => {
   const out: SuggestionAction[] = [];
 
   if (isEmpty(selfState)) {
-    if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
-    if (hasContent(upstream.brief)) out.push(localizeAction(actions.outlineWizard, language));
+    if (!hasContent(upstream.brief)) {
+      out.push(localizeAction(actions.writeBrief, language));
+    } else {
+      out.push(localizeAction(actions.outlineHints, language));
+    }
   }
 
   if (hasContent(selfState)) out.push(localizeAction(actions.outlineGaps, language));
@@ -183,10 +185,8 @@ const outlineActions: ActionStrategy = ({ selfState, upstream, language }) => {
 
 const briefActions: ActionStrategy = ({ selfState, upstream, language }) => {
   const out: SuggestionAction[] = [];
-  if (isEmpty(selfState) && hasContent(upstream.manifest)) {
-    out.push(localizeAction(actions.briefIdeaShortStory, language));
-  }
   if (hasContent(selfState)) out.push(localizeAction(actions.briefGaps, language));
+  if (!hasContent(selfState)) out.push(localizeAction(actions.briefDrafter, language));
   return out;
 };
 
@@ -198,14 +198,13 @@ const actionStrategies: Partial<Record<DocKindId, ActionStrategy>> = {
 };
 
 // ---------------------------------------------------------------------------
-// Public API (now async because templates are lazy loaded)
+// Public API (async because templates are lazy loaded)
 // ---------------------------------------------------------------------------
 
 export async function getInitialAssistantHint(
   ctx: HintContext
 ): Promise<AssistantHint | null> {
   if (isMissing(ctx.selfState)) return null;
-
   const introMessage = await renderIntro(ctx);
   const actions = actionStrategies[ctx.kind]?.(ctx) ?? [];
 

@@ -223,7 +223,6 @@ The build process runs: `tsc && vite build && electron-builder`
 - **Step Types**:
   - **question**: Human-validated input (text, textarea, scale, single/multi-select)
   - **llm-processing**: AI assistance within explicitly bounded context
-  - **llm-approval**: Human approval/rejection/edit of AI output (maintains human authority)
   - **compound**: Nested sub-steps with progress tracking
 - **Features**:
   - Conditional step skipping based on previous answers
@@ -374,7 +373,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - Wizards help construct the contextual layers that AI later operates within
 - Pure functional engine with dependency injection for testability
 - Declarative JSON configs enable new wizards without code changes
-- Four step types: question (human input), llm-processing (bounded AI assistance), llm-approval (human authority), compound (nesting)
+- Four step types: question (human input), llm-processing (bounded AI assistance), compound (nesting)
 - Conditional navigation, template interpolation, and custom output formatting
 - Currently powers manifest starter and outline builder workflows
 - Reflects LCRF principle that AI helps construct the layers it later operates within

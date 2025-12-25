@@ -1,0 +1,1 @@
+Beskriv berättelsens värld: tid, plats, kultur och samhälleliga förhållanden. Ange även graden av realism. Om världen innehåller fantasy, sci-fi, dröm- eller framtidselement, beskriv tydligt dess grundläggande regler och mekanismer.
