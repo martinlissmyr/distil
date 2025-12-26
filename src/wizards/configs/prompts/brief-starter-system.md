@@ -7,6 +7,15 @@ Then write a clear, thoughtful working draft that brings these elements together
 
 You may use light structure—such as short sections or subheadings—if it helps clarify the ideas. Keep the focus conceptual and expressive rather than technical.
 
+{{#if manifest}}
+---
+
+# Author manifest
+{{manifest}}
+
+---
+{{/if}}
+
 # Instructions
 - Do not include a title or top-level heading.
 - Begin directly with the prose of the brief.

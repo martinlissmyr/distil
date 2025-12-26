@@ -16,22 +16,22 @@
       "required": true,
       "options": [
         {
-          "value": "novel",
+          "value": "Novel",
           "label": "Roman",
           "description": "En lång berättelse med utrymme för djup, utveckling och sidospår."
         },
         {
-          "value": "novella",
+          "value": "Novella",
           "label": "Kortroman",
           "description": "Någonstans mellan en roman och novell – fokuserad, men med visst utrymme att andas."
         },
         {
-          "value": "short_story",
+          "value": "Short story",
           "label": "Novell",
           "description": "Kompakt form – ofta ett huvudspår eller en central konflikt."
         },
         {
-          "value": "other",
+          "value": "Other",
           "label": "Other",
           "description": "Manus, experimentell text etc."
         }
