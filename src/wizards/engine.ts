@@ -191,6 +191,8 @@ export function createWizardEngine(deps: WizardDeps) {
         writingLanguageName,
       };
 
+      //console.log(vars);
+
       // step.prompt.* are KEYS now
       const systemTemplateKey = step.prompt.system;
       const userTemplateKey = step.prompt.user;
@@ -214,6 +216,16 @@ export function createWizardEngine(deps: WizardDeps) {
         role: 'user',
         content: interpolate(userTemplate, vars),
       });
+
+      const promptSummary = messages
+      .map((m) => {
+        const header = m.role === 'system' ? 'SYSTEM PROMPT' : 'USER PROMPT';
+        return `## ${header}\n\n${m.content}`;
+      })
+      .join('\n\n---\n\n');
+      console.log(promptSummary);
+
+      //deps.mockMode = true;
 
       if (deps.mockMode) {
         // mock mode

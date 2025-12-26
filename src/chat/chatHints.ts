@@ -5,6 +5,7 @@ import type { OpenWizardCommand } from '../wizards/types';
 import type { WritingLanguage } from '../types/language';
 import { interpolate } from '../helpers/interpolate';
 import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
+import { docKinds, contextLayerOrder, type DocKindId } from '../models/docs';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -82,6 +83,53 @@ function localizeAction(action: any, lang: WritingLanguage): SuggestionAction {
   };
 }
 
+function getWriteActionForTopmostMissingUpstreamDoc(
+  currentKind: DocKindId,
+  upstream: Partial<Record<MetaDocKey, DocState>>
+) {
+  const currentCfg = docKinds[currentKind];
+  if (!currentCfg) return null;
+
+  const currentLayerIdx = contextLayerOrder.indexOf(currentCfg.contextLayer);
+
+  // Candidate upstream keys = keys present in upstream (already computed by your rules)
+  const candidates = (Object.keys(upstream) as MetaDocKey[])
+    .filter((k) => {
+      const cfg = docKinds[k];
+      if (!cfg) return false;
+
+      // must be "above" current kind
+      const layerIdx = contextLayerOrder.indexOf(cfg.contextLayer);
+      if (layerIdx === -1 || layerIdx >= currentLayerIdx) return false;
+
+      // contentless = not hasContent
+      return !hasContent(upstream[k]);
+    })
+    .sort((a, b) => {
+      const ai = contextLayerOrder.indexOf(docKinds[a].contextLayer);
+      const bi = contextLayerOrder.indexOf(docKinds[b].contextLayer);
+      return ai - bi; // most upstream first
+    });
+
+  const topmost = candidates[0];
+  if (!topmost) return null;
+
+  // Map doc kind -> write action
+  switch (topmost) {
+    case 'manifest':
+      return actions.writeManifest;
+    case 'brief':
+      return actions.writeBrief;
+    case 'outline':
+      return actions.writeOutline;
+    // add this only if you actually have it
+    // case 'world':
+    //   return actions.writeWorld;
+    default:
+      return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Vite template loading
 // ---------------------------------------------------------------------------
@@ -132,61 +180,55 @@ async function renderIntro(
 
 type ActionStrategy = (ctx: HintContext) => SuggestionAction[];
 
-const proseActions: ActionStrategy = ({ selfState, upstream, language }) => {
+/* PROSE */
+const proseActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
   const out: SuggestionAction[] = [];
 
-  if (isEmpty(selfState)) {
-    if (!hasContent(upstream.manifest)) {
-      out.push(localizeAction(actions.writeManifest, language));
-    } else {
-      if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
-      if (!hasContent(upstream.outline) && hasContent(upstream.brief)) {
-        out.push(localizeAction(actions.writeOutline, language));
-      }
-    }
-  }
-
-  if (hasContent(selfState)) {
-    if (!hasContent(upstream.manifest)) {
-      out.push(localizeAction(actions.writeManifest, language));
-    } else {
-      if (!hasContent(upstream.brief)) out.push(localizeAction(actions.writeBrief, language));
-      if (!hasContent(upstream.outline) && hasContent(upstream.brief)) {
-        out.push(localizeAction(actions.writeOutline, language));
-      }
-    }
+  const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
+  if (actionForTopmostMissingUpstreamDoc) {
+    out.push(localizeAction(actionForTopmostMissingUpstreamDoc, language));
   }
 
   return out;
 };
 
-const manifestActions: ActionStrategy = ({ selfState, language }) => {
+/* MANIFEST */
+const manifestActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
   const out: SuggestionAction[] = [];
   if (isEmpty(selfState)) out.push(localizeAction(actions.manifestStart, language));
   if (hasContent(selfState)) out.push(localizeAction(actions.manifestGaps, language));
   return out;
 };
 
-const outlineActions: ActionStrategy = ({ selfState, upstream, language }) => {
+/* OUTLINE */
+const outlineActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
   const out: SuggestionAction[] = [];
 
-  if (isEmpty(selfState)) {
-    if (!hasContent(upstream.brief)) {
-      out.push(localizeAction(actions.writeBrief, language));
-    } else {
-      out.push(localizeAction(actions.outlineHints, language));
-    }
+  const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
+  if (actionForTopmostMissingUpstreamDoc) {
+    out.push(localizeAction(actionForTopmostMissingUpstreamDoc, language));
   }
+
+  if (isEmpty(selfState)) out.push(localizeAction(actions.outlineHints, language));
 
   if (hasContent(selfState)) out.push(localizeAction(actions.outlineGaps, language));
 
   return out;
 };
 
-const briefActions: ActionStrategy = ({ selfState, upstream, language }) => {
+/* BRIEF */
+const briefActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
   const out: SuggestionAction[] = [];
+
+  const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
+  if (actionForTopmostMissingUpstreamDoc) {
+    out.push(localizeAction(actionForTopmostMissingUpstreamDoc, language));
+  }
+
   if (hasContent(selfState)) out.push(localizeAction(actions.briefGaps, language));
+
   if (!hasContent(selfState)) out.push(localizeAction(actions.briefDrafter, language));
+
   return out;
 };
 

@@ -13,10 +13,7 @@ import {
 } from '@mantine/core';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { useAppStore } from '../../state/useAppStore';
-
-// ✅ moved to registry
 import { listWizardIds, getWizardConfig } from '../../wizards/registry';
-
 import { metaExtensions } from '../editor/extensions/metaExtensions';
 import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
 import type { EditorKind } from '../../types/chat';
@@ -90,54 +87,49 @@ export const WizardTesterView: React.FC = () => {
           backgroundColor: 'var(--overlay)',
         }}
       >
-        <Paper p="md" radius="sm">
-          <Stack gap="md">
-            <Title order={5}>Available Wizards</Title>
-            <ScrollArea style={{ maxHeight: 300 }}>
-              <Stack gap="xs">
-                {availableWizards.map((wizardId) => {
-                  const config = getWizardConfig(wizardId);
-                  const isSelected = wizardId === selectedWizardId;
+        <ScrollArea style={{ flex: '1 1 0' }}>
+          <Stack gap="xs">
+            {availableWizards.map((wizardId) => {
+              const config = getWizardConfig(wizardId);
+              const isSelected = wizardId === selectedWizardId;
 
-                  return (
-                    <Paper
-                      key={wizardId}
-                      p="sm"
-                      radius="sm"
-                      withBorder
-                      style={{
-                        cursor: activeWizard ? 'not-allowed' : 'pointer',
-                        backgroundColor: isSelected
-                          ? 'var(--mantine-color-blue-light)'
-                          : undefined,
-                        borderColor: isSelected
-                          ? 'var(--mantine-color-blue-6)'
-                          : undefined,
-                        opacity: activeWizard ? 0.6 : 1,
-                      }}
-                      onClick={() => handleSelectWizard(wizardId)}
-                    >
-                      <Stack gap="xs">
-                        <Group justify="space-between">
-                          <Text size="sm" fw={600}>
-                            {config.title}
-                          </Text>
-                          <Badge size="sm">{config.targetDoc}</Badge>
-                        </Group>
-                        <Text size="xs" c="dimmed">
-                          {config.description}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {config.steps.length} step{config.steps.length !== 1 ? 's' : ''}
-                        </Text>
-                      </Stack>
-                    </Paper>
-                  );
-                })}
-              </Stack>
-            </ScrollArea>
+              return (
+                <Paper
+                  key={wizardId}
+                  p="sm"
+                  radius="sm"
+                  withBorder
+                  style={{
+                    cursor: activeWizard ? 'not-allowed' : 'pointer',
+                    backgroundColor: isSelected
+                      ? 'var(--mantine-color-blue-light)'
+                      : undefined,
+                    borderColor: isSelected
+                      ? 'var(--mantine-color-blue-6)'
+                      : undefined,
+                    opacity: activeWizard ? 0.6 : 1,
+                  }}
+                  onClick={() => handleSelectWizard(wizardId)}
+                >
+                  <Stack gap="xs">
+                    <Group justify="space-between">
+                      <Text size="sm" fw={600}>
+                        {config.title}
+                      </Text>
+                      <Badge size="sm">{config.targetDoc}</Badge>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      {config.description}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {config.steps.length} step{config.steps.length !== 1 ? 's' : ''}
+                    </Text>
+                  </Stack>
+                </Paper>
+              );
+            })}
           </Stack>
-        </Paper>
+        </ScrollArea>
       </Stack>
 
       {/* Right Column - TipTap Editor */}
@@ -152,7 +144,7 @@ export const WizardTesterView: React.FC = () => {
           backgroundColor: 'var(--overlay)',
         }}
       >
-        <Paper p="md" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Paper p="md" radius="sm" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Stack gap="md" style={{ flex: 1, height: '100%', minHeight: 0 }}>
             <Group justify="space-between">
               <Title order={5}>Editor Output</Title>
@@ -162,7 +154,6 @@ export const WizardTesterView: React.FC = () => {
                 </Badge>
               )}
             </Group>
-            <Divider />
 
             {/* TipTap Editor */}
             <Box
@@ -171,20 +162,13 @@ export const WizardTesterView: React.FC = () => {
                 flex: 1,
                 minHeight: 0,
                 overflow: 'auto',
-                border: '1px solid var(--mantine-color-dark-4)',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 padding: '16px',
                 backgroundColor: 'var(--mantine-color-dark-8)',
               }}
             >
               <EditorContent editor={editor} />
             </Box>
-
-            {!selectedWizardConfig && (
-              <Text size="sm" c="dimmed" ta="center">
-                Select a wizard from the list to begin
-              </Text>
-            )}
           </Stack>
         </Paper>
       </Box>

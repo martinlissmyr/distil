@@ -17,7 +17,7 @@ Innan du börjar är det effektivt att skapa en outline där du beskriver berät
 {{#if selfHasContent}}
 Jag kan hjälpa till med revisioner, förslag och utveckling av din text.
 
-{{#if !hasContent(manifest)}}Jag rekommenderar dock att du först formulerat ett författarmanifest som beskriver din röst, värderingar och stil.
+{{#if !hasContent(manifest)}}Jag rekommenderar dock att du först formulerar ett författarmanifest där du beskriver din röst, värderingar och stil.
 {{/if}}
 
 {{#if hasContent(manifest) && !hasContent(brief)}}
@@ -25,6 +25,6 @@ Det blir dock lättare att hjälpa dig om du först skapar en brief för din tex
 {{/if}}
 
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
-Innan du går vidare kan du skapa en disposition/outline fär du beskriver berättelsens struktur, karaktärsbågar och progression.
+Innan du går vidare kan det vara hjälpsamt att skapa en disposition eller outline som beskriver berättelsens struktur, karaktärsbågar och utveckling.
 {{/if}}
 {{/if}}
