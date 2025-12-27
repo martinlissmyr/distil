@@ -132,6 +132,22 @@ export function createWizardActions(args: {
       args.set(() => next);
     },
 
+    setLlmResult: (resultKey, value) => {
+      const state: WizardState = {
+        activeWizard: args.get().activeWizard,
+        wizardContext: args.get().wizardContext,
+      };
+      args.set(() => service.setLlmResult(state, resultKey, value));
+    },
+
+    setLlmDraft: (resultKey, value) => {
+      const state: WizardState = {
+        activeWizard: args.get().activeWizard,
+        wizardContext: args.get().wizardContext,
+      };
+      args.set(() => service.setLlmDraft(state, resultKey, value));
+    },
+
     clearLlmResult: (resultKey) => {
       const state: WizardState = { activeWizard: args.get().activeWizard, wizardContext: args.get().wizardContext };
       args.set(() => service.clearLlmResult(state, resultKey));
