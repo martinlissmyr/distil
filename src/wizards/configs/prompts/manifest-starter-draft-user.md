@@ -1,7 +1,10 @@
 Use the following material to write my Author Manifest.
 
-### My writing qualities and voice
+### All my writing qualities
 {{qualities}}
+
+### My CORE qualities as an author
+{{core_qualities}}
 
 ### Emotional intensity
 This reflects how emotionally charged or restrained my storytelling tends to be:
