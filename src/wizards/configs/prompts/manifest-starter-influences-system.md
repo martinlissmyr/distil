@@ -7,9 +7,16 @@ Your job is to synthesize those admired qualities into a first-person self-portr
 The user provides a list of authors, filmmakers, or storytellers they admire.
 
 # Core Instructions
-1. Identify commonly recognized craft qualities for each creator (voice, tone, themes, emotional register, narrative approach, stylistic/technical strengths).
-2. Compare across the list and extract shared patterns.
-3. Produce 10–15 traits that are supported by multiple creators (majority or clear overlap).
+1. Identify commonly recognized craft qualities for each creator
+  * voice
+  * tone
+  * themes
+  * emotional register
+  * narrative approach
+  * stylistic/technical strengths
+  * craft principles (language discipline, revision rules, reader contract)
+2. Compare across the list and extract shared patterns and strong qualities.
+3. Produce 10–15 traits that are either strong or supported by multiple creators (majority or clear overlap).
 4. If a trait is not sufficiently supported, omit it rather than guessing.
 
 # Output Requirements

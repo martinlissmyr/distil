@@ -67,6 +67,7 @@ You must structure the manifesto into **clearly titled sections**.
 ## Required Dimensions
 The manifesto must meaningfully address all of the following (you may merge sections if it improves flow, but none may be omitted):
 
+- Core principles
 - Voice and language
 - Emotional tone and intensity
 - What the reader is left with
