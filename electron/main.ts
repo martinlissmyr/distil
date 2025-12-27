@@ -1,5 +1,6 @@
 // electron/main.ts
 import { app, BrowserWindow, nativeTheme } from 'electron';
+import { autoUpdater } from "electron-updater";
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -26,6 +27,18 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
+
+function setupAutoUpdates() {
+  // Good default UX while you’re still in a small beta group
+  autoUpdater.autoDownload = true;
+
+  // Optional: log
+  autoUpdater.on("checking-for-update", () => console.log("[updates] checking"));
+  autoUpdater.on("update-available", () => console.log("[updates] available"));
+  autoUpdater.on("update-not-available", () => console.log("[updates] none"));
+  autoUpdater.on("error", (err) => console.log("[updates] error", err));
+  autoUpdater.on("update-downloaded", () => console.log("[updates] downloaded"));
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -89,6 +102,15 @@ app.on('activate', () => {
 });
 
 app.whenReady().then(() => {
+  setupAutoUpdates();
+
+  if (app.isPackaged) {
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.checkForUpdatesAndNotify();
+  } else {
+    console.log("[updates] skipping (dev mode)");
+  }
+
   // Register all IPC handlers before creating window
   registerAllHandlers();
 
