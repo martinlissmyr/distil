@@ -18,7 +18,16 @@ type WizardModalProps = {
 
 export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => {
   const activeWizard = useAppStore((s) => s.activeWizard);
-  const { nextStep, previousStep, closeWizard, getAnswer, processLlmStep, setAnswer, clearLlmResult } = useAppStore();
+  const {
+    nextStep,
+    previousStep,
+    closeWizard,
+    getAnswer,
+    processLlmStep,
+    setLlmResult,
+    setAnswer,
+    clearLlmResult
+  } = useAppStore();
 
   // Track which steps we've already initiated processing for
   const processingInitiatedRef = useRef<Set<string>>(new Set());
@@ -29,21 +38,31 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     activeWizard.currentStepPath
   ) : null;
 
+  // Select specific properties to avoid re-triggering on unrelated state changes
+  const isLlmProcessing = useAppStore((s) => s.activeWizard?.isLlmProcessing ?? false);
+  const currentStepId = currentStep?.id;
+  const llmResultForCurrentStep = useAppStore((s) => {
+    if (!currentStep || currentStep.type !== 'llm-processing') return undefined;
+    const step = currentStep as LlmProcessingStep;
+    return s.activeWizard?.llmResults?.[step.resultKey];
+  });
+
   // Auto-trigger LLM processing when arriving at an LLM step
   useEffect(() => {
     if (!activeWizard || !opened || !currentStep || currentStep.type !== 'llm-processing') return;
 
     const processingStep = currentStep as LlmProcessingStep;
-    const hasResult = !!activeWizard.llmResults[processingStep.resultKey];
-    const isProcessing = activeWizard.isLlmProcessing;
+
+    const hasResult = llmResultForCurrentStep !== undefined; // IMPORTANT: presence, not truthiness
     const alreadyInitiated = processingInitiatedRef.current.has(processingStep.id);
 
     console.log('[WizardModal] useEffect - LLM step detected:', {
       stepId: processingStep.id,
       resultKey: processingStep.resultKey,
       hasResult,
-      isProcessing,
+      isProcessing: isLlmProcessing,
       alreadyInitiated,
+      resultType: typeof llmResultForCurrentStep,
     });
 
     // If result was cleared (rejection), allow re-initiation
@@ -53,12 +72,20 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     }
 
     // Only trigger if we don't have a result yet, we're not already processing, and we haven't initiated yet
-    if (!hasResult && !isProcessing && !processingInitiatedRef.current.has(processingStep.id)) {
+    if (!hasResult && !isLlmProcessing && !processingInitiatedRef.current.has(processingStep.id)) {
       console.log('[WizardModal] Auto-triggering LLM processing');
       processingInitiatedRef.current.add(processingStep.id);
       processLlmStep(processingStep);
     }
-  }, [currentStep?.id, activeWizard?.isLlmProcessing, activeWizard?.llmResults, opened]);
+  }, [
+    opened,
+    currentStepId,
+    isLlmProcessing,
+    llmResultForCurrentStep,
+    processLlmStep,
+    activeWizard, // Still need this for the guard checks
+    currentStep, // Still need this for the guard checks
+  ]);
 
   if (!activeWizard || !opened) return null;
   if (!currentStep) return null;
@@ -71,6 +98,17 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
   };
 
   const handleNext = async () => {
+    // ✅ If current step is editable LLM, commit draft -> resultKey right before Next
+    if (activeWizard && currentStep?.type === 'llm-processing') {
+      const s = currentStep as LlmProcessingStep;
+      if (s.editableResult) {
+        const draft = activeWizard.llmDrafts?.[s.resultKey];
+        if (draft !== undefined) {
+          setLlmResult(s.resultKey, draft);
+        }
+      }
+    }
+
     await nextStep();
   };
 
@@ -80,10 +118,19 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
 
   // Handlers for approval steps
   const handleApprove = async () => {
-    if (!currentStep) return;
+    if (!currentStep || !activeWizard) return;
 
     if (currentStep.type === 'llm-processing') {
       const processingStep = currentStep as LlmProcessingStep;
+
+      // ✅ also commit on approve
+      if (processingStep.editableResult) {
+        const draft = activeWizard.llmDrafts?.[processingStep.resultKey];
+        if (draft !== undefined) {
+          setLlmResult(processingStep.resultKey, draft);
+        }
+      }
+
       setAnswer(processingStep.id, 'approved');
       await nextStep();
     }
@@ -132,7 +179,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     // For llm-processing steps, disable if no result yet
     if (currentStep.type === 'llm-processing') {
       const processingStep = currentStep as LlmProcessingStep;
-      return !activeWizard.llmResults[processingStep.resultKey];
+      return activeWizard.llmResults[processingStep.resultKey] === undefined;
     }
 
     return false;
@@ -212,7 +259,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
         hidden: processingStep.hidden,
         resultKey: processingStep.resultKey,
         result: activeWizard.llmResults[processingStep.resultKey],
-        hasResult: !!activeWizard.llmResults[processingStep.resultKey],
+        hasResult: activeWizard.llmResults[processingStep.resultKey] !== undefined,
         hasApprovalOptions: !!processingStep.approvalOptions,
       });
 
@@ -229,7 +276,7 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       // Enable Next once processing is complete (unless hidden, which auto-advances)
       if (!processingStep.hidden) {
         // Check if result exists
-        return !!activeWizard.llmResults[processingStep.resultKey];
+        return activeWizard.llmResults[processingStep.resultKey] !== undefined;
       }
       // Hidden steps auto-advance, so Next button doesn't matter
       return false;

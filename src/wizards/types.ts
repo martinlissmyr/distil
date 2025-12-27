@@ -89,6 +89,7 @@ export type LlmProcessingStep = BaseStep & {
   approvalOptions?: {
     rejectLabel?: string;
   };
+  editableResult?: boolean;
 };
 
 /**
@@ -150,6 +151,7 @@ export type ActiveWizard = {
   answers: Record<string, any>;
   completedSteps: Set<string>;
   llmResults: Record<string, any>;
+  llmDrafts?: Record<string, string>;
   isLlmProcessing: boolean;
   startedAt: number;
   hasUnsavedProgress: boolean;
@@ -179,4 +181,6 @@ export type WizardActions = {
   clearLlmResult: (resultKey: string) => void;
   bakeWizard: () => Promise<string>;
   insertResult: (text: string) => Promise<void>;
+  setLlmResult: (resultKey: string, value: any) => void;
+  setLlmDraft: (resultKey: string, value: string) => void;
 };

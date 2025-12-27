@@ -78,6 +78,16 @@ async function loadPromptByKey(key: string): Promise<string> {
 
 // ---------------------------------------------------------------------------
 
+function toEditableString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value == null) return '';
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
 export function createWizardEngine(deps: WizardDeps) {
   // NOTE: do NOT use zustand hook inside here. Use getState().
   const getWritingLanguage = () => useAppStore.getState().writingLanguage;
@@ -97,6 +107,7 @@ export function createWizardEngine(deps: WizardDeps) {
         answers: {},
         completedSteps: new Set(),
         llmResults: {},
+        llmDrafts: {},
         isLlmProcessing: false,
         startedAt: Date.now(),
         hasUnsavedProgress: false,
@@ -148,16 +159,51 @@ export function createWizardEngine(deps: WizardDeps) {
     };
   }
 
+  function setLlmDraft(state: WizardState, resultKey: string, value: string): WizardState {
+    const { activeWizard } = state;
+    if (!activeWizard) return state;
+
+    return {
+      ...state,
+      activeWizard: {
+        ...activeWizard,
+        llmDrafts: { ...(activeWizard.llmDrafts ?? {}), [resultKey]: value },
+        hasUnsavedProgress: true,
+      },
+    };
+  }
+
+  function setLlmResult(state: WizardState, resultKey: string, value: any): WizardState {
+    const { activeWizard } = state;
+    if (!activeWizard) return state;
+
+    return {
+      ...state,
+      activeWizard: {
+        ...activeWizard,
+        llmResults: { ...activeWizard.llmResults, [resultKey]: value },
+        hasUnsavedProgress: true,
+      },
+    };
+  }
+
   function clearLlmResult(state: WizardState, resultKey: string): WizardState {
     const { activeWizard } = state;
     if (!activeWizard) return state;
 
-    const next = { ...activeWizard.llmResults };
-    delete next[resultKey];
+    const nextResults = { ...activeWizard.llmResults };
+    delete nextResults[resultKey];
+
+    const nextDrafts = { ...(activeWizard.llmDrafts ?? {}) };
+    delete nextDrafts[resultKey]; // also clear draft on regen
 
     return {
       ...state,
-      activeWizard: { ...activeWizard, llmResults: next },
+      activeWizard: {
+        ...activeWizard,
+        llmResults: nextResults,
+        llmDrafts: nextDrafts,
+      },
     };
   }
 
@@ -246,6 +292,8 @@ export function createWizardEngine(deps: WizardDeps) {
         const value = mock[step.resultKey] ?? mock.default;
 
         const w = state.activeWizard!;
+
+        // Don't populate llmDrafts here - let LlmProcessingStepView seed it when displayed
         return {
           ...state,
           activeWizard: {
@@ -268,6 +316,8 @@ export function createWizardEngine(deps: WizardDeps) {
       }
 
       const w = state.activeWizard!;
+
+      // Don't populate llmDrafts here - let LlmProcessingStepView seed it when displayed
       return {
         ...state,
         activeWizard: {
@@ -383,8 +433,10 @@ export function createWizardEngine(deps: WizardDeps) {
     goToStep,
     previousStep,
     setAnswer,
+    setLlmResult,
     clearLlmResult,
     processLlmStep,
+    setLlmDraft,
     bakeWizard,
     nextStep,
   };

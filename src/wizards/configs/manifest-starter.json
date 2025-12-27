@@ -1,545 +1,192 @@
 {
   "id": "manifest-starter",
   "version": "1.0.0",
-  "title": "Author Manifest Creator",
-  "description": "Define your voice, values, themes, and creative intentions",
+  "title": "Skapa ett författarmanifest",
+  "description": "Definiera din röst, dina värderingar, teman och kreativa intentioner",
   "targetDoc": "manifest",
   "steps": [
     {
-      "id": "step2b_aftertaste",
+      "id": "influences",
       "type": "question",
-      "title": "Emotional aftertaste",
-      "description": "What emotional resonance should remain?",
-      "questionType": "multi-select",
-      "question": "What emotional 'aftertaste' do you want your stories to leave?",
-      "required": true,
-      "minSelections": 1,
-      "maxSelections": 4,
-      "options": [
-        {
-          "value": "hopeful",
-          "label": "Hopeful",
-          "description": "A sense of possibility and optimism"
-        },
-        {
-          "value": "bittersweet",
-          "label": "Bittersweet",
-          "description": "Beauty tinged with loss or longing"
-        },
-        {
-          "value": "unsettled",
-          "label": "Unsettled",
-          "description": "Lingering questions and unease"
-        },
-        {
-          "value": "inspired",
-          "label": "Inspired to act",
-          "description": "Motivation to change or do something"
-        },
-        {
-          "value": "seen",
-          "label": "Seen and understood",
-          "description": "Recognition and validation"
-        },
-        {
-          "value": "thoughtful",
-          "label": "Intrigued and thoughtful",
-          "description": "Curiosity and reflection"
-        },
-        {
-          "value": "calm",
-          "label": "Calm and comforted",
-          "description": "Peace and reassurance"
-        },
-        {
-          "value": "challenged",
-          "label": "Shaken or challenged",
-          "description": "Assumptions questioned, perspective shifted"
-        }
-      ]
-    },
-    {
-      "id": "step1a_influences",
-      "type": "question",
-      "title": "Who do you want to be as a writer?",
-      "description": "Identify your aspirational voice through admired storytellers",
+      "title": "Din röst, stil och kvaliteter",
+      "question": "Nämn 3–5 författare eller berättare vars verk du beundrar",
+      "description": "Låt oss ringa in vilken stil och vilka kvaliteter du själv strävar efter.",
       "questionType": "textarea",
-      "question": "Name 3–5 authors, filmmakers, or storytellers whose work you wish you could have created yourself.",
-      "placeholder": "E.g Siri Hustvedt, J.K. Rowling & Charles Dickens",
+      "placeholder": "T.ex. Siri Hustvedt, J.K. Rowling & Charles Dickens",
       "required": true,
-      "minLength": 30,
+      "minLength": 0,
       "maxLength": 1000
     },
     {
-      "id": "step1b_traits",
-      "type": "question",
-      "title": "Your aspirational qualities",
-      "description": "Which qualities do you most aspire to in your writing?",
-      "questionType": "multi-select",
-      "question": "Based on the storytellers you admire, which of these qualities do you most aspire to in your own writing?",
-      "required": true,
-      "minSelections": 2,
-      "maxSelections": 6,
-      "options": [
-        {
-          "value": "lyrical-language",
-          "label": "Lyrical, image-rich language",
-          "description": "Poetic, sensory, evocative prose"
-        },
-        {
-          "value": "honest-raw",
-          "label": "Honest, raw emotional tone",
-          "description": "Unfiltered emotional truth and vulnerability"
-        },
-        {
-          "value": "tight-suspense",
-          "label": "Tight, suspenseful plotting",
-          "description": "Page-turner pacing and tension"
-        },
-        {
-          "value": "gentle-intimate",
-          "label": "Gentle, intimate atmosphere",
-          "description": "Quiet, close observation of life"
-        },
-        {
-          "value": "playful-voice",
-          "label": "Playful, surprising voice",
-          "description": "Wit, humor, unexpected angles"
-        },
-        {
-          "value": "moral-complexity",
-          "label": "Morally complex characters",
-          "description": "Gray areas, difficult choices, flawed people"
-        },
-        {
-          "value": "big-ideas",
-          "label": "Big, ambitious ideas",
-          "description": "Philosophical depth, conceptual reach"
-        },
-        {
-          "value": "quiet-realism",
-          "label": "Quiet, observational realism",
-          "description": "True-to-life detail and restraint"
-        },
-        {
-          "value": "bold-experimental",
-          "label": "Bold, experimental form",
-          "description": "Structure-breaking, risk-taking storytelling"
-        },
-        {
-          "value": "emotional-intensity",
-          "label": "Powerful emotional intensity",
-          "description": "Stories that hit hard and linger"
-        }
-      ]
+      "id": "influences_synthesis",
+      "type": "llm-processing",
+      "title": "Din röst, stil och kvaliteter",
+      "description": "Här är ett utkast på vad du aspirerar på för stil och kvaliteter. Ta bort, lägg till och ändra om du vill. Dessa kvaliteter kommer bli en del av ditt manifest senare.",
+      "hidden": false,
+      "prompt": {
+        "system": "manifest-starter-influences-system",
+        "user": "manifest-starter-influences-user"
+      },
+      "resultKey": "qualities",
+      "editableResult": true,
+      "extractJson": false,
+      "approvalOptions": {
+        "rejectLabel": "Regenerate"
+      }
     },
     {
-      "id": "step2a_intensity",
+      "id": "intensity",
       "type": "question",
-      "title": "Emotional intensity",
-      "question": "Where on the emotional spectrum do you see your stories landing?",
-      "description": "Set how much emotional intensity you want your storytelling to carry",
+      "title": "Emotionell intensitet",
+      "question": "Var på det emotionella spektrumet vill du att dina berättelser ska landa?",
+      "description": "Ställ in hur stark känslomässig laddning ditt berättande ska ha",
       "questionType": "scale",
       "required": true,
       "min": 1,
       "max": 5,
       "scaleLabels": {
-        "min": "Quiet and understated",
-        "max": "Dramatic and emotionally charged"
+        "min": "Stillamt och lågmält",
+        "max": "Dramatiskt och känslomässigt laddat"
       }
     },
     {
-      "id": "step2c_themes",
+      "id": "aftertaste",
       "type": "question",
-      "title": "Core themes & questions",
-      "description": "The big human questions you explore",
+      "title": "Emotionell eftersmak",
+      "question": "Hur ska det kännas när berättelsen är slut?",
+      "description": "Vad ska dröja sig kvar hos läsaren efter sista sidan – i tanken, i kroppen eller i hjärtat?",
+      "questionType": "multi-select",
+      "required": true,
+      "minSelections": 1,
+      "maxSelections": 3,
+      "options": [
+        {
+          "value": "leave-hope-and-direction",
+          "label": "Hopp & riktning",
+          "description": "En känsla av möjlighet, rörelse framåt eller stillsam tillförsikt"
+        },
+        {
+          "value": "leave-melancholy-and-beauty",
+          "label": "Vemod & komplex skönhet",
+          "description": "Sorg, längtan eller smärta som känns meningsfull och bärande"
+        },
+        {
+          "value": "leave-unease-and-tension",
+          "label": "Oro & friktion",
+          "description": "En kvarhängande känsla av obehag, spänning eller att något skaver"
+        },
+        {
+          "value": "leave-perspective-shifted",
+          "label": "Utmanad & ifrågasatt",
+          "description": "Antaganden som skakas om, perspektiv som sätts på prov"
+        },
+        {
+          "value": "leave-seen-and-recognized",
+          "label": "Sedd & igenkänd",
+          "description": "En stark känsla av igenkänning, bekräftelse eller att bli förstådd"
+        },
+        {
+          "value": "leave-reflective-and-curious",
+          "label": "Tankeväckt & reflekterande",
+          "description": "Idéer eller teman som dröjer sig kvar och fortsätter arbeta i tanken"
+        },
+        {
+          "value": "leave-calm-and-comforted",
+          "label": "Lugn & tröst",
+          "description": "Ro, trygghet eller känslan av att ha blivit varsamt hållen"
+        },
+        {
+          "value": "leave-entertained-and-immersed",
+          "label": "Underhållen & uppslukad",
+          "description": "Ren läsglädje, engagemang, spänning eller att bara få följa med"
+        },
+        {
+          "value": "leave-emotional-companionship",
+          "label": "I sällskap",
+          "description": "En känsla av närhet till karaktärerna – som att lämna vänner när boken tar slut"
+        }
+      ]
+    },
+    {
+      "id": "central_themes",
+      "type": "question",
+      "title": "Centrala teman och frågor",
+      "question": "Vilka mänskliga frågor återkommer i ditt berättande?",
+      "description": "Det här handlar om de grundläggande spänningar, frågor eller motsättningar som du gång på gång dras till när du skriver. Inte nödvändigtvis något du vill besvara – utan något du vill utforska, vrida på eller leva i genom berättelsen. Formulera några olika teman som frågor, motsättningar eller korta påståenden.",
       "questionType": "textarea",
-      "question": "What big human questions or tensions do you find yourself wanting to explore in your stories?",
-      "placeholder": "e.g., How do we stay true to ourselves when the world demands conformity? The tension between belonging and independence...",
+      "placeholder": "t.ex. Hur förblir vi oss själva när världen kräver anpassning? Spänningen mellan tillhörighet och självständighet...",
       "required": false,
       "maxLength": 800
     },
     {
-      "id": "step3a_world_tilt",
+      "id": "endings_and_openness",
       "type": "question",
-      "title": "World realism scale",
-      "description": "How grounded or fantastical are your worlds?",
-      "questionType": "scale",
-      "question": "How close to everyday reality do you want most of your stories to be?",
-      "required": true,
-      "min": 1,
-      "max": 7,
-      "scaleLabels": {
-        "min": "Very grounded, real-world",
-        "max": "Highly fantastical or reimagined"
-      }
-    },
-    {
-      "id": "step3b_world_flavour",
-      "type": "question",
-      "title": "World settings",
-      "description": "What kinds of worlds call to you?",
-      "questionType": "multi-select",
-      "question": "What kinds of worlds or settings do you feel called to create?",
-      "required": false,
-      "minSelections": 1,
-      "maxSelections": 5,
-      "options": [
-        {
-          "value": "contemporary",
-          "label": "Everyday, contemporary life",
-          "description": "Here and now, recognizable settings"
-        },
-        {
-          "value": "historical",
-          "label": "Historical",
-          "description": "Past eras and periods"
-        },
-        {
-          "value": "off-kilter",
-          "label": "Slightly off-kilter reality",
-          "description": "Familiar but with a twist"
-        },
-        {
-          "value": "speculative",
-          "label": "Near future or speculative",
-          "description": "What-if scenarios and extrapolations"
-        },
-        {
-          "value": "high-fantasy",
-          "label": "High fantasy or wildly reimagined",
-          "description": "Fully invented worlds"
-        },
-        {
-          "value": "intimate-scale",
-          "label": "Intimate, small-scale settings",
-          "description": "Focused on personal spaces and moments"
-        },
-        {
-          "value": "epic-scale",
-          "label": "Epic, large-scale worlds",
-          "description": "Sweeping scope and breadth"
-        }
-      ]
-    },
-    {
-      "id": "step3c_characters",
-      "type": "question",
-      "title": "Character types",
-      "description": "Who are you drawn to write about?",
-      "questionType": "multi-select",
-      "question": "What kinds of characters do you feel most drawn to write about?",
-      "required": false,
-      "minSelections": 1,
-      "maxSelections": 5,
-      "options": [
-        {
-          "value": "quiet-observers",
-          "label": "Quiet observers",
-          "description": "Watchers, listeners, internal processors"
-        },
-        {
-          "value": "messy-conflicted",
-          "label": "Messy, conflicted people",
-          "description": "Flawed, struggling, contradictory"
-        },
-        {
-          "value": "idealists",
-          "label": "Idealists in a cynical world",
-          "description": "Hopeful people facing harsh realities"
-        },
-        {
-          "value": "morally-gray",
-          "label": "Morally gray decision-makers",
-          "description": "Complex choices without clear right answers"
-        },
-        {
-          "value": "outsiders",
-          "label": "Outsiders/loners",
-          "description": "People on the margins, not fitting in"
-        },
-        {
-          "value": "in-transition",
-          "label": "People in transition",
-          "description": "Grief, moves, break-ups, life changes"
-        },
-        {
-          "value": "ordinary-extraordinary",
-          "label": "Ordinary people in extraordinary situations",
-          "description": "Regular folks facing unusual circumstances"
-        },
-        {
-          "value": "extraordinary-ordinary",
-          "label": "Extraordinary people in ordinary situations",
-          "description": "Remarkable individuals in mundane settings"
-        }
-      ]
-    },
-    {
-      "id": "step3d_struggles",
-      "type": "question",
-      "title": "Human struggles",
-      "description": "The contradictions you keep circling back to",
-      "questionType": "textarea",
-      "question": "Name a few human struggles or contradictions you keep circling back to in your imagination.",
-      "placeholder": "e.g., The need for connection vs. fear of vulnerability, wanting to be special vs. wanting to belong...",
-      "required": false,
-      "maxLength": 600
-    },
-    {
-      "id": "step4a_priorities",
-      "type": "question",
-      "title": "What matters most",
-      "description": "Your core storytelling values",
-      "questionType": "multi-select",
-      "question": "When you think about your stories at their best, what matters most?",
-      "required": true,
-      "minSelections": 2,
-      "maxSelections": 5,
-      "options": [
-        {
-          "value": "emotional-truth",
-          "label": "Emotional truth",
-          "description": "Authentic feelings and genuine human experience"
-        },
-        {
-          "value": "strong-characters",
-          "label": "Strong, meaningful characters",
-          "description": "Memorable, fully-realized people"
-        },
-        {
-          "value": "interesting-ideas",
-          "label": "Interesting ideas or concepts",
-          "description": "Intellectual depth and novelty"
-        },
-        {
-          "value": "atmosphere",
-          "label": "Atmosphere and mood",
-          "description": "Immersive feeling and tone"
-        },
-        {
-          "value": "pace-momentum",
-          "label": "Pace and momentum",
-          "description": "Forward drive and energy"
-        },
-        {
-          "value": "surprise",
-          "label": "Surprise and unpredictability",
-          "description": "Keeping readers off-balance"
-        },
-        {
-          "value": "clarity",
-          "label": "Clarity and accessibility",
-          "description": "Easy to follow and understand"
-        },
-        {
-          "value": "language-style",
-          "label": "Language and style",
-          "description": "Beautiful or distinctive prose"
-        }
-      ]
-    },
-    {
-      "id": "step4b_avoid",
-      "type": "question",
-      "title": "Things to avoid",
-      "description": "What you never want your writing to feel like",
-      "questionType": "multi-select",
-      "question": "What do you never want your writing to feel like?",
-      "required": false,
-      "minSelections": 1,
-      "maxSelections": 6,
-      "options": [
-        {
-          "value": "preachy",
-          "label": "Preachy",
-          "description": "Heavy-handed messages or moralizing"
-        },
-        {
-          "value": "cynical",
-          "label": "Cynical without purpose",
-          "description": "Darkness for its own sake"
-        },
-        {
-          "value": "empty",
-          "label": "Empty or shallow",
-          "description": "Style over substance"
-        },
-        {
-          "value": "cruel",
-          "label": "Cruel for shock value",
-          "description": "Violence or trauma as spectacle"
-        },
-        {
-          "value": "confusing",
-          "label": "Confusing without reward",
-          "description": "Opaque with no payoff"
-        },
-        {
-          "value": "cliche",
-          "label": "Cliché and predictable",
-          "description": "Tired tropes and obvious plots"
-        },
-        {
-          "value": "manipulative",
-          "label": "Emotionally manipulative",
-          "description": "Cheap emotional tricks"
-        },
-        {
-          "value": "tidy",
-          "label": "Overly tidy / unrealistically neat",
-          "description": "Too convenient or pat resolutions"
-        }
-      ]
-    },
-    {
-      "id": "step4c_principles",
-      "type": "question",
-      "title": "Personal principles",
-      "description": "Reminders for your future writing self",
-      "questionType": "textarea",
-      "question": "Are there any personal principles you want your future self to remember when writing (e.g. 'always be honest about emotion', 'never cheapen trauma', etc.)?",
-      "placeholder": "Your writing principles...",
-      "required": false,
-      "maxLength": 600
-    },
-    {
-      "id": "step5a_reader_temperament",
-      "type": "question",
-      "title": "Your ideal reader",
-      "description": "Who are you writing toward?",
-      "questionType": "multi-select",
-      "question": "What kind of reader do you imagine connecting most deeply with your stories?",
-      "required": false,
-      "minSelections": 1,
-      "maxSelections": 4,
-      "options": [
-        {
-          "value": "comfort",
-          "label": "Someone looking for comfort",
-          "description": "Seeking solace and reassurance"
-        },
-        {
-          "value": "challenge",
-          "label": "Someone who wants to be challenged",
-          "description": "Open to difficulty and provocation"
-        },
-        {
-          "value": "think-reflect",
-          "label": "Someone who loves to think and reflect",
-          "description": "Intellectual and contemplative readers"
-        },
-        {
-          "value": "feel-intensely",
-          "label": "Someone who wants to feel intensely",
-          "description": "Craving emotional immersion"
-        },
-        {
-          "value": "escape",
-          "label": "Someone who needs escape",
-          "description": "Looking to leave their world behind"
-        },
-        {
-          "value": "recognition",
-          "label": "Someone searching for recognition / feeling seen",
-          "description": "Wanting their experience reflected back"
-        }
-      ]
-    },
-    {
-      "id": "step5b_complexity",
-      "type": "question",
-      "title": "Story complexity",
-      "description": "How demanding should your stories be?",
+      "title": "Slut och öppenhet",
+      "question": "Hur vill du att dina berättelser ska avslutas?",
+      "description": "Inte i handling, utan i känsla och rörelse. Ska slutet knyta ihop, lämna öppet eller kännas som början på något nytt?",
       "questionType": "single-select",
-      "question": "How demanding do you want your stories to be for your readers?",
-      "required": true,
+      "required": false,
       "options": [
         {
-          "value": "gentle",
-          "label": "Easy to enter, emotionally gentle",
-          "description": "Low barrier, soft landing"
+          "value": "closed",
+          "label": "Avslutande",
+          "description": "Känns som en helhet som sluter sig"
         },
         {
-          "value": "accessible-rich",
-          "label": "Accessible but emotionally rich",
-          "description": "Easy to follow, deep to feel"
+          "value": "open",
+          "label": "Öppet",
+          "description": "Lämnar frågor, glipor eller osäkerhet"
         },
         {
-          "value": "nuanced",
-          "label": "Nuanced and layered, asking for attention",
-          "description": "Rewards careful reading"
-        },
-        {
-          "value": "challenging",
-          "label": "Challenging, asking for patience and depth",
-          "description": "Complex, requires work from reader"
+          "value": "continuing",
+          "label": "Fortsättande",
+          "description": "Känns som att berättelsen lever vidare efter sista raden"
         }
       ]
     },
     {
-      "id": "step5c_who_needs_this",
+      "id": "realism_or_fantasy",
       "type": "question",
-      "title": "Who needs this?",
-      "description": "Imagine your ideal reader",
-      "questionType": "textarea",
-      "question": "Imagine one person who finishes your story and quietly thinks, 'I needed this.' Who are they? Describe them in a sentence or two.",
-      "placeholder": "e.g., Someone who's felt invisible their whole life, finally seeing themselves reflected...",
-      "required": false,
-      "maxLength": 400
-    },
-    {
-      "id": "step6a_voice_closeness",
-      "type": "question",
-      "title": "Finding your voice",
-      "description": "How formed is your writing voice?",
+      "title": "Realism eller fantasi?",
+      "question": "Hur nära vår egen verklighet rör sig dina berättelser?",
+      "description": "Tänk på var dina världar brukar börja – och hur långt de rör sig bort från det vardagliga. Handlar det mest om igenkännbara miljöer och realistiska förutsättningar, eller om omtolkade, förskjutna eller helt uppdiktade världar?",
       "questionType": "scale",
-      "question": "How close do you feel to the writing voice you ultimately want?",
       "required": true,
       "min": 1,
       "max": 7,
       "scaleLabels": {
-        "min": "I'm just starting to find it",
-        "max": "I'm very close to what I want"
+        "min": "Mycket jordnära, realistiskt",
+        "max": "Tydligt uppdiktade eller omtolkade världar"
       }
     },
     {
-      "id": "step6b_future_self",
+      "id": "reader_participation",
       "type": "question",
-      "title": "The writer you're becoming",
-      "description": "Your aspirational writing identity",
-      "questionType": "textarea",
-      "question": "Describe, in a few words or sentences, the writer you're becoming. What will your voice and work feel like when you're closer to that future self?",
-      "placeholder": "e.g., Confident in my own rhythm, unafraid of quiet moments, writing stories that trust the reader...",
-      "required": false,
-      "maxLength": 500
+      "title": "Läsarens roll",
+      "question": "Hur aktiv vill du att läsaren ska vara i tolkningen av texten?",
+      "description": "Vissa berättelser leder läsaren tydligt, andra lämnar mycket öppet. Det här handlar om hur mycket du vill förklara – och hur mycket du vill att läsaren själv ska fylla i.",
+      "questionType": "scale",
+      "required": true,
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Tydligt vägledd och förklarad",
+        "max": "Öppet för tolkning"
+      }
     },
     {
-      "id": "step6c_process",
-      "type": "question",
-      "title": "Your writing process",
-      "description": "How you want to work",
-      "questionType": "textarea",
-      "question": "What do you want your writing process to feel like (e.g. playful, disciplined, exploratory, ritualistic) and what do you hope to get better at?",
-      "placeholder": "e.g., I want it to feel exploratory but with structure, getting better at finishing drafts...",
-      "required": false,
-      "maxLength": 500
-    },
-    {
-      "id": "step7_synthesis",
+      "id": "manifest_draft_final_step",
       "type": "llm-processing",
-      "title": "Generating your Author Manifest",
-      "description": "Creating a draft based on your answers",
+      "title": "Utkast på manifest",
+      "description": "Här är ett arbetsutkast som du kan vidareutveckla senare.",
       "hidden": false,
       "prompt": {
-        "system": "manifest-starter-summary-system",
-        "user": "manifest-starter-summary-user"
+        "system": "manifest-starter-draft-system",
+        "user": "manifest-starter-draft-user"
       },
       "resultKey": "manifest_draft",
-      "extractJson": false,
-      "approvalOptions": {
-        "rejectLabel": "Try again"
-      }
+      "editableResult": false,
+      "extractJson": false
     }
   ],
   "outputTemplate": "{{manifest_draft}}"
