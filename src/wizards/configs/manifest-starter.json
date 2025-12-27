@@ -21,7 +21,7 @@
       "id": "influences_synthesis",
       "type": "llm-processing",
       "title": "Din röst, stil och kvaliteter",
-      "description": "Här är ett utkast på vad du aspirerar på för stil och kvaliteter. Ta bort, lägg till och ändra om du vill. Dessa kvaliteter kommer bli en del av ditt manifest senare.",
+      "description": "Här är ett utkast till stil och kvaliteter. Ta bort det som inte stämmer och justera där det behövs. Det som blir kvar kommer att ligga till grund för ditt manifest, och i nästa steg får du välja vilka av dessa som är viktigast för dig.",
       "hidden": false,
       "prompt": {
         "system": "manifest-starter-influences-system",
@@ -52,11 +52,10 @@
       "type": "question",
       "title": "Kärnkvaliteter",
       "question": "Vilka kärnkvaliteter ska prägla ditt sätt att berätta?",
-      "description": "Välj de principer och kvaliteter som känns mest grundläggande för hur du skriver — inte allt du kan göra, utan det som alltid ska finnas där. De här valen formar tonen, språket och känslan i ditt berättande, oavsett genre eller form.",
+      "description": "Välj de principer och kvaliteter som känns mest grundläggande för hur du skriver — det som alltid ska finnas där. De här valen formar tonen, språket och känslan i ditt berättande, oavsett genre eller form.",
       "questionType": "multi-select",
       "required": true,
       "minSelections": 1,
-      "maxSelections": 5,
       "options": "{{quality_options}}"
     },
     {
@@ -112,7 +111,7 @@
         },
         {
           "value": "leave-reflective-and-curious",
-          "label": "Tankeväckt & reflekterande",
+          "label": "Tankeväckande & reflekterande",
           "description": "Idéer eller teman som dröjer sig kvar och fortsätter arbeta i tanken"
         },
         {
