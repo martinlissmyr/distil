@@ -27,7 +27,7 @@ type QuestionStepViewProps = {
 };
 
 export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
-  const { getAnswer, setAnswer } = useAppStore();
+  const { getAnswer, setAnswer, activeWizard } = useAppStore();
 
   // Get existing answer - type varies by question type
   const existingAnswer = getAnswer(step.id);
@@ -138,7 +138,23 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   const getOptions = () => {
     if (!step.options) return [];
     if (Array.isArray(step.options)) return step.options;
-    // Dynamic options ({{variableName}}) - for now return empty, will be populated by LLM results
+
+    // Dynamic options: "{{variableName}}" references LLM results
+    if (typeof step.options === 'string') {
+      const match = step.options.match(/^\{\{(.+?)\}\}$/);
+      if (match && activeWizard) {
+        const resultKey = match[1].trim();
+        const result = activeWizard.llmResults[resultKey];
+
+        // Result should be an array of option objects
+        if (Array.isArray(result)) {
+          return result;
+        }
+
+        console.warn(`[QuestionStepView] Dynamic options "${resultKey}" not found or not an array in llmResults`);
+      }
+    }
+
     return [];
   };
 

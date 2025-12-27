@@ -35,6 +35,31 @@
       }
     },
     {
+      "id": "extract_quality_options",
+      "type": "llm-processing",
+      "title": "Förbereder alternativ...",
+      "description": "Genererar alternativ baserat på dina kvaliteter",
+      "hidden": true,
+      "prompt": {
+        "system": "manifest-starter-extract-options-system",
+        "user": "manifest-starter-extract-options-user"
+      },
+      "resultKey": "quality_options",
+      "extractJson": true
+    },
+    {
+      "id": "core_qualities",
+      "type": "question",
+      "title": "Kärnkvaliteter",
+      "question": "Vilka kärnkvaliteter ska prägla ditt sätt att berätta?",
+      "description": "Välj de principer och kvaliteter som känns mest grundläggande för hur du skriver — inte allt du kan göra, utan det som alltid ska finnas där. De här valen formar tonen, språket och känslan i ditt berättande, oavsett genre eller form.",
+      "questionType": "multi-select",
+      "required": true,
+      "minSelections": 1,
+      "maxSelections": 5,
+      "options": "{{quality_options}}"
+    },
+    {
       "id": "intensity",
       "type": "question",
       "title": "Emotionell intensitet",
