@@ -87,6 +87,32 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     currentStep, // Still need this for the guard checks
   ]);
 
+  // Auto-advance hidden LLM steps when processing completes
+  useEffect(() => {
+    if (!activeWizard || !opened || !currentStep || currentStep.type !== 'llm-processing') return;
+
+    const processingStep = currentStep as LlmProcessingStep;
+
+    // Only auto-advance hidden steps
+    if (!processingStep.hidden) return;
+
+    const hasResult = llmResultForCurrentStep !== undefined;
+
+    // If hidden step has result and not currently processing, advance
+    if (hasResult && !isLlmProcessing) {
+      console.log('[WizardModal] Auto-advancing hidden step:', processingStep.id);
+      nextStep();
+    }
+  }, [
+    opened,
+    currentStepId,
+    isLlmProcessing,
+    llmResultForCurrentStep,
+    nextStep,
+    activeWizard,
+    currentStep,
+  ]);
+
   if (!activeWizard || !opened) return null;
   if (!currentStep) return null;
 
@@ -148,14 +174,39 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
 
   // Calculate step info
   const currentStepIndex = activeWizard.currentStepPath[0];
-  const totalSteps = activeWizard.config.steps.length;
+
+  // Calculate visible (non-hidden) step counts
+  const visibleSteps = activeWizard.config.steps.filter(step => {
+    if (step.type === 'llm-processing') {
+      return !(step as LlmProcessingStep).hidden;
+    }
+    return true;
+  });
+  const totalVisibleSteps = visibleSteps.length;
+
+  // Calculate current visible step index (how many non-hidden steps have we passed)
+  const currentVisibleStepIndex = activeWizard.config.steps
+    .slice(0, currentStepIndex)
+    .filter(step => {
+      if (step.type === 'llm-processing') {
+        return !(step as LlmProcessingStep).hidden;
+      }
+      return true;
+    }).length + 1; // +1 because we want 1-based indexing
+
   const stepTitle = currentStep.title ?? activeWizard.config.steps[currentStepIndex]?.title ?? 'Step';
-  const topTitle = `${stepTitle} (${currentStepIndex + 1}/${totalSteps})`;
+
+  // Hide step count if current step is hidden
+  const isCurrentStepHidden = currentStep.type === 'llm-processing' && (currentStep as LlmProcessingStep).hidden;
+  const topTitle = isCurrentStepHidden
+    ? stepTitle
+    : `${stepTitle} (${currentVisibleStepIndex}/${totalVisibleSteps})`;
 
   // Check if we can go back
   const canGoBack = currentStepIndex > 0;
 
-  // Check if we're on the last step
+  // Check if we're on the last step (based on actual step count, not visible count)
+  const totalSteps = activeWizard.config.steps.length;
   const isLastStep = currentStepIndex === totalSteps - 1;
 
   // Check if current step uses approval buttons (hide standard Next button)
