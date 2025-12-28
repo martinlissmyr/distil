@@ -1,0 +1,41 @@
+.chatScrollArea {
+  // Style Mantine ScrollArea's custom scrollbar
+  :global {
+    // Try Mantine's class naming convention
+    .mantine-ScrollArea-scrollbar {
+      padding: 2px;
+    }
+
+    .mantine-ScrollArea-thumb {
+      background-color: rgba(0, 0, 0, 0.15) !important;
+      border-radius: 4px;
+      transition: background-color 200ms ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.25) !important;
+      }
+    }
+
+    // Dark mode
+    [data-mantine-color-scheme="dark"] & {
+      .mantine-ScrollArea-thumb {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.25) !important;
+        }
+      }
+    }
+  }
+}
+
+.textArea {
+  --input-placeholder-color: rgba(0,0,0,.25);
+}
+
+.chatButton {
+  &[data-disabled] {
+    background-color: rgba(0,0,0,.05);
+    color: rgba(0,0,0,.15);
+  }
+}

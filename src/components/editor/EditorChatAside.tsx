@@ -13,7 +13,7 @@ import { useScopeManager } from './chat/useScopeManager';
 import { MessageBubble } from './chat/MessageBubble';
 import { SelectionPill } from './chat/SelectionPill';
 import { TypingIndicator } from './chat/TypingIndicator';
-import styles from './chat/ChatScrollbar.module.scss';
+import styles from './EditorChatAside.module.scss';
 
 // ✅ docs-model driven scope
 import { getDocScope } from '../../models/docs';
@@ -340,7 +340,7 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
         m="xs"
         style={{
           backgroundColor: 'var(--aside-input)',
-          borderRadius: '12px',
+          borderRadius: '10px',
         }}
       >
         <Textarea
@@ -353,9 +353,19 @@ export const EditorChatAside: React.FC<EditorChatAsideProps> = (props) => {
           minRows={2}
           maxRows={4}
           radius={0}
+          classNames={{
+            input: styles.textArea
+          }}
         />
         <Group justify="flex-end" mt={4}>
-          <Button size="xs" onClick={handleSendClick} disabled={isSending || !input.trim()}>
+          <Button
+            size="xs"
+            onClick={handleSendClick}
+            disabled={isSending || !input.trim()}
+            classNames={{
+              root: styles.chatButton,
+            }}
+          >
             Ask
           </Button>
         </Group>

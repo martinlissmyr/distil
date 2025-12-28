@@ -19,16 +19,16 @@ export const defaultTheme = mergeMantineTheme(
        * 0 = lightest surface, 9 = deepest neutral.
        */
       gray: [
-        '#F8FAFC', // 0 – page highlight
-        '#F1F5F9', // 1 – subtle surface
-        '#E2E8F0', // 2 – borders / separators
-        '#CBD5E1', // 3 – stronger border
-        '#94A3B8', // 4 – muted text/icon
-        '#64748B', // 5 – secondary text
-        '#475569', // 6 – strong secondary
-        '#334155', // 7 – deep slate
-        '#1F2937', // 8 – near-black UI
-        '#0F172A', // 9 – deepest (rarely used in light mode)
+        '#FAF9F8', // 0 – warm paper white
+        '#F3F1EF', // 1 – subtle warm surface
+        '#E5E1DD', // 2 – borders / separators
+        '#CDC7C1', // 3 – stronger border
+        '#A9A19A', // 4 – muted text / icon
+        '#7D756E', // 5 – secondary text
+        '#5E5751', // 6 – strong secondary
+        '#3F3934', // 7 – deep warm gray
+        '#26221F', // 8 – near-black UI
+        '#1A1715', // 9 – base charcoal (your reference)
       ],
 
       /**
@@ -52,7 +52,7 @@ export const defaultTheme = mergeMantineTheme(
   })
 );
 
-export const metaTheme = mergeMantineTheme(
+export const proseTheme = mergeMantineTheme(
   base,
   createTheme({
     primaryColor: 'orangeWarm',
@@ -89,7 +89,7 @@ export const metaTheme = mergeMantineTheme(
   })
 );
 
-export const proseTheme = mergeMantineTheme(
+export const metaTheme = mergeMantineTheme(
   base,
   createTheme({
     // Primary accent for prose mode
