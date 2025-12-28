@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { client } from '../api/client';
 import { metaJsonToMarkdown } from '../helpers/markdownUtils';
 import type { MetaScope, MetaDocKey, MetaDocState } from '../types/metaDoc';
+import type { UiSchemaSetting, UiSchema } from '../types/ui';
+import { DEFAULT_UI_SCHEMA_SETTING, SUPPORTED_UI_SCHEMA_SETTINGS } from '../types/ui';
 
 import type {
   WizardState,
@@ -30,6 +32,12 @@ type AppStore = {
   writingLanguageLoaded: boolean;
   loadWritingLanguage: () => Promise<void>;
   setWritingLanguage: (lang: WritingLanguage) => Promise<void>;
+
+  // ---- UI Schema Setting -----
+  uiSchemaSetting: UiSchemaSetting;
+  uiSchemaLoaded: boolean;
+  loadUiSchema: () => Promise<void>;
+  setUiSchemaSetting: (v: UiSchemaSetting) => Promise<void>;
 
   setHasApiKey: (v: boolean) => void;
 
@@ -71,6 +79,13 @@ export const docIdForPrimary = (args: {
   return `root::${kind}`;
 };
 
+const isSupportedUiSchemaSetting = (v: unknown): v is UiSchemaSetting => {
+  return (
+    typeof v === 'string' &&
+    (SUPPORTED_UI_SCHEMA_SETTINGS as readonly string[]).includes(v)
+  );
+};
+
 const isSupportedWritingLanguage = (v: unknown): v is WritingLanguage => {
   return (
     typeof v === 'string' &&
@@ -105,7 +120,54 @@ export const useAppStore = create<AppStore>((set, get) => ({
     })),
 
   getDocRevision: (docId) => get().docRevision[docId] ?? 0,
-  
+
+  uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING,
+  uiSchemaLoaded: false,
+
+  async loadUiSchema() {
+    if (get().uiSchemaLoaded) return;
+
+    try {
+      const resp = await client.getUiSchema();
+      if (resp.ok) {
+        const value = resp.data;
+        if (isSupportedUiSchemaSetting(value)) {
+          set({ uiSchemaSetting: value, uiSchemaLoaded: true });
+        } else {
+          set({ uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING, uiSchemaLoaded: true });
+        }
+      } else {
+        console.error('[useAppStore] getUiSchema failed:', resp.error);
+        set({ uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING, uiSchemaLoaded: true });
+      }
+    } catch (e) {
+      console.error('[useAppStore] Failed to load uiSchema', e);
+      set({ uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING, uiSchemaLoaded: true });
+    }
+  },
+
+  async setUiSchemaSetting(next) {
+    if (!isSupportedUiSchemaSetting(next)) {
+      throw new Error(`Unsupported ui schema setting: ${String(next)}`);
+    }
+
+    const prev = get().uiSchemaSetting;
+
+    // optimistic update => immediate UI change everywhere
+    set({ uiSchemaSetting: next, uiSchemaLoaded: true });
+
+    try {
+      const resp = await client.setUiSchema(next);
+      if (!resp.ok) {
+        set({ uiSchemaSetting: prev, uiSchemaLoaded: true });
+        throw new Error(resp.error);
+      }
+    } catch (e) {
+      set({ uiSchemaSetting: prev, uiSchemaLoaded: true });
+      throw e instanceof Error ? e : new Error('Failed to set UI schema');
+    }
+  },
+
   async loadWritingLanguage() {
     // Avoid re-loading if already loaded
     if (get().writingLanguageLoaded) return;

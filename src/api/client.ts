@@ -1,6 +1,7 @@
 // src/api/client.ts
 import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from '../types/language';
+import type { UiSchemaSetting } from '../types/ui'; // ✅ add
 import type { EntityType } from '../models/entityIndex';
 
 export type Project = {
@@ -111,6 +112,14 @@ export const client = {
   },
   setWritingLanguage(lang: WritingLanguage) {
     return window.settings.setWritingLanguage(lang);
+  },
+
+  // -------- UI Schema --------
+  getUiSchema() {
+    return window.settings.getUiSchema();
+  },
+  setUiSchema(schema: UiSchemaSetting) {
+    return window.settings.setUiSchema(schema);
   },
 
   // -------- apiKey --------

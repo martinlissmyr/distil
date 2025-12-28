@@ -81,6 +81,11 @@ contextBridge.exposeInMainWorld('settings', {
   getWritingLanguage: () => ipcRenderer.invoke('settings:getWritingLanguage'),
   setWritingLanguage: (lang: string) =>
     ipcRenderer.invoke('settings:setWritingLanguage', lang),
+
+  // ---- UI Schema ----
+  getUiSchema: () => ipcRenderer.invoke('settings:getUiSchema'),
+  setUiSchema: (schema: string) =>
+    ipcRenderer.invoke('settings:setUiSchema', schema),
 })
 
 

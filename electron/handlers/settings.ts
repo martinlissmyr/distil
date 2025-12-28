@@ -1,8 +1,8 @@
 // electron/handlers/settings.ts
 import { saveApiKey, loadApiKey, clearApiKey } from '../secureStore';
-import { validateApiKey, validateWritingLanguage } from '../validation';
+import { validateApiKey, validateWritingLanguagem, validateUiSchema } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
-import { getWritingLanguage, setWritingLanguage } from '../fs/settings';
+import { getWritingLanguage, setWritingLanguagem, setUiSchema, getUiSchema } from '../fs/settings';
 
 /**
  * Registers IPC handlers for application settings (API keys, preferences, etc.)
@@ -36,4 +36,18 @@ export function registerSettingsHandlers(): void {
     const stored = await getWritingLanguage();
     return stored ?? 'sv';
   });
+
+  // ---- Writing language ----
+  safeHandle('settings:setUiSchema', async (schema: string) => {
+    validateUiSchema(schema);
+    await setUiSchema(schema);
+    return undefined; // void return
+  });
+
+  safeHandle('settings:getUiSchema', async () => {
+    // Default should be "system" if nothing stored
+    const stored = await getUiSchema();
+    return stored ?? 'system';
+  });
+
 }

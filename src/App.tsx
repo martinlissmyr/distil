@@ -12,7 +12,6 @@ import { useAppStore } from './state/useAppStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ProseDoc } from './components/editor/ProseEditor';
-import { useThemeSetup } from './hooks/useThemeSetup';
 import { AppContent } from './components/layout/AppContent';
 import { AppModals } from './components/common/AppModals';
 import { useNavigation } from './hooks/useNavigation';
@@ -172,9 +171,6 @@ const App: React.FC = () => {
       setWizardModalOpen(false);
     }
   };
-
-  // Theme setup
-  useThemeSetup();
 
   // ---- Project handlers ----
   const projectHandlers = useProjectHandlers({

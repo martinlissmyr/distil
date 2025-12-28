@@ -3,10 +3,26 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Stack, Box } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
-import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
+import {
+  SettingsGroup,
+  SettingsGroupLabel,
+  type SettingItem,
+} from '../common/SettingsGroup';
+
 import type { WritingLanguage } from '../../types/language';
-import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE, SUPPORTED_WRITING_LANGUAGES } from '../../types/language';
+import {
+  WRITING_LANGUAGE_LABEL,
+  SUPPORTED_WRITING_LANGUAGES,
+} from '../../types/language';
+
+import type { UiSchemaSetting } from '../../types/ui';
+import {
+  UI_SCHEMA_LABEL,
+  SUPPORTED_UI_SCHEMA_SETTINGS,
+} from '../../types/ui';
+
 import { client } from '../../api/client';
+import { useAppStore } from '../../state/useAppStore';
 
 type SettingsModalProps = {
   opened: boolean;
@@ -95,9 +111,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   const [apiKeySaved, setApiKeySaved] = useState(''); // last saved/loaded value
   const [apiKeyDraft, setApiKeyDraft] = useState(''); // what user edits in apiKey view
 
-  // ---- Writing language ----
-  const [writingLanguage, setWritingLanguage] = useState<WritingLanguage>(DEFAULT_WRITING_LANGUAGE);
+  // ---- Writing language (Zustand; applies immediately app-wide) ----
+  const writingLanguage = useAppStore((s) => s.writingLanguage);
+  const writingLanguageLoaded = useAppStore((s) => s.writingLanguageLoaded);
+  const loadWritingLanguage = useAppStore((s) => s.loadWritingLanguage);
+  const setWritingLanguage = useAppStore((s) => s.setWritingLanguage);
+
   const [writingLanguageSaving, setWritingLanguageSaving] = useState(false);
+
+  // ---- UI Schema (Zustand; applies immediately app-wide) ----
+  // NOTE: these store fields/actions must exist (mirror writingLanguage pattern):
+  // uiSchemaSetting, uiSchemaLoaded, loadUiSchema, setUiSchema
+  const uiSchema = useAppStore((s) => (s as any).uiSchemaSetting as UiSchemaSetting);
+  const uiSchemaLoaded = useAppStore((s) => Boolean((s as any).uiSchemaLoaded));
+  const loadUiSchema = useAppStore((s) => (s as any).loadUiSchemaSetting as () => Promise<void>);
+  const setUiSchema = useAppStore(
+    (s) => (s as any).setUiSchemaSetting as (v: UiSchemaSetting) => Promise<void>
+  );
+
+  const [uiSchemaSaving, setUiSchemaSaving] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,7 +197,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   // ✅ debouncer AFTER saveApiKey is defined
   const debouncedSaveApiKey = useDebouncedCallback(saveApiKey, 450);
 
-  // Load settings on open (API key + writing language)
+  // Load settings on open (API key + store-backed settings)
   useEffect(() => {
     if (!opened) return;
 
@@ -179,39 +211,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
         setDeleteConfirm(false);
         setApiKeySaveError('');
 
-        const [apiKeyResp, langResp] = await Promise.all([
-          client.getApiKey(),
-          client.getWritingLanguage(),
-        ]);
-
+        // Load API key (modal-local)
+        const apiKeyResp = await client.getApiKey();
         if (cancelled) return;
 
-        // ---- API key ----
         if (apiKeyResp.ok) {
           const key = typeof apiKeyResp.data === 'string' ? apiKeyResp.data : '';
           setApiKeySaved(key);
           setApiKeyDraft(key);
         } else {
           console.error('Failed to load API key:', apiKeyResp.error);
-          // keep defaults
           setApiKeySaved('');
           setApiKeyDraft('');
         }
 
-        // ---- Writing language ----
-        if (langResp.ok) {
-          setWritingLanguage(langResp.data ?? DEFAULT_WRITING_LANGUAGE);
-        } else {
-          console.error('Failed to load writing language:', langResp.error);
-          setWritingLanguage(DEFAULT_WRITING_LANGUAGE);
-        }
+        // Load app-wide settings via store (idempotent)
+        // (these will ensure other parts of the app also get the values)
+        if (!writingLanguageLoaded) await loadWritingLanguage();
+        if (!uiSchemaLoaded) await loadUiSchema();
       } catch (e) {
         console.error('Failed to load settings', e);
         if (!cancelled) {
-          // Safe fallbacks
           setApiKeySaved('');
           setApiKeyDraft('');
-          setWritingLanguage(DEFAULT_WRITING_LANGUAGE);
+          // store actions already have fallbacks; nothing else needed here
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -223,7 +246,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
     return () => {
       cancelled = true;
     };
-  }, [opened]);
+  }, [opened, writingLanguageLoaded, loadWritingLanguage, uiSchemaLoaded, loadUiSchema]);
 
   // When entering/leaving the apiKey subview
   useEffect(() => {
@@ -276,38 +299,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   const handleWritingLanguageChange = async (lang: WritingLanguage | null) => {
     if (!lang) return;
 
-    const prev = writingLanguage;
-
-    // Optimistic UI
-    setWritingLanguage(lang);
-
     try {
       setWritingLanguageSaving(true);
-
-      const resp = await client.setWritingLanguage(lang);
-      if (!resp.ok) {
-        console.error('Failed to save writing language:', resp.error);
-        setWritingLanguage(prev); // revert
-        return;
-      }
-
-      // Optional: keep local state in sync with persisted value
-      const reload = await client.getWritingLanguage();
-      if (reload.ok) setWritingLanguage(reload.data ?? lang);
+      // ✅ store setter is optimistic, so the app updates immediately
+      await setWritingLanguage(lang);
     } catch (e) {
       console.error('Failed to save writing language', e);
-      setWritingLanguage(prev); // revert
     } finally {
       setWritingLanguageSaving(false);
+    }
+  };
+
+  const handleUiSchemaChange = async (nextValue: UiSchemaSetting | null) => {
+    if (!nextValue) return;
+
+    try {
+      setUiSchemaSaving(true);
+      // ✅ store setter should be optimistic -> UI applies immediately
+      await setUiSchema(nextValue);
+    } catch (e) {
+      console.error('Failed to save UI schema', e);
+    } finally {
+      setUiSchemaSaving(false);
     }
   };
 
   // Root view items (navigation)
   const rootItems: SettingItem[] = useMemo(() => {
     const langDisabled = loading || writingLanguageSaving;
+    const uiDisabled = loading || uiSchemaSaving;
+
     const languageOptions = SUPPORTED_WRITING_LANGUAGES.map((lang) => ({
       value: lang,
       label: WRITING_LANGUAGE_LABEL[lang] ?? lang,
+    }));
+
+    const uiSchemaOptions = SUPPORTED_UI_SCHEMA_SETTINGS.map((v) => ({
+      value: v,
+      label: UI_SCHEMA_LABEL[v] ?? v,
     }));
 
     return [
@@ -327,12 +356,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
         disabled: langDisabled,
         data: languageOptions,
       },
+      {
+        id: 'ui-schema-setting',
+        type: 'select',
+        label: 'UI Theme',
+        value: uiSchema,
+        onChange: handleUiSchemaChange,
+        disabled: uiDisabled,
+        data: uiSchemaOptions,
+      },
     ];
-  }, [apiKeySaved, writingLanguage, loading, writingLanguageSaving]);
+  }, [
+    apiKeySaved,
+    writingLanguage,
+    uiSchema,
+    loading,
+    writingLanguageSaving,
+    uiSchemaSaving,
+  ]);
 
-  // Validation for the UI icon/tooltip:
-  // - we show "save error" if present
-  // - otherwise show format validation
   const apiKeyValidateForUi = (v: string): ApiKeyValidation => {
     if (apiKeySaveError) return { state: 'error', text: apiKeySaveError };
     return validateApiKey(v);
@@ -402,11 +444,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
       overlayPreset="glassLight"
       header={
         <Box p={12}>
-          <TopNavigation
-            title={title}
-            onBack={stack.length > 1 ? pop : undefined}
-            onClose={onClose}
-          />
+          <TopNavigation title={title} onBack={stack.length > 1 ? pop : undefined} onClose={onClose} />
         </Box>
       }
     >

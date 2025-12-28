@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
-import { useSystemTheme } from './hooks/useSystemTheme';
+import { useResolvedUiSchema } from './hooks/useResolvedUiSchema';
 import '@mantine/core/styles.css';
 import { defaultTheme, metaTheme, proseTheme } from './theme';
 import { useNavigation } from './hooks/useNavigation';
@@ -10,7 +10,7 @@ import { getSectionConfig } from './models/sections';
 import type { uiMode } from './types/ui/';
 
 function Root() {
-  useSystemTheme();
+  const { resolved } = useResolvedUiSchema();
 
   const { leafId } = useNavigation();
 
@@ -29,7 +29,7 @@ function Root() {
     <MantineProvider
       theme={themeByUiMode}
       defaultColorScheme="dark"
-      forceColorScheme={window.theme ? undefined : 'dark'}
+      forceColorScheme={resolved}
     >
       <div data-ui-mode={uiMode} style={{ height: '100%' }}>
         <App />

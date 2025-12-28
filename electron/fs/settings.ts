@@ -5,6 +5,7 @@ import { app } from 'electron';
 
 export type AppSettingsFile = {
   writingLanguage?: string; // validated at handler level
+  uiSchema?: string; // validated at handler level
 };
 
 const getRootDir = () => {
@@ -41,4 +42,14 @@ export async function getWritingLanguage(): Promise<string | null> {
 export async function setWritingLanguage(language: string): Promise<void> {
   const settings = await readSettingsFile();
   await writeSettingsFile({ ...settings, writingLanguage: language });
+}
+
+export async function getUiSchema(): Promise<string | null> {
+  const settings = await readSettingsFile();
+  return typeof settings.uiSchema === 'string' ? settings.uiSchema : null;
+}
+
+export async function setUiSchema(schema: string): Promise<void> {
+  const settings = await readSettingsFile();
+  await writeSettingsFile({ ...settings, uiSchema: schema });
 }
