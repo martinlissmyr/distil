@@ -12,11 +12,9 @@ export const defaultTheme = mergeMantineTheme(
     primaryColor: 'gray',
     white: '#ffffff',
     black: '#0f1115',
-
     colors: {
       /**
        * Neutral “UI gray” scale for light mode.
-       * 0 = lightest surface, 9 = deepest neutral.
        */
       gray: [
         '#FAF9F8', // 0 – warm paper white
@@ -30,11 +28,8 @@ export const defaultTheme = mergeMantineTheme(
         '#26221F', // 8 – near-black UI
         '#1A1715', // 9 – base charcoal (your reference)
       ],
-
       /**
-       * “dark” scale only matters when the color scheme is dark,
-       * but define it anyway so default mode can safely switch schemes.
-       * Here it’s a neutral charcoal (not brown, not blue).
+       * “dark” scale
        */
       dark: [
         '#E6EAF0', // 0 – text-ish in dark mode
@@ -71,10 +66,9 @@ export const proseTheme = mergeMantineTheme(
         '#4D2B0C', // 8 – near-background accent
         '#2F1C0A', // 9 – deepest tone (almost merges with bg)
       ],
-
-      // 👇 key part: make "dark" match your warm-brown UI
+      // make "dark" match the warm-brown UI
       dark: [
-        '#F2E8DF', // text-ish
+        '#F2E8DF',
         '#E6D4C2',
         '#D4B896',
         '#8A7767',
@@ -82,7 +76,7 @@ export const proseTheme = mergeMantineTheme(
         '#3A2F29',
         '#2B231E',
         '#241D18',
-        '#1E1814', // your body bg neighborhood
+        '#1E1814', 
         '#16110E',
       ],
     },
@@ -94,14 +88,11 @@ export const metaTheme = mergeMantineTheme(
   createTheme({
     // Primary accent for prose mode
     primaryColor: 'inkBlue',
-
     white: '#E9EDF3',
     black: '#0B1020',
-
     colors: {
       /**
        * Ink / night-writing blue
-       * Used for primary buttons, active states, focus rings
        */
       inkBlue: [
         '#EEF3FA', // 0 – near-white highlight
@@ -115,11 +106,8 @@ export const metaTheme = mergeMantineTheme(
         '#1F324D', // 8 – near-bg accent
         '#132236', // 9 – deepest tone
       ],
-
       /**
-       * Dark scale mapped to your prose background
-       * This is the *critical* part: Mantine hover/overlays
-       * pull from `dark[]`, not primaryColor.
+       * Dark scale mapped to meta background
        */
       dark: [
         '#E6EBF2', // 0 – main text
