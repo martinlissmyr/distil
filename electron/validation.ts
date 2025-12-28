@@ -157,3 +157,24 @@ export function validateWritingLanguage(lang: unknown): asserts lang is string {
     throw new Error(`Unsupported writing language: ${trimmed}`);
   }
 }
+
+/**
+ * Validates UI Schema.
+ */
+export function validateUiSchema(schema: unknown): asserts schema is string {
+  if (typeof schema !== 'string') {
+    throw new Error('UI Schema must be a string');
+  }
+
+  const trimmed = schema.trim();
+  if (!trimmed) {
+    throw new Error('UI Schema cannot be empty');
+  }
+
+  // Keep this intentionally simple and explicit.
+  const supported = new Set(['system', 'dark', 'light']);
+
+  if (!supported.has(trimmed)) {
+    throw new Error(`Unsupported UI Schema: ${trimmed}`);
+  }
+}
