@@ -31,7 +31,10 @@ function Root() {
       defaultColorScheme="dark"
       forceColorScheme={resolved}
     >
-      <div data-ui-mode={uiMode} style={{ height: '100%' }}>
+      <div data-ui-mode={uiMode} style={{ 
+        height: '100%',
+        backgroundColor: 'var(--body)',
+      }}>
         <App />
       </div>
     </MantineProvider>

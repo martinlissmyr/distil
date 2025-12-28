@@ -65,14 +65,13 @@ $modes: (meta, prose); // “default” handled separately, always emitted at ro
    -------------------------------- */
 
 $ui-tokens: (
+
+  body: (
+    default: (light: #fff, dark: #1F252D)
+  ),  
+
   text: (
     default: (light: #1a1715, dark: #efefef)
-  ),
-
-  bg-sidebar: (
-    default: (light: rgba(239, 239, 239, 1), dark: rgba(255, 255, 255, 0.02)),
-    meta:    (light: rgba(249, 239, 235, 1), dark: rgba(26, 20, 16, 1)),
-    prose:   (light: rgba(239, 239, 239, 1), dark: rgba(12, 18, 34, 1))
   ),
 
   overlay: (
@@ -80,11 +79,11 @@ $ui-tokens: (
   ),
 
   overlay-subtle: (
-    default: (light: rgba(250, 250, 250, 0.8), dark: rgba(45, 45, 45, 1))
+    default: (light: rgba(0, 0, 0, 0.11), dark: rgba(45, 45, 45, 1))
   ),
 
   overlay-subtle-hover: (
-    default: (light: rgba(245, 245, 245, 0.9), dark: rgba(48, 48, 48, 1))
+    default: (light: rgba(0, 0, 0, 0.10), dark: rgba(48, 48, 48, 1))
   ),
 
   overlay-highlighted: (
@@ -92,11 +91,11 @@ $ui-tokens: (
   ),
 
   card-subtle: (
-    default: (light: rgba(0, 0, 0, 0.2), dark: rgba(0, 0, 0, 0.2))
+    default: (light: rgba(0, 0, 0, 0.05), dark: rgba(0, 0, 0, 0.2))
   ),
 
   card-subtle-hover: (
-    default: (light: rgba(0, 0, 0, 0.3), dark: rgba(0, 0, 0, 0.3))
+    default: (light: rgba(0, 0, 0, 0.1), dark: rgba(0, 0, 0, 0.3))
   ),
 
   border-subtle: (
@@ -104,11 +103,11 @@ $ui-tokens: (
   ),
 
   border-subtlest: (
-    default: (light: rgba(15, 23, 42, 0.03), dark: rgba(148, 163, 184, 0.05))
+    default: (light: rgba(15, 23, 42, 0.0), dark: rgba(148, 163, 184, 0.05)),
   ),
 
   aside-input: (
-    default: (light: rgba(0, 0, 0, 0.02), dark: rgba(255, 255, 255, 0.02))
+    default: (light: rgba(0,0,0,.04), dark: rgba(255, 255, 255, 0.02)),
   ),
 
   aside-bubble: (
@@ -131,34 +130,40 @@ $ui-tokens: (
     default: (light: rgba(255, 235, 80, 0.45), dark: rgba(255, 235, 80, 0.45))
   ),
 
+  bg-sidebar: (
+    default: (light: #F5F5F5, dark: rgba(255, 255, 255, 0.02)),
+    prose:    (light: rgba(247, 238, 232, 1), dark: rgba(26, 20, 16, 1)),
+    meta:   (light: #D8DBE5, dark: rgba(12, 18, 34, 1))
+  ),
+
   bg-editor: (
-    default: (light: rgba(245, 245, 245, 1), dark: rgba(20, 20, 23, 1)),
-    meta:    (light: rgba(255, 246, 240, 1), dark: rgba(30, 24, 20, 1)),
-    prose:   (light: rgba(245, 245, 245, 1), dark: rgba(16, 24, 39, 1))
+    default: (light: rgba(216, 216, 216, 1), dark: rgba(20, 20, 23, 1)),
+    prose:    (light: rgba(255, 246, 240, 1), dark: rgba(30, 24, 20, 1)),
+    meta:   (light: #E5E7ED, dark: rgba(16, 24, 39, 1))
   ),
 
   bg-editor-faded: (
     default: (light: rgba(245, 245, 245, 0.8), dark: rgba(20, 20, 23, 0.8)),
-    meta:    (light: rgba(255, 246, 240, 0.8), dark: rgba(30, 24, 20, 0.8)),
-    prose:   (light: rgba(245, 245, 245, 0.8), dark: rgba(16, 24, 39, 0.8))
+    prose:    (light: rgba(255, 246, 240, 0.8), dark: rgba(30, 24, 20, 0.8)),
+    meta:   (light: rgba(245, 245, 245, 0.8), dark: rgba(16, 24, 39, 0.8))
   ),
 
   bg-editor-transparent: (
     default: (light: rgba(245, 245, 245, 0), dark: rgba(20, 20, 23, 0)),
-    meta:    (light: rgba(255, 246, 240, 0), dark: rgba(30, 24, 20, 0)),
-    prose:   (light: rgba(245, 245, 245, 0), dark: rgba(16, 24, 39, 0))
+    prose:    (light: rgba(255, 246, 240, 0), dark: rgba(30, 24, 20, 0)),
+    meta:   (light: rgba(245, 245, 245, 0), dark: rgba(16, 24, 39, 0))
   ),
 
   editor-overlay: (
     default: (light: rgba(255, 255, 255, 0.94), dark: rgba(23, 23, 26, 0.94)),
-    meta:    (light: rgba(255, 255, 250, 0.94), dark: rgba(22, 18, 15, 0.94)),
-    prose:   (light: rgba(255, 255, 255, 0.94), dark: rgba(12, 18, 34, 0.94))
+    prose:    (light: rgba(255, 255, 250, 0.94), dark: rgba(22, 18, 15, 0.94)),
+    meta:   (light: rgba(255, 255, 255, 0.94), dark: rgba(12, 18, 34, 0.94))
   ),
 
   bg-editor-aside: (
     default: (light: rgba(239, 239, 239, 1), dark: rgba(45, 45, 45, 1)),
-    meta:    (light: rgba(255, 250, 246, 0.94), dark: rgba(34, 28, 24, 0.94)),
-    prose:   (light: rgba(239, 239, 239, 1), dark: rgba(18, 28, 43, 1))
+    prose:    (light: rgba(247, 238, 232, 1), dark: rgba(34, 28, 24, 0.94)),
+    meta:   (light: #E0E2EA, dark: rgba(18, 28, 43, 1))
   )
 );
 

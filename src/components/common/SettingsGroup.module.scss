@@ -36,7 +36,7 @@
 
 .separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-subtle);
   margin: 0 16px; /* align like macOS (not full bleed) */
 }
 
