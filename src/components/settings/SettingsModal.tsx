@@ -1,97 +1,23 @@
 // src/components/settings/SettingsModal.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Stack, Box } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { Box } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
-import {
-  SettingsGroup,
-  SettingsGroupLabel,
-  type SettingItem,
-} from '../common/SettingsGroup';
+import { SettingsRootView } from './SettingsRootView';
+import { ApiKeyView } from './ApiKeyView';
+import { validateApiKey } from './utils';
+import { VIEWS, type SettingsViewId } from './types';
 
 import type { WritingLanguage } from '../../types/language';
-import {
-  WRITING_LANGUAGE_LABEL,
-  SUPPORTED_WRITING_LANGUAGES,
-} from '../../types/language';
-
 import type { UiSchemaSetting } from '../../types/ui';
-import {
-  UI_SCHEMA_LABEL,
-  SUPPORTED_UI_SCHEMA_SETTINGS,
-} from '../../types/ui';
 
 import { client } from '../../api/client';
 import { useAppStore } from '../../state/useAppStore';
+import { useDebouncedCallback } from '../../hooks/useDebouncedCallback';
 
 type SettingsModalProps = {
   opened: boolean;
   onClose: () => void;
-};
-
-type SettingsViewId = 'root' | 'apiKey';
-
-type ViewConfig = {
-  id: SettingsViewId;
-  title: string;
-};
-
-const VIEWS: Record<SettingsViewId, ViewConfig> = {
-  root: { id: 'root', title: 'Settings' },
-  apiKey: { id: 'apiKey', title: 'OpenAI API key' },
-};
-
-// Small debouncer without extra deps
-function useDebouncedCallback<TArgs extends any[]>(
-  fn: (...args: TArgs) => void | Promise<void>,
-  delayMs: number
-) {
-  const timeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  const cancel = () => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  };
-
-  const call = (...args: TArgs) => {
-    cancel();
-    timeoutRef.current = window.setTimeout(() => fn(...args), delayMs);
-  };
-
-  return { call, cancel };
-}
-
-type ApiKeyValidation =
-  | { state: 'ok'; text?: string }
-  | { state: 'error'; text?: string }
-  | { state: 'empty'; text?: string };
-
-const validateApiKey = (v: string): ApiKeyValidation => {
-  const trimmed = v.trim();
-
-  if (!trimmed) {
-    return {
-      state: 'empty',
-      text: 'No API key set',
-    };
-  }
-
-  if (!trimmed.startsWith('sk-')) {
-    return {
-      state: 'error',
-      text: 'OpenAI API keys must start with "sk-"',
-    };
-  }
-
-  return { state: 'ok' };
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose }) => {
@@ -324,110 +250,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
     }
   };
 
-  // Root view items (navigation)
-  const rootItems: SettingItem[] = useMemo(() => {
-    const langDisabled = loading || writingLanguageSaving;
-    const uiDisabled = loading || uiSchemaSaving;
-
-    const languageOptions = SUPPORTED_WRITING_LANGUAGES.map((lang) => ({
-      value: lang,
-      label: WRITING_LANGUAGE_LABEL[lang] ?? lang,
-    }));
-
-    const uiSchemaOptions = SUPPORTED_UI_SCHEMA_SETTINGS.map((v) => ({
-      value: v,
-      label: UI_SCHEMA_LABEL[v] ?? v,
-    }));
-
-    return [
-      {
-        id: 'api-key-settings-nav',
-        type: 'navigation',
-        label: 'OpenAI API key',
-        rightText: apiKeySaved.trim() ? 'sk-*********************' : 'Add a key',
-        onClick: () => push('apiKey'),
-      },
-      {
-        id: 'lang-setting',
-        type: 'select',
-        label: 'Writing language',
-        value: writingLanguage,
-        onChange: handleWritingLanguageChange,
-        disabled: langDisabled,
-        data: languageOptions,
-      },
-      {
-        id: 'ui-schema-setting',
-        type: 'select',
-        label: 'UI Theme',
-        value: uiSchema,
-        onChange: handleUiSchemaChange,
-        disabled: uiDisabled,
-        data: uiSchemaOptions,
-      },
-    ];
-  }, [
-    apiKeySaved,
-    writingLanguage,
-    uiSchema,
-    loading,
-    writingLanguageSaving,
-    uiSchemaSaving,
-  ]);
-
-  const apiKeyValidateForUi = (v: string): ApiKeyValidation => {
-    if (apiKeySaveError) return { state: 'error', text: apiKeySaveError };
-    return validateApiKey(v);
-  };
-
   // ---- Render view content ----
   const content = (() => {
     if (activeView === 'root') {
       return (
-        <Stack gap="sm">
-          <SettingsGroup items={rootItems} ariaLabel="Settings" disabled={loading} />
-        </Stack>
+        <SettingsRootView
+          apiKeySaved={apiKeySaved}
+          writingLanguage={writingLanguage}
+          uiSchema={uiSchema}
+          loading={loading}
+          writingLanguageSaving={writingLanguageSaving}
+          uiSchemaSaving={uiSchemaSaving}
+          onNavigate={() => push('apiKey')}
+          onWritingLanguageChange={handleWritingLanguageChange}
+          onUiSchemaChange={handleUiSchemaChange}
+        />
       );
     }
 
     if (activeView === 'apiKey') {
-      const apiKeyItems: SettingItem[] = [
-        {
-          id: 'api-key',
-          type: 'text',
-          label: 'API key',
-          value: apiKeyDraft,
-
-          multiline: true,
-          minRows: 2,
-          maxRows: 6,
-
-          placeholder: 'sk-...',
-          disabled,
-          onChange: handleApiKeyChange,
-          validate: apiKeyValidateForUi,
-        },
-        ...(apiKeySaved.trim()
-          ? [
-              {
-                id: 'delete',
-                type: 'button',
-                label: ' ',
-                buttonLabel: deleteConfirm ? 'Click again to remove' : 'Remove key',
-                onClick: handleClearClick,
-                color: 'red',
-                variant: deleteConfirm ? 'filled' : 'subtle',
-                disabled,
-              } as SettingItem,
-            ]
-          : []),
-      ];
-
       return (
-        <Stack gap="sm">
-          <SettingsGroup items={apiKeyItems} ariaLabel="OpenAI API key settings" disabled={loading} />
-          <SettingsGroupLabel description="The API Key is stored securely in your system keychain on this device. Changes are saved automatically." />
-        </Stack>
+        <ApiKeyView
+          apiKeyDraft={apiKeyDraft}
+          apiKeySaved={apiKeySaved}
+          disabled={disabled}
+          saving={saving}
+          clearing={clearing}
+          deleteConfirm={deleteConfirm}
+          apiKeySaveError={apiKeySaveError}
+          onChange={handleApiKeyChange}
+          onClear={handleClearClick}
+        />
       );
     }
 
