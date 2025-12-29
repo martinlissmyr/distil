@@ -125,7 +125,7 @@ export const AppContent: React.FC<AppContentProps> = ({
             storyId={selectedStoryId}
             doc={currentDoc}
             onChange={handleDocChange}
-            title={currentTitle}
+            title={`${currentTitle} – Text`}
           />
         );
 
@@ -134,6 +134,7 @@ export const AppContent: React.FC<AppContentProps> = ({
           <StoryOutlineView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
+            title={`${currentTitle} – Outline`}
           />
         );
 
@@ -142,6 +143,7 @@ export const AppContent: React.FC<AppContentProps> = ({
           <StoryWorldView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
+            title={`${currentTitle} – World`}
           />
         );
 
@@ -150,6 +152,7 @@ export const AppContent: React.FC<AppContentProps> = ({
           <StoryBriefView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
+            title={`${currentTitle} – Brief`}
           />
         );
 
@@ -164,6 +167,7 @@ export const AppContent: React.FC<AppContentProps> = ({
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             docKind={docKind}
+            currentStoryTitle={currentTitle}
           />
         );
 

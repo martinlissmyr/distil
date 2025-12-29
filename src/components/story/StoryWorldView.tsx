@@ -7,11 +7,13 @@ import { useNavigation } from '../../hooks/useNavigation';
 type StoryWorldViewProps = {
   projectId: string;
   storyId: string;
+  title: string;
 };
 
 export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
   projectId,
   storyId,
+  title,
 }) => {
   const { setStorySection, goToManifest } = useNavigation();
 
@@ -33,7 +35,7 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
         mode="bound"
         scope={{ scope: 'story', projectId, storyId }}
         metaKey="world"
-        title="Story world"
+        title={title}
         placeholder="Describe the world of your story: time period, location, world-building details, rules of the world…"
         withChat
         chatConfig={{

@@ -70,6 +70,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           maxWidth: '100%',
+          userSelect: 'none',
+          pointerEvents: 'none',
         }}
       >
         {title}

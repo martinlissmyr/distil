@@ -15,6 +15,7 @@ type EntityIndexViewProps = {
   projectId: string;
   storyId: string;
   docKind: Extract<DocKindId, 'characters' | 'locations'>;
+  currentStoryTitle: string;
 };
 
 type ViewMode = 'list' | 'edit';
@@ -23,6 +24,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   projectId,
   storyId,
   docKind,
+  currentStoryTitle,
 }) => {
   const docConfig = getDocKind(docKind);
 
@@ -141,7 +143,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         <Box className={styles.root}>
           <Box py={20} px={30}>
             <TopNavigation
-              title={docConfig.title}
+              title={`${currentStoryTitle} – ${docConfig.title}`}
             />
           </Box>
           <Box p="xl">
