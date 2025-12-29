@@ -40,6 +40,7 @@
     "@mantine/core": "^8.3.9",
     "@mantine/hooks": "^8.3.9",
     "@mantine/styles": "^6.0.22",
+    "@tiptap/extension-bubble-menu": "^3.14.0",
     "@tiptap/extension-heading": "^3.11.0",
     "@tiptap/extension-placeholder": "^3.11.0",
     "@tiptap/markdown": "^3.11.0",
