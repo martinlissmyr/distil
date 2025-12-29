@@ -7,11 +7,13 @@ import { useNavigation } from '../../hooks/useNavigation';
 type StoryOutlineViewProps = {
   projectId: string;
   storyId: string;
+  title: string;
 };
 
 export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
   projectId,
   storyId,
+  title,
 }) => {
   const { setStorySection, goToManifest } = useNavigation();
 
@@ -33,7 +35,7 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
         mode="bound"
         scope={{ scope: 'story', projectId, storyId }}
         metaKey="outline"
-        title="Story outline"
+        title={title}
         placeholder="Sketch the structure of your story…"
         withChat
         chatConfig={{

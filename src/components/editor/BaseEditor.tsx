@@ -6,6 +6,7 @@ import type { Editor } from '@tiptap/react';
 import { EditorChatAside } from './EditorChatAside';
 import type { ChatConfig } from './ProseEditor';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
+import { TopNavigation } from '../common/TopNavigation';
 import styles from './BaseEditor.module.scss';
 import { BubbleMenu } from '@tiptap/react/menus';
 
@@ -25,7 +26,6 @@ export type BaseEditorProps = {
 export const BaseEditor: React.FC<BaseEditorProps> = ({
   editor,
   title,
-  showTitle = true,
   toolbar,
   withChat = true,
   chatConfig,
@@ -167,51 +167,53 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
     <>
       <BubbleMenu
         editor={editor}
-        updateDelay={0}
+        updateDelay={250}
         options={{
           placement: 'top',
           offset: 8,
           flip: true,
-          arrow: true,
         }}
         className={styles.toolbarBubble}
         data-ui="bubble-menu"
-        appendTo={() => document.body}
       >
         {toolbar}
       </BubbleMenu>
-    <Box
-      className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
-      style={{ '--aside-offset': `${asideOffset}px` } as React.CSSProperties}
-    >
-      <Box className={styles.topOverlay} />
-
       <Box
-        ref={scrollRef}
-        className={styles.scrollArea}
-        onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
+        className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
+        style={{ '--aside-offset': `${asideOffset}px` } as React.CSSProperties}
       >
-        <Box className={styles.editor}>
-          {showTitle && <h1 className={styles.editorTitle}>{title}</h1>}
-          <EditorContent editor={editor} />
-        </Box>
-      </Box>
-
-      {withChat && (
-        <Box className={styles.chatAside}>
-          <EditorChatAside
-            {...chatConfig}
-            fullTextMarkdown={fullTextMarkdown}
-            selectionMarkdown={selectionMarkdown}
-            hasSelection={hasSelection}
+        <Box py={20} px={30} className={styles.topNavigation}>
+          <TopNavigation
             title={title}
-            isTextLoaded={fullTextMarkdown !== null}
-            editor={editor}
-            onOpenWizard={handleOpenWizard} // ✅ always wired when chat is on
           />
         </Box>
-      )}
-    </Box>
+        <Box className={styles.topOverlay} />
+
+        <Box
+          ref={scrollRef}
+          className={styles.scrollArea}
+          onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
+        >
+          <Box className={styles.editor}>
+            <EditorContent editor={editor} />
+          </Box>
+        </Box>
+
+        {withChat && (
+          <Box className={styles.chatAside}>
+            <EditorChatAside
+              {...chatConfig}
+              fullTextMarkdown={fullTextMarkdown}
+              selectionMarkdown={selectionMarkdown}
+              hasSelection={hasSelection}
+              title={title}
+              isTextLoaded={fullTextMarkdown !== null}
+              editor={editor}
+              onOpenWizard={handleOpenWizard} // ✅ always wired when chat is on
+            />
+          </Box>
+        )}
+      </Box>
     </>
   );
 };

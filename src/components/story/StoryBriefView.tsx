@@ -8,11 +8,13 @@ import type { MetaScope } from '../../types/metaDoc';
 type StoryBriefViewProps = {
   projectId: string;
   storyId: string;
+  title: string;
 };
 
 export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
   projectId,
   storyId,
+  title,
 }) => {
   const { setStorySection, goToManifest } = useNavigation();
 
@@ -39,7 +41,7 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
         mode="bound"
         scope={scope}
         metaKey="brief"
-        title="Story brief"
+        title={title}
         placeholder="Capture the core idea of this story…"
         withChat
         chatConfig={{
