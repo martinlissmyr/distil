@@ -7,6 +7,7 @@ import { EditorChatAside } from './EditorChatAside';
 import type { ChatConfig } from './ProseEditor';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import styles from './BaseEditor.module.scss';
+import { BubbleMenu } from '@tiptap/react/menus';
 
 import type { OpenWizardCommand } from '../../wizards/types';
 import type { WizardContext } from '../../wizards/types';
@@ -36,6 +37,9 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
   const [hasSelection, setHasSelection] = useState(false);
+
+  // Track if user has ever made a selection (menu stays open once triggered)
+  const hadSelectionRef = useRef(false);
 
   // Determine schema based on editor kind
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
@@ -106,6 +110,11 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
       const hasActiveSelection = from !== to;
       setHasSelection(hasActiveSelection);
 
+      // Update ref for bubble menu - once set, stays true forever
+      if (hasActiveSelection) {
+        hadSelectionRef.current = true;
+      }
+
       if (hasActiveSelection) {
         try {
           const slice = editor.state.doc.slice(from, to);
@@ -155,14 +164,26 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   if (!editor) return null;
 
   return (
+    <>
+      <BubbleMenu
+        editor={editor}
+        updateDelay={0}
+        options={{
+          placement: 'top',
+          offset: 8,
+          flip: true,
+          arrow: true,
+        }}
+        className={styles.toolbarBubble}
+        data-ui="bubble-menu"
+        appendTo={() => document.body}
+      >
+        {toolbar}
+      </BubbleMenu>
     <Box
       className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
       style={{ '--aside-offset': `${asideOffset}px` } as React.CSSProperties}
     >
-      <Group className={styles.toolbarPill} p="xs">
-        {toolbar}
-      </Group>
-
       <Box className={styles.topOverlay} />
 
       <Box
@@ -191,5 +212,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
         </Box>
       )}
     </Box>
+    </>
   );
 };

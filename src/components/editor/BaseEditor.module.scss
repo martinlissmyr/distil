@@ -194,15 +194,18 @@
 /* ==============================
    Toolbar pill
    ============================== */
-.toolbarPill {
-  position: absolute;
-  top: 16px;
-  left: calc(var(--editor-gutter) - 16px);
-  z-index: 20;
-
+.toolbarBubble {
   background: var(--editor-overlay);
+  padding: 10px;
   border-radius: 56px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 10000 !important;
+}
+
+// Target the positioned wrapper that contains the bubble menu
+:global(div[style*="position: absolute"]:has([data-ui="bubble-menu"])),
+:global(div[style*="position: fixed"]:has([data-ui="bubble-menu"])) {
+  z-index: 10000 !important;
 }
 
 /* ==============================
@@ -237,7 +240,7 @@
   min-height: 0;
   overflow: auto;
 
-  padding-top: 120px;
+  padding-top: 80px;
   padding-bottom: 24px;
 
   cursor: text;
