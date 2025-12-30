@@ -1,15 +1,18 @@
 // src/components/common/inputs/Textarea.tsx
 import React, { useMemo } from 'react';
-import { Badge, Textarea as MantineTextarea } from '@mantine/core';
+import { Badge, Textarea as MantineTextarea, Text } from '@mantine/core';
 import classes from './Textarea.module.scss';
 
 type TextareaProps = {
   value: string;
   onChange: (value: string) => void;
 
+  label?: string;
+  description?: string;
   placeholder?: string;
   minRows?: number;
   maxRows?: number;
+  autosize?: boolean;
 
   /** Validation */
   required?: boolean;
@@ -21,7 +24,7 @@ type TextareaProps = {
 };
 
 function validate({
-  value,
+  value = '',
   required,
   minLength,
   maxLength,
@@ -44,13 +47,16 @@ function validate({
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
-  value,
+  value = '',
   onChange,
+  label,
+  description,
   placeholder,
   minRows = 12,
   maxRows,
+  autosize = true,
   required,
-  minLength,
+  minLength = 0,
   maxLength,
   error,
 }) => {
@@ -65,49 +71,61 @@ export const Textarea: React.FC<TextareaProps> = ({
   const charCount = value.length;
   const overMax = Boolean(maxLength && charCount > maxLength);
 
-  return (
-    <div style={{ position: 'relative' }}>
-      <MantineTextarea
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={placeholder}
-        minRows={minRows}
-        maxRows={maxRows}
-        autosize
-        classNames={classes}
-        data-error={effectiveError !== ''}
-        data-counter={showCounter}
-      />
-
-      {effectiveError ? (
+  const RightSection = () => {
+    if (effectiveError) {
+      return (
         <Badge
           size="xs"
           variant="light"
           color="gray"
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            right: 8,
-            pointerEvents: 'none',
-          }}
+          className={classes.badge}
         >
           {effectiveError}
         </Badge>
-      ) : showCounter ? (
+      );
+    } else if (showCounter) {
+      return (
         <Badge
           size="xs"
           variant="light"
           color={overMax ? 'red' : 'gray'}
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            right: 8,
-            pointerEvents: 'none',
-          }}
+          className={classes.badge}
         >
           {charCount} / {maxLength}
         </Badge>
-      ) : null}
+      );
+    }
+  }
+
+  return (
+    <div className={classes.wrapper}>
+      <MantineTextarea
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        label={label}
+        placeholder={placeholder}
+        minRows={minRows}
+        maxRows={maxRows}
+        autosize={autosize}
+        classNames={{
+          label: classes.textareaLabel,
+          input: classes.textareaInput,
+          section: classes.textareaSection,
+        }}
+        data-error={effectiveError !== ''}
+        data-counter={showCounter}
+        size="sm"
+        rightSection={<RightSection/>}
+      />
+      {description && (
+        <Text
+          size="xs"
+          className={classes.description}
+          mt={4}
+        >
+          {description}
+        </Text>
+      )}
     </div>
   );
 };

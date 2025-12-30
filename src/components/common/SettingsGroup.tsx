@@ -439,18 +439,22 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
 
       return (
         <Select
+          key={s.id}
           value={s.value}
           placeholder={s.placeholder}
           data={s.data}
           onChange={s.onChange}
           disabled={disabled}
           variant="unstyled"
+          allowDeselect={false}
+          clearable={false}
           {...focusProps}
           comboboxProps={{
             dropdownPadding: 6,
-            radius: 24,
+            radius: 12,
           }}
           classNames={{
+            root: classes.selectRoot,
             input: classes.unstyledInput,
             dropdown: classes.dropdown,
             option: classes.option,

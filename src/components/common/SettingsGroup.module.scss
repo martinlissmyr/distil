@@ -114,6 +114,10 @@
   }
 }
 
+.selectRoot {
+  margin-right: -12px;
+}
+
 .unstyledTextarea {
   text-align: left !important;
   padding: 0;
@@ -141,12 +145,9 @@
   text-overflow: ellipsis;
 }
 
-/* Optional: make dropdown match the panel vibe */
 .dropdown {
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: color-mix(in srgb, var(--mantine-color-body) 92%, rgba(255, 255, 255, 0.06));
-  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  //background: color-mix(in srgb, var(--mantine-color-body) 92%, rgba(255, 255, 255, 0.06));
 }
 
 .option {

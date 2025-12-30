@@ -1,10 +1,44 @@
-.input {
-  --input-radius: 8px;
+// src/components/common/inputs/Textarea.module.scss
+
+.textareaInput {
+  --input-radius: var(--mantine-radius-lg);
   overflow: hidden;
-  padding-bottom: 32px;
+  border-color: transparent !important;
+  border-radius: var(--mantine-radius-lg);
+  background: color-mix(in srgb, var(--mantine-color-body) 60%, rgba(255, 255, 255, 0.06)) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 12px !important;
 
   &[data-counter="true"],
   &[data-error="true"] {
-      padding-right: 85px;
+    padding-right: 85px;
   }
+}
+
+.textareaLabel {
+  font-weight: 600 !important;
+  padding: 0 12px;
+  margin-bottom: 4px;
+}
+
+.textareaSection {
+  --input-right-section-size: 85px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+}
+
+.wrapper {
+  .description {
+    padding: 0 12px;
+    color: var(--mantine-color-dimmed);
+  }
+
+  /*&:focus-within,
+  &:hover {
+    .description {
+      opacity: 1;
+    }
+  }*/
 }

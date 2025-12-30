@@ -1,4 +1,4 @@
-// src/components/wizard/inputs/RadioGroup.tsx
+// src/components/common/inputs/RadioGroup.tsx
 import React, { useMemo } from 'react';
 import { Badge, Box, Flex, Radio, SimpleGrid, Stack, Text } from '@mantine/core';
 import classes from './RadioGroup.module.scss';
