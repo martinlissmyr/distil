@@ -1,13 +1,12 @@
-// src/components/common/inputs/TextInput.module.scss
+// src/components/common/inputs/Select.module.scss
 
-.textInput {
+.selectInput {
   background-color: transparent !important;
   border-color: var(--mantine-color-dark-6) !important;
 }
 
-.textInputSection {
-  --input-right-section-size: auto;
-  margin-right: 10px;
+.selectDropdown {
+	border-radius: 8px !important;
 }
 
 .wrapper {

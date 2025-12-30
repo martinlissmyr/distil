@@ -1,12 +1,14 @@
-// src/components/wizard/inputs/TextInput.tsx
+// src/components/common/inputs/TextInput.tsx
 import React, { useMemo } from 'react';
-import { Badge, TextInput as MantineTextInput } from '@mantine/core';
+import { Badge, TextInput as MantineTextInput, Text } from '@mantine/core';
 import classes from './TextInput.module.scss';
 
 type TextInputProps = {
   value: string;
   onChange: (value: string) => void;
 
+  label?: string;
+  description?: string;
   placeholder?: string;
 
   /** Validation */
@@ -19,7 +21,7 @@ type TextInputProps = {
 };
 
 function validate({
-  value,
+  value = '',
   required,
   minLength,
   maxLength,
@@ -29,7 +31,7 @@ function validate({
   minLength?: number;
   maxLength?: number;
 }): string {
-  const trimmed = value.trim();
+  const trimmed = value?.trim();
 
   if (required && !trimmed) return 'Required';
   if (minLength && trimmed.length < minLength) return 'Required';
@@ -41,8 +43,10 @@ function validate({
 }
 
 export const TextInput: React.FC<TextInputProps> = ({
-  value,
+  value = '',
   onChange,
+  label, 
+  description,
   placeholder,
   required,
   minLength,
@@ -60,48 +64,58 @@ export const TextInput: React.FC<TextInputProps> = ({
   const charCount = value.length;
   const overMax = Boolean(maxLength && charCount > maxLength);
 
-  return (
-    <div style={{ position: 'relative' }}>
-      <MantineTextInput
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={placeholder}
-        classNames={classes}
-        data-error={effectiveError !== ''}
-        data-counter={showCounter}
-      />
-
-      {effectiveError ? (
+  const RightSection = () => {
+    if (effectiveError) {
+      return (
         <Badge
           size="xs"
           variant="light"
           color="gray"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            right: 8,
-            pointerEvents: 'none',
-          }}
+          className={classes.badge}
         >
           {effectiveError}
         </Badge>
-      ) : showCounter ? (
+      );
+    } else if (showCounter) {
+      return (
         <Badge
           size="xs"
           variant="light"
           color={overMax ? 'red' : 'gray'}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            right: 8,
-            pointerEvents: 'none',
-          }}
+          className={classes.badge}
         >
           {charCount} / {maxLength}
         </Badge>
-      ) : null}
+      );
+    }
+  }
+
+  return (
+    <div className={classes.wrapper}>
+      <MantineTextInput
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        label={label}
+        placeholder={placeholder}
+        radius="sm"
+        classNames={{
+          input: classes.textInput,
+          section: classes.textInputSection
+        }}
+        data-error={effectiveError !== ''}
+        data-counter={showCounter}
+        size="sm"
+        rightSection={<RightSection/>}
+      />
+      {description && (
+        <Text
+          size="xs"
+          mt={4}
+          className={classes.description}
+        >
+          {description}
+        </Text>
+      )}
     </div>
   );
 };

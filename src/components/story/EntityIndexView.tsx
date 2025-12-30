@@ -8,7 +8,7 @@ import type { CharacterDoc, EntityIndex, EntityIndexEntry } from '../../models/e
 import { CharacterEditView } from './CharacterEditView';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
-import { EntityCard, CreateEntityCard } from '../common/EntityCard';
+import { EntityGrid } from '../common/EntityGrid';
 import { TopNavigation } from '../common/TopNavigation';
 
 type EntityIndexViewProps = {
@@ -84,12 +84,15 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       // Create entity index entry from character doc
       const entry: EntityIndexEntry = {
         id: character.id!,
-        name: character.identity!.name,
-        tier: character.tier!,
         type: 'character',
-        projection: {
-          roleInStory: character.identity!.roleInStory,
-        },
+        name: character.identity!.name,
+        aliases: character.identity!.aliases,
+        presenceAndExpression: character.presenceAndExpression!,
+        innerOrientation: character.innerOrientation,
+        sensitivityAndPull: character.sensitivityAndPull,
+        externalConstraints: character.externalConstraints,
+        tier: character.tier!,
+        roleInStory: character.identity!.roleInStory,
         docRef: {
           type: 'character',
           id: character.id!,
@@ -132,6 +135,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   };
 
   const characters = entityIndex?.entities || [];
+  const characterViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
 
   return (
     <StorySectionShell
@@ -143,7 +147,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         <Box className={styles.root}>
           <Box py={20} px={30}>
             <TopNavigation
-              title={`${currentStoryTitle} – ${docConfig.title}`}
+              title={characterViewTitle}
             />
           </Box>
           <Box p="xl">
@@ -152,24 +156,15 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
               {loading && <Text c="dimmed">Loading...</Text>}
 
               {!loading && (
-                <Group gap="lg">
-                  {characters.map((char) => {
-                    const id = char.id;
-                    return (
-                      <EntityCard
-                        key={id}
-                        id={id}
-                        label={char.name}
-                        onSelect={() => handleEditCharacter(id)}
-                        icon="character"
-                      />
-                    );
-                  })}
-
-                  <CreateEntityCard
-                    onCreate={handleAddCharacter}
-                  />
-                </Group>
+                <EntityGrid
+                  items={characters}
+                  getId={(c) => c.id}
+                  getLabel={(c) => c.name}
+                  onSelect={handleEditCharacter}
+                  onCreate={handleAddCharacter}
+                  icon="character"
+                  createLabel="New Character"
+                />
               )}
             </Stack>
           </Box>
@@ -180,6 +175,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         <CharacterEditView
           projectId={projectId}
           storyId={storyId}
+          title={`${characterViewTitle} – ${editingCharacter?.name || 'New'}`}
           character={editingCharacter}
           onBack={handleBackToList}
           onSave={handleSaveCharacter}
