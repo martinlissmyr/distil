@@ -57,6 +57,12 @@ contextBridge.exposeInMainWorld('distil', {
     ipcRenderer.invoke('entity:loadIndex', projectId, storyId, entityType),
   saveEntityIndex: (projectId: string, storyId: string, entityType: 'character' | 'location', index: any) =>
     ipcRenderer.invoke('entity:saveIndex', projectId, storyId, entityType, index),
+
+  // -------- entity documents ----------
+  loadEntityDoc: (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string) =>
+    ipcRenderer.invoke('entity:load', projectId, storyId, entityType, entityId),
+  saveEntityDoc: (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: any) =>
+    ipcRenderer.invoke('entity:save', projectId, storyId, entityType, entityId, doc),
 })
 
 contextBridge.exposeInMainWorld('chat', {
