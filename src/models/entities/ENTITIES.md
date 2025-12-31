@@ -86,256 +86,98 @@ An **EntityIndex** is a story-scoped list of lightweight entries (“projections
 
 ---
 
-## Abstract Concepts (Author-Facing Semantics)
+## Architecture
 
-### LCRF Context
-These concepts are part of **Layer 4: Structured Knowledge** (specifically `storyEntities` context) in the LCRF stack. They represent **author-defined constraints** that govern downstream AI behavior during **Layer 5: Task Execution** (prose writing).
+### Schema DSL System
+Entities use a **lightweight schema definition system** inspired by Sanity CMS. All entity structure is defined in `src/models/entities/schemas/`:
 
-This reflects the core LCRF principle: **upstream layers always govern downstream behavior**. The contradictions, relationships, triggers, and arcs defined here constrain what the AI suggests during prose editing — preventing drift, hallucination, and character inconsistency.
+**Core Schema Types** (`schemas/types.ts`):
+- **FieldDef**: Defines individual fields with:
+  - `name`: Field path (supports nesting like `"identity.name"`)
+  - `label`, `description`, `placeholder`: UI copy
+  - `type`: `'text' | 'textarea' | 'select'` (determines input component)
+  - `group`: Optional semantic grouping
+  - `schema`: Zod validation (single source of truth)
+  - `minRows`, `options`: UI hints for textarea/select types
+  - `index`: Future hint for projection inclusion
+- **GroupDef**: Semantic field grouping with label and description
+- **DocumentTypeDef**: Complete document schema with name, version, groups, and fields
+- Helper functions: `defineField()` and `defineType()` for type-safe definitions
 
----
+**Entity Schemas**:
+- **character.ts**: Character schema with identity and role groups
+  - Identity fields: name, aliases
+  - Role fields: tier (primary/significant/secondary), roleInStory
+  - Body fields: presenceAndExpression, voiceSamples, innerOrientation, sensitivityAndPull, externalConstraints
+  - All fields optional except name
+- **location.ts**: Location schema (similar pattern)
 
-The following concepts appear throughout the entity models. They are **not technical fields**, but narrative tools. The UI and AI should treat them as *signals*, not as rigid taxonomies.
+**Zod Schema Generation** (`src/helpers/buildZodFromSchema.ts`):
+- Converts DSL schema to Zod object schema
+- Supports nested paths: `"identity.name"` expands to `{ identity: { name: z.string() } }`
+- Single source of truth for validation
+- Generates `CharacterDocSchema` and `LocationDocSchema`
 
-### RelationshipDomain
-**What it is:**  
-A high-level domain describing *what kind of bond* exists between two characters.
+**Entity Document Types**:
+- Generated from schemas: `CharacterDoc = z.infer<typeof CharacterDocSchema>`
+- Base metadata: `id`, `version`, `updatedAt`, `createdAt`
+- Nested structure from field paths (e.g., `identity: { name, aliases }`)
+- All fields except `id`, `version`, `updatedAt` are optional
 
-Examples:
-- `romantic`
-- `family`
-- `professional`
-- `power`
-- `ideological`
-- `social`
-- `community`
-- `sexual`
+### EntityIndex Simplification
+The **EntityIndex** is now minimal:
+- **EntityIndexEntry** contains only: `id`, `name`, `docRef`, `sortOrder`
+- No complex projections in current implementation
+- Lightweight and regenerable from entity docs
+- Stored at: `{storyId}-characters.json`, `{storyId}-locations.json`
 
-**How to think about it:**  
-Domains answer *“In what sphere does this relationship primarily operate?”*  
-A relationship can span multiple domains (e.g. `romantic + power`, or `family + ideological`).
+### Persistence Strategy
 
-**How it’s used:**
-- Helps AI reason about likely behavior and tension.
-- Helps retrieve relevant relationships for questions like:
-  - “Who holds power over X?”
-  - “Is this a romantic betrayal or a professional one?”
-
----
-
-### RelationshipValence
-**What it is:**  
-The *emotional direction* or stance of the relationship.
-
-Common values:
-- `supportive` – fundamentally reinforcing, even if imperfect
-- `conflicted` – mixed, unstable, ambivalent
-- `antagonistic` – opposing, hostile, undermining
-- `neutral` – functional but emotionally flat
-- `unknown` – deliberately undefined
-
-**Example (romantic + supportive):**
-- Mutual care, trust, or loyalty — even if quiet or restrained.
-
-**Example (romantic + conflicted):**
-- Desire mixed with resentment, dependency, fear, or self-denial.
-
-**How it’s used:**
-- Strong signal for consistency checks:
-  - “Would X confide this?”
-  - “Would X challenge Y here?”
-- Helps AI detect tonal mismatches.
-
----
-
-### Strength (Relationship Strength)
-**What it is:**  
-A scalar (0..1) representing *how much this relationship matters* in the story.
-
-**Important:**  
-Strength is *not* moral closeness or affection. It is **narrative weight**.
-
-Examples:
-- A bitter rivalry may have **high strength**.
-- A pleasant acquaintance may have **low strength**.
-- A community tie (e.g. shared circles) may have **medium strength** even without intimacy.
-
-**Friendship vs community vs acquaintance**
-- **Acquaintance**: low strength, narrow domain.
-- **Friendship**: moderate-to-high strength, personal domain.
-- **Community**: medium strength, broad domain (many shared spaces, norms).
-
----
-
-### Archetype
-**What it is:**  
-A shorthand *narrative role-pattern*, not a personality box.
-
-Examples:
-- “the mask”
-- “the investigator”
-- “the witness”
-- “the double”
-- “the caretaker”
-
-**How to think about it:**  
-Archetype answers *“What story-function does this character tend to perform?”*  
-It should **not** fully describe the character — it’s a lens, not a cage.
-
-**How it’s used:**
-- Helps AI reason about expected pressures and behaviors.
-- Helps the author maintain thematic clarity.
-
----
-
-### SettingAnchor
-**What it is:**  
-A short phrase anchoring the character in *place + time + social context*.
-
-Examples:
-- “Berlin, late Weimar period”
-- “Upper-middle-class urban household”
-- “Provincial cultural elite”
-
-**How it’s used:**
-- Provides grounding for dialogue, behavior, and plausibility.
-- Helps AI avoid anachronisms or tonal drift.
-
----
-
-### Contradiction
-**What it is:**  
-A *core internal tension* that defines the character.
-
-Format:
-- “X, but Y”
-- “Capable of A, incapable of B”
-
-Examples:
-- “Socially skilled but internally empty”
-- “Morally rigid but emotionally avoidant”
-
-**How to think about it:**  
-Contradiction is often the **engine of scenes**.  
-If nothing contradicts, nothing moves.
-
----
-
-### Obstacles
-**What it is:**  
-Forces preventing the character from achieving goals.
-
-Types:
-- Internal (fear, belief, wound)
-- External (other characters, institutions, environment)
-
-**How it’s used:**
-- Helps AI reason about believable failure or delay.
-- Supports consistency checks:
-  - “Why doesn’t X just do Y?”
-
----
-
-### Triggers
-**What it is:**  
-Specific stimuli that reliably provoke a shift in behavior or emotion.
-
-Examples:
-- Being publicly questioned
-- Certain words or topics
-- Authority figures
-- Silence
-- Praise
-
-**How it’s used:**
-- High-value signal for scene writing.
-- Useful for detecting character-consistent reactions.
-
----
-
-### Avoids
-**What it is:**  
-Topics, behaviors, or emotional territories the character systematically avoids.
-
-Examples:
-- Conflict
-- Introspection
-- Speaking about the past
-- Making promises
-
-**How it’s used:**
-- Helps AI avoid putting words/actions in a character’s mouth that feel wrong.
-- Useful in dialogue validation:
-  - “Would X really say this?”
-
----
-
-### CharacterArc
-**What it is:**  
-The *directional change* of the character across the story.
-
-Components:
-- `startState` – who they are at entry
-- `changeVector` – how they are pulled or pushed
-- `endState` – who they become (or fail to become)
-- `keyTurns` – moments that lock change in place
-
-**Important:**  
-An arc can be **subtle**, **incomplete**, or **tragically circular**.
-
-**How it’s used:**
-- Guides long-range consistency.
-- Helps AI reason about “early vs late” behavior.
-
----
-
-## Persistence Strategy
-
-### Principle: one file per entity
+**Principle: one file per entity**
 Entities should be editable in isolation and safe to persist independently of the main story document.
 
-### Storage location (aligns with existing patterns)
-Entities are story-scoped and stored within the story's directory hierarchy:
-
+**Storage location** (aligns with existing patterns):
 ```
 ~/Distil/projects/<projectId>/stories/<storyId>/entities/
   characters/
-    <characterId>.json
+    <characterId>.json    # Full CharacterDoc (future)
   locations/
-    <locationId>.json
-  index.json
+    <locationId>.json     # Full LocationDoc (future)
+
+# Current storage (entity indices only):
+~/Distil/projects/<projectId>/stories/<storyId>/
+  <storyId>-characters.json    # EntityIndex
+  <storyId>-locations.json     # EntityIndex
 ```
 
 **Rationale:**
 - Follows existing pattern where story-scoped data lives under `stories/<storyId>/`
-- Similar to how metaDocs might be stored, but with subdirectories for organization
+- Similar to how metaDocs are stored
 - Keeps all story-related data (prose, outline, brief, entities) under one story path
-- `index.json` remains lightweight and can be regenerated from entity docs
+- Index remains lightweight and can be regenerated from entity docs
 
-### Write Queue Integration
-Entity saves must use the existing write queue system (implemented in `electron/fs/fs.ts`) to prevent race conditions when multiple entities or the index are saved concurrently.
+**Write Queue Integration**:
+Entity saves use the existing write queue system (`electron/fs/fs.ts`) to prevent race conditions.
 
----
+### Document Model Integration
 
-## Document Model Integration
-
-### Relationship to existing document model
+**Relationship to existing document model**:
 Entities are **not** registered as doc kinds in the core document model (`src/models/docs/`). Instead, they are a **parallel subsystem** with their own schema and persistence patterns.
 
 **Why separate from doc model:**
 - **Multiple instances**: Unlike docs (one manifest, one brief, one outline per story), there are many characters and locations per story
-- **Structured schemas**: Entities use typed TypeScript interfaces (e.g., `CharacterDoc`, `LocationDoc`) rather than free-form TipTap JSONContent
+- **Structured schemas**: Entities use schema DSL with Zod validation rather than free-form TipTap JSONContent
 - **Index-based retrieval**: Entities use a projection/index pattern for context selection, unlike docs which are loaded individually
-- **Custom UI patterns**: Entity editing may use structured forms, not just TipTap rich text editors
+- **Custom UI patterns**: Entity editing uses schema-driven forms, not just TipTap rich text editors
 
-### However, entities follow similar architectural patterns:
+**Entities follow similar architectural patterns:**
 - **LCRF layer assignment** (Layer 4: Structured Knowledge)
 - **Story-scoped persistence** under `stories/<storyId>/`
 - **Write queue usage** to prevent race conditions
 - **Context participation** via `getContextRulesFor()` integration
 - **State management** via Zustand store with loading/caching
 
-### Context Rules Integration
+**Context Rules Integration**:
 Entities extend the existing context selection algorithm (`src/chat/contextSelector.ts`):
 
 - **For `storyText` editing**: Characters and locations are **intelligently selected** based on:
@@ -346,6 +188,48 @@ Entities extend the existing context selection algorithm (`src/chat/contextSelec
 - **For entity editing**: Upstream context (manifest, brief, world) is **always included**. Other entities may be included if relationships/connections are relevant.
 
 The entity relevance pipeline (heuristics → rules → optional LLM classification → fetch full docs) integrates with the existing three-stage context selection approach.
+
+---
+
+## Benefits of Schema-Based Approach
+
+The schema DSL provides a **single source of truth** for entity structure, validation, and UI behavior:
+
+### 1. **Declarative Structure**
+- All entity fields, groups, and metadata defined in one place
+- Type-safe definitions with `defineField()` and `defineType()` helpers
+- Easy to understand and modify without touching component code
+
+### 2. **Automatic Type Generation**
+- TypeScript types derived from Zod schemas: `CharacterDoc = z.infer<typeof CharacterDocSchema>`
+- Full type safety from schema → validation → storage → UI
+- No manual type synchronization needed
+
+### 3. **Unified Validation**
+- Zod schemas embedded in field definitions
+- Single validation source used for both client-side and storage layer
+- Consistent error messages and validation behavior
+
+### 4. **Dynamic Form Rendering**
+- UI forms generated from schema groups and fields
+- `FieldDef.type` determines input component (TextInput, Textarea, Select)
+- Adding/modifying fields only requires schema updates, no component changes
+- Labels, descriptions, placeholders all defined in schema
+
+### 5. **Schema Evolution**
+- Version field enables migration strategies
+- Easy to add new fields without breaking existing data
+- Clear upgrade paths when schema structure changes
+
+### 6. **Self-Documenting**
+- Field labels and descriptions serve as inline documentation
+- Schema structure communicates intent to both humans and AI assistants
+- Reduces need for separate documentation files
+
+### 7. **Extensibility**
+- Easy to add new entity types (locations, items, factions)
+- Consistent pattern for all entity schemas
+- Future features (projections, indexing hints) can be added to FieldDef without breaking changes
 
 ---
 
@@ -459,13 +343,6 @@ Entity saves automatically use the existing write queue system in `fs.ts`:
 - Index updates are queued separately
 - Prevents race conditions during concurrent editing
 
-### Autosave Behavior
-Entity editors follow existing autosave patterns:
-- **Debounce delay**: 1000ms (1 second) after last edit
-- **Dirty state tracking**: Component tracks unsaved changes
-- **Auto-save on unmount**: Save before navigating away
-- **Save confirmation**: Visual indicator when save completes
-
 ---
 
 ## Navigation & UI Integration
@@ -514,39 +391,6 @@ Entities integrate with the sections model (`src/models/sections/`) by adding ne
    → If unsaved changes, prompt to save
    → Return to grid view
    → Grid refreshes from updated entity index
-```
-
-### UI Components (proposed structure)
-```
-src/components/entities/
-  StoryCharactersView.tsx     # Grid view of all characters
-  StoryLocationsView.tsx      # Grid view of all locations
-  CharacterEditor.tsx         # Full character editing form
-  LocationEditor.tsx          # Full location editing form
-  EntityCard.tsx              # Reusable card for grids
-  EntityEditView.tsx          # wrapper for editors
-  fields/
-    RelationshipField.tsx     # Structured relationship editor
-    VoiceField.tsx            # Voice/dialogue editor
-    ArcField.tsx              # Character arc editor
-    # ... other specialized field editors
-```
-
-### Editor Configuration
-Entity fields use a **hybrid approach**:
-- **Short structured fields**: Standard text inputs, selects, sliders (e.g., name, archetype, strength)
-- **Longer prose fields**: TipTap editors with minimal config (e.g., voice description, behavior patterns)
-- **Specialized fields**: Custom components (e.g., relationship graph, arc timeline)
-
-TipTap fields use a simplified `entityEditorConfig`:
-```typescript
-const entityEditorConfig: EditorConfig = {
-  headingLevels: [3], // H3 only for sub-sections within fields
-  lists: true,
-  horizontalRule: false,
-  toolbar: ['bold', 'italic', 'bulletList', 'orderedList'],
-  placeholder: 'Describe this aspect...',
-};
 ```
 
 ---
@@ -611,42 +455,9 @@ When entities are included in AI prompts, they're formatted as structured markdo
 ```markdown
 # CHARACTER: <name>
 
-**Archetype**: <archetype>
-**Setting Anchor**: <settingAnchor>
-
-## Core Contradiction
-<contradiction>
-
-## Voice & Behavior
-<voice>
-
-## Key Relationships
-- **<otherName>** (<domain>, <valence>, strength: <0-1>): <dynamic>
-
-## Triggers & Avoids
-**Triggers**: <triggers>
-**Avoids**: <avoids>
+TBD
 
 [Additional sections as relevant to context...]
-```
-
-### What "ephemeral" means
-- Ephemeral messages **must render in UI**.
-- They **must never be sent as LLM history**.
-- They exist purely for guidance, hints, and suggested actions.
-
-### Ephemeral Messages for Entity Guidance
-When entity context is relevant but not fully loaded:
-
-```typescript
-{
-  type: 'ephemeral',
-  content: 'This question involves **3 characters** (Alice, Bob, Carol). Loading their profiles...',
-  actions: [
-    { type: 'wizard', wizardId: 'character-consistency-check', label: 'Check character consistency' },
-    { type: 'navigate', target: { section: 'characters' }, label: 'View characters' },
-  ],
-}
 ```
 
 ---
@@ -679,23 +490,36 @@ Wizard outputs should:
 
 ### ✅ IMPLEMENTED
 
+**Schema DSL System**:
+- ✅ Core schema types: FieldDef, GroupDef, DocumentTypeDef (`schemas/types.ts`)
+- ✅ Helper functions: `defineField()`, `defineType()` for type-safe definitions
+- ✅ Character schema with identity and role groups (`schemas/character.ts`)
+- ✅ Nested field path support (e.g., `"identity.name"`)
+- ✅ Zod schema generation from DSL (`buildZodFromSchema` helper)
+- ✅ CharacterDoc and CharacterDocSchema generated from schema
+- ✅ Field metadata: labels, descriptions, placeholders, UI types, validation
+
 **Core Data Model**:
-- ✅ EntityIndex type with EntityIndexEntry structure
-- ✅ Basic CharacterDoc structure (id, name, role, tier)
+- ✅ EntityIndex type with simplified EntityIndexEntry (id, name, docRef, sortOrder only)
+- ✅ CharacterDoc structure generated from character schema
 - ✅ Entity integration into document model via discriminated union
 - ✅ EntityIndexDocConfig distinguishes entity indices from rich text docs
 - ✅ Characters and locations registered as DocKindIds at `storyEntities` LCRF layer
 
 **Storage & Persistence**:
 - ✅ Entity index storage at `{storyId}-characters.json` and `{storyId}-locations.json`
-- ✅ Write queue integration for atomic saves
-- ✅ File system handlers in `electron/fs/DistilFs.ts`
+- ✅ Entity document storage at `stories/entities/{entityType}s/{entityId}.json`
+- ✅ Write queue integration for atomic saves (both index and docs)
+- ✅ Separate storage: lightweight index for lists, full docs for editing
 
 **IPC Layer**:
 - ✅ `entity:loadIndex` handler (loads entity index from disk)
 - ✅ `entity:saveIndex` handler (saves entity index with write queue protection)
+- ✅ `entity:load` handler (loads individual entity document)
+- ✅ `entity:save` handler (saves individual entity document)
 - ✅ Standardized error handling with `IpcResponse<T>` pattern
-- ✅ Client wrapper in `src/api/DistilClient.ts`
+- ✅ Client wrapper methods in `src/api/client.ts`
+- ✅ Type definitions in `src/global.d.ts`
 
 **State Management**:
 - ✅ Zustand store integration for entity indices
@@ -703,60 +527,106 @@ Wizard outputs should:
 - ✅ `loadEntityIndex` and `saveEntityIndex` actions
 
 **UI Components**:
-- ✅ EntityIndexView component (generic list/edit view)
-- ✅ CharacterEditView (full-screen character editing form)
-- ✅ Character cards in grid view
-- ✅ Navigation integration (Characters section in story sidebar)
-- ✅ Basic character fields: name, role, tier
+- ✅ EntityIndexView component (generic list/edit view for any entity type)
+- ✅ EntityEditView component (schema-driven form renderer)
+- ✅ Entity cards in grid view
+- ✅ Navigation integration (Characters and Locations sections in story sidebar)
+- ✅ Character fields: identity (name, aliases), role (tier, roleInStory), body fields (presence, voice, orientation, sensitivity, constraints)
+- ✅ Location schema with identity and role groups
 
-**Current Implementation**:
-- Character creation and editing fully functional
-- Entity indices store lightweight projections for list view
-- Characters properly positioned at `storyEntities` layer in LCRF hierarchy
-- Discriminated union (RichTextDocConfig vs EntityIndexDocConfig) enables type-safe document model
-- File storage using same patterns as metaDocs, with write queue protection
+**Schema-Driven Form Rendering**:
+- ✅ EntityEditView component renders forms dynamically from DocumentTypeDef schema
+- ✅ Generates form sections from schema groups using SettingsGroup components
+- ✅ Maps FieldDef.type to input components (TextInput, Textarea, Select)
+- ✅ Handles nested field paths (e.g., "identity.name")
+- ✅ Extracts default values from Zod schema definitions
+- ✅ Applies schema validation on save via generated Zod schemas
+- ✅ Benefits: Adding/modifying fields only requires schema changes, no component updates
+- ✅ Works identically for characters and locations
+
+**Full Entity Document Storage**:
+- ✅ IPC handlers: `entity:load`, `entity:save` (in `electron/handlers/entities.ts`)
+- ✅ File system functions: `loadEntityDoc()`, `saveEntityDoc()` (in `electron/fs/fs.ts`)
+- ✅ Storage pattern: `~/Distil/projects/{projectId}/stories/entities/{entityType}s/{entityId}.json`
+- ✅ Full entity doc validation using generated Zod schemas before save
+- ✅ Write queue protection for concurrent saves
+- ✅ Separate from entity index - index stores minimal projections (id, name, docRef)
+
+**Current Implementation Summary**:
+- ✅ Character creation, editing, and storage fully functional with schema-driven UI
+- ✅ Location schema defined and ready for use (same pattern as characters)
+- ✅ Entity indices store lightweight projections (id, name, docRef) for efficient list views
+- ✅ Full entity docs stored separately with complete field data
+- ✅ Two-tier storage model: index for lists, full docs for editing
+- ✅ Schema DSL as single source of truth for structure, validation, and UI metadata
+- ✅ EntityEditView dynamically renders forms for any entity type from schema
+- ✅ CharacterDoc and LocationDoc types auto-generated from schemas
+- ✅ File storage with atomic writes and race condition protection
+- ✅ Properly positioned at `storyEntities` layer in LCRF hierarchy
 
 ---
 
 ## 🚧 FUTURE WORK
 
-**Extended CharacterDoc Fields** (not yet implemented):
-- Surface traits and appearance
-- Inner traits and psychology
-- Goals and desires
-- Behavior patterns
-- Voice and dialogue characteristics
-- Character arc (startState, changeVector, endState, keyTurns)
-- Relationships (domain, valence, strength, dynamic)
-- Triggers and avoids
-- Facts and background
+### Immediate Next Steps
 
-**Full Entity Storage**:
-- Separate storage for full CharacterDoc beyond index entries
-- Storage pattern: `~/Distil/projects/{projectId}/stories/{storyId}/entities/characters/{characterId}.json`
-- IPC handlers: `entity:load`, `entity:save`, `entity:delete`
+**Extended Character Schema**:
+- Add remaining semantic groups to character schema:
+  - Relationships group (connections, dynamics, valence)
+  - Arc group (startState, changeVector, endState, keyTurns)
+  - Facts group (background, history, context)
+- Define fields with appropriate types (text, textarea, structured editors)
+- Auto-generate CharacterDoc type and validation from extended schema
 
-**Location Implementation**:
-- LocationDoc structure
-- Location editing UI
+### Location Implementation
+
+**Location Schema & UI**:
+- Define LocationDoc schema with appropriate groups and fields
+- Location editing UI using same schema-driven form pattern
 - Location index storage and retrieval
+- Navigation integration
 
-**Relationship Management**:
-- Relationship graph visualization
-- Relationship editor with domain, valence, strength
+### Advanced Schema Features
+
+**Projection Generation**:
+- Current: Simple index with name only
+- Future: Generate markdown-formatted projections from schema
+- Use `field.index = true` hint to mark fields for projection inclusion
+- Potentially LLM-assisted projection generation based on schema structure
+
+**Schema Evolution**:
+- Version migration system for schema changes
+- Validation and migration of old CharacterDocs to new schema versions
+- Backwards compatibility for entity docs with outdated schemas
+
+### Relationship Management
+
+**Structured Relationship Editing**:
+- Relationship field type in schema DSL
+- Custom editor component for relationship graphs
+- Domain, valence, strength fields
 - Bidirectional relationship consistency
 
-**Advanced Features**:
-- Serialization modes (structured, fullMarkdown, projection)
-- Entity-specific context selection for AI prompts
-- Entity wizards (character voice builder, relationship mapper)
-- Entity consistency checking
-- Entity search and filtering
+### Context Integration
 
-**Context Integration**:
-- Entity context formatting for AI prompts
+**Entity Context for AI Prompts**:
+- Entity context formatting for AI prompts (markdown serialization)
 - Heuristic filtering based on entity relevance
 - LLM-based entity selection for ambiguous cases
 - Entity-specific ephemeral messages and hints
+
+### Entity Wizards & Advanced Features
+
+**Wizards**:
+- Character voice builder wizard
+- Relationship mapper wizard
+- Character arc planner wizard
+- All wizards use schema metadata for guidance
+
+**Advanced Features**:
+- Entity consistency checking
+- Entity search and filtering
+- Serialization modes (structured, fullMarkdown, projection)
+- Entity templates based on archetypes
 
 ---

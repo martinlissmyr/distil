@@ -79,6 +79,21 @@ declare global {
         entityType: EntityType,
         index: any
       ) => Promise<IpcResponse<undefined>>;
+
+      // Entity Documents
+      loadEntityDoc: (
+        projectId: string,
+        storyId: string,
+        entityType: 'character' | 'location',
+        entityId: string
+      ) => Promise<IpcResponse<any>>;
+      saveEntityDoc: (
+        projectId: string,
+        storyId: string,
+        entityType: 'character' | 'location',
+        entityId: string,
+        doc: any
+      ) => Promise<IpcResponse<undefined>>;
     };
 
     chat: {
@@ -105,6 +120,10 @@ declare global {
       // Writing language
       getWritingLanguage: () => Promise<IpcResponse<WritingLanguage>>;
       setWritingLanguage: (lang: WritingLanguage) => Promise<IpcResponse<undefined>>;
+
+      // UI Schema
+      getUiSchema: () => Promise<IpcResponse<string | null>>;
+      setUiSchema: (schema: string) => Promise<IpcResponse<undefined>>;
     };
 
     theme: {

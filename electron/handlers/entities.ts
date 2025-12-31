@@ -1,5 +1,5 @@
 // electron/handlers/entities.ts
-import { loadEntityIndex, saveEntityIndex } from '../fs/fs';
+import { loadEntityIndex, saveEntityIndex, loadEntityDoc, saveEntityDoc } from '../fs/fs';
 import { validateProjectId, validateStoryId, validateJsonDoc } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
 
@@ -34,6 +34,38 @@ export function registerEntityHandlers(): void {
       validateEntityType(entityType);
       validateJsonDoc(index);
       await saveEntityIndex(projectId, storyId, entityType, index);
+      return undefined; // void return
+    }
+  );
+
+  safeHandle(
+    'entity:load',
+    async (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string) => {
+      validateProjectId(projectId);
+      validateStoryId(storyId);
+      validateEntityType(entityType);
+
+      if (!entityId || typeof entityId !== 'string') {
+        throw new Error('Invalid entity ID');
+      }
+
+      return loadEntityDoc(projectId, entityType, entityId);
+    }
+  );
+
+  safeHandle(
+    'entity:save',
+    async (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: any) => {
+      validateProjectId(projectId);
+      validateStoryId(storyId);
+      validateEntityType(entityType);
+      validateJsonDoc(doc);
+
+      if (!entityId || typeof entityId !== 'string') {
+        throw new Error('Invalid entity ID');
+      }
+
+      await saveEntityDoc(projectId, entityType, entityId, doc);
       return undefined; // void return
     }
   );

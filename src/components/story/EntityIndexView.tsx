@@ -1,11 +1,15 @@
 // src/components/story/EntityIndexView.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Title, Button, Stack, Card, Text, Group } from '@mantine/core';
+import { Box, Text, Stack } from '@mantine/core';
 import { StorySectionShell } from './StorySectionShell';
 import { getDocKind } from '../../models/docs';
 import type { DocKindId } from '../../models/docs';
-import type { CharacterDoc, EntityIndex, EntityIndexEntry } from '../../models/entities';
-import { CharacterEditView } from './CharacterEditView';
+import type { EntityIndex, EntityIndexEntry } from '../../models/entities/entityIndex';
+import type { CharacterDoc } from '../../models/entities/schemas/character';
+import type { LocationDoc } from '../../models/entities/schemas/location';
+import { EntityEditView } from './EntityEditView';
+import { characterType } from '../../models/entities/schemas/character';
+import { locationType } from '../../models/entities/schemas/location';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 import { EntityGrid } from '../common/EntityGrid';
@@ -30,7 +34,9 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 
   // Local navigation state
   const [mode, setMode] = useState<ViewMode>('list');
-  const [editingCharacter, setEditingCharacter] = useState<EntityIndexEntry | null>(null);
+  const [editingEntity, setEditingEntity] = useState<EntityIndexEntry | null>(null);
+  const [editingEntityDoc, setEditingEntityDoc] = useState<CharacterDoc | LocationDoc | null>(null);
+  const [loadingDoc, setLoadingDoc] = useState(false);
 
   // Entity data
   const [entityIndex, setEntityIndex] = useState<EntityIndex | null>(null);
@@ -40,6 +46,13 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   useEffect(() => {
     loadIndex();
   }, [projectId, storyId, docKind]);
+
+  // Clear editing state when switching between entity types
+  useEffect(() => {
+    setMode('list');
+    setEditingEntity(null);
+    setEditingEntityDoc(null);
+  }, [docKind]);
 
   const loadIndex = async () => {
     setLoading(true);
@@ -59,21 +72,37 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
     }
   };
 
-  const handleAddCharacter = () => {
-    setEditingCharacter(null);
+  const handleAddEntity = () => {
+    setEditingEntity(null);
+    setEditingEntityDoc(null);
     setMode('edit');
   };
 
   const handleBackToList = () => {
     setMode('list');
-    setEditingCharacter(null);
+    setEditingEntity(null);
+    setEditingEntityDoc(null);
   };
 
-  const handleSaveCharacter = async (character: Partial<CharacterDoc>) => {
+  const handleSaveEntity = async (doc: Partial<CharacterDoc | LocationDoc>) => {
     try {
       const entityType = docKind === 'characters' ? 'character' : 'location';
 
-      // Create or update index
+      // Save full entity doc to disk
+      const saveDocResponse = await client.saveEntityDoc(
+        projectId,
+        storyId,
+        entityType,
+        doc.id!,
+        doc
+      );
+
+      if (!saveDocResponse.ok) {
+        console.error('Failed to save entity doc:', saveDocResponse.error);
+        throw new Error('Failed to save entity doc');
+      }
+
+      // Update entity index with minimal projection
       const currentIndex: EntityIndex = entityIndex || {
         version: 1,
         scope: { kind: 'story', projectId, storyId },
@@ -81,24 +110,17 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         updatedAt: new Date().toISOString(),
       };
 
-      // Create entity index entry from character doc
+      // Extract name from nested identity or top-level
+      const name = (doc as any).identity?.name || (doc as any).name || 'Unnamed';
+
+      // Create minimal index entry
       const entry: EntityIndexEntry = {
-        id: character.id!,
-        type: 'character',
-        name: character.identity!.name,
-        aliases: character.identity!.aliases,
-        presenceAndExpression: character.presenceAndExpression!,
-        innerOrientation: character.innerOrientation,
-        sensitivityAndPull: character.sensitivityAndPull,
-        externalConstraints: character.externalConstraints,
-        tier: character.tier!,
-        roleInStory: character.identity!.roleInStory,
+        id: doc.id!,
+        name,
         docRef: {
-          type: 'character',
-          id: character.id!,
+          type: entityType,
+          id: doc.id!,
         },
-        updatedAt: new Date().toISOString(),
-        createdAt: character.createdAt || new Date().toISOString(),
       };
 
       // Add or update entry
@@ -111,31 +133,74 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 
       currentIndex.updatedAt = new Date().toISOString();
 
-      // Save to disk
-      const response = await client.saveEntityIndex(projectId, storyId, entityType, currentIndex);
+      // Save updated index
+      const saveIndexResponse = await client.saveEntityIndex(projectId, storyId, entityType, currentIndex);
 
-      if (response.ok) {
+      if (saveIndexResponse.ok) {
         setEntityIndex(currentIndex);
         handleBackToList();
       } else {
-        console.error('Failed to save entity index:', response.error);
+        console.error('Failed to save entity index:', saveIndexResponse.error);
       }
     } catch (error) {
-      console.error('Error saving character:', error);
+      console.error('Error saving entity:', error);
       throw error;
     }
   };
 
-  const handleEditCharacter = (characterId: string) => {
-    const character = characters.find(c => c.id === characterId);
-    if (character) {
-      setEditingCharacter(character);
-      setMode('edit');
+  const handleEditEntity = async (entityId: string) => {
+    const entity = entities.find((e: EntityIndexEntry) => e.id === entityId);
+    if (entity) {
+      setEditingEntity(entity);
+      setLoadingDoc(true);
+
+      try {
+        const entityType = docKind === 'characters' ? 'character' : 'location';
+        const response = await client.loadEntityDoc(projectId, storyId, entityType, entityId);
+
+        if (response.ok && response.data) {
+          setEditingEntityDoc(response.data);
+          setMode('edit');
+        } else {
+          const errorMsg = response.ok ? 'Unknown error' : response.error;
+          console.error('Failed to load entity doc:', errorMsg);
+        }
+      } catch (error) {
+        console.error('Error loading entity doc:', error);
+      } finally {
+        setLoadingDoc(false);
+      }
     }
   };
 
-  const characters = entityIndex?.entities || [];
-  const characterViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
+  const handleReorderEntities = async (ids: string[]) => {
+    if (!entityIndex) return;
+
+    // Reorder entities array based on new ids order
+    const reordered = ids.map(id => entityIndex.entities.find(e => e.id === id)).filter((e): e is EntityIndexEntry => e !== undefined);
+
+    const updatedIndex: EntityIndex = {
+      ...entityIndex,
+      entities: reordered,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const entityType = docKind === 'characters' ? 'character' : 'location';
+      const response = await client.saveEntityIndex(projectId, storyId, entityType, updatedIndex);
+
+      if (response.ok) {
+        setEntityIndex(updatedIndex);
+      } else {
+        console.error('Failed to save entity order:', response.ok ? 'Unknown error' : response.error);
+      }
+    } catch (error) {
+      console.error('Error saving entity order:', error);
+    }
+  };
+
+  const entities = entityIndex?.entities || [];
+  const entityViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
 
   return (
     <StorySectionShell
@@ -147,7 +212,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         <Box className={styles.root}>
           <Box py={20} px={30}>
             <TopNavigation
-              title={characterViewTitle}
+              title={entityViewTitle}
             />
           </Box>
           <Box p="xl">
@@ -156,14 +221,15 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
               {loading && <Text c="dimmed">Loading...</Text>}
 
               {!loading && (
-                <EntityGrid
-                  items={characters}
-                  getId={(c) => c.id}
-                  getLabel={(c) => c.name}
-                  onSelect={handleEditCharacter}
-                  onCreate={handleAddCharacter}
+                <EntityGrid<EntityIndexEntry>
+                  items={entities}
+                  getId={(e) => e.id}
+                  getLabel={(e) => e.name}
+                  onSelect={handleEditEntity}
+                  onCreate={handleAddEntity}
+                  onReorderEntities={handleReorderEntities}
                   icon="character"
-                  createLabel="New Character"
+                  createLabel={`New ${docConfig.title.slice(0, -1)}`}
                 />
               )}
             </Stack>
@@ -171,15 +237,20 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         </Box>
       )}
 
-      {mode === 'edit' && docKind === 'characters' && (
-        <CharacterEditView
+      {mode === 'edit' && !loadingDoc && (
+        <EntityEditView
           projectId={projectId}
           storyId={storyId}
-          title={`${characterViewTitle} – ${editingCharacter?.name || 'New'}`}
-          character={editingCharacter}
+          title={`${entityViewTitle} – ${editingEntity?.name || 'New'}`}
+          entityDoc={editingEntityDoc}
+          schema={docKind === 'characters' ? characterType : locationType}
           onBack={handleBackToList}
-          onSave={handleSaveCharacter}
+          onSave={handleSaveEntity}
         />
+      )}
+
+      {mode === 'edit' && loadingDoc && (
+        <Box p="xl">Loading...</Box>
       )}
     </StorySectionShell>
   );

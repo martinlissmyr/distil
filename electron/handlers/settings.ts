@@ -1,8 +1,8 @@
 // electron/handlers/settings.ts
 import { saveApiKey, loadApiKey, clearApiKey } from '../secureStore';
-import { validateApiKey, validateWritingLanguagem, validateUiSchema } from '../validation';
+import { validateApiKey, validateWritingLanguage, validateUiSchema } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
-import { getWritingLanguage, setWritingLanguagem, setUiSchema, getUiSchema } from '../fs/settings';
+import { getWritingLanguage, setWritingLanguage, setUiSchema, getUiSchema } from '../fs/settings';
 
 /**
  * Registers IPC handlers for application settings (API keys, preferences, etc.)

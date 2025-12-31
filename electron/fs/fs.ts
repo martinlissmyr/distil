@@ -579,3 +579,49 @@ export async function saveEntityIndex(
     await writeJsonAtomic(file, index)
   })
 }
+
+// ---- Entity Documents ----
+
+// Entity document storage path (separate from index)
+const getEntityDocFile = (
+  projectId: string,
+  entityType: 'character' | 'location',
+  entityId: string
+) => path.join(getStoriesDir(projectId), 'entities', `${entityType}s`, `${sanitizeId(entityId)}.json`)
+
+export async function loadEntityDoc(
+  projectId: string,
+  entityType: 'character' | 'location',
+  entityId: string
+): Promise<any | null> {
+  const file = getEntityDocFile(projectId, entityType, entityId)
+  try {
+    const raw = await fs.readFile(file, 'utf-8')
+    return JSON.parse(raw)
+  } catch (err: unknown) {
+    // File doesn't exist yet - expected for new entities
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null
+    }
+    throw err
+  }
+}
+
+export async function saveEntityDoc(
+  projectId: string,
+  entityType: 'character' | 'location',
+  entityId: string,
+  doc: any
+): Promise<void> {
+  // Use write queue to prevent race conditions
+  const queueKey = `entityDoc:${projectId}:${entityType}:${entityId}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getEntityDocFile(projectId, entityType, entityId)
+
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(file), { recursive: true })
+
+    await writeJsonAtomic(file, doc)
+  })
+}

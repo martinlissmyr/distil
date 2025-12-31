@@ -2,7 +2,7 @@
 import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from '../types/language';
 import type { UiSchemaSetting } from '../types/ui'; // ✅ add
-import type { EntityType } from '../models/entityIndex';
+import type { EntityType } from '../models/entities/entityIndex';
 
 export type Project = {
   id: string;
@@ -145,5 +145,13 @@ export const client = {
   },
   saveEntityIndex(projectId: string, storyId: string, entityType: EntityType, index: any) {
     return window.distil.saveEntityIndex(projectId, storyId, entityType, index);
+  },
+
+  // -------- Entity Documents --------
+  loadEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string) {
+    return window.distil.loadEntityDoc(projectId, storyId, entityType, entityId);
+  },
+  saveEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: any) {
+    return window.distil.saveEntityDoc(projectId, storyId, entityType, entityId, doc);
   },
 };
