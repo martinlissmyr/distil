@@ -18,12 +18,12 @@ export const characterType = defineType({
     {
       id: "identity",
       label: "Identity",
-      description: "What do you call the character? And does it go under any other names? Or is it referenced to in ways other than its name? Either in the text or in the outline, brief etc?",
+      description: "These are the basic traits of this character.",
     },
     {
       id: "role",
       label: "Role & Significance",
-      description: "Choose how central this character is to the story’s core arc. This affects how much narrative focus, development, and influence the character has on the plot. And what role does this character play in the story’s structure — not their personality or backstory. Q: What does this character do for the story?",
+      description: "How central is this character is to the story’s core arc? What role does this character play in the story’s structure — not their personality or backstory. Q: What does this character do for the story?",
     }
   ],
   fields: [
@@ -44,7 +44,25 @@ export const characterType = defineType({
       group: 'identity',
       type: 'text',
       label: 'Aliases',
-      placeholder: 'Character aliases, nicknames, etc.',
+      placeholder: 'Nicknames, aliases or internal names you use when referring to the character',
+      schema: z.string().optional(),
+    }),
+
+    defineField({
+      name: 'identity.age',
+      group: 'identity',
+      type: 'text',
+      label: 'Age',
+      placeholder: 'The characters age (actual or approximate)',
+      schema: z.string().optional(),
+    }),
+
+    defineField({
+      name: 'identity.gender',
+      group: 'identity',
+      type: 'text',
+      label: 'Gender',
+      placeholder: 'Gender identity or self-description',
       schema: z.string().optional(),
     }),
 
@@ -69,19 +87,30 @@ export const characterType = defineType({
       group: 'role',
       type: 'text',
       label: 'Narrative role',
-      placeholder: 'e.g. investigator, witness, catalyst, mentor',
+      placeholder: 'e.g. witness, catalyst, antagonist',
       schema: z.string().optional(),
     }),
 
     // --------------------
-    // Body (freeform fields)
+    // freeform fields
     // --------------------
+    defineField({
+      name: 'positionAndLivelihood',
+      type: 'textarea',
+      label: 'Position in the world (livelihood, status, belonging)',
+      description:
+        'Describe how this character lives and is situated in their world — work or calling, social position, dependence, privilege, or marginality. Describe what shapes their everyday standing and possibilities.',
+      placeholder: '',
+      minRows: 4,
+      schema: z.string().optional(),
+    }),
+
     defineField({
       name: 'presenceAndExpression',
       type: 'textarea',
       label: 'Presence & Expression (what others see and feel)',
       description:
-        'How the character comes across — physically, socially, and behaviorally. Physical presence, behavioral signals, social & cultural markers etc. Q: When this character enters a room, what do others immediately notice or sense?',
+        'How the character comes across — physically, socially, and behaviorally. Physical presence, behavioral signals, social & cultural markers etc. Q: When this character enters a room, what do others immediately notice or sense? How do the character talk or express themselves?',
       placeholder: '',
       minRows: 4,
       schema: z.string().optional(),
@@ -92,7 +121,7 @@ export const characterType = defineType({
       type: 'textarea',
       label: 'Voice & Thought Samples (how they speak or think)',
       description:
-        "Concrete examples of the character’s voice, inner monologue, or way of expressing themselves. This can be snippets of dialogue, fragments of thought, recurring phrases, or tonal patterns — not to lock the character into fixed lines, but to capture their rhythm, register, and attitude in language. Q: If this character spoke or thought for a few lines, what would it actually sound like?",
+        "Concrete examples of the character’s voice, inner monologue, or way of expressing themselves. This can be snippets of dialogue, fragments of thought, recurring phrases, or tonal patterns. Q: If this character spoke or thought for a few lines, what would it actually sound like?",
       placeholder: '',
       minRows: 4,
       schema: z.string().optional(),
@@ -112,9 +141,9 @@ export const characterType = defineType({
     defineField({
       name: 'sensitivityAndPull',
       type: 'textarea',
-      label: 'Sensitivity & pull (what affects the character most)',
+      label: 'Triggers, draws & resistances (what reliably moves them)',
       description:
-        'Situations, topics, or dynamics that reliably draw them in or make them withdraw or react — including triggers, avoids, soft spots, and temptations. Q: What do they react strongly to, for better or worse?',
+        'Situations, interactions, or themes that consistently provoke a response — pulling the character toward something or pushing them away. Focus on what happens around them and how they tend to react, rather than abstract traits. Examples: certain people or power dynamics, public attention or privacy, praise, shame, silence, conflict, responsibility, dependency, abandonment.',
       placeholder: '',
       minRows: 4,
       schema: z.string().optional(),
@@ -126,6 +155,17 @@ export const characterType = defineType({
       label: 'External constraints (what limits choice)',
       description:
         "Forces outside the character that shape what's possible — people, institutions, environment, obligations, social context, time, money, health, etc. Q: What circumstances, structures, or obligations narrow their range of choices?",
+      placeholder: '',
+      minRows: 4,
+      schema: z.string().optional(),
+    }),
+
+    defineField({
+      name: 'notesAndFacts',
+      type: 'textarea',
+      label: 'Other notes and facts',
+      description:
+        "Other facts or circumstances you want to define for you character.",
       placeholder: '',
       minRows: 4,
       schema: z.string().optional(),
