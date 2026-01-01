@@ -2,7 +2,7 @@
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
 import { StorySectionShell } from './StorySectionShell';
-import { useNavigation } from '../../hooks/useNavigation';
+import { useEditorChat } from '../../hooks/useEditorChat';
 import type { MetaScope } from '../../types/metaDoc';
 
 type StoryBriefViewProps = {
@@ -16,15 +16,13 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
   storyId,
   title,
 }) => {
-  const { setStorySection, goToManifest } = useNavigation();
-
-  const handleNavigate = (target: string) => {
-    if (target === 'manifest') {
-      goToManifest();
-    } else {
-      setStorySection(target as any);
-    }
-  };
+  const { handleNavigate } = useEditorChat({
+    chatConfig: {
+      kind: 'brief',
+      storyId,
+      projectId,
+    },
+  });
 
   const scope: MetaScope = {
     scope: 'story',
