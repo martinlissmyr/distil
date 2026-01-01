@@ -9,6 +9,10 @@ import { Select } from '../common/inputs/Select';
 import styles from './EntityIndexView.module.scss';
 import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
 import { useLeaveGuardStore } from '../../hooks/useNavigation';
+import { EditorChatAside } from '../editor/EditorChatAside';
+import { useEditorChat } from '../../hooks/useEditorChat';
+import { entityToMarkdown } from '../../helpers/entityMarkdownUtils';
+import type { DocRefWithKind } from '../../types/docRef';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
   projectId: string;
@@ -18,6 +22,10 @@ type EntityEditViewProps<T extends Record<string, any>> = {
   onBack: () => void;
   onSave: (doc: Partial<T>) => Promise<void>;
   title: string;
+  /** Optional: Enable AI chat sidebar */
+  withChat?: boolean;
+  /** Doc reference for chat context */
+  doc?: DocRefWithKind;
 };
 
 // Helper to get nested value from object using dot path
@@ -53,11 +61,15 @@ function getZodDefault(schema: any): any {
 }
 
 export function EntityEditView<T extends Record<string, any>>({
+  projectId,
+  storyId,
   entityDoc,
   schema,
   onBack,
   onSave,
   title,
+  withChat = false,
+  doc,
 }: EntityEditViewProps<T>) {
   const isNew = entityDoc === null;
 
@@ -94,6 +106,24 @@ export function EntityEditView<T extends Record<string, any>>({
     const now = JSON.stringify(formData ?? {});
     setDirty(now !== baselineRef.current);
   }, [formData, setDirty]);
+
+  // Markdown export for chat
+  const [fullTextMarkdown, setFullTextMarkdown] = useState<string>('');
+
+  useEffect(() => {
+    const markdown = entityToMarkdown(formData, schema);
+    setFullTextMarkdown(markdown);
+  }, [formData, schema]);
+
+  // Chat integration
+  const chatConfig = doc ? {
+    doc,
+    kind: doc.docKind,
+    projectId,
+    storyId,
+  } : undefined;
+
+  const { handleOpenWizard } = useEditorChat({ chatConfig });
 
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
     setFormData((prev) => setNestedValue({ ...prev }, fieldName, value));
@@ -250,7 +280,9 @@ export function EntityEditView<T extends Record<string, any>>({
   const canSave = Boolean(nameValue && String(nameValue).trim().length > 0);
 
   return (
-    <Box className={styles.root}>
+    <Box
+      className={styles.root}
+    >
       <Box className={styles.topOverlay} />
       <Box className={styles.topNavigation}>
         <TopNavigation
@@ -262,23 +294,49 @@ export function EntityEditView<T extends Record<string, any>>({
         />
       </Box>
 
-      <ScrollArea className={styles.scrollArea} style={{ height: '100%' }} type="auto" scrollbarSize={8}>
-        <Stack gap="lg" pt={120} pb={40}>
-          <Box w={600} ml="auto" mr="auto">
-            <Stack gap="xl">
-              {/* Render groups first */}
-              {schema.groups?.map((group: any) => {
-                const fields = fieldsByGroup.get(group.id) || [];
-                if (fields.length === 0) return null;
-                return renderGroupedFields(group.id, fields);
-              })}
+      <Box style={{ flex: 1, minHeight: 0, display: 'flex', position: 'relative' }}>
+        <ScrollArea
+          className={styles.scrollArea}
+          style={{ flex: 1, height: '100%' }}
+          type="auto"
+          scrollbarSize={8}
+        >
+          <Stack gap="lg" pt={120} pb={40} className={styles.editor}>
+            {/* Render groups first */}
+            {schema.groups?.map((group: any) => {
+              const fields = fieldsByGroup.get(group.id) || [];
+              if (fields.length === 0) return null;
+              return renderGroupedFields(group.id, fields);
+            })}
 
-              {/* Render ungrouped fields */}
-              {renderUngroupedFields(fieldsByGroup.get(undefined) || [])}
-            </Stack>
+            {/* Render ungrouped fields */}
+            {renderUngroupedFields(fieldsByGroup.get(undefined) || [])}
+          </Stack>
+        </ScrollArea>
+
+        {/* Chat aside */}
+        {withChat && doc && (
+          <Box
+            style={{
+              position: 'absolute',
+              top: '12px',
+              bottom: '12px',
+              right: 'var(--aside-offset)',
+              width: 'calc(100% - var(--aside-offset) - (var(--editor-gutter) * 2 + var(--editor-width)))',
+              zIndex: 20,
+              display: 'flex',
+            }}
+          >
+            <EditorChatAside
+              doc={doc}
+              title={title}
+              fullTextMarkdown={fullTextMarkdown}
+              isTextLoaded={true}
+              onOpenWizard={handleOpenWizard}
+            />
           </Box>
-        </Stack>
-      </ScrollArea>
+        )}
+      </Box>
     </Box>
   );
 }
