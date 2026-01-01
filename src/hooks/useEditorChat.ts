@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useAppStore } from '../state/useAppStore';
 import type { WizardContext } from '../wizards/types';
 import type { ChatConfig } from '../components/editor/ProseEditor';
+import { useNavigation } from './useNavigation';
 
 export type EditorChatHookProps = {
   chatConfig?: ChatConfig;
@@ -19,6 +20,7 @@ export type EditorChatHookProps = {
 export function useEditorChat(props: EditorChatHookProps) {
   const { chatConfig, editor } = props;
   const startWizard = useAppStore((s) => (s as any).startWizard);
+  const { setStorySection, goToManifest } = useNavigation();
 
   const handleOpenWizard = useCallback(
     (cmd: { wizardId: string; doc: any; editor?: any }) => {
@@ -46,7 +48,16 @@ export function useEditorChat(props: EditorChatHookProps) {
     [startWizard, editor, chatConfig]
   );
 
+  const handleNavigate = useCallback((target: string) => {
+    if (target === 'manifest') {
+      goToManifest();
+    } else {
+      setStorySection(target as any);
+    }
+  }, [setStorySection, goToManifest]);
+
   return {
     handleOpenWizard,
+    handleNavigate,
   };
 }

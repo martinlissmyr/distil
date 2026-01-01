@@ -2,7 +2,7 @@
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
 import { StorySectionShell } from './StorySectionShell';
-import { useNavigation } from '../../hooks/useNavigation';
+import { useEditorChat } from '../../hooks/useEditorChat';
 
 type StoryOutlineViewProps = {
   projectId: string;
@@ -15,15 +15,13 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
   storyId,
   title,
 }) => {
-  const { setStorySection, goToManifest } = useNavigation();
-
-  const handleNavigate = (target: string) => {
-    if (target === 'manifest') {
-      goToManifest();
-    } else {
-      setStorySection(target as any);
-    }
-  };
+  const { handleNavigate } = useEditorChat({
+    chatConfig: {
+      kind: 'outline',
+      storyId,
+      projectId,
+    },
+  });
 
   return (
     <StorySectionShell

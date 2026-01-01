@@ -2,7 +2,7 @@
 import React from 'react';
 import { ProseEditor, ProseDoc } from '../editor/ProseEditor';
 import { StorySectionShell } from './StorySectionShell';
-import { useNavigation } from '../../hooks/useNavigation';
+import { useEditorChat } from '../../hooks/useEditorChat';
 
 type StoryTextViewProps = {
   projectId: string;
@@ -19,15 +19,14 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
-  const { setStorySection, goToManifest } = useNavigation();
-
-  const handleNavigate = (target: string) => {
-    if (target === 'manifest') {
-      goToManifest();
-    } else {
-      setStorySection(target as any);
-    }
-  };
+  const { handleNavigate } = useEditorChat({
+    chatConfig: {
+      kind: 'prose',
+      storyId,
+      storyTitle: title,
+      projectId,
+    },
+  });
 
   return (
     <StorySectionShell
