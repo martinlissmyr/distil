@@ -1,5 +1,6 @@
 // /src/models/entities/schemas/types.ts
 import { z } from 'zod';
+import type { WizardId } from '../../../wizards/types';
 
 /**
  * Minimal Sanity-like schema DSL.
@@ -45,6 +46,9 @@ export type FieldDef<TGroup extends string = string> = {
   // Data validation (single source of truth)
   schema: z.ZodTypeAny;
 
+  wizard?: WizardId;
+  wizardLabel?: string;
+  
   // Optional: future projection/indexing hints
   index?: boolean;
 };

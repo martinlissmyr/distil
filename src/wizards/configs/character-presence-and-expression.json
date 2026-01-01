@@ -1,0 +1,22 @@
+{
+  "id": "character-presence-and-expression",
+  "version": "1.0.0",
+  "title": "Skapa snabbt",
+  "description": "En snabb guide som hjälper dig beskriva karaktärens utseende, intryck och uttryck.",
+  "targetDoc": "characters",
+  "outputTemplate": "{{looks_maxxing}}",
+  "steps": [
+    {
+      "id": "looks_maxxing",
+      "type": "question",
+      "title": "Hur ser karaktären ut?",
+      "question": "Hur skulle du beskriva bkaraktärens nuna?",
+      "description": "Beskriv övergripande",
+      "questionType": "text",
+      "placeholder": "",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    }
+  ]
+}

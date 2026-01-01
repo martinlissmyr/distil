@@ -9,5 +9,5 @@ Fyll i de delar som känns relevanta för just din berättelse. Alla fält behö
 Tänk på det här som en plats där du samlar sådant du vill ha i bakhuvudet när du skriver: hur karaktären uppfattas, vad som styr deras val och hur de tenderar att reagera i olika situationer.
 
 {{#if selfHasContent}}
-Jag kan hjälpa dig att utveckla, förtydliga eller utmana det du skriver.
+Jag kan hjälpa dig att utveckla, förtydliga eller utmana det du skriver. Ställ dig i ett fält och klicka på Guide för att få hjälp att komma igång med specifika beskrivningar.
 {{/if}}

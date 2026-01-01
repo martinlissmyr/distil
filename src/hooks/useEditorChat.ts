@@ -3,6 +3,7 @@ import { useAppStore } from '../state/useAppStore';
 import type { WizardContext } from '../wizards/types';
 import type { ChatConfig } from '../components/editor/ProseEditor';
 import { useNavigation } from './useNavigation';
+import type { RefObject } from 'react';
 
 export type EditorChatHookProps = {
   chatConfig?: ChatConfig;
@@ -11,6 +12,7 @@ export type EditorChatHookProps = {
    * If not provided, wizards will still work but without direct editor access.
    */
   editor?: any;
+  targetInputRef: RefObject;
 };
 
 /**
@@ -23,7 +25,7 @@ export function useEditorChat(props: EditorChatHookProps) {
   const { setStorySection, goToManifest } = useNavigation();
 
   const handleOpenWizard = useCallback(
-    (cmd: { wizardId: string; doc: any; editor?: any }) => {
+    (cmd: { wizardId: string; editor?: any; targetInputRef?: RefObject; }) => {
       if (!startWizard || typeof startWizard !== 'function') {
         console.warn('[useEditorChat] startWizard not found on store');
         return;
@@ -41,6 +43,7 @@ export function useEditorChat(props: EditorChatHookProps) {
       const ctx: WizardContext = {
         ref,
         targetEditor: cmd.editor || editor,
+        targetInputRef: cmd.targetInputRef || null,
       } as any;
 
       startWizard(cmd.wizardId, ctx);
