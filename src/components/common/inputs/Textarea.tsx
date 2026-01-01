@@ -114,17 +114,21 @@ export const Textarea: React.FC<TextareaProps> = ({
           {charCount} / {maxLength}
         </Badge>
       );
+    } else {
+      return null;
     }
   }
 
+  const hasRightSection = Boolean(effectiveError || showCounter);
+
   return (
     <div className={classes.wrapper}>
-      <Group justify="space-between" className={classes.textareaLabelGroup}>
-        <Text size="sm" className={classes.textareaLabel}>
+      <Group justify="space-between" gap={10} className={classes.textareaLabelGroup}>
+        <Text size="sm" overflow="ellipsis" lineClamp={1} flex={1} className={classes.textareaLabel}>
           {label}
         </Text>
         {onActionButtonClick && (
-          <Box className={classes.textareaAction}>
+          <Box className={classes.textareaAction} flex={0}>
             <Button
               size="compact-xs"
               variant="filled"
@@ -152,7 +156,9 @@ export const Textarea: React.FC<TextareaProps> = ({
         data-error={effectiveError !== ''}
         data-counter={showCounter}
         size="sm"
-        rightSection={<RightSection/>}
+        {...(hasRightSection && {
+          rightSection: <RightSection />,
+        })}
         ref={textareaRef}
       />
       {description && (

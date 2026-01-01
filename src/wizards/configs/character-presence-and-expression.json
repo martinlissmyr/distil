@@ -1,22 +1,107 @@
 {
   "id": "character-presence-and-expression",
   "version": "1.0.0",
-  "title": "Skapa snabbt",
-  "description": "En snabb guide som hjälper dig beskriva karaktärens utseende, intryck och uttryck.",
+  "title": "Karaktärens närvaro och uttryck",
+  "description": "En kort guide för att fånga hur karaktären uppfattas av andra – kroppsligt, socialt och i sitt sätt att uttrycka sig.",
   "targetDoc": "characters",
-  "outputTemplate": "{{looks_maxxing}}",
+  "outputTemplate": "{{presence_and_expression}}",
   "steps": [
     {
-      "id": "looks_maxxing",
+      "id": "first_impression",
       "type": "question",
-      "title": "Hur ser karaktären ut?",
-      "question": "Hur skulle du beskriva bkaraktärens nuna?",
-      "description": "Beskriv övergripande",
-      "questionType": "text",
-      "placeholder": "",
+      "title": "Första intrycket",
+      "question": "Vad är det första andra lägger märke till när karaktären kommer in i ett rum?",
+      "description": "Tänk inte i detaljer, utan i helhetskänsla. Vad känner människor direkt – trygghet, spänning, auktoritet, oro, värme?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. En stillsam men tydlig närvaro som gör att samtal dämpas något.",
       "required": false,
       "minLength": 0,
       "maxLength": 300
+    },
+    {
+      "id": "physical_presence",
+      "type": "question",
+      "title": "Fysisk närvaro",
+      "question": "Hur ser karaktären ut och hur tar den plats fysiskt?",
+      "description": "Detta handlar inte om exakta mått, utan om anletsdrag, hållning, rörelsemönster, tempo och kroppsspråk.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Rör sig långsamt och kontrollerat, undviker yviga gester.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "voice_and_delivery",
+      "type": "question",
+      "title": "Röst och sätt att tala",
+      "question": "Hur låter karaktären när hen talar?",
+      "description": "Fundera på röstläge, tempo, pauser, tydlighet och hur mycket som sägs – eller lämnas osagt.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Låg röst, få ord, talar långsamt och med eftertänksamma pauser.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "language_and_expression",
+      "type": "question",
+      "title": "Språk och uttryck",
+      "question": "Hur uttrycker sig karaktären språkligt?",
+      "description": "Ordval, ton, nivå av formellhet, slang, ironi eller precision. Hur förändras språket i olika situationer?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Akademiskt och precist, men blir snabb och fragmentarisk när hon är upprörd.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "style_and_attire",
+      "type": "question",
+      "title": "Stil och yttre signaler",
+      "question": "Vilka yttre detaljer signalerar något om karaktären?",
+      "description": "Kläder, accessoarer eller andra återkommande val som kommunicerar status, tillhörighet eller kontroll.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Diskret klädsel, neutrala färger, alltid samma jacka.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "social_demeanor",
+      "type": "question",
+      "title": "Socialt bemötande",
+      "question": "Hur beter sig karaktären mot andra?",
+      "description": "Värme, distans, artighet, dominant eller tillbakadragen. Hur lätt är hen att läsa av?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Vänlig men avvaktande, håller alltid ett visst emotionellt avstånd.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "tells_and_habits",
+      "type": "question",
+      "title": "Återkommande beteenden",
+      "question": "Finns det små beteenden som avslöjar karaktären?",
+      "description": "Sådant andra kanske inte medvetet noterar, men som återkommer: gester, pauser, sätt att undvika blickar eller ta ordet.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Rör alltid vid ringen när hon tvekar, undviker ögonkontakt vid konflikt.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 300
+    },
+    {
+      "id": "presence_synthesis",
+      "type": "llm-processing",
+      "title": "Sammanfattad närvaro och uttryck",
+      "description": "Här är en sammanhängande beskrivning av hur karaktären uppfattas av andra.",
+      "hidden": false,
+      "prompt": {
+        "system": "character-presence-synthesis-system",
+        "user": "character-presence-synthesis-user"
+      },
+      "resultKey": "presence_and_expression",
+      "extractJson": false
     }
   ]
 }

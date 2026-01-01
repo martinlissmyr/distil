@@ -6,8 +6,11 @@
 }
 
 .textInputSection {
-  --input-right-section-size: auto;
-  margin-right: 10px;
+  [data-error="true"] &,
+  [counter="true"] & {
+    --input-right-section-size: auto;
+    margin-right: 10px;
+  }
 }
 
 .wrapper {
