@@ -6,9 +6,10 @@ import { BaseModal } from '../common/BaseModal';
 import { useAppStore } from '../../state/useAppStore';
 import { getCurrentStep } from '../../wizards/navigation';
 import { QuestionStepView } from './steps/QuestionStepView';
+import { InformationStepView } from './steps/InformationStepView';
 import { LlmProcessingStepView } from './steps/LlmProcessingStepView';
 import { LlmApprovalStepView } from './steps/LlmApprovalStepView';
-import type { QuestionStep, LlmProcessingStep, LlmApprovalStep } from '../../wizards/types';
+import type { QuestionStep, LlmProcessingStep, LlmApprovalStep, InformationStep } from '../../wizards/types';
 import { TopNavigation } from '../common/TopNavigation';
 
 type WizardModalProps = {
@@ -180,6 +181,9 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     if (step.type === 'llm-processing') {
       return !(step as LlmProcessingStep).hidden;
     }
+    if (step.type === 'information') {
+      return false;
+    }
     return true;
   });
   const totalVisibleSteps = visibleSteps.length;
@@ -191,14 +195,16 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       if (step.type === 'llm-processing') {
         return !(step as LlmProcessingStep).hidden;
       }
+      if (step.type === 'information') {
+        return false;
+      }
       return true;
     }).length + 1; // +1 because we want 1-based indexing
 
   const stepTitle = currentStep.title ?? activeWizard.config.steps[currentStepIndex]?.title ?? 'Step';
+  const hideCounter = (currentStep.type === 'llm-processing' && (currentStep as LlmProcessingStep).hidden) || currentStep.type === 'information';
 
-  // Hide step count if current step is hidden
-  const isCurrentStepHidden = currentStep.type === 'llm-processing' && (currentStep as LlmProcessingStep).hidden;
-  const topTitle = isCurrentStepHidden
+  const topTitle = hideCounter
     ? stepTitle
     : `${stepTitle} (${currentVisibleStepIndex}/${totalVisibleSteps})`;
 
@@ -435,6 +441,10 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
         >
           {currentStep ? (
             <Box pt={50} px={30}>
+              {currentStep.type === 'information' && (
+                <InformationStepView key={currentStep.id} step={currentStep as InformationStep} />
+              )}
+
               {currentStep.type === 'question' && (
                 <QuestionStepView key={currentStep.id} step={currentStep as QuestionStep} />
               )}

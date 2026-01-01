@@ -76,6 +76,9 @@ export function validateWizardConfig(data: any): WizardConfig {
       case 'compound':
         validateCompoundStep(step, path);
         break;
+      case 'information':
+        validateInformationStep(step, path);
+        break;
       default:
         throw new Error(`Step ${step.id} has unknown type: ${step.type}`);
     }
@@ -179,6 +182,8 @@ export function validateWizardConfig(data: any): WizardConfig {
       validateStep(subStep, `${path}.subSteps[${i}]`);
     });
   };
+
+  const validateInformationStep = (step: any, path: string): void => {};
 
   // Validate all top-level steps
   data.steps.forEach((step: any, i: number) => {

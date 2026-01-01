@@ -45,7 +45,16 @@ export type WizardStep =
   | QuestionStep
   | LlmProcessingStep
   | LlmApprovalStep
+  | InformationStep
   | CompoundStep;
+
+
+/**
+ * A step that just presents som information to the user
+ */
+export type InformationStep = BaseStep & {
+  type: 'information';
+};
 
 /**
  * User input step with various question types

@@ -1,0 +1,137 @@
+{
+  "id": "character-position-in-the-world",
+  "version": "1.0.0",
+  "title": "Karaktärens position i världen",
+  "description": "En karaktärsintervju (hot seat) som hjälper dig fånga hur karaktären lever, var den hör hemma, och vilka möjligheter eller begränsningar som formar deras vardag.",
+  "targetDoc": "characters",
+  "outputTemplate": "{{position_in_the_world}}",
+  "steps": [
+    {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Karaktärsintervju: position i världen",
+      "description": "I den här delen svarar du som om du intervjuade din karaktär.\n\nDet du skriver är inte tänkt att hamna direkt i berättelsen. Syftet är att förstå hur karaktären lever i sin värld: vad som är normalt för dem, var de hör hemma, och hur världen svarar på deras närvaro.\n\nSvara konkret och spontant. Små detaljer (platser, vanor, bemötanden) är ofta mer värdefulla än stora förklaringar."
+    },
+    {
+      "id": "everyday_reality",
+      "type": "question",
+      "title": "Vardagens verklighet",
+      "question": "Vad gör du en helt vanlig dag, utan att något särskilt händer?",
+      "description": "Beskriv rytm och verklighet: var du är, vad du gör, vem du träffar, och vad som känns “normalt” i ditt liv.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag börjar tidigt, går samma väg, undviker vissa kvarter, äter snabbt, pratar mest med två personer.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "self_definition",
+      "type": "question",
+      "title": "Självbild i världen",
+      "question": "Om någon frågar vem du är, vad brukar du svara först – och vad utelämnar du?",
+      "description": "Svara som karaktären. Det viktiga är kontrasten: det som är “officiellt” vs det som känns privat, skört eller laddat.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag säger att jag jobbar där. Jag säger inte varför jag egentligen är kvar i staden.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "first_assumptions",
+      "type": "question",
+      "title": "Andras spontana läsning",
+      "question": "När människor träffar dig för första gången, vad brukar de anta om dig?",
+      "description": "Tänk på instinktiva reaktioner: respekt, misstanke, nyfikenhet, distans, välvilja. Vad “läser” de in innan du ens har sagt något?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. De tror att jag har kontroll. De pratar lite mer försiktigt och testar var jag står.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "belonging_places",
+      "type": "question",
+      "title": "Tillhörighet och platser",
+      "question": "Finns det platser där du känner dig helt självklar – och platser där du märker att du inte hör hemma?",
+      "description": "Beskriv konkreta miljöer. Var rör du dig obehindrat? Var blir du iakttagen, ifrågasatt eller osynliggjord?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. I verkstaden är jag trygg. På rådhuset blir jag alltid stoppad i dörren, även när jag har ärende.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "power_treatment",
+      "type": "question",
+      "title": "Makt och bemötande",
+      "question": "Hur brukar människor med makt över dig behandla dig?",
+      "description": "Tänk chefer, myndigheter, äldste, högstatuspersoner, vakter, lärare, råd – vem som än kan säga “nej”. Hur låter deras ton, och vad förväntar de sig av dig?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. De är artiga men korta. De får mig att vänta. De vill att jag ska vara tacksam.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "resource_gap",
+      "type": "question",
+      "title": "Resurser och trygghet",
+      "question": "Vad händer om du plötsligt behöver något du inte har?",
+      "description": "Det kan vara pengar, tid, skydd, papper, hjälp, transport, information. Vem vänder du dig till – eller kan du inte vända dig till någon?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag löser det genom X. Om det inte går, tar jag ett lån jag skäms för, eller låter bli.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "defended_position",
+      "type": "question",
+      "title": "Stolthet, skam eller försvar",
+      "question": "Finns det något med ditt liv eller din plats i världen som du försvarar – även om ingen angriper det?",
+      "description": "Svara i jag-form. Vad måste du rättfärdiga inför dig själv? Vad blir du snabbt känslig kring när ämnet kommer upp?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag skämtar bort det. Jag säger att jag valt det här, men jag blir arg om någon antyder att jag är fast.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "world_shift",
+      "type": "question",
+      "title": "Hur världen har förändrats",
+      "question": "Har världen behandlat dig på samma sätt hela ditt liv, eller har det förändrats?",
+      "description": "Tänk på ett “före och efter”. När skedde skiftet? Vad var annorlunda i hur du blev bemött, vad du hade tillgång till, eller vad som kändes möjligt?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Förr blev jag underskattad. Nu får jag alltid frågor om vem som “egentligen” ligger bakom mig.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "future_possibilities",
+      "type": "question",
+      "title": "Det som känns möjligt eller uteslutet",
+      "question": "Om du blickar fem år framåt – vad känns möjligt för dig, och vad känns uteslutet?",
+      "description": "Det här handlar om ditt upplevda handlingsutrymme. Vad kan du realistiskt bli, göra eller få? Och vad känns som något “för andra”?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag kan klara mig. Jag kan inte bli fri från X. Jag kan inte röra mig i de rummen utan att betala ett pris.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 450
+    },
+    {
+      "id": "position_synthesis",
+      "type": "llm-processing",
+      "title": "Sammanfattad position i världen",
+      "description": "Här är en sammanhängande beskrivning av hur karaktären lever och är placerad i sin värld.",
+      "hidden": false,
+      "prompt": {
+        "system": "character-position-synthesis-system",
+        "user": "character-position-synthesis-user"
+      },
+      "resultKey": "position_in_the_world",
+      "extractJson": false
+    }
+  ]
+}
