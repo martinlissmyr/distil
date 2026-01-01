@@ -10,9 +10,7 @@ import { TopNavigation } from '../common/TopNavigation';
 import styles from './BaseEditor.module.scss';
 import { BubbleMenu } from '@tiptap/react/menus';
 
-import type { OpenWizardCommand } from '../../wizards/types';
-import type { WizardContext } from '../../wizards/types';
-import { useAppStore } from '../../state/useAppStore';
+import { useEditorChat } from '../../hooks/useEditorChat';
 
 export type BaseEditorProps = {
   editor: Editor | null;
@@ -44,37 +42,8 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   // Determine schema based on editor kind
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
 
-  // ✅ Wizard opener (shared for all BaseEditor usage)
-  const startWizard = useAppStore((s) => (s as any).startWizard);
-
-  const handleOpenWizard = useCallback(
-    (cmd: OpenWizardCommand) => {
-      if (!editor) return;
-
-      if (!startWizard || typeof startWizard !== 'function') {
-        console.warn('[BaseEditor] startWizard not found on store');
-        return;
-      }
-
-      // Build ctx.ref in the shape your storeGlue expects.
-      // Assumes chatConfig carries projectId/storyId when in story scope.
-      const projectId = (chatConfig as any)?.projectId as string | undefined;
-      const storyId = (chatConfig as any)?.storyId as string | undefined;
-
-      const ref =
-        projectId && storyId
-          ? ({ scope: 'story', projectId, storyId } as const)
-          : ({ scope: 'root' } as const);
-
-      const ctx: WizardContext = {
-        ref,
-        targetEditor: editor,
-      } as any;
-
-      startWizard(cmd.wizardId, ctx);
-    },
-    [startWizard, editor, chatConfig]
-  );
+  // Wizard integration via reusable hook
+  const { handleOpenWizard } = useEditorChat({ chatConfig, editor: editor ?? undefined });
 
   // Extract full text markdown when editor content changes
   useEffect(() => {
