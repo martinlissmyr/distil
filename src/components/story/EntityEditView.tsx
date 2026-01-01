@@ -1,6 +1,6 @@
 // src/components/story/EntityEditView.tsx
-import { useState, useEffect } from 'react';
-import { Box, Stack, Button, ScrollArea } from '@mantine/core';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Box, Stack, ScrollArea } from '@mantine/core';
 import type { DocumentTypeDef, FieldDef } from '../../models/entities/schemas/types';
 import { TopNavigation } from '../common/TopNavigation';
 import { Textarea } from '../common/inputs/Textarea';
@@ -8,6 +8,7 @@ import { TextInput } from '../common/inputs/TextInput';
 import { Select } from '../common/inputs/Select';
 import styles from './EntityIndexView.module.scss';
 import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
+import { useLeaveGuardStore } from '../../hooks/useNavigation';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
   projectId: string;
@@ -36,6 +37,21 @@ function setNestedValue(obj: any, path: string, value: any): any {
   return { ...obj };
 }
 
+// Best-effort default extraction (works for z.string().default(...) and z.enum(...).default(...))
+function getZodDefault(schema: any): any {
+  try {
+    // zod default() wraps with ZodDefault and stores defaultValue()
+    if (schema?._def?.typeName === 'ZodDefault' && typeof schema._def.defaultValue === 'function') {
+      return schema._def.defaultValue();
+    }
+    // sometimes you might have optional(default(...)) etc
+    if (schema?._def?.innerType) return getZodDefault(schema._def.innerType);
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
 export function EntityEditView<T extends Record<string, any>>({
   entityDoc,
   schema,
@@ -49,21 +65,41 @@ export function EntityEditView<T extends Record<string, any>>({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
 
-  // Load entity data when editing
+  // Leave guard integration
+  const setDirty = useLeaveGuardStore((s) => s.setDirty);
+  const requestNavigate = useLeaveGuardStore((s) => s.requestNavigate);
+
+  // Keep a stable "baseline" snapshot for dirty detection (avoids re-stringifying initial state on every render)
+  const baselineRef = useRef<string>('');
+
+  const handleBack = useCallback(() => {
+    requestNavigate(onBack);
+  }, [requestNavigate, onBack]);
+
+  // Load entity data when editing / creating
   useEffect(() => {
-    if (entityDoc) {
-      setFormData(entityDoc);
-    } else {
-      // Reset form for new entity
-      setFormData({});
-    }
-  }, [entityDoc]);
+    const initial = entityDoc ?? {};
+    setFormData(initial);
+    baselineRef.current = JSON.stringify(initial);
+    setDirty(false);
 
-  const handleFieldChange = (fieldName: string, value: any) => {
-    setFormData(prev => setNestedValue({ ...prev }, fieldName, value));
-  };
+    // Ensure we don’t leave the global guard stuck “dirty” if this component unmounts
+    return () => {
+      setDirty(false);
+    };
+  }, [entityDoc, setDirty]);
 
-  const handleSave = async () => {
+  // Dirty tracking (cheap enough for small docs)
+  useEffect(() => {
+    const now = JSON.stringify(formData ?? {});
+    setDirty(now !== baselineRef.current);
+  }, [formData, setDirty]);
+
+  const handleFieldChange = useCallback((fieldName: string, value: any) => {
+    setFormData((prev) => setNestedValue({ ...prev }, fieldName, value));
+  }, []);
+
+  const handleSave = useCallback(async () => {
     setSaving(true);
     try {
       const docToSave: any = {
@@ -78,74 +114,85 @@ export function EntityEditView<T extends Record<string, any>>({
       }
 
       await onSave(docToSave);
+
+      // Mark clean before leaving
+      baselineRef.current = JSON.stringify(docToSave);
+      setDirty(false);
+
       onBack();
     } catch (error) {
       console.error('Failed to save entity:', error);
     } finally {
       setSaving(false);
     }
-  };
+  }, [entityDoc?.createdAt, entityDoc?.id, formData, onBack, onSave, schema.name, schema.version, setDirty]);
 
   // Group fields by group (or ungrouped)
-  const fieldsByGroup = new Map<string | undefined, FieldDef[]>();
-  for (const field of schema.fields) {
-    const groupId = field.group;
-    if (!fieldsByGroup.has(groupId)) {
-      fieldsByGroup.set(groupId, []);
+  const fieldsByGroup = useMemo(() => {
+    const map = new Map<string | undefined, FieldDef[]>();
+    for (const field of schema.fields) {
+      const groupId = field.group;
+      if (!map.has(groupId)) map.set(groupId, []);
+      map.get(groupId)!.push(field);
     }
-    fieldsByGroup.get(groupId)!.push(field);
-  }
+    return map;
+  }, [schema.fields]);
 
   // Render grouped fields using SettingsGroup
   const renderGroupedFields = (groupId: string, fields: FieldDef[]) => {
     const group = schema.groups?.find((g: any) => g.id === groupId);
 
-    const items = fields.map(field => {
-      const value = getNestedValue(formData, field.name) ?? '';
+    const items = fields
+      .map((field) => {
+        const raw = getNestedValue(formData, field.name);
 
-      if (field.type === 'text') {
-        return {
-          id: field.name,
-          type: 'text' as const,
-          label: field.label,
-          value: String(value),
-          placeholder: field.placeholder,
-          onChange: (val: string) => handleFieldChange(field.name, val),
-        } as SettingItem;
-      } else if (field.type === 'select') {
-        // Get the default from schema if value is undefined
-        const schemaDefault = field.schema._def.defaultValue ?? field.schema._def.innerType?._def.defaultValue;
-        const fieldValue = getNestedValue(formData, field.name) ?? schemaDefault ?? '';
+        if (field.type === 'text') {
+          const value = raw ?? '';
+          return {
+            id: field.name,
+            type: 'text' as const,
+            label: field.label,
+            value: String(value),
+            placeholder: field.placeholder,
+            onChange: (val: string) => handleFieldChange(field.name, val),
+          } as SettingItem;
+        }
 
-        return {
-          id: field.name,
-          type: 'select' as const,
-          label: field.label,
-          value: String(fieldValue),
-          placeholder: field.placeholder,
-          data: field.options || [],
-          onChange: (val: string | null) => handleFieldChange(field.name, val),
-        } as SettingItem;
-      }
+        if (field.type === 'select') {
+          const schemaDefault = getZodDefault(field.schema);
+          const fieldValue = (raw ?? schemaDefault ?? null) as string | null;
 
-      return null;
-    }).filter((item): item is SettingItem => item !== null);
+          return {
+            id: field.name,
+            type: 'select' as const,
+            label: field.label,
+            value: fieldValue, // IMPORTANT: keep null when empty; don't coerce to ''
+            placeholder: field.placeholder,
+            data: field.options || [],
+            onChange: (val: string | null) => handleFieldChange(field.name, val),
+          } as SettingItem;
+        }
+
+        return null;
+      })
+      .filter((item): item is SettingItem => item !== null);
 
     return (
       <Stack gap={4} key={groupId}>
-        {group?.label && <SettingsGroupLabel label={group.label} description={undefined} />}
+        {group?.label ? <SettingsGroupLabel label={group.label} description={undefined} /> : null}
         <SettingsGroup items={items} />
-        {group?.description && <SettingsGroupLabel label={undefined} description={group.description} />}
+        {group?.description ? <SettingsGroupLabel label={undefined} description={group.description} /> : null}
       </Stack>
     );
   };
 
-  // Render ungrouped fields (textareas)
+  // Render ungrouped fields (textareas + any ungrouped text/select)
   const renderUngroupedFields = (fields: FieldDef[]) => {
-    return fields.map(field => {
-      const value = getNestedValue(formData, field.name) ?? '';
+    return fields.map((field) => {
+      const raw = getNestedValue(formData, field.name);
 
       if (field.type === 'textarea') {
+        const value = raw ?? '';
         return (
           <Textarea
             key={field.name}
@@ -153,15 +200,14 @@ export function EntityEditView<T extends Record<string, any>>({
             description={field.description}
             placeholder={field.placeholder}
             value={String(value)}
-            autosize
             minRows={field.minRows || 4}
             onChange={(val: string) => handleFieldChange(field.name, val)}
           />
         );
       }
 
-      // Non-textarea ungrouped fields (text, select)
       if (field.type === 'text') {
+        const value = raw ?? '';
         return (
           <TextInput
             key={field.name}
@@ -175,9 +221,8 @@ export function EntityEditView<T extends Record<string, any>>({
       }
 
       if (field.type === 'select') {
-        // Get the default from schema if value is undefined
-        const schemaDefault = field.schema._def.defaultValue ?? field.schema._def.innerType?._def.defaultValue;
-        const fieldValue = getNestedValue(formData, field.name) ?? schemaDefault ?? '';
+        const schemaDefault = getZodDefault(field.schema);
+        const value = (raw ?? schemaDefault ?? null) as string | null;
 
         return (
           <Select
@@ -185,7 +230,7 @@ export function EntityEditView<T extends Record<string, any>>({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={String(fieldValue)}
+            value={value} // IMPORTANT: keep null when empty
             data={field.options || []}
             onChange={(val: string | null) => handleFieldChange(field.name, val)}
           />
@@ -197,22 +242,27 @@ export function EntityEditView<T extends Record<string, any>>({
   };
 
   // Check if we can save (e.g., name required)
-  const nameField = schema.fields.find(f => f.name.endsWith('.name') || f.name === 'name');
+  const nameField = useMemo(
+    () => schema.fields.find((f) => f.name.endsWith('.name') || f.name === 'name'),
+    [schema.fields]
+  );
   const nameValue = nameField ? getNestedValue(formData, nameField.name) : '';
-  const canSave = nameValue && String(nameValue).trim().length > 0;
+  const canSave = Boolean(nameValue && String(nameValue).trim().length > 0);
 
   return (
     <Box className={styles.root}>
       <Box className={styles.topOverlay} />
       <Box className={styles.topNavigation}>
-        <TopNavigation title={title} onBack={onBack} />
+        <TopNavigation
+          title={title}
+          onBack={handleBack}
+          onSave={handleSave}
+          canSave={canSave || saving}
+          saveLabel={isNew ? 'Create' : 'Save'}
+        />
       </Box>
-      <ScrollArea
-        className={styles.scrollArea}
-        style={{ height: '100%' }}
-        type="auto"
-        scrollbarSize={8}
-      >
+
+      <ScrollArea className={styles.scrollArea} style={{ height: '100%' }} type="auto" scrollbarSize={8}>
         <Stack gap="lg" pt={120} pb={40}>
           <Box w={600} ml="auto" mr="auto">
             <Stack gap="xl">
@@ -225,11 +275,6 @@ export function EntityEditView<T extends Record<string, any>>({
 
               {/* Render ungrouped fields */}
               {renderUngroupedFields(fieldsByGroup.get(undefined) || [])}
-
-              {/* Save button */}
-              <Button onClick={handleSave} disabled={!canSave || saving} loading={saving}>
-                {isNew ? `Create ${schema.title}` : 'Save Changes'}
-              </Button>
             </Stack>
           </Box>
         </Stack>

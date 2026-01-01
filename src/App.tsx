@@ -14,8 +14,9 @@ import { Sidebar } from './components/layout/Sidebar';
 import type { ProseDoc } from './components/editor/ProseEditor';
 import { AppContent } from './components/layout/AppContent';
 import { AppModals } from './components/common/AppModals';
-import { useNavigation } from './hooks/useNavigation';
+import { useNavigation, useLeaveGuardStore } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
+import { ConfirmLeaveModal } from './components/common/ConfirmLeaveModal';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
@@ -159,6 +160,17 @@ const App: React.FC = () => {
   const [wizardModalOpen, setWizardModalOpen] = useState(false);
   const activeWizard = useAppStore((s) => s.activeWizard);
 
+  // Leave guard modal
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [leaveModalProps, setLeaveModalProps] = useState<{
+    title?: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }>({ message: '', onConfirm: () => {}, onCancel: () => {} });
+
   // Open wizard modal when wizard starts
   useEffect(() => {
     setWizardModalOpen(!!activeWizard);
@@ -171,6 +183,34 @@ const App: React.FC = () => {
       setWizardModalOpen(false);
     }
   };
+
+  // Register leave guard confirm function
+  const setConfirmLeave = useLeaveGuardStore((s) => s.setConfirmLeave);
+  useEffect(() => {
+    setConfirmLeave((args) => {
+      return new Promise<boolean>((resolve) => {
+        setLeaveModalProps({
+          title: args.title,
+          message: args.message,
+          confirmLabel: args.confirmLabel,
+          cancelLabel: args.cancelLabel,
+          onConfirm: () => {
+            setLeaveModalOpen(false);
+            resolve(true);
+          },
+          onCancel: () => {
+            setLeaveModalOpen(false);
+            resolve(false);
+          },
+        });
+        setLeaveModalOpen(true);
+      });
+    });
+
+    return () => {
+      setConfirmLeave(undefined);
+    };
+  }, [setConfirmLeave]);
 
   // ---- Project handlers ----
   const projectHandlers = useProjectHandlers({
@@ -285,6 +325,14 @@ const App: React.FC = () => {
 
         wizardModalOpen={wizardModalOpen}
         onCloseWizardModal={handleCloseWizardModal}
+
+        leaveGuardModalOpen={leaveModalOpen}
+        leaveGuardTitle={leaveModalProps.title}
+        leaveGuardMessage={leaveModalProps.message}
+        leaveGuardConfirmLabel={leaveModalProps.confirmLabel}
+        leaveGuardCancelLabel={leaveModalProps.cancelLabel}
+        onLeaveGuardConfirm={leaveModalProps.onConfirm}
+        onLeaveGuardCancel={leaveModalProps.onCancel}
       />
     </>
   );
