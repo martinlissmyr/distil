@@ -102,6 +102,8 @@ export const characterType = defineType({
         'Describe how this character lives and is situated in their world — work or calling, social position, dependence, privilege, or marginality. Describe what shapes their everyday standing and possibilities.',
       placeholder: '',
       minRows: 4,
+      wizardLabel: 'Guide me',
+      wizard: 'character-position-in-the-world',
       schema: z.string().optional(),
     }),
 
