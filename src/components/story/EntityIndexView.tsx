@@ -244,6 +244,13 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
           title={`${entityViewTitle} – ${editingEntity?.name || 'New'}`}
           entityDoc={editingEntityDoc}
           schema={docKind === 'characters' ? characterType : locationType}
+          withChat={true}
+          doc={{
+            scope: 'story',
+            docKind: 'characters',
+            projectId,
+            storyId,
+          }}
           onBack={handleBackToList}
           onSave={handleSaveEntity}
         />

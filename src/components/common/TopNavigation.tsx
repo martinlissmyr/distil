@@ -1,6 +1,6 @@
 // src/components/common/TopNavigation.tsx
 import React from 'react';
-import { ActionIcon, Box, Group, Text } from '@mantine/core';
+import { ActionIcon, Box, Group, Text, Button } from '@mantine/core';
 import {Icon} from './Icon';
 
 type TopNavigationProps = {
@@ -13,6 +13,11 @@ type TopNavigationProps = {
   /** Optional close button */
   onClose?: () => void;
   closeLabel?: string;
+
+  /** Optional save button */
+  onSave?: () => void;
+  saveLabel?: string;
+  canSave?: boolean;
 
   /** Layout/styling */
   zIndex?: number;
@@ -31,6 +36,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   backLabel = 'Back',
   onClose,
   closeLabel = 'Close',
+  onSave,
+  canSave = true,
+  saveLabel = 'Save',
   zIndex = 10,
 }) => {
   return (
@@ -79,7 +87,19 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
       {/* Right slot */}
       <Group justify="flex-end" gap="xs" style={{ minWidth: 0 }}>
-        {onClose ? (
+        {onSave && (
+          <Button
+            variant="light"
+            size="sm"
+            radius="xl"
+            onClick={onSave}
+            disabled={!canSave}
+          >
+            {saveLabel}
+          </Button>
+        )}
+
+        {onClose && (
           <ActionIcon
             aria-label={closeLabel}
             variant="light"
@@ -89,7 +109,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           >
             <Icon type="close" size={26} />
           </ActionIcon>
-        ) : (
+        )}
+
+        {!onClose && !onSave && (
           <ButtonPlaceholder/>
         )}
       </Group>
