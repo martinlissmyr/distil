@@ -113,7 +113,7 @@ export const characterType = defineType({
         'How the character comes across — physically, socially, and behaviorally. Physical presence, behavioral signals, social & cultural markers etc. Q: When this character enters a room, what do others immediately notice or sense? How do the character talk or express themselves?',
       placeholder: '',
       minRows: 4,
-      wizardLabel: 'Guide',
+      wizardLabel: 'Guide me',
       wizard: 'character-presence-and-expression',
       schema: z.string().optional(),
     }),
