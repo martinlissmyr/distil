@@ -4,6 +4,7 @@ import { EntityEditModal } from './EntityEditModal';
 import { EntityCreateModal } from './EntityCreateModal';
 import { SettingsModal } from '../settings/SettingsModal';
 import { WizardModal } from '../wizard/WizardModal';
+import { ConfirmLeaveModal } from './ConfirmLeaveModal';
 
 export interface AppModalsProps {
   // Project modal (edit)
@@ -35,6 +36,15 @@ export interface AppModalsProps {
   // Wizard modal
   wizardModalOpen: boolean;
   onCloseWizardModal: () => void;
+
+  // Leave guard modal
+  leaveGuardModalOpen: boolean;
+  leaveGuardTitle?: string;
+  leaveGuardMessage: string;
+  leaveGuardConfirmLabel?: string;
+  leaveGuardCancelLabel?: string;
+  onLeaveGuardConfirm: () => void;
+  onLeaveGuardCancel: () => void;
 }
 
 export const AppModals: React.FC<AppModalsProps> = ({
@@ -61,6 +71,14 @@ export const AppModals: React.FC<AppModalsProps> = ({
 
   wizardModalOpen,
   onCloseWizardModal,
+
+  leaveGuardModalOpen,
+  leaveGuardTitle,
+  leaveGuardMessage,
+  leaveGuardConfirmLabel,
+  leaveGuardCancelLabel,
+  onLeaveGuardConfirm,
+  onLeaveGuardCancel,
 }) => {
   return (
     <>
@@ -117,6 +135,17 @@ export const AppModals: React.FC<AppModalsProps> = ({
 
       {/* Wizard modal */}
       <WizardModal opened={wizardModalOpen} onClose={onCloseWizardModal} />
+
+      {/* Leave guard modal */}
+      <ConfirmLeaveModal
+        opened={leaveGuardModalOpen}
+        onClose={onLeaveGuardCancel}
+        onConfirm={onLeaveGuardConfirm}
+        title={leaveGuardTitle}
+        message={leaveGuardMessage}
+        confirmLabel={leaveGuardConfirmLabel}
+        cancelLabel={leaveGuardCancelLabel}
+      />
     </>
   );
 };

@@ -3,7 +3,69 @@ import { create } from 'zustand';
 import { useEffect, useCallback, useRef } from 'react';
 import type { StorySectionId, RootSectionId } from '../models/sections';
 
-// Types
+// -------------------------
+// Leave guard store
+// -------------------------
+type ConfirmLeaveFn = (args: {
+  title?: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+}) => Promise<boolean>;
+
+type LeaveGuardStore = {
+  isDirty: boolean;
+  setDirty: (dirty: boolean) => void;
+
+  // Optional custom confirm (Mantine modal, etc.)
+  confirmLeave?: ConfirmLeaveFn;
+  setConfirmLeave: (fn: ConfirmLeaveFn | undefined) => void;
+
+  requestNavigate: (next: () => void) => void;
+};
+
+export const useLeaveGuardStore = create<LeaveGuardStore>((set, get) => ({
+  isDirty: false,
+  setDirty: (isDirty) => set({ isDirty }),
+
+  confirmLeave: undefined,
+  setConfirmLeave: (fn) => set({ confirmLeave: fn }),
+
+  requestNavigate: (next) => {
+    const { isDirty, confirmLeave } = get();
+    if (!isDirty) {
+      next();
+      return;
+    }
+
+    // async confirm wrapper
+    void (async () => {
+      let ok = false;
+
+      if (confirmLeave) {
+        ok = await confirmLeave({
+          title: 'Discard changes?',
+          message: 'You have unsaved changes. Leave and discard changes?',
+          confirmLabel: 'Discard changes',
+          cancelLabel: 'Cancel',
+        });
+      } else {
+        ok = window.confirm('You have unsaved changes. If you leave now, those changes will be lost.');
+      }
+
+      if (ok) {
+        // reset dirty before navigating
+        set({ isDirty: false });
+        next();
+      }
+    })();
+  },
+}));
+
+// -------------------------
+// navigation store
+// -------------------------
+
 export type StorySection = StorySectionId;
 export type RootSection = RootSectionId;
 export type AppSection = 'root' | 'project' | 'story';
@@ -27,7 +89,6 @@ type NavigationStore = NavState & {
 
 const NAV_STATE_KEY = 'distil:navState:v3';
 
-// Create Zustand store for navigation
 const useNavigationStore = create<NavigationStore>((set) => ({
   appSection: 'root',
   rootSection: 'projects',
@@ -40,16 +101,16 @@ const useNavigationStore = create<NavigationStore>((set) => ({
   setStorySection: (storySection) => set({ storySection }),
   setSelectedProjectId: (projectId) => set({ projectId }),
   setSelectedStoryId: (storyId) => set({ storyId }),
-  restoreState: (state) => set({
-    appSection: state.appSection,
-    rootSection: state.rootSection,
-    projectId: state.projectId,
-    storyId: state.storyId,
-    storySection: state.storySection,
-  }),
+  restoreState: (state) =>
+    set({
+      appSection: state.appSection,
+      rootSection: state.rootSection,
+      projectId: state.projectId,
+      storyId: state.storyId,
+      storySection: state.storySection,
+    }),
 }));
 
-// Helper functions for localStorage persistence
 function loadNavState(): NavState | null {
   try {
     const raw = window.localStorage.getItem(NAV_STATE_KEY);
@@ -72,13 +133,13 @@ function saveNavState(state: NavState) {
   try {
     window.localStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
   } catch {
-    // ignore; localStorage might be unavailable
+    // ignore
   }
 }
 
 export type NavigationLeaf =
   | { kind: 'root'; id: RootSection }
-  | { kind: 'project'; id: 'projects' } // or ProjectSectionId if you add it later
+  | { kind: 'project'; id: 'projects' }
   | { kind: 'story'; id: StorySection };
 
 function computeLeaf(
@@ -91,16 +152,7 @@ function computeLeaf(
   return { kind: 'root', id: rootSection };
 }
 
-/**
- * Custom hook to manage application navigation state and localStorage persistence
- *
- * Handles navigation between:
- * - Root sections (projects, manifest)
- * - Project view (list of stories)
- * - Story view (prose, outline, brief, etc.)
- */
 export function useNavigation() {
-  // Get state and setters from Zustand store
   const appSection = useNavigationStore((s) => s.appSection);
   const rootSection = useNavigationStore((s) => s.rootSection);
   const storySection = useNavigationStore((s) => s.storySection);
@@ -113,17 +165,15 @@ export function useNavigation() {
   const setSelectedProjectId = useNavigationStore((s) => s.setSelectedProjectId);
   const setSelectedStoryId = useNavigationStore((s) => s.setSelectedStoryId);
   const restoreStateToStore = useNavigationStore((s) => s.restoreState);
-  const leaf = computeLeaf(appSection, rootSection, storySection);
 
-  // Track if we're in the initialization phase (don't persist during restoration)
+  // NEW: single guard entrypoint
+  const requestNavigate = useLeaveGuardStore((s) => s.requestNavigate);
+
+  const leaf = computeLeaf(appSection, rootSection, storySection);
   const isInitializing = useRef(true);
 
-  // Persist navigation state to localStorage whenever it changes (after initialization)
   useEffect(() => {
-    // Skip persistence during initial mount/restoration
-    if (isInitializing.current) {
-      return;
-    }
+    if (isInitializing.current) return;
 
     const nav: NavState = {
       appSection,
@@ -135,74 +185,94 @@ export function useNavigation() {
     saveNavState(nav);
   }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection]);
 
-  // Navigation actions
+  // Wrap ALL actions with requestNavigate
   const goToProjects = useCallback(() => {
-    setAppSection('root');
-    setRootSection('projects');
-    setSelectedProjectId(null);
-    setSelectedStoryId(null);
-  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
+    requestNavigate(() => {
+      setAppSection('root');
+      setRootSection('projects');
+      setSelectedProjectId(null);
+      setSelectedStoryId(null);
+    });
+  }, [requestNavigate, setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
   const goToManifest = useCallback(() => {
-    setAppSection('root');
-    setRootSection('manifest');
-    setSelectedProjectId(null);
-    setSelectedStoryId(null);
-  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
+    requestNavigate(() => {
+      setAppSection('root');
+      setRootSection('manifest');
+      setSelectedProjectId(null);
+      setSelectedStoryId(null);
+    });
+  }, [requestNavigate, setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
   const goToPlayground = useCallback(() => {
-    setAppSection('root');
-    setRootSection('playground');
-    setSelectedProjectId(null);
-    setSelectedStoryId(null);
-  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
+    requestNavigate(() => {
+      setAppSection('root');
+      setRootSection('playground');
+      setSelectedProjectId(null);
+      setSelectedStoryId(null);
+    });
+  }, [requestNavigate, setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
 
-  const goToProject = useCallback((projectId: string) => {
-    setAppSection('project');
-    setRootSection('projects');
-    setSelectedProjectId(projectId);
-    setSelectedStoryId(null);
-  }, [setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]);
+  const goToProject = useCallback(
+    (projectId: string) => {
+      requestNavigate(() => {
+        setAppSection('project');
+        setRootSection('projects');
+        setSelectedProjectId(projectId);
+        setSelectedStoryId(null);
+      });
+    },
+    [requestNavigate, setAppSection, setRootSection, setSelectedProjectId, setSelectedStoryId]
+  );
 
-  const goToStory = useCallback((
-    projectId: string,
-    storyId: string,
-    section: StorySection = 'prose'
-  ) => {
-    setAppSection('story');
-    setSelectedProjectId(projectId);
-    setSelectedStoryId(storyId);
-    setStorySection(section);
-  }, [setAppSection, setSelectedProjectId, setSelectedStoryId, setStorySection]);
+  const goToStory = useCallback(
+    (projectId: string, storyId: string, section: StorySection = 'prose') => {
+      requestNavigate(() => {
+        setAppSection('story');
+        setSelectedProjectId(projectId);
+        setSelectedStoryId(storyId);
+        setStorySection(section);
+      });
+    },
+    [requestNavigate, setAppSection, setSelectedProjectId, setSelectedStoryId, setStorySection]
+  );
 
-  const restoreStateCallback = useCallback((state: NavState) => {
-    restoreStateToStore(state);
-  }, [restoreStateToStore]);
+  const guardedSetStorySection = useCallback(
+    (section: StorySection) => {
+      requestNavigate(() => {
+        setStorySection(section);
+      });
+    },
+    [requestNavigate, setStorySection]
+  );
+
+  const restoreStateCallback = useCallback(
+    (state: NavState) => {
+      restoreStateToStore(state);
+    },
+    [restoreStateToStore]
+  );
 
   const finishInitializationCallback = useCallback(() => {
-    // Re-enable persistence after initialization is complete
     isInitializing.current = false;
   }, []);
 
   return {
-    // State
     appSection,
     rootSection,
     storySection,
     selectedProjectId,
     selectedStoryId,
     leaf,
-    leafId: leaf.id, // convenience for getSectionConfig()
+    leafId: leaf.id,
 
-    // Actions
     goToProjects,
     goToManifest,
     goToPlayground,
     goToProject,
     goToStory,
-    setStorySection,
+    setStorySection: guardedSetStorySection,
 
-    // Utilities (for initialization)
     loadSavedState: loadNavState,
     restoreState: restoreStateCallback,
     finishInitialization: finishInitializationCallback,
