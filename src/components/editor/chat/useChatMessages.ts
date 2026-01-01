@@ -196,7 +196,7 @@ export function useChatMessages({
     projectId,
     storyId,
     writingLanguage,
-    docRevision, // ✅ important: re-run when wizard bumps revision
+    docRevision, // important: re-run when wizard bumps revision
   ]);
 
   const addMessage = (message: ChatMessage) => setMessages((prev) => [...prev, message]);

@@ -178,7 +178,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
               title={title}
               isTextLoaded={fullTextMarkdown !== null}
               editor={editor}
-              onOpenWizard={handleOpenWizard} // ✅ always wired when chat is on
+              onOpenWizard={handleOpenWizard} // always wired when chat is on
             />
           </Box>
         )}

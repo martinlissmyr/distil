@@ -52,7 +52,7 @@ const isEmpty = (s?: DocState) => s === 'empty';
 const isMissing = (s?: DocState) => s === 'missing';
 
 // Only doc kinds that have hint templates
-type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief';
+type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief' | 'characters' | 'locations';
 
 function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'prose') return 'prose';
@@ -60,6 +60,8 @@ function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'outline') return 'outline';
   if (kind === 'brief') return 'brief';
   if (kind === 'world') return 'world';
+  if (kind === 'characters') return 'characters';
+  if (kind === 'locations') return 'locations';
   return null;
 }
 

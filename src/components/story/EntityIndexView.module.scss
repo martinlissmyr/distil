@@ -7,6 +7,12 @@
   height: 100%;
   background: var(--bg-editor);
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  --editor-gutter: min(110px, 6vw);
+  --editor-width: min(680px, 40vw);
+  --aside-offset: 12px;
 }
 
 .divider {
@@ -16,9 +22,9 @@
 }
 
 .topNavigation {
+  width: calc(var(--editor-width) + var(--editor-gutter) * 2);
   position: absolute;
   top: 0;
-  right: 0;
   left: 0;
   padding: 20px 30px;
   z-index: 20;
@@ -72,4 +78,14 @@
       );
     }
   }
+}
+
+.editor {
+  width: calc(var(--editor-width) + var(--editor-gutter) * 2);
+  padding-left: var(--editor-gutter);
+  padding-right: var(--editor-gutter);
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
 }
