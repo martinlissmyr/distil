@@ -223,6 +223,18 @@ export function EntityEditView<T extends Record<string, any>>({
 
       if (field.type === 'textarea') {
         const value = raw ?? '';
+        const ref = useRef<HTMLTextAreaElement>(null);
+        const actionButtonLabel = field.wizardLabel ? field.wizardLabel : 'Open wizard';
+        const onWizardClick =
+          field.wizard
+            ? () => {
+                handleOpenWizard({
+                  wizardId: field.wizard,
+                  targetInputRef: ref,
+                });
+              }
+            : undefined;
+
         return (
           <Textarea
             key={field.name}
@@ -232,6 +244,10 @@ export function EntityEditView<T extends Record<string, any>>({
             value={String(value)}
             minRows={field.minRows || 4}
             onChange={(val: string) => handleFieldChange(field.name, val)}
+            actionButtonText={actionButtonLabel}
+            actionButtonIcon="wizard"
+            onActionButtonClick={onWizardClick}
+            textareaRef={ref}
           />
         );
       }

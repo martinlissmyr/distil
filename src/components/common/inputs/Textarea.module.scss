@@ -17,8 +17,15 @@
 
 .textareaLabel {
   font-weight: 600 !important;
-  padding: 0 12px;
+}
+
+.textareaLabelGroup {
+  padding: 0 12px !important;
   margin-bottom: 4px;
+}
+
+.textareaAction {
+  opacity: 0;
 }
 
 .textareaSection {
@@ -35,10 +42,9 @@
     color: var(--mantine-color-dimmed);
   }
 
-  /*&:focus-within,
-  &:hover {
-    .description {
+  &:focus-within {
+    .textareaAction {
       opacity: 1;
     }
-  }*/
+  }
 }

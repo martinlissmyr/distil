@@ -5,6 +5,7 @@ import { createWizardEngine } from './engine';
 import { docIdForMeta, metaId } from '../state/useAppStore';
 import type { MetaDocState } from '../types/metaDoc';
 import { docKinds } from '../models/docs';
+import { insertIntoTextarea } from '../helpers/inputHelpers';
 
 export function createWizardActions(args: {
   set: (fn: any) => void;
@@ -38,33 +39,42 @@ export function createWizardActions(args: {
     },
 
     insertIntoEditor: async (ctx, text) => {
+      console.log(ctx);
       const editor = ctx.targetEditor;
-      if (!editor) {
+      const inputRef = ctx.targetInputRef;
+
+      if (!editor && !inputRef) {
         // fallback: store wizardResult
         args.set((s: any) => ({ wizardResult: text }));
         return;
       }
 
-      try {
-        const current = editor.getMarkdown();
-        const merged = current.trim() ? `${current}\n\n${text}` : text;
-        const json = editor.markdown.parse(merged);
-        editor.commands.setContent(json);
+      if (editor) {
+        try {
+          const current = editor.getMarkdown();
+          const merged = current.trim() ? `${current}\n\n${text}` : text;
+          const json = editor.markdown.parse(merged);
+          editor.commands.setContent(json);
 
-        // Signal that this marks a revision
-        // Chat will listen to this and emit a new
-        // initial hint
-        const scope =
-          ctx.ref.scope === 'story'
-            ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
-            : ({ scope: 'root' } as const);
+          const scope =
+            ctx.ref.scope === 'story'
+              ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
+              : ({ scope: 'root' } as const);
 
-        // if this wizard targets the "brief" meta doc:
-        const docId = docIdForMeta(scope, 'brief');
-        args.get().bumpDocRevision(docId);
+          const docId = docIdForMeta(scope, 'brief');
+          args.get().bumpDocRevision(docId);
+          return;
+        } catch {
+          args.set((s: any) => ({ wizardResult: text }));
+          return;
+        }
+      }
 
-      } catch {
-        args.set((s: any) => ({ wizardResult: text }));
+      if (inputRef) {
+        const ok = insertIntoTextarea(inputRef, text, 'append');
+        if (!ok) {
+          args.set((s: any) => ({ wizardResult: text }));
+        }
       }
     },
 

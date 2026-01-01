@@ -1,7 +1,17 @@
 // src/components/common/inputs/Textarea.tsx
 import React, { useMemo } from 'react';
-import { Badge, Textarea as MantineTextarea, Text } from '@mantine/core';
+import {
+  Badge,
+  Textarea as MantineTextarea,
+  Text,
+  Box,
+  Group,
+  ActionIcon,
+  Button,
+} from '@mantine/core';
 import classes from './Textarea.module.scss';
+import { Icon } from '../Icon';
+import type { RefObject } from 'react';
 
 type TextareaProps = {
   value: string;
@@ -18,6 +28,12 @@ type TextareaProps = {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
+
+  actionButtonIcon?: string;
+  actionButtonText?: string;
+  onActionButtonClick?: (value: string) => void;
+
+  textareaRef: RefObject;
 
   /** Optional external error override */
   error?: string;
@@ -59,6 +75,10 @@ export const Textarea: React.FC<TextareaProps> = ({
   minLength = 0,
   maxLength,
   error,
+  actionButtonIcon = 'wizard',
+  actionButtonText = 'Perform action',
+  onActionButtonClick,
+  textareaRef = null,
 }) => {
   const internalError = useMemo(
     () => validate({ value, required, minLength, maxLength }),
@@ -99,10 +119,27 @@ export const Textarea: React.FC<TextareaProps> = ({
 
   return (
     <div className={classes.wrapper}>
+      <Group justify="space-between" className={classes.textareaLabelGroup}>
+        <Text size="sm" className={classes.textareaLabel}>
+          {label}
+        </Text>
+        {onActionButtonClick && (
+          <Box className={classes.textareaAction}>
+            <Button
+              size="compact-xs"
+              variant="filled"
+              aria-label={actionButtonText}
+              onClick={onActionButtonClick}
+              rightSection={<Icon type={actionButtonIcon} size={12}/>}
+            >
+              {actionButtonText}
+            </Button>
+          </Box>
+        )}
+      </Group>
       <MantineTextarea
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
-        label={label}
         placeholder={placeholder}
         minRows={minRows}
         maxRows={maxRows}
@@ -116,6 +153,7 @@ export const Textarea: React.FC<TextareaProps> = ({
         data-counter={showCounter}
         size="sm"
         rightSection={<RightSection/>}
+        ref={textareaRef}
       />
       {description && (
         <Text
