@@ -15,6 +15,7 @@ import {
 } from './navigation';
 import { useAppStore } from '../state/useAppStore';
 import { buildPromptForStep } from './promptBuilder';
+import { interpolate } from '../helpers/interpolate';
 
 export type WizardDeps = {
   // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)

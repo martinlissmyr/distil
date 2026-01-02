@@ -10,7 +10,8 @@
       "id": "method_intro",
       "type": "information",
       "title": "Karaktärsintervju: position i världen",
-      "description": "I den här delen svarar du som om du intervjuade din karaktär.\n\nDet du skriver är inte tänkt att hamna direkt i berättelsen. Syftet är att förstå hur karaktären lever i sin värld: vad som är normalt för dem, var de hör hemma, och hur världen svarar på deras närvaro.\n\nSvara konkret och spontant. Små detaljer (platser, vanor, bemötanden) är ofta mer värdefulla än stora förklaringar."
+      "illustration": "interview",
+      "description": "I den här guiden svarar du som om du intervjuade din karaktär.\n\nDet du skriver är inte tänkt att hamna direkt i berättelsen. Syftet är att förstå hur karaktären lever i sin värld: vad som är normalt för dem, var de hör hemma, och hur världen svarar på deras närvaro.\n\nSvara konkret och spontant. Små detaljer (platser, vanor, bemötanden) är ofta mer värdefulla än stora förklaringar."
     },
     {
       "id": "everyday_reality",
@@ -22,7 +23,7 @@
       "placeholder": "t.ex. Jag börjar tidigt, går samma väg, undviker vissa kvarter, äter snabbt, pratar mest med två personer.",
       "required": false,
       "minLength": 0,
-      "maxLength": 400
+      "maxLength": 2000
     },
     {
       "id": "self_definition",
@@ -34,7 +35,7 @@
       "placeholder": "t.ex. Jag säger att jag jobbar där. Jag säger inte varför jag egentligen är kvar i staden.",
       "required": false,
       "minLength": 0,
-      "maxLength": 400
+      "maxLength": 2000
     },
     {
       "id": "first_assumptions",
@@ -46,7 +47,7 @@
       "placeholder": "t.ex. De tror att jag har kontroll. De pratar lite mer försiktigt och testar var jag står.",
       "required": false,
       "minLength": 0,
-      "maxLength": 400
+      "maxLength": 2000
     },
     {
       "id": "belonging_places",
@@ -58,7 +59,7 @@
       "placeholder": "t.ex. I verkstaden är jag trygg. På rådhuset blir jag alltid stoppad i dörren, även när jag har ärende.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "power_treatment",
@@ -70,7 +71,7 @@
       "placeholder": "t.ex. De är artiga men korta. De får mig att vänta. De vill att jag ska vara tacksam.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "resource_gap",
@@ -82,7 +83,7 @@
       "placeholder": "t.ex. Jag löser det genom X. Om det inte går, tar jag ett lån jag skäms för, eller låter bli.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "defended_position",
@@ -94,7 +95,7 @@
       "placeholder": "t.ex. Jag skämtar bort det. Jag säger att jag valt det här, men jag blir arg om någon antyder att jag är fast.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "world_shift",
@@ -106,7 +107,7 @@
       "placeholder": "t.ex. Förr blev jag underskattad. Nu får jag alltid frågor om vem som “egentligen” ligger bakom mig.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "future_possibilities",
@@ -118,7 +119,7 @@
       "placeholder": "t.ex. Jag kan klara mig. Jag kan inte bli fri från X. Jag kan inte röra mig i de rummen utan att betala ett pris.",
       "required": false,
       "minLength": 0,
-      "maxLength": 450
+      "maxLength": 2000
     },
     {
       "id": "position_synthesis",
