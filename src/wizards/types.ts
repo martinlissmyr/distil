@@ -54,6 +54,7 @@ export type WizardStep =
  */
 export type InformationStep = BaseStep & {
   type: 'information';
+  illustration: string;
 };
 
 /**
