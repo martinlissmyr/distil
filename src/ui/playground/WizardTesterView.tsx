@@ -210,8 +210,8 @@ export const WizardTesterView: React.FC = () => {
             )}
 
             {rightPanelMode === 'editor' && (
-              <Stack gap="md" style={{ flex: 1, height: '100%', minHeight: 0 }}>
-                <Group justify="space-between">
+              <Stack gap={0} style={{ flex: 1, height: '100%', minHeight: 0 }}>
+                <Group justify="space-between" p={20}>
                   <Title order={5}>Wizard Output</Title>
                   <Badge size="lg" variant="light">
                     {selectedWizardConfig.targetDoc}

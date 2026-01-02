@@ -139,17 +139,8 @@ export const characterType = defineType({
         "What shapes the characters choices and behavior — values, morale, beliefs, longing, habit, comfort, or tension. This doesn’t have to be a problem to overcome. Q: What inner direction shapes this character’s choices, even when they’re not aware of it?",
       placeholder: '',
       minRows: 4,
-      schema: z.string().optional(),
-    }),
-
-    defineField({
-      name: 'sensitivityAndPull',
-      type: 'textarea',
-      label: 'Triggers, draws & resistances (what reliably moves them)',
-      description:
-        'Situations, interactions, or themes that consistently provoke a response — pulling the character toward something or pushing them away. Focus on what happens around them and how they tend to react, rather than abstract traits. Examples: certain people or power dynamics, public attention or privacy, praise, shame, silence, conflict, responsibility, dependency, abandonment.',
-      placeholder: '',
-      minRows: 4,
+      wizardLabel: 'Guide me',
+      wizard: 'character-inner-orientation',
       schema: z.string().optional(),
     }),
 

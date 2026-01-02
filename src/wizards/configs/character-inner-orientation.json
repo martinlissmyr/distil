@@ -1,0 +1,160 @@
+{
+  "id": "character-inner-orientation",
+  "version": "1.1.0",
+  "title": "Karaktärens inre orientering",
+  "description": "En karaktärsintervju som hjälper dig fånga det som tyst styr karaktärens val, reaktioner och beteenden – även när de inte själva tänker på det.",
+  "targetDoc": "characters",
+  "outputTemplate": "{{inner_orientation}}",
+  "steps": [
+    {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Karaktärsintervju: inre orientering",
+      "illustration": "questionnaire-inner",
+      "description": "I den här guiden svarar du som om du intervjuade din karaktär.\n\nSyftet är inte att formulera teman eller förklaringar, utan att förstå vad som faktiskt styr karaktärens val i vardagen: vad som känns rätt, vad som skaver, vad som lugnar, och vad som drar.\n\nSvara konkret och vardagsnära. Små exempel, preferenser och reaktioner är ofta mer användbara än stora ord."
+    },
+    {
+      "id": "default_comfort",
+      "type": "question",
+      "title": "Det som lugnar dig",
+      "question": "Vad gör du instinktivt för att känna dig trygg, lugn eller i balans?",
+      "description": "Tänk på vanor och mönster: rutiner, platser, människor, kroppsliga beteenden eller tankesätt du återvänder till när inget särskilt händer.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag gör samma saker i samma ordning. Jag undviker att sticka ut. Jag håller mig nära det jag kan kontrollera.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "quiet_tensions",
+      "type": "question",
+      "title": "Det som skaver",
+      "question": "Finns det något som ofta skapar en låg, återkommande spänning i dig?",
+      "description": "Inte stora trauman, utan sådant som gnager: otålighet, skuld, rastlöshet, plikt, längtan, rädsla för att bli fast eller bortvald.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag har svårt att vila utan att känna att jag borde göra mer. Jag blir snabbt irriterad när saker tar för lång tid.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "when_unobserved",
+      "type": "question",
+      "title": "När ingen ser",
+      "question": "När du är helt ensam och inte behöver ta hänsyn till någon annan — vad gör du då som du sällan gör inför andra?",
+      "description": "Tänk på små, vardagliga skillnader snarare än stora hemligheter. Det kan handla om hur du pratar, vad du tillåter dig att känna, vad du undviker, hur du vilar, eller hur du beter dig när ingen ser eller bedömer dig.\n\nExempel:\n– vad du tänker men inte säger\n– vad du tillåter dig själv att känna\n– beteenden du döljer eller tonar ner\n– sätt du slappnar av, kontrollerar, eller tappar kontroll",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag tillåter mig att vara trött och långsam. Jag pratar högt för mig själv. Jag tvekar mindre när jag är ensam.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "self_image_boundary",
+      "type": "question",
+      "title": "En gräns du inte vill passera",
+      "question": "Finns det något du absolut inte vill bli – även om det skulle göra livet enklare?",
+      "description": "Detta handlar om självbild snarare än handling. Vad skulle kännas som ett svek mot dig själv, även om omgivningen accepterade det?",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag vill inte bli någon som blundar eller låtsas som att det inte angår mig.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "quiet_longing",
+      "type": "question",
+      "title": "En tyst längtan",
+      "question": "Finns det något du längtar efter, men sällan tillåter dig att ta på allvar?",
+      "description": "Det behöver inte vara stort eller dramatiskt. Tänk på något stilla: lättnad, enkelhet, vila, att slippa bära, eller att någon annan tar ansvar.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Att få stanna kvar. Att inte behöva vara modig. Att någon annan säger att det räcker.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 400
+    },
+    {
+      "id": "scale_security_freedom",
+      "type": "question",
+      "title": "Trygghet eller frihet",
+      "question": "När trygghet och frihet står i konflikt – vad lutar du oftast mot?",
+      "questionType": "scale",
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Trygghet",
+        "max": "Frihet"
+      },
+      "required": false
+    },
+    {
+      "id": "scale_loyalty_independence",
+      "type": "question",
+      "title": "Lojalitet eller självständighet",
+      "question": "När andras förväntningar krockar med din egen vilja – vad väger oftast tyngst?",
+      "questionType": "scale",
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Lojalitet",
+        "max": "Självständighet"
+      },
+      "required": false
+    },
+    {
+      "id": "scale_rest_responsibility",
+      "type": "question",
+      "title": "Vila eller ansvar",
+      "question": "När du är trött men något behöver göras – vad väljer du oftast?",
+      "questionType": "scale",
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Vila",
+        "max": "Ansvar"
+      },
+      "required": false
+    },
+    {
+      "id": "scale_truth_peace",
+      "type": "question",
+      "title": "Sanning eller fred",
+      "question": "När ärlighet riskerar att skapa konflikt – vad prioriterar du oftast?",
+      "questionType": "scale",
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Fred",
+        "max": "Sanning"
+      },
+      "required": false
+    },
+    {
+      "id": "scale_change_stability",
+      "type": "question",
+      "title": "Förändring eller stabilitet",
+      "question": "När något nytt lockar men det gamla fungerar – vad drar dig mest?",
+      "questionType": "scale",
+      "min": 1,
+      "max": 5,
+      "scaleLabels": {
+        "min": "Stabilitet",
+        "max": "Förändring"
+      },
+      "required": false
+    },
+    {
+      "id": "inner_orientation_synthesis",
+      "type": "llm-processing",
+      "title": "Sammanfattad inre orientering",
+      "description": "Här är en sammanhängande beskrivning av vad som tyst styr karaktärens val och beteenden.",
+      "hidden": false,
+      "prompt": {
+        "system": "character-inner-orientation-synthesis-system",
+        "user": "character-inner-orientation-synthesis-user"
+      },
+      "resultKey": "inner_orientation",
+      "extractJson": false
+    }
+  ]
+}
