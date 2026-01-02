@@ -89,7 +89,7 @@
       "type": "question",
       "title": "Stolthet, skam eller försvar",
       "question": "Finns det något med ditt liv eller din plats i världen som du försvarar – även om ingen angriper det?",
-      "description": "Svara i jag-form. Vad måste du rättfärdiga inför dig själv? Vad blir du snabbt känslig kring när ämnet kommer upp?",
+      "description": "Svara i jag-form. Vad måste du rättfärdiga inför dig själv? Vad blir du snabbt känsligt när ämnet kommer upp?",
       "questionType": "textarea",
       "placeholder": "t.ex. Jag skämtar bort det. Jag säger att jag valt det här, men jag blir arg om någon antyder att jag är fast.",
       "required": false,
