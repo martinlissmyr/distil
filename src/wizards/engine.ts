@@ -13,9 +13,8 @@ import {
   getPreviousStepPath,
   isStepComplete,
 } from './navigation';
-import { interpolate } from '../helpers/interpolate';
 import { useAppStore } from '../state/useAppStore';
-import { WRITING_LANGUAGE_LABEL } from '../types/language';
+import { buildPromptForStep } from './promptBuilder';
 
 export type WizardDeps = {
   // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)
@@ -43,40 +42,6 @@ export type WizardDeps = {
   mockMode?: boolean;
   mockDelayMs?: number;
 };
-
-// ---------------------------------------------------------------------------
-// Vite prompt loading (./prompts/<key>.md)
-// step.prompt.system / step.prompt.user are now KEYS, not full prompt strings.
-// ---------------------------------------------------------------------------
-
-const promptLoaders = import.meta.glob('./configs/prompts/*.md', {
-  query: '?raw',
-  import: 'default',
-});
-
-// cache by full path: "./prompts/<key>.md"
-const promptCache = new Map<string, string>();
-
-async function loadPromptByKey(key: string): Promise<string> {
-  const file = key.endsWith('.md') ? key : `${key}.md`;
-  const path = `./configs/prompts/${file}`;
-
-  const cached = promptCache.get(path);
-  if (cached != null) return cached;
-
-  const loader = promptLoaders[path];
-  if (!loader) {
-    console.warn(`[wizard engine] Missing prompt file: ${path}`);
-    return '';
-  }
-
-  const content = (await loader()) as string;
-  promptCache.set(path, content);
-
-  return content;
-}
-
-// ---------------------------------------------------------------------------
 
 function toEditableString(value: unknown): string {
   if (typeof value === 'string') return value;
@@ -221,73 +186,27 @@ export function createWizardEngine(deps: WizardDeps) {
     };
 
     try {
-      const metaDocsMarkdown = await deps.resolveMetaDocsMarkdown(wizardContext);
+      // Use extracted prompt builder
+      const { messages, summary } = await buildPromptForStep(
+        step,
+        activeWizard.answers,
+        activeWizard.llmResults,
+        wizardContext,
+        {
+          resolveMetaDocsMarkdown: deps.resolveMetaDocsMarkdown,
+          getWritingLanguage,
+        }
+      );
 
-      const writingLanguage = getWritingLanguage();
-      const writingLanguageName =
-        WRITING_LANGUAGE_LABEL[writingLanguage] || 'Swedish';
-
-      // Merge contexts: answers, llmResults, and non-null metaDocs
-      const vars = {
-        ...activeWizard.answers,
-        ...activeWizard.llmResults,
-        ...Object.fromEntries(
-          Object.entries(metaDocsMarkdown).filter(([_, v]) => v !== null)
-        ),
-        writingLanguageName,
-      };
-
-      //console.log(vars);
-
-      // step.prompt.* are KEYS now
-      const systemTemplateKey = step.prompt.system;
-      const userTemplateKey = step.prompt.user;
-
-      const systemTemplate = systemTemplateKey
-        ? await loadPromptByKey(systemTemplateKey)
-        : '';
-      const userTemplate = await loadPromptByKey(userTemplateKey);
-
-      // Interpolate system and user separately
-      const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
-
-      if (systemTemplate.trim()) {
-        messages.push({
-          role: 'system',
-          content: interpolate(systemTemplate, vars),
-        });
-      }
-
-      messages.push({
-        role: 'user',
-        content: interpolate(userTemplate, vars),
-      });
-
-      const promptSummary = messages
-      .map((m) => {
-        const header = m.role === 'system' ? 'SYSTEM PROMPT' : 'USER PROMPT';
-        return `## ${header}\n\n${m.content}`;
-      })
-      .join('\n\n---\n\n');
-      console.log(promptSummary);
-
-      //deps.mockMode = true;
+      console.log(summary);
 
       if (deps.mockMode) {
         // mock mode
         await new Promise((r) => setTimeout(r, deps.mockDelayMs ?? 800));
 
-        // Build a readable mock output from the generated messages
-        const promptSummary = messages
-          .map((m) => {
-            const header = m.role === 'system' ? 'SYSTEM PROMPT' : 'USER PROMPT';
-            return `## ${header}\n\n${m.content}`;
-          })
-          .join('\n\n---\n\n');
-
         const mock: Record<string, string> = {
           writing_tip: "Show, don't tell—use action and sensory detail.",
-          default: promptSummary,
+          default: summary,
         };
         const value = mock[step.resultKey] ?? mock.default;
 
