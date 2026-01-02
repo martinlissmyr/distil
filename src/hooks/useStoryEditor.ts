@@ -1,7 +1,7 @@
 // src/hooks/useStoryEditor.ts
 import { useState, useEffect, useCallback } from 'react';
 import { client, StoryData } from '../api/client';
-import type { ProseDoc } from '../components/editor/ProseEditor';
+import type { ProseDoc } from '../ui/editor/ProseEditor';
 
 /**
  * Custom hook to manage story editor state and autosave

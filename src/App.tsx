@@ -9,14 +9,14 @@ import {
   StoryData,
 } from './api/client';
 import { useAppStore } from './state/useAppStore';
-import { AppLayout } from './components/layout/AppLayout';
-import { Sidebar } from './components/layout/Sidebar';
-import type { ProseDoc } from './components/editor/ProseEditor';
-import { AppContent } from './components/layout/AppContent';
-import { AppModals } from './components/common/AppModals';
+import { AppLayout } from './ui/layout/AppLayout';
+import { Sidebar } from './ui/layout/Sidebar';
+import type { ProseDoc } from './ui/editor/ProseEditor';
+import { AppContent } from './ui/layout/AppContent';
+import { AppModals } from './ui/layout/AppModals';
 import { useNavigation, useLeaveGuardStore } from './hooks/useNavigation';
 import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
-import { ConfirmLeaveModal } from './components/common/ConfirmLeaveModal';
+import { ConfirmLeaveModal } from './ui/modals/ConfirmLeaveModal';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
