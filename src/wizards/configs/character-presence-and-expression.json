@@ -7,6 +7,13 @@
   "outputTemplate": "{{presence_and_expression}}",
   "steps": [
     {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Karaktärens närvaro och uttryck",
+      "illustration": "questionnaire-presence",
+      "description": "Den här delen hjälper dig att fånga hur karaktären uppfattas av andra i stunden – inte vem hen är innerst inne, utan vilket intryck hen ger.\n\nSvara som om du stod bredvid karaktären och iakttog henne i vardagliga situationer: när hon kliver in i ett rum, säger något enkelt, möter andras blickar. Fokusera på det som är synligt, hörbart och märkbart.\n\nFörsök att vara konkret och situationsnära. Små detaljer i rörelse, tonfall eller vana säger ofta mer än stora förklaringar. Det här materialet används senare för att skapa en sammanhängande beskrivning som kan vägleda hur karaktären agerar och uppfattas i scener."
+    },
+    {
       "id": "first_impression",
       "type": "question",
       "title": "Första intrycket",

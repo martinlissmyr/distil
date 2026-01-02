@@ -6,6 +6,13 @@
   "targetDoc": "manifest",
   "steps": [
     {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Skapa ett författarmanifest",
+      "illustration": "questionnaire",
+      "description": "Du kommer nu få svara på ett antal frågor. Tänk på att det inte finns några rätt eller fel svar.\n\nFrågorna är ett sätt att ringa in hur du faktiskt vill skriva och hur du tänker. Svara intuitivt och konkret, även om formuleringarna känns ofärdiga.\n\nDet du anger här används senare för att sammanfoga ett författarmanifest i din egen röst. Fokusera därför på det som återkommer i ditt skrivande och känns grundläggande för dig – inte på tillfälliga idéer eller ambitioner."
+    },
+    {
       "id": "influences",
       "type": "question",
       "title": "Din röst, stil och kvaliteter",

@@ -5,6 +5,7 @@ import {
   Image,
 } from '@mantine/core';
 import type { InformationStep } from '../../../wizards/types';
+import classes from './InformationStepView.module.scss';
 
 type InformationStepViewProps = {
   step: InformationStep;
@@ -12,7 +13,7 @@ type InformationStepViewProps = {
 
 export const InformationStepView: React.FC<InformationStepViewProps> = ({ step }) => {
   return (
-    <Box>
+    <Box className={classes.layout}>
       {/* Question text */}
       {step.illustration && (
         <Box my={40} justify="center">
@@ -21,16 +22,12 @@ export const InformationStepView: React.FC<InformationStepViewProps> = ({ step }
             h={300}
             w="auto"
             fit="contain"
-            style={{
-              margin: '0 auto',
-              filter: 'invert()',
-              opacity: '.2',
-            }}
+            className={classes.illustration}
           />
         </Box>
       )}
       {step.description && (
-        <Text size="md">
+        <Text size="md" className={classes.text}>
           {step.description}
         </Text>
       )}

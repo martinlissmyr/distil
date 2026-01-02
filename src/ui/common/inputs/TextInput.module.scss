@@ -1,16 +1,28 @@
 // src/ui/common/inputs/TextInput.module.scss
 
 .textInput {
-  background-color: transparent !important;
-  border-color: var(--mantine-color-dark-6) !important;
+  --input-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+  border-color: transparent !important;
+  border-radius: var(--mantine-radius-lg);
+  background: color-mix(in srgb, var(--mantine-color-body) 60%, rgba(255, 255, 255, 0.06)) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 12px !important;
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+
+  &[data-counter="true"],
+  &[data-error="true"] {
+    padding-right: 85px;
+  }
 }
 
 .textInputSection {
-  [data-error="true"] &,
-  [counter="true"] & {
-    --input-right-section-size: auto;
-    margin-right: 10px;
-  }
+ --input-right-section-size: 85px;
+  margin-right: 12px;
+  margin-bottom: 12px;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
 }
 
 .wrapper {

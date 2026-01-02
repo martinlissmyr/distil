@@ -183,6 +183,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
           required={step.required}
           minLength={step.minLength}
           maxLength={step.maxLength}
+          description={<>Tip: Use dictation to answer longer questions. Read about <a target="_blank" href="https://support.apple.com/sv-se/guide/mac-help/mh40584/mac">how to enable it</a> on you mac. Remember to select the correct language the first time you use dictation.</>}
         />
       )}
 

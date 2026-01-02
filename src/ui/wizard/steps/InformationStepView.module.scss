@@ -1,0 +1,14 @@
+.illustration {
+  margin: 0 auto;
+  opacity: .4;
+
+  :root[data-mantine-color-scheme='dark'] & {
+	  filter: #{'invert(100%)'};
+  }
+}
+
+.text {
+	max-width: 600px;
+	margin: 0 auto !important;
+	text-align: center;
+}
