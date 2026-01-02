@@ -152,7 +152,7 @@ Distil/
 │   │   ├── engine.ts     # Pure wizard engine
 │   │   ├── registry.ts   # Wizard discovery
 │   │   └── configs/      # Wizard definitions
-│   ├── components/
+│   ├── ui/
 │   │   ├── editor/
 │   │   │   └── editorConfigFactory.tsx  # Extension & toolbar factories
 │   │   ├── entities/     # Entity UI components

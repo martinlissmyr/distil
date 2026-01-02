@@ -2,8 +2,8 @@
 import { Editor } from '@tiptap/core';
 import type { JSONContent } from '@tiptap/core';
 
-import { metaExtensions } from '../components/editor/extensions/metaExtensions';
-import { proseExtensions } from '../components/editor/extensions/proseExtensions';
+import { metaExtensions } from '../ui/editor/extensions/metaExtensions';
+import { proseExtensions } from '../ui/editor/extensions/proseExtensions';
 
 // Singleton editor instances, reused across calls
 // We maintain separate instances for meta and prose to match their different schemas

@@ -236,31 +236,31 @@ The build process runs: `tsc && vite build && electron-builder`
 
 ### Component Structure
 
-**Layout** (`src/components/layout/`)
+**Layout** (`src/ui/layout/`)
 - `DistilLayout`: Main split-pane container (sidebar + main)
 - `Sidebar`: Navigation for projects/stories and story sections, dynamically generated from sections model
 - `AppContent`: Main content area with routing based on section component mapping from sections model
 - `DistilChrome`: Custom window chrome (minimize/maximize/close buttons)
 
-**Projects** (`src/components/projects/`)
+**Projects** (`src/ui/projects/`)
 - Grid view of all projects with drag-to-reorder support (@dnd-kit)
 
-**Stories** (`src/components/stories/`)
+**Stories** (`src/ui/stories/`)
 - Grid view of stories within a project
 - `StoryTextView`: Main prose editor
 - `StoryOutlineView`, `StoryBriefView`: MetaDoc editors for story planning
 
-**Entities** (`src/components/story/`)
+**Entities** (`src/ui/story/`)
 - `EntityIndexView`: Generic list/edit view for entity collections (characters, locations)
 - `EntityEditView`: Schema-driven form renderer for any entity type
 - Entity cards displaying lightweight projections from index
 - Navigation integration in story sidebar
 
-**Manifest** (`src/components/manifest/`)
+**Manifest** (`src/ui/manifest/`)
 - Root-level editor for author's style/tone guide
 - Used as context in all AI writing assistance
 
-**Common** (`src/components/common/`)
+**Common** (`src/ui/common/`)
 - `EntityCard`, `EntityGrid`: Reusable card/grid components
 - `EntityEditModal`: Generic rename/delete modal for projects and stories
 - `Modal`: Base modal component
