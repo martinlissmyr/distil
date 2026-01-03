@@ -2,6 +2,19 @@ Use the following interview answers to write the character description aspect:
 
 "Position in the world (livelihood, status, belonging)".
 
+# Basic character facts
+{{#if currentProjection.identity.name}}
+Name: {{currentProjection.identity.name}}
+{{/if}}
+{{#if currentProjection.identity.gender}}
+Gender: {{currentProjection.identity.gender}}
+{{/if}}
+{{#if currentProjection.identity.age}}
+Age: {{currentProjection.identity.age}}
+{{/if}}
+
+# Questions and answers
+
 ---
 
 Q: Vad gör du en helt vanlig dag, utan att något särskilt händer? Beskriv rytm och verklighet: var du är, vad du gör, vem du träffar, och vad som känns “normalt” i ditt liv.

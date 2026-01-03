@@ -150,11 +150,14 @@ export type WizardContext = {
   /** TipTap Editor instance or Input Ref to insert results into */
   targetEditor?: any;
   targetInputRef: RefObject;
-  
+
   llmContext?: {
     kinds: EditorKind[];
     markdown: string;
   };
+
+  /** Optional: Current entity projection for template interpolation */
+  currentProjection?: Record<string, any>;
 };
 
 /**

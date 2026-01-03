@@ -35,6 +35,7 @@ export function useEditorChat(props: EditorChatHookProps) {
       editor?: any;
       targetInputRef?: RefObject<any>;
       currentContent?: string;
+      currentProjection?: Record<string, any>;
       /** Override default chatConfig for this wizard invocation */
       chatConfig?: ChatConfig;
     }) => {
@@ -60,6 +61,7 @@ export function useEditorChat(props: EditorChatHookProps) {
         targetEditor: cmd.editor || editor,
         targetInputRef: cmd.targetInputRef || null,
         currentContent: cmd.currentContent,
+        currentProjection: cmd.currentProjection,
         llmContext: effectiveConfig.llmContext || { kinds: [], markdown: '' },
       } as any;
 

@@ -2,6 +2,19 @@ Use the following interview answers to write the character description aspect:
 
 "Inre orientering (det som tyst styr karaktärens val och beteenden)".
 
+# Basic character facts
+{{#if currentProjection.identity.name}}
+Name: {{currentProjection.identity.name}}
+{{/if}}
+{{#if currentProjection.identity.gender}}
+Gender: {{currentProjection.identity.gender}}
+{{/if}}
+{{#if currentProjection.identity.age}}
+Age: {{currentProjection.identity.age}}
+{{/if}}
+
+# Questions and answers
+
 ---
 
 Q: Vad gör du instinktivt för att känna dig trygg, lugn eller i balans?

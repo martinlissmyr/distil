@@ -37,6 +37,7 @@ export const characterType = defineType({
       label: 'Name',
       placeholder: 'Character name',
       schema: z.string().min(1, 'Name is required'),
+      includeInProjection: true,
     }),
 
     defineField({
@@ -46,6 +47,7 @@ export const characterType = defineType({
       label: 'Aliases',
       placeholder: 'Nicknames, aliases or internal names you use when referring to the character',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
 
     defineField({
@@ -55,6 +57,7 @@ export const characterType = defineType({
       label: 'Age',
       placeholder: 'The characters age (actual or approximate)',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
 
     defineField({
@@ -64,6 +67,7 @@ export const characterType = defineType({
       label: 'Gender',
       placeholder: 'Gender identity or self-description',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
 
     // --------------------
@@ -80,6 +84,7 @@ export const characterType = defineType({
         { value: 'significant', label: 'Significant' },
         { value: 'secondary', label: 'Secondary' },
       ],
+      includeInProjection: true,
     }),
 
     defineField({
@@ -89,6 +94,7 @@ export const characterType = defineType({
       label: 'Narrative role',
       placeholder: 'e.g. witness, catalyst, antagonist',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
 
     // --------------------
