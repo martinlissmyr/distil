@@ -1,16 +1,30 @@
 // src/ui/editor/chat/MarkdownContent.module.scss
 
+
+
 .markdown {
+  font-size: 14px; // default
+
+  &[data-size='sm'] {
+    font-size: 14px;
+  }
+
+  &[data-size='md'] {
+    font-size: 16px;
+  }
+
+  &[data-size='lg'] {
+    font-size: 18px;
+  }
 
   p {
     margin-top: 0;
-    font-size: 14px;
     margin-bottom: 12px;
     line-height: 1.6;
   }
 
   h1, h2, h3 {
-    font-size: 14px;
+    font-size: 1em;
     font-weight: 700;
     margin-bottom: 8px;
     margin-top: 24px;
@@ -18,6 +32,12 @@
 
     &:first-child {
       margin-top: 8px;
+    }
+  }
+
+  &[data-compact='false'] {
+    h1 {
+      font-size: 1.3em;
     }
   }
 
@@ -34,14 +54,12 @@
   }
 
   li {
-    font-size: 14px;
     margin-bottom: 4px;
     line-height: 1.6;
   }
 
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
     padding: 2px 6px;
     border-radius: 4px;
     background-color: var(--mantine-color-gray-1);

@@ -18,11 +18,6 @@ import { buildPromptForStep } from './promptBuilder';
 import { interpolate } from '../helpers/interpolate';
 
 export type WizardDeps = {
-  // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)
-  resolveMetaDocsMarkdown: (
-    ctx: WizardContext
-  ) => Promise<Partial<Record<MetaDocKey, string | null>>>;
-
   // Chat boundary
   sendChat: (args: {
     messages: Array<{ role: 'system' | 'user'; content: string }>;
@@ -60,7 +55,8 @@ export function createWizardEngine(deps: WizardDeps) {
 
   async function startWizard(
     wizardId: string,
-    context: WizardContext
+    context: WizardContext,
+    currentContent: string = '',
   ): Promise<Pick<WizardState, 'activeWizard' | 'wizardContext'>> {
     const config = getWizardConfig(wizardId);
 
@@ -78,7 +74,10 @@ export function createWizardEngine(deps: WizardDeps) {
         startedAt: Date.now(),
         hasUnsavedProgress: false,
       },
-      wizardContext: context,
+      wizardContext: {
+        currentContent,
+        ...context
+      },
     };
   }
 
@@ -187,19 +186,16 @@ export function createWizardEngine(deps: WizardDeps) {
     };
 
     try {
-      // Use extracted prompt builder
+      // Use prompt builder
       const { messages, summary } = await buildPromptForStep(
         step,
         activeWizard.answers,
         activeWizard.llmResults,
         wizardContext,
         {
-          resolveMetaDocsMarkdown: deps.resolveMetaDocsMarkdown,
           getWritingLanguage,
         }
       );
-
-      console.log(summary);
 
       if (deps.mockMode) {
         // mock mode
