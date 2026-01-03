@@ -493,11 +493,57 @@ Wizard outputs should:
 **Schema DSL System**:
 - ✅ Core schema types: FieldDef, GroupDef, DocumentTypeDef (`schemas/types.ts`)
 - ✅ Helper functions: `defineField()`, `defineType()` for type-safe definitions
-- ✅ Character schema with identity and role groups (`schemas/character.ts`)
+- ✅ Character schema with identity, role, and body groups (`schemas/character.ts`)
 - ✅ Nested field path support (e.g., `"identity.name"`)
-- ✅ Zod schema generation from DSL (`buildZodFromSchema` helper)
+- ✅ Zod schema generation from DSL (`buildZodFromSchema.ts` helper)
 - ✅ CharacterDoc and CharacterDocSchema generated from schema
 - ✅ Field metadata: labels, descriptions, placeholders, UI types, validation
+
+**Helper Utilities**:
+- ✅ Nested object utilities (`helpers/nestedObjectUtils.ts`): `getNestedValue()`, `setNestedValue()`
+- ✅ Zod helpers (`helpers/zodHelpers.ts`): `isZodFieldRequired()`, `getZodDefault()`, `getRequiredFields()`
+- ✅ Schema-driven validation in EntityEditView using `getRequiredFields()` from schema
+- ✅ Clean separation: navigation utilities in nestedObjectUtils, validation utilities in zodHelpers
+
+## Projection System
+
+**Purpose**: Lightweight markdown representations for context selection (avoids loading full entity docs)
+
+**Template-based approach**:
+- Templates stored as `.md` files in `src/models/entities/projectionTemplates/`
+- Current templates: `character.projection.md`, `location.projection.md`
+- Templates define human-readable markdown format for entities in AI prompts
+
+**Template syntax**:
+- Uses `interpolate()` helper from `src/helpers/stringUtils.ts`
+- Variable interpolation: `{{variableName}}` (e.g., `{{identity.name}}`, `{{role.tier}}`)
+- Conditional sections: `{{#if hasContent(field)}}...{{/if}}` - hides empty sections
+- Example: `{{#if hasContent(body.voiceSamples)}}` only shows voice section when content exists
+
+**Generation**:
+- `buildEntityProjectionMarkdown()` in `src/models/entities/entityProjectionUtils.ts`
+- Takes entity doc + entity type, returns formatted markdown string
+- Loads appropriate template for entity type
+- Interpolates entity field values into template
+- Evaluates conditionals to hide empty sections
+
+**Storage**:
+- `projection` field in `EntityIndexEntry` (optional)
+- Stored in entity index files: `{storyId}-characters.json`, `{storyId}-locations.json`
+- Not authoritative - can always be regenerated from entity docs
+
+**Trigger**:
+- Auto-generated when entity is saved via EntityIndexView
+- EntityEditView calls `buildEntityProjectionMarkdown()` after successful save
+- Updates entity index with new projection
+- Ensures projections stay in sync with entity docs
+
+**Benefits**:
+- **Token-efficient**: Only includes fields marked with `includeInProjection: true` in schema
+- **Flexible**: Templates can be edited without code changes - just modify `.md` files
+- **Context-aware**: `hasContent()` conditionals hide empty sections, reducing noise
+- **Regenerable**: Derived from entity docs, not authoritative - can be rebuilt at any time
+- **Human-readable**: Markdown format matches existing context system patterns
 
 **Core Data Model**:
 - ✅ EntityIndex type with simplified EntityIndexEntry (id, name, docRef, sortOrder only)
@@ -531,8 +577,9 @@ Wizard outputs should:
 - ✅ EntityEditView component (schema-driven form renderer)
 - ✅ Entity cards in grid view
 - ✅ Navigation integration (Characters and Locations sections in story sidebar)
-- ✅ Character fields: identity (name, aliases), role (tier, roleInStory), body fields (presence, voice, orientation, sensitivity, constraints)
+- ✅ Character fields: identity (name, aliases), role (tier, roleInStory), body fields (presence, voice, orientation, sensitivity, constraints, relationships)
 - ✅ Location schema with identity and role groups
+- ✅ SCSS module improvements: inline styles refactored to proper module structure
 
 **Schema-Driven Form Rendering**:
 - ✅ EntityEditView component renders forms dynamically from DocumentTypeDef schema
@@ -554,6 +601,7 @@ Wizard outputs should:
 
 **Current Implementation Summary**:
 - ✅ Character creation, editing, and storage fully functional with schema-driven UI
+- ✅ Full character schema implementation with relationships field (free-text format for LLM-friendly flexibility)
 - ✅ Location schema defined and ready for use (same pattern as characters)
 - ✅ Entity indices store lightweight projections (id, name, docRef) for efficient list views
 - ✅ Full entity docs stored separately with complete field data
@@ -561,8 +609,12 @@ Wizard outputs should:
 - ✅ Schema DSL as single source of truth for structure, validation, and UI metadata
 - ✅ EntityEditView dynamically renders forms for any entity type from schema
 - ✅ CharacterDoc and LocationDoc types auto-generated from schemas
+- ✅ Helper utilities for nested object navigation and Zod schema introspection
 - ✅ File storage with atomic writes and race condition protection
 - ✅ Properly positioned at `storyEntities` layer in LCRF hierarchy
+- ✅ Relationships field included in entity projections for context selection
+- ✅ Projection system fully implemented: template-based markdown generation for AI context
+- ✅ Auto-generation of projections on entity save with conditional sections for empty fields
 
 ---
 
@@ -570,11 +622,14 @@ Wizard outputs should:
 
 ### Immediate Next Steps
 
-**Extended Character Schema**:
-- Add remaining semantic groups to character schema:
-  - Relationships (connections, dynamics, valence)
-- Define fields with appropriate types (text, textarea, structured editors)
-- Auto-generate CharacterDoc type and validation from extended schema
+**Character Schema Enhancements**:
+- ✅ Relationships field added to character schema (body group)
+- Note: Free-text approach chosen over structured relationship model for:
+  - LLM-friendly natural language format
+  - Flexibility in describing complex relationship dynamics
+  - Simpler implementation avoiding bidirectional sync complexity
+  - Easier for authors to write and edit
+- Future: Consider structured relationship tracking if needed for advanced features
 
 ### Location Implementation
 
@@ -586,24 +641,10 @@ Wizard outputs should:
 
 ### Advanced Schema Features
 
-**Projection Generation**:
-- Current: Simple index with name only
-- Future: Generate markdown-formatted projections from schema
-- Use `field.index = true` hint to mark fields for projection inclusion
-- Potentially LLM-assisted projection generation based on schema structure
-
 **Schema Evolution**:
 - Version migration system for schema changes
 - Validation and migration of old CharacterDocs to new schema versions
 - Backwards compatibility for entity docs with outdated schemas
-
-### Relationship Management
-
-**Structured Relationship Editing**:
-- Relationship field type in schema DSL
-- Custom editor component for relationship graphs
-- Domain, valence, strength fields
-- Bidirectional relationship consistency
 
 ### Context Integration
 
@@ -613,13 +654,7 @@ Wizard outputs should:
 - LLM-based entity selection for ambiguous cases
 - Entity-specific ephemeral messages and hints
 
-### Entity Wizards & Advanced Features
-
-**Wizards**:
-- Character voice builder wizard
-- Relationship mapper wizard
-- Character arc planner wizard
-- All wizards use schema metadata for guidance
+### Entity Advanced Features
 
 **Advanced Features**:
 - Entity consistency checking

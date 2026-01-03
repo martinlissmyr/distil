@@ -10,10 +10,12 @@ import type { LocationDoc } from '../../models/entities/schemas/location';
 import { EntityEditView } from './EntityEditView';
 import { characterType } from '../../models/entities/schemas/character';
 import { locationType } from '../../models/entities/schemas/location';
+import type { DocumentTypeDef } from '../../models/entities/schemas/types';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 import { EntityGrid } from '../common/EntityGrid';
 import { TopNavigation } from '../common/TopNavigation';
+import { buildEntityProjectionMarkdown, loadProjectionTemplate } from '../../helpers/entityProjectionUtils';
 
 type EntityIndexViewProps = {
   projectId: string;
@@ -84,9 +86,39 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
     setEditingEntityDoc(null);
   };
 
+  /**
+   * Extracts the entity name from the document using the schema.
+   * Looks for fields ending in .name or named 'name'.
+   */
+  const extractEntityName = (doc: Record<string, any>, schema: DocumentTypeDef<any>): string => {
+    // First try to find a field ending in .name
+    for (const field of schema.fields) {
+      if (field.name.endsWith('.name')) {
+        const keys = field.name.split('.');
+        let value = doc;
+        for (const key of keys) {
+          value = value?.[key];
+          if (value === undefined || value === null) break;
+        }
+        if (typeof value === 'string' && value.trim()) {
+          return value;
+        }
+      }
+    }
+
+    // Fallback to top-level name field
+    const nameField = schema.fields.find(f => f.name === 'name');
+    if (nameField && typeof doc.name === 'string' && doc.name.trim()) {
+      return doc.name;
+    }
+
+    return 'Unnamed';
+  };
+
   const handleSaveEntity = async (doc: Partial<CharacterDoc | LocationDoc>) => {
     try {
       const entityType = docKind === 'characters' ? 'character' : 'location';
+      const schema = docKind === 'characters' ? characterType : locationType;
 
       // Save full entity doc to disk
       const saveDocResponse = await client.saveEntityDoc(
@@ -102,7 +134,13 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         throw new Error('Failed to save entity doc');
       }
 
-      // Update entity index with minimal projection
+      // Load projection template
+      const template = await loadProjectionTemplate(entityType);
+
+      // Generate projection markdown
+      const projectionMarkdown = buildEntityProjectionMarkdown(doc as Record<string, any>, schema, template);
+
+      // Update entity index with projection
       const currentIndex: EntityIndex = entityIndex || {
         version: 1,
         scope: { kind: 'story', projectId, storyId },
@@ -110,13 +148,14 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
         updatedAt: new Date().toISOString(),
       };
 
-      // Extract name from nested identity or top-level
-      const name = (doc as any).identity?.name || (doc as any).name || 'Unnamed';
+      // Extract name using schema
+      const name = extractEntityName(doc as Record<string, any>, schema);
 
-      // Create minimal index entry
+      // Create index entry with projection
       const entry: EntityIndexEntry = {
         id: doc.id!,
         name,
+        projection: projectionMarkdown,
         docRef: {
           type: entityType,
           id: doc.id!,
