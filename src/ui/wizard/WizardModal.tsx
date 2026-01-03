@@ -8,7 +8,6 @@ import { getCurrentStep } from '../../wizards/navigation';
 import { QuestionStepView } from './steps/QuestionStepView';
 import { InformationStepView } from './steps/InformationStepView';
 import { LlmProcessingStepView } from './steps/LlmProcessingStepView';
-import { LlmApprovalStepView } from './steps/LlmApprovalStepView';
 import type { QuestionStep, LlmProcessingStep, LlmApprovalStep, InformationStep } from '../../wizards/types';
 import { TopNavigation } from '../common/TopNavigation';
 
