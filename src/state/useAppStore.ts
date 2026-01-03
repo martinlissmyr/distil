@@ -3,14 +3,12 @@ import { create } from 'zustand';
 import { client } from '../api/client';
 import { metaJsonToMarkdown } from '../helpers/markdownUtils';
 import type { MetaScope, MetaDocKey, MetaDocState } from '../types/metaDoc';
-import type { UiSchemaSetting, UiSchema } from '../types/ui';
+import type { UiSchemaSetting } from '../types/ui';
 import { DEFAULT_UI_SCHEMA_SETTING, SUPPORTED_UI_SCHEMA_SETTINGS } from '../types/ui';
 
 import type {
   WizardState,
   WizardActions,
-  WizardContext,
-  LlmProcessingStep,
 } from '../wizards/types';
 import { createWizardActions } from '../wizards/storeGlue';
 

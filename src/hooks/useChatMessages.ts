@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import type { EditorKind } from '../types/chat';
 import {
   getInitialAssistantHint,
-  type SuggestionAction,
+  type LocalizedSuggestionAction,
   type DocState,
 } from '../chat/chatHints';
 import { useAppStore, metaId } from '../state/useAppStore';
@@ -20,7 +20,7 @@ export type ChatMessage = {
    */
   ephemeral?: boolean;
 
-  suggestions?: SuggestionAction[];
+  suggestions?: LocalizedSuggestionAction[];
 };
 
 interface UseChatMessagesOptions {

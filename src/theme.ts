@@ -1,14 +1,16 @@
-import { createTheme, mergeMantineTheme } from '@mantine/core';
+import { createTheme, mergeMantineTheme, DEFAULT_THEME } from '@mantine/core';
 
-const base = createTheme({
+const baseOverrides = {
   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
   defaultRadius: 'xl',
   primaryShade: { light: 5, dark: 5 },
-});
+  focusRing: 'auto',
+} as const;
 
 export const defaultTheme = mergeMantineTheme(
-  base,
+  DEFAULT_THEME,
   createTheme({
+    ...baseOverrides,
     primaryColor: 'gray',
     white: '#ffffff',
     black: '#0f1115',
@@ -48,8 +50,9 @@ export const defaultTheme = mergeMantineTheme(
 );
 
 export const proseTheme = mergeMantineTheme(
-  base,
+  DEFAULT_THEME,
   createTheme({
+    ...baseOverrides,
     primaryColor: 'orangeWarm',
     white: '#efefef',
     black: '#1a1715',
@@ -84,8 +87,9 @@ export const proseTheme = mergeMantineTheme(
 );
 
 export const metaTheme = mergeMantineTheme(
-  base,
+  DEFAULT_THEME,
   createTheme({
+    ...baseOverrides,
     // Primary accent for prose mode
     primaryColor: 'inkBlue',
     white: '#E9EDF3',

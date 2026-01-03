@@ -7,7 +7,7 @@
  */
 
 import type { DocKindId } from '../docs';
-import type { uiMode } from '../../types/ui';
+import type { UiMode } from '../../types/ui';
 
 /** Scope determines where a section appears in the navigation hierarchy */
 export type SectionScope = 'root' | 'story';
@@ -18,7 +18,7 @@ type BaseSectionConfig = {
   readonly id: string;
 
   /** Unique identifier for the section */
-  readonly uiMode: uiMode;
+  readonly uiMode: UiMode;
 
   /** Scope determines navigation hierarchy level */
   readonly scope: SectionScope;
@@ -64,7 +64,7 @@ export type SectionConfig = StorySectionConfig | RootSectionConfig;
  */
 export const sectionConfigs = {
   // ─── Story Sections ──────────────────────────────────────────────
-  // Shows text first, then meta docs rrdered by LCRF layers: concept → structure → world → entities 
+  // Shows text first, then meta docs rrdered by LCRF layers: concept → structure → world → entities
 
   prose: {
     id: 'prose',
@@ -75,7 +75,7 @@ export const sectionConfigs = {
     order: 1,
     component: 'StoryTextView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   brief: {
     id: 'brief',
@@ -86,7 +86,7 @@ export const sectionConfigs = {
     order: 2,
     component: 'StoryBriefView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   outline: {
     id: 'outline',
@@ -97,7 +97,7 @@ export const sectionConfigs = {
     order: 3,
     component: 'StoryOutlineView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   world: {
     id: 'world',
@@ -108,7 +108,7 @@ export const sectionConfigs = {
     order: 4,
     component: 'StoryWorldView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   characters: {
     id: 'characters',
@@ -119,7 +119,7 @@ export const sectionConfigs = {
     order: 5,
     component: 'EntityIndexView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   locations: {
     id: 'locations',
@@ -130,7 +130,7 @@ export const sectionConfigs = {
     order: 6,
     component: 'EntityIndexView',
     isImplemented: true,
-  },
+  } as const as StorySectionConfig,
 
   // ─── Root Sections ───────────────────────────────────────────────
 
@@ -142,7 +142,7 @@ export const sectionConfigs = {
     order: 1,
     component: 'ProjectsView',
     isImplemented: true,
-  },
+  } as const as RootSectionConfig,
 
   manifest: {
     id: 'manifest',
@@ -153,7 +153,7 @@ export const sectionConfigs = {
     order: 2,
     component: 'ManifestView',
     isImplemented: true,
-  },
+  } as const as RootSectionConfig,
 
   playground: {
     id: 'playground',
@@ -164,7 +164,7 @@ export const sectionConfigs = {
     component: 'PlaygroundView',
     isImplemented: true,
     devOnly: true,
-  },
+  } as const as RootSectionConfig,
 } as const;
 
 // ─── Derived Types ───────────────────────────────────────────────────
@@ -219,7 +219,7 @@ export function getRootSections(options?: {
 
   return Object.values(sectionConfigs)
     .filter((config): config is RootSectionConfig => config.scope === 'root')
-    .filter(config => !config.devOnly || isDevMode)
+    .filter(config => !(config.devOnly ?? false) || isDevMode)
     .filter(config => !implementedOnly || config.isImplemented)
     .sort((a, b) => a.order - b.order);
 }
@@ -227,8 +227,9 @@ export function getRootSections(options?: {
 /**
  * Get the doc kind for a section (if it has one)
  */
-export function getSectionDocKind(id: SectionId): DocKindId | undefined {
-  return sectionConfigs[id].docKind;
+export function getSectionDocKind(id: SectionId): DocKindId | string | undefined {
+  const config = sectionConfigs[id];
+  return 'docKind' in config ? config.docKind : undefined;
 }
 
 /**
@@ -242,5 +243,7 @@ export function isSectionImplemented(id: SectionId): boolean {
  * Get section by doc kind (reverse lookup)
  */
 export function getSectionByDocKind(docKind: DocKindId): SectionConfig | undefined {
-  return Object.values(sectionConfigs).find(config => config.docKind === docKind);
+  return Object.values(sectionConfigs).find(
+    config => 'docKind' in config && config.docKind === docKind
+  );
 }

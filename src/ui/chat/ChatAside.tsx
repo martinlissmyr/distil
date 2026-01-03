@@ -3,7 +3,7 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
-import type { SuggestionAction } from '../../chat/chatHints';
+import type { LocalizedSuggestionAction } from '../../chat/chatHints';
 import type { DocRefWithKind } from '../../types/docRef';
 
 import { useChatMessages } from '../../hooks/useChatMessages';
@@ -41,7 +41,7 @@ type ChatAsideProps = {
   /**
    * Called for any suggestion action (for analytics / orchestration).
    */
-  onSuggestionAction?: (action: SuggestionAction) => void;
+  onSuggestionAction?: (action: LocalizedSuggestionAction) => void;
 
   /**
    * Existing navigation callback (kept as-is).
@@ -109,7 +109,6 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
     fullTextMarkdown,
     selectionMarkdown = '',
     hasSelection = false,
-    isTextLoaded,
     onSuggestionAction,
     onNavigate,
     onOpenWizard,
@@ -193,7 +192,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
     };
   }, []);
 
-  const handleSuggestionClick = (action: SuggestionAction) => {
+  const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Always notify parent if it wants to observe actions
     onSuggestionAction?.(action);
 

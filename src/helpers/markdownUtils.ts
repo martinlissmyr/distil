@@ -51,7 +51,7 @@ export function jsonToMarkdown(
     : getProseMarkdownEditor();
 
   // Replace content with the provided JSON
-  editor.commands.setContent(doc, false);
+  editor.commands.setContent(doc, { emitUpdate: false });
 
   // Get markdown from the extension
   // Different TipTap versions expose this differently, so we try both
