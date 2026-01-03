@@ -1,0 +1,102 @@
+{
+  "id": "character-external-constraints",
+  "version": "1.0.0",
+  "title": "Karaktärens yttre begränsningar",
+  "description": "En karaktärsintervju (hot seat) som hjälper dig fånga vilka omständigheter, personer och strukturer som faktiskt begränsar karaktärens handlingsutrymme.",
+  "targetDoc": "characters",
+  "outputTemplate": "{{external_constraints}}",
+  "steps": [
+    {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Karaktärsintervju: yttre begränsningar",
+      "illustration": "interview-constraints",
+      "description": "# I den här guiden svarar du som om du intervjuade din karaktär.\n\nSyftet är att ringa in vad som faktiskt begränsar karaktärens val: personer, regler, system, resurser och konsekvenser. Det här handlar om yttre omständigheter — inte om vad karaktären \"vill\" eller \"borde\".\n\nSvara konkret och vardagsnära. Skriv hellre specifika exempel (situationer, platser, personer, kostnader) än stora ord.\n\n*OBS: Om du redan har en beskrivning kommer den att vävas in i resultatet från den här guiden.*"
+    },
+    {
+      "id": "non_negotiables",
+      "type": "question",
+      "title": "Det du måste ta hänsyn till",
+      "question": "Vilka saker i ditt liv måste du ta hänsyn till, oavsett vad du själv vill?",
+      "description": "Tänk på sådant som inte är valbara: ansvar, skyldigheter, överenskommelser, regler eller beroenden som alltid ligger i bakgrunden.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag måste leverera X varje vecka. Jag måste vara hemma vid en viss tid. Jag kan inte säga nej till Y utan att allt rasar.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 700
+    },
+    {
+      "id": "limiting_people",
+      "type": "question",
+      "title": "Personer som begränsar dig",
+      "question": "Finns det någon eller några personer som direkt begränsar vad du kan göra eller välja?",
+      "description": "Det kan vara familj, chefer, beskyddare, övervakare, barn, äldre, skuldsättare eller någon du är beroende av. Beskriv hur de begränsar dig i praktiken.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. X kontrollerar pengarna. Y bestämmer var jag får gå. Z blir farlig om jag trotsar dem.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 700
+    },
+    {
+      "id": "institutions_and_rules",
+      "type": "question",
+      "title": "Institutioner och regler",
+      "question": "Finns det regler, system eller institutioner som sätter tydliga gränser för ditt liv?",
+      "description": "Lagar, traditioner, klassystem, skrån, religion, myndigheter, magiska regler, tekniska system — sådant som inte går att ignorera utan konsekvenser.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag behöver tillstånd för att resa. Jag får inte tala i vissa rum. Det finns regler som gör att jag alltid måste ha någon med mig.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 700
+    },
+    {
+      "id": "resource_constraints",
+      "type": "question",
+      "title": "Brist på resurser",
+      "question": "Vad saknar du som skulle göra dina val enklare, men som du inte har tillgång till?",
+      "description": "Pengar, tid, information, kontakter, skydd, utbildning, status, hälsa eller transport. Fokusera på vad bristen hindrar dig från att göra.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag saknar pengar för att flytta. Jag saknar information för att kunna lita på någon. Jag saknar skydd och vågar därför inte säga emot.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 700
+    },
+    {
+      "id": "cost_of_defiance",
+      "type": "question",
+      "title": "Det som kostar att trotsa",
+      "question": "Vad händer om du trotsar det som förväntas av dig?",
+      "description": "Tänk konsekvenser: straff, utfrysning, våld, skuld, förlust av trygghet, rykte, arbete eller skydd. Beskriv vad som brukar ske (eller vad du är rädd ska ske).",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag blir av med jobbet. Jag förlorar tillgång till platsen. De vänder sig emot mig. Någon jag bryr mig om drabbas.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 800
+    },
+    {
+      "id": "cannot_leave",
+      "type": "question",
+      "title": "Det du inte kan lämna",
+      "question": "Finns det något i ditt liv som du inte kan lämna bakom dig, även om du skulle vilja?",
+      "description": "Ansvar, personer, plats, roll, skuld, löften eller omständigheter som håller dig kvar. Beskriv vad som gör det omöjligt eller för dyrt att lämna.",
+      "questionType": "textarea",
+      "placeholder": "t.ex. Jag kan inte lämna X utan att svika ett löfte. Jag kan inte lämna platsen för att någon väntar på mig. Jag är fast i ett avtal jag inte kan bryta.",
+      "required": false,
+      "minLength": 0,
+      "maxLength": 800
+    },
+    {
+      "id": "external_constraints_synthesis",
+      "type": "llm-processing",
+      "title": "Sammanfattade yttre begränsningar",
+      "description": "Här är en sammanhängande beskrivning av vad som begränsar karaktärens handlingsutrymme.",
+      "hidden": false,
+      "prompt": {
+        "system": "character-external-constraints-synthesis-system",
+        "user": "character-external-constraints-synthesis-user"
+      },
+      "resultKey": "external_constraints",
+      "extractJson": false
+    }
+  ]
+}

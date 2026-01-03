@@ -168,6 +168,7 @@ export const characterType = defineType({
         "Forces outside the character that shape what's possible — people, institutions, environment, obligations, social context, time, money, health, etc. Q: What circumstances, structures, or obligations narrow their range of choices?",
       placeholder: '',
       minRows: 4,
+      wizard: 'character-external-constraints',
       schema: z.string().optional(),
     }),
 

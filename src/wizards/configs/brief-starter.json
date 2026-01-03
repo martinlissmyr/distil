@@ -7,6 +7,13 @@
   "outputTemplate": "{{brief_draft}}",
   "steps": [
     {
+      "id": "method_intro",
+      "type": "information",
+      "title": "Skapa ett utkast till en brief",
+      "illustration": "questionnaire-brief",
+      "description": "Du kommer nu få svara på några korta frågor som tillsammans blir ett första utkast till din story brief.\n\nSvara hellre snabbt än perfekt. En mening, nyckelord eller röriga anteckningar räcker. Om du inte vet exakt än — skriv det du lutar åt, eller hoppa över och gå vidare.\n\nTänk på briefen som ett ankare: den ska fånga form, ton, kärnidé och vad du vill att läsaren ska känna. Du kan alltid justera allt senare."
+    },
+    {
       "id": "story_form",
       "type": "question",
       "title": "Berättelsens form",

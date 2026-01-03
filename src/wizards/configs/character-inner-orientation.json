@@ -11,7 +11,7 @@
       "type": "information",
       "title": "Karaktärsintervju: inre orientering",
       "illustration": "questionnaire-inner",
-      "description": "I den här guiden svarar du som om du intervjuade din karaktär.\n\nSyftet är inte att formulera teman eller förklaringar, utan att förstå vad som faktiskt styr karaktärens val i vardagen: vad som känns rätt, vad som skaver, vad som lugnar, och vad som drar.\n\nSvara konkret och vardagsnära. Små exempel, preferenser och reaktioner är ofta mer användbara än stora ord."
+      "description": "# I den här guiden svarar du som om du intervjuade din karaktär.\n\nSyftet är inte att formulera teman eller förklaringar, utan att förstå vad som faktiskt styr karaktärens val i vardagen: vad som känns rätt, vad som skaver, vad som lugnar, och vad som drar.\n\nSvara konkret och vardagsnära. Små exempel, preferenser och reaktioner är ofta mer användbara än stora ord.\n\n*OBS: Om du redan har en beskrivning kommer den att vävas in i resultatet från den här guiden.*"
     },
     {
       "id": "default_comfort",
