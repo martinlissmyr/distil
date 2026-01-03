@@ -302,7 +302,6 @@ The build process runs: `tsc && vite build && electron-builder`
 *Schema DSL:*
 - **DocumentTypeDef**: Defines entity type with name, version, groups, and fields
 - **FieldDef**: Defines individual fields with:
-  - Nested path support (e.g., `"identity.name"`)
   - UI metadata (label, description, placeholder, type)
   - Validation (Zod schema)
   - Group assignment for organized rendering
