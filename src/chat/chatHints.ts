@@ -183,7 +183,7 @@ async function renderIntro(
 type ActionStrategy = (ctx: HintContext) => SuggestionAction[];
 
 /* PROSE */
-const proseActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
+const proseActions: ActionStrategy = ({ upstream, language, kind }) => {
   const out: SuggestionAction[] = [];
 
   const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
@@ -195,7 +195,7 @@ const proseActions: ActionStrategy = ({ selfState, upstream, language, kind }) =
 };
 
 /* MANIFEST */
-const manifestActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
+const manifestActions: ActionStrategy = ({ selfState, language }) => {
   const out: SuggestionAction[] = [];
   if (isEmpty(selfState)) out.push(localizeAction(actions.manifestStart, language));
   if (hasContent(selfState)) out.push(localizeAction(actions.manifestGaps, language));

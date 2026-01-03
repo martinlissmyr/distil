@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
@@ -7,7 +7,6 @@ import '@mantine/core/styles.css';
 import { defaultTheme, metaTheme, proseTheme } from './theme';
 import { useNavigation } from './hooks/useNavigation';
 import { getSectionConfig } from './models/sections';
-import type { uiMode } from './types/ui/';
 
 function Root() {
   const { resolved } = useResolvedUiSchema();

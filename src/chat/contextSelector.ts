@@ -107,11 +107,6 @@ export type ContextNeeds = {
   needsWorld: boolean;
 };
 
-// For compatibility; not really used directly any more, but harmless:
-type HeuristicResult = ContextNeeds & {
-  confidence: number; // 0-1, how confident we are in this result
-};
-
 type ContextKind = MetaDocKey;
 
 export type HeuristicCheckResult = {
