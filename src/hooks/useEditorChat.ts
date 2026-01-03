@@ -1,3 +1,4 @@
+// src/hooks/useEditorChat.ts
 import { useCallback } from 'react';
 import { useAppStore } from '../state/useAppStore';
 import type { WizardContext } from '../wizards/types';
@@ -6,13 +7,17 @@ import { useNavigation } from './useNavigation';
 import type { RefObject } from 'react';
 
 export type EditorChatHookProps = {
+  /**
+   * Optional: Default chat config with projectId/storyId.
+   * Can be overridden per-wizard-call via handleOpenWizard's chatConfig param.
+   */
   chatConfig?: ChatConfig;
   /**
    * Optional: pass the TipTap editor for wizard integration.
    * If not provided, wizards will still work but without direct editor access.
    */
   editor?: any;
-  targetInputRef: RefObject;
+  targetInputRef?: RefObject<any>;
 };
 
 /**
@@ -25,15 +30,25 @@ export function useEditorChat(props: EditorChatHookProps) {
   const { setStorySection, goToManifest } = useNavigation();
 
   const handleOpenWizard = useCallback(
-    (cmd: { wizardId: string; editor?: any; targetInputRef?: RefObject; }) => {
+    (cmd: {
+      wizardId: string;
+      editor?: any;
+      targetInputRef?: RefObject<any>;
+      currentContent?: string;
+      /** Override default chatConfig for this wizard invocation */
+      chatConfig?: ChatConfig;
+    }) => {
       if (!startWizard || typeof startWizard !== 'function') {
         console.warn('[useEditorChat] startWizard not found on store');
         return;
       }
 
+      // Use per-call chatConfig if provided, otherwise fall back to hook's chatConfig
+      const effectiveConfig = cmd.chatConfig || chatConfig || {};
+
       // Build ctx.ref from chatConfig or doc
-      const projectId = (chatConfig as any)?.projectId as string | undefined;
-      const storyId = (chatConfig as any)?.storyId as string | undefined;
+      const projectId = (effectiveConfig as any)?.projectId as string | undefined;
+      const storyId = (effectiveConfig as any)?.storyId as string | undefined;
 
       const ref =
         projectId && storyId
@@ -44,6 +59,8 @@ export function useEditorChat(props: EditorChatHookProps) {
         ref,
         targetEditor: cmd.editor || editor,
         targetInputRef: cmd.targetInputRef || null,
+        currentContent: cmd.currentContent,
+        llmContext: effectiveConfig.llmContext || { kinds: [], markdown: '' },
       } as any;
 
       startWizard(cmd.wizardId, ctx);
