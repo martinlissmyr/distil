@@ -1,0 +1,132 @@
+// src/helpers/zodHelpers.ts
+import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
+
+/**
+ * Checks if a Zod schema represents a required field.
+ *
+ * Returns false for:
+ * - ZodOptional: `.optional()`
+ * - ZodNullable: `.nullable()`
+ * - ZodDefault with optional/nullable inner types: `.optional().default(...)` or `.default(...).optional()`
+ *
+ * Returns true for:
+ * - ZodString with .min(1): `.string().min(1, 'Name is required')`
+ * - ZodEnum: `.enum(['a', 'b'])`
+ * - Other non-optional, non-nullable, non-defaulted types
+ *
+ * Handles nested ZodEffects and ZodDefault wrapping.
+ *
+ * @example
+ * isZodFieldRequired(z.string().min(1, 'Name is required')) // true
+ * isZodFieldRequired(z.string().optional()) // false
+ * isZodFieldRequired(z.enum(['a', 'b'])) // true
+ * isZodFieldRequired(z.enum(['a', 'b']).default('a')) // false (has default)
+ * isZodFieldRequired(z.string().min(1).optional()) // false
+ * isZodFieldRequired(z.string().nullable()) // false
+ *
+ * @param schema - A Zod schema object
+ * @returns true if the field is required, false if optional/nullable/has default
+ */
+export function isZodFieldRequired(schema: any): boolean {
+  try {
+    if (!schema?._def) return false;
+
+    const typeName = schema._def.typeName;
+
+    // Explicitly NOT required types
+    if (typeName === 'ZodOptional') return false;
+    if (typeName === 'ZodNullable') return false;
+
+    // ZodDefault: check if inner type is optional/nullable
+    if (typeName === 'ZodDefault') {
+      const innerType = schema._def.innerType;
+      if (!innerType) return false; // Has default, so not required
+
+      // If the inner type is optional or nullable, it's not required
+      if (innerType._def?.typeName === 'ZodOptional') return false;
+      if (innerType._def?.typeName === 'ZodNullable') return false;
+
+      // Otherwise, even with a default, it's not required (default value satisfies requirement)
+      return false;
+    }
+
+    // ZodEffects: unwrap and check inner schema
+    if (typeName === 'ZodEffects') {
+      const innerSchema = schema._def.schema;
+      if (innerSchema) return isZodFieldRequired(innerSchema);
+    }
+
+    // ZodString with .min(1) is required
+    if (typeName === 'ZodString') {
+      const checks = schema._def.checks;
+      if (Array.isArray(checks)) {
+        const hasMinLength = checks.some((check: any) => check.kind === 'min' && check.value >= 1);
+        if (hasMinLength) return true;
+      }
+      // Plain z.string() without .min(1) is not inherently required
+      return false;
+    }
+
+    // ZodEnum is required (no inherent default unless .default() is called)
+    if (typeName === 'ZodEnum') return true;
+
+    // Other types without explicit optional/nullable/default are considered required
+    // This includes ZodNumber, ZodBoolean, ZodObject, ZodArray, etc.
+    return true;
+  } catch {
+    // If introspection fails, assume not required to avoid false positives
+    return false;
+  }
+}
+
+/**
+ * Extracts the default value from a Zod schema, if one exists.
+ * Works with z.string().default(...), z.enum(...).default(...), etc.
+ *
+ * @example
+ * getZodDefault(z.string().default('hello')) // returns 'hello'
+ * getZodDefault(z.enum(['a', 'b']).default('a')) // returns 'a'
+ * getZodDefault(z.string()) // returns undefined
+ *
+ * @param schema - A Zod schema object
+ * @returns The default value if defined, otherwise undefined
+ */
+export function getZodDefault(schema: any): any {
+  try {
+    // zod default() wraps with ZodDefault and stores defaultValue()
+    if (schema?._def?.typeName === 'ZodDefault' && typeof schema._def.defaultValue === 'function') {
+      return schema._def.defaultValue();
+    }
+    // sometimes you might have optional(default(...)) etc
+    if (schema?._def?.innerType) return getZodDefault(schema._def.innerType);
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+/**
+ * Returns all fields from a DocumentTypeDef where the schema is marked as required.
+ *
+ * Uses isZodFieldRequired() to determine if a field is required based on its Zod schema.
+ *
+ * @example
+ * const schema = defineType({
+ *   name: 'example',
+ *   title: 'Example',
+ *   version: 1,
+ *   fields: [
+ *     defineField({ name: 'required', label: 'Required', type: 'text', schema: z.string().min(1) }),
+ *     defineField({ name: 'optional', label: 'Optional', type: 'text', schema: z.string().optional() }),
+ *   ]
+ * });
+ * getRequiredFields(schema) // returns [{ name: 'required', ... }]
+ *
+ * @param schema - A DocumentTypeDef schema definition
+ * @returns Array of FieldDef objects that are marked as required
+ */
+export function getRequiredFields<TGroups extends readonly any[] | undefined = undefined>(
+  schema: DocumentTypeDef<TGroups>
+): FieldDef[] {
+  return schema.fields.filter((field) => isZodFieldRequired(field.schema)) as FieldDef[];
+}

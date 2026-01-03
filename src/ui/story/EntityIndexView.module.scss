@@ -89,3 +89,30 @@
   display: flex;
   flex-direction: column;
 }
+
+.contentWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+.scrollAreaWrapper {
+  flex: 1;
+  height: 100%;
+}
+
+.editorContent {
+  padding-top: 120px;
+  padding-bottom: 40px;
+}
+
+.chatAsideWrapper {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  right: var(--aside-offset);
+  width: calc(100% - var(--aside-offset) - (var(--editor-gutter) * 2 + var(--editor-width)));
+  z-index: 20;
+  display: flex;
+}

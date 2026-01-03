@@ -1,12 +1,6 @@
 // src/helpers/entityProjectionUtils.ts
 import type { DocumentTypeDef } from '../models/entities/schemas/types';
-
-/**
- * Helper to get nested value from object using dot path
- */
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
-}
+import { getNestedValue } from './nestedObjectUtils';
 
 /**
  * Builds a projection object from an entity document based on schema fields
