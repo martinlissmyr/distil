@@ -99,7 +99,7 @@ Entities use a **lightweight schema definition system** inspired by Sanity CMS. 
   - `group`: Optional semantic grouping
   - `schema`: Zod validation (single source of truth)
   - `minRows`, `options`: UI hints for textarea/select types
-  - `index`: Future hint for projection inclusion
+  - `includeInProjection`: Hint for projection inclusion
 - **GroupDef**: Semantic field grouping with label and description
 - **DocumentTypeDef**: Complete document schema with name, version, groups, and fields
 - Helper functions: `defineField()` and `defineType()` for type-safe definitions
@@ -572,9 +572,7 @@ Wizard outputs should:
 
 **Extended Character Schema**:
 - Add remaining semantic groups to character schema:
-  - Relationships group (connections, dynamics, valence)
-  - Arc group (startState, changeVector, endState, keyTurns)
-  - Facts group (background, history, context)
+  - Relationships (connections, dynamics, valence)
 - Define fields with appropriate types (text, textarea, structured editors)
 - Auto-generate CharacterDoc type and validation from extended schema
 
