@@ -42,7 +42,7 @@ export function useChatScroll(messages: ChatMessage[]) {
     }
 
     // Find the last user message
-    const lastUserMessageIndex = messages.findLastIndex((m) => m.role === 'user');
+    const lastUserMessageIndex = messages.findLastIndex((m: ChatMessage) => m.role === 'user');
     if (lastUserMessageIndex === -1) {
       setSpacerHeight(0);
       return;
@@ -105,7 +105,7 @@ export function useChatScroll(messages: ChatMessage[]) {
     if (!vp || messages.length === 0) return;
 
     // Find the last user message
-    const lastUserMessageIndex = messages.findLastIndex((m) => m.role === 'user');
+    const lastUserMessageIndex = messages.findLastIndex((m: ChatMessage) => m.role === 'user');
     if (lastUserMessageIndex === -1) return;
 
     // Wait for DOM to update

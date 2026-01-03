@@ -7,6 +7,7 @@ import '@mantine/core/styles.css';
 import { defaultTheme, metaTheme, proseTheme } from './theme';
 import { useNavigation } from './hooks/useNavigation';
 import { getSectionConfig } from './models/sections';
+import type { UiMode } from './types/ui';
 
 function Root() {
   const { resolved } = useResolvedUiSchema();

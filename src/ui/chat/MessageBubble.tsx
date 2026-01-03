@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '../common/Icon';
 import { Box, Group, Text, Button, Stack } from '@mantine/core';
-import type { SuggestionAction } from '../../chat/chatHints';
+import type { LocalizedSuggestionAction } from '../../chat/chatHints';
 import type { ChatMessage } from '../../hooks/useChatMessages';
 import { MarkdownContent } from '../common/MarkdownContent';
 
 type MessageBubbleProps = {
   message: ChatMessage;
-  onSuggestionClick?: (action: SuggestionAction) => void;
+  onSuggestionClick?: (action: LocalizedSuggestionAction) => void;
 };
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -83,7 +83,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     return () => clearInterval(interval);
   }, [isTypingComplete, visibleSuggestions.length]);
 
-  const handleSuggestionClick = (action: SuggestionAction) => {
+  const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Remove button locally immediately
     setHiddenSuggestionIds((prev) => {
       const next = new Set(prev);
