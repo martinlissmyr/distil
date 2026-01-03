@@ -9,6 +9,9 @@ import type { WizardId } from '../../../wizards/types';
 
 export type FieldType = 'text' | 'textarea' | 'select';
 
+export type FieldRole =
+  | 'primaryTitle';        // what you show in lists, breadcrumbs, headers
+
 export type FieldOption = { value: string; label: string };
 
 export type GroupDef = {
@@ -27,12 +30,13 @@ export type GroupId<TGroups> =
 
 export type FieldDef<TGroup extends string = string> = {
   name: string;
+  fieldRole?: FieldRole;
 
   // UI copy
   label: string;
   description?: string;
   placeholder?: string;
-
+  
   // UI behavior
   type: FieldType;
   group?: TGroup;

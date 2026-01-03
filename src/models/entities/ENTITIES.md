@@ -93,7 +93,8 @@ Entities use a **lightweight schema definition system** inspired by Sanity CMS. 
 
 **Core Schema Types** (`schemas/types.ts`):
 - **FieldDef**: Defines individual fields with:
-  - `name`: Field path (supports nesting like `"identity.name"`)
+  - `name`: Field name (flat structure, no dot notation)
+  - `fieldRole`: Optional role identifier (e.g., `'primaryTitle'` for main entity identifier)
   - `label`, `description`, `placeholder`: UI copy
   - `type`: `'text' | 'textarea' | 'select'` (determines input component)
   - `group`: Optional semantic grouping
@@ -106,22 +107,22 @@ Entities use a **lightweight schema definition system** inspired by Sanity CMS. 
 
 **Entity Schemas**:
 - **character.ts**: Character schema with identity and role groups
-  - Identity fields: name, aliases
-  - Role fields: tier (primary/significant/secondary), roleInStory
-  - Body fields: presenceAndExpression, voiceSamples, innerOrientation, sensitivityAndPull, externalConstraints
-  - All fields optional except name
+  - Identity fields: `name` (with `fieldRole: 'primaryTitle'`), `aliases`
+  - Role fields: `tier` (primary/significant/secondary), `roleInStory`
+  - Body fields: `presenceAndExpression`, `voiceSamples`, `innerOrientation`, `sensitivityAndPull`, `externalConstraints`, `relationships`
+  - All fields optional except `name`
 - **location.ts**: Location schema (similar pattern)
 
 **Zod Schema Generation** (`src/helpers/buildZodFromSchema.ts`):
 - Converts DSL schema to Zod object schema
-- Supports nested paths: `"identity.name"` expands to `{ identity: { name: z.string() } }`
+- Flat field structure: all fields at root level
 - Single source of truth for validation
 - Generates `CharacterDocSchema` and `LocationDocSchema`
 
 **Entity Document Types**:
 - Generated from schemas: `CharacterDoc = z.infer<typeof CharacterDocSchema>`
 - Base metadata: `id`, `version`, `updatedAt`, `createdAt`
-- Nested structure from field paths (e.g., `identity: { name, aliases }`)
+- Flat structure with all fields at root level
 - All fields except `id`, `version`, `updatedAt` are optional
 
 ### EntityIndex Simplification
@@ -494,16 +495,15 @@ Wizard outputs should:
 - ✅ Core schema types: FieldDef, GroupDef, DocumentTypeDef (`schemas/types.ts`)
 - ✅ Helper functions: `defineField()`, `defineType()` for type-safe definitions
 - ✅ Character schema with identity, role, and body groups (`schemas/character.ts`)
-- ✅ Nested field path support (e.g., `"identity.name"`)
+- ✅ Flat field structure with `fieldRole` for identifying primary title field
 - ✅ Zod schema generation from DSL (`buildZodFromSchema.ts` helper)
 - ✅ CharacterDoc and CharacterDocSchema generated from schema
 - ✅ Field metadata: labels, descriptions, placeholders, UI types, validation
 
 **Helper Utilities**:
-- ✅ Nested object utilities (`helpers/nestedObjectUtils.ts`): `getNestedValue()`, `setNestedValue()`
 - ✅ Zod helpers (`helpers/zodHelpers.ts`): `isZodFieldRequired()`, `getZodDefault()`, `getRequiredFields()`
 - ✅ Schema-driven validation in EntityEditView using `getRequiredFields()` from schema
-- ✅ Clean separation: navigation utilities in nestedObjectUtils, validation utilities in zodHelpers
+- ✅ Field identification via `fieldRole: 'primaryTitle'` for main entity identifier (no nested path support)
 
 ## Projection System
 
@@ -516,9 +516,9 @@ Wizard outputs should:
 
 **Template syntax**:
 - Uses `interpolate()` helper from `src/helpers/stringUtils.ts`
-- Variable interpolation: `{{variableName}}` (e.g., `{{identity.name}}`, `{{role.tier}}`)
+- Variable interpolation: `{{variableName}}` (e.g., `{{name}}`, `{{tier}}`)
 - Conditional sections: `{{#if hasContent(field)}}...{{/if}}` - hides empty sections
-- Example: `{{#if hasContent(body.voiceSamples)}}` only shows voice section when content exists
+- Example: `{{#if hasContent(voiceSamples)}}` only shows voice section when content exists
 
 **Generation**:
 - `buildEntityProjectionMarkdown()` in `src/models/entities/entityProjectionUtils.ts`
@@ -585,7 +585,8 @@ Wizard outputs should:
 - ✅ EntityEditView component renders forms dynamically from DocumentTypeDef schema
 - ✅ Generates form sections from schema groups using SettingsGroup components
 - ✅ Maps FieldDef.type to input components (TextInput, Textarea, Select)
-- ✅ Handles nested field paths (e.g., "identity.name")
+- ✅ Flat field structure with all fields at root level
+- ✅ Uses `fieldRole: 'primaryTitle'` to identify main entity identifier
 - ✅ Extracts default values from Zod schema definitions
 - ✅ Applies schema validation on save via generated Zod schemas
 - ✅ Benefits: Adding/modifying fields only requires schema changes, no component updates
@@ -609,7 +610,8 @@ Wizard outputs should:
 - ✅ Schema DSL as single source of truth for structure, validation, and UI metadata
 - ✅ EntityEditView dynamically renders forms for any entity type from schema
 - ✅ CharacterDoc and LocationDoc types auto-generated from schemas
-- ✅ Helper utilities for nested object navigation and Zod schema introspection
+- ✅ Flat field structure with `fieldRole` for primary title identification
+- ✅ Helper utilities for Zod schema introspection
 - ✅ File storage with atomic writes and race condition protection
 - ✅ Properly positioned at `storyEntities` layer in LCRF hierarchy
 - ✅ Relationships field included in entity projections for context selection

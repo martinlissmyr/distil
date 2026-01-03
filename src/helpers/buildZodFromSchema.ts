@@ -4,7 +4,8 @@ import type { FieldDef, DocumentTypeDef } from '../models/entities/schemas/types
 
 /**
  * Build a Zod schema for the "data shape" from your field DSL.
- * Supports nested paths like "identity.name" by expanding to objects.
+ * Note: Current schemas use flat field names. Nested path support
+ * (e.g., "identity.name") remains for backwards compatibility but is not used.
  */
 
 function setDeep(obj: any, path: string[], value: any) {

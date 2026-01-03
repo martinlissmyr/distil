@@ -1,5 +1,5 @@
 import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
-import { getNestedValue } from './nestedObjectUtils';
+import { getPrimaryTitleValue } from './entityProjectionUtils';
 
 export function entityToMarkdown(
   formData: Record<string, any>,
@@ -10,7 +10,7 @@ export function entityToMarkdown(
 
   // ---- 1. Detect whether there is any meaningful content ----
   const hasAnyContent = schema.fields.some((field) => {
-    const value = getNestedValue(formData, field.name);
+    const value = formData[field.name];
 
     if (includeEmpty) return true;
 
@@ -28,14 +28,9 @@ export function entityToMarkdown(
   // ---- 2. Normal rendering (unchanged logic) ----
   const lines: string[] = [];
 
-  const nameField = schema.fields.find(
-    (f) => f.name.endsWith('.name') || f.name === 'name'
-  );
-  const entityName = nameField
-    ? getNestedValue(formData, nameField.name)
-    : schema.title;
+  const entityName = getPrimaryTitleValue(formData, schema);
 
-  lines.push(`# ${schema.title}: ${entityName || 'Untitled'}`);
+  lines.push(`# ${schema.title}: ${entityName}`);
   lines.push('');
 
   const fieldsByGroup = new Map<string | undefined, FieldDef[]>();
@@ -51,7 +46,7 @@ export function entityToMarkdown(
       const groupLines: string[] = [];
 
       for (const field of fields) {
-        const value = getNestedValue(formData, field.name);
+        const value = formData[field.name];
         if (!includeEmpty && !value) continue;
 
         if (field.type === 'textarea') {
@@ -79,7 +74,7 @@ export function entityToMarkdown(
   const ungroupedLines: string[] = [];
 
   for (const field of ungrouped) {
-    const value = getNestedValue(formData, field.name);
+    const value = formData[field.name];
     if (!includeEmpty && !value) continue;
 
     if (field.type === 'textarea') {

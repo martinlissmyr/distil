@@ -1,6 +1,5 @@
 // src/helpers/entityProjectionUtils.ts
 import type { DocumentTypeDef } from '../models/entities/schemas/types';
-import { getNestedValue } from './nestedObjectUtils';
 import { interpolate } from './interpolate';
 
 /**
@@ -10,36 +9,68 @@ import { interpolate } from './interpolate';
  * It works in three stages:
  *
  * 1. **buildEntityProjection**: Extract relevant fields from entity doc based on schema
- * 2. **flattenForInterpolation**: Convert nested projection to flat key-value pairs
+ * 2. **flattenForInterpolation**: Prepare projection for template interpolation
  * 3. **buildEntityProjectionMarkdown**: Interpolate values into markdown template
  *
  * Example flow:
- * - Entity doc: { identity: { name: "John", age: 25 }, tier: "primary" }
- * - Projection: { identity: { name: "John", age: 25 }, tier: "primary" }
- * - Flattened: { "identity.name": "John", name: "John", "identity.age": 25, age: 25, tier: "primary" }
+ * - Entity doc: { name: "John", age: 25, tier: "primary" }
+ * - Projection: { name: "John", age: 25, tier: "primary" }
+ * - Flattened: { name: "John", age: 25, tier: "primary" }
  * - Template: "# {{name}}\n{{#if hasContent(age)}}Age: {{age}}{{/if}}"
  * - Output: "# John\nAge: 25"
  */
 
 /**
+ * Gets the primary title value from an entity document using the schema's fieldRole.
+ * Looks for the field marked with fieldRole: 'primaryTitle' in the schema.
+ * Falls back to 'Untitled' if no primaryTitle field is found or if the value is empty.
+ *
+ * @example
+ * getPrimaryTitleValue(characterDoc, characterSchema) // returns "John Smith"
+ * getPrimaryTitleValue({}, characterSchema) // returns "Untitled"
+ *
+ * @param entityDoc - The entity document
+ * @param schema - The DocumentTypeDef schema
+ * @returns The primary title string
+ */
+export function getPrimaryTitleValue(
+  entityDoc: Record<string, any>,
+  schema: DocumentTypeDef<any>
+): string {
+  // Find field with primaryTitle role
+  const titleField = schema.fields.find(f => f.fieldRole === 'primaryTitle');
+
+  if (!titleField) return 'Untitled';
+
+  const value = entityDoc[titleField.name];
+
+  if (!value || (typeof value === 'string' && value.trim().length === 0)) {
+    return 'Untitled';
+  }
+
+  return String(value);
+}
+
+/**
  * Builds a projection object from an entity document based on schema fields
  * marked with includeInProjection: true.
  *
- * This extracts only the fields that should be included in AI context,
- * preserving the nested structure from the schema.
+ * This extracts only the fields that should be included in AI context.
  *
  * @example
  * const projection = buildEntityProjection(characterDoc, characterSchema);
  * // Returns:
  * // {
- * //   identity: { name: "John", age: "25", gender: "male" },
+ * //   name: "John",
+ * //   age: "25",
+ * //   gender: "male",
  * //   tier: "primary",
  * //   roleInStory: "protagonist"
  * // }
  *
  * @param entityDoc - The full entity document
  * @param schema - The entity schema definition
- * @returns Nested projection object with only included fields
+ * @returns Projection object with only included fields
  */
 export function buildEntityProjection(
   entityDoc: Record<string, any>,
@@ -50,95 +81,48 @@ export function buildEntityProjection(
   for (const field of schema.fields) {
     if (!field.includeInProjection) continue;
 
-    const value = getNestedValue(entityDoc, field.name);
+    const value = entityDoc[field.name];
     if (value === undefined || value === null || value === '') continue;
 
-    // Set nested value in projection
-    const keys = field.name.split('.');
-    let current = projection;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-      if (!current[key]) {
-        current[key] = {};
-      }
-      current = current[key];
-    }
-
-    const lastKey = keys[keys.length - 1];
-    current[lastKey] = value;
+    projection[field.name] = value;
   }
 
   return projection;
 }
 
 /**
- * Flattens a nested projection object for template interpolation.
+ * Prepares a projection object for template interpolation.
  *
- * Creates both fully-qualified paths (e.g., "identity.name") and short keys
- * (e.g., "name") for convenient access in templates. Short keys are only added
- * if they don't conflict with existing keys at the root level.
+ * Since projections are now flat, this simply returns a copy of the projection.
  *
  * @example
  * const flattened = flattenForInterpolation(
- *   { identity: { name: "John", age: 25 }, tier: "primary" },
- *   entityDoc
+ *   { name: "John", age: 25, tier: "primary" }
  * );
  * // Returns:
  * // {
- * //   "identity.name": "John",
- * //   "name": "John",
- * //   "identity.age": 25,
- * //   "age": 25,
- * //   "tier": "primary"
+ * //   name: "John",
+ * //   age: 25,
+ * //   tier: "primary"
  * // }
  *
- * @param projection - The nested projection object
- * @param entityDoc - The original entity document (for nested value lookups)
- * @returns Flattened object with both nested paths and short keys
+ * @param projection - The projection object
+ * @returns Copy of the projection object
  */
 function flattenForInterpolation(
-  projection: Record<string, any>,
-  entityDoc: Record<string, any>
+  projection: Record<string, any>
 ): Record<string, any> {
-  const flattened: Record<string, any> = {};
-  const shortKeysSeen = new Set<string>();
-
-  function traverse(obj: any, path: string[] = []) {
-    for (const key in obj) {
-      const value = obj[key];
-      const newPath = [...path, key];
-      const fullKey = newPath.join('.');
-
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        // Nested object - recurse
-        traverse(value, newPath);
-      } else {
-        // Leaf value - add to flattened
-        flattened[fullKey] = value;
-
-        // Add short key if not already present (avoid conflicts)
-        const shortKey = newPath[newPath.length - 1];
-        if (!shortKeysSeen.has(shortKey)) {
-          flattened[shortKey] = value;
-          shortKeysSeen.add(shortKey);
-        }
-      }
-    }
-  }
-
-  traverse(projection);
-  return flattened;
+  return { ...projection };
 }
 
 /**
  * Builds markdown representation of an entity using a template.
  *
  * This is the main function for generating AI-friendly context from entity documents.
- * It combines projection extraction, flattening, and template interpolation.
+ * It combines projection extraction and template interpolation.
  *
  * The template can use:
- * - Variable substitution: {{name}}, {{identity.name}}
+ * - Variable substitution: {{name}}, {{age}}
  * - Conditional blocks: {{#if hasContent(age)}}Age: {{age}}{{/if}}
  * - Logical operators: {{#if tier && hasContent(roleInStory)}}...{{/if}}
  *
@@ -160,11 +144,11 @@ export function buildEntityProjectionMarkdown(
   schema: DocumentTypeDef<any>,
   template: string
 ): string {
-  // Build nested projection
+  // Build projection
   const projection = buildEntityProjection(entityDoc, schema);
 
-  // Flatten for interpolation
-  const flattened = flattenForInterpolation(projection, entityDoc);
+  // Prepare for interpolation
+  const flattened = flattenForInterpolation(projection);
 
   // Create hasContent resolver
   const hasContentResolver = (key: string): boolean => {
