@@ -100,6 +100,18 @@ export const characterType = defineType({
     // --------------------
     // freeform fields
     // --------------------
+
+    defineField({
+      name: 'relationships',
+      type: 'textarea',
+      label: 'Relationships & Dynamics',
+      description: 'Key relationships, dynamics, and connections with other characters. Describe both emotional bonds and narrative functions.',
+      placeholder: 'Mentor figure to X, but growing tensions over Y. Professional rivalry with Z...',
+      minRows: 4,
+      schema: z.string().optional(),
+      includeInProjection: true,
+    }),
+
     defineField({
       name: 'positionAndLivelihood',
       type: 'textarea',
