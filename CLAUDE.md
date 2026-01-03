@@ -334,7 +334,7 @@ The build process runs: `tsc && vite build && electron-builder`
   - Groups fields into SettingsGroup components
   - Maps field types to input components (TextInput, Textarea, Select)
   - Extracts default values from Zod schemas
-  - Handles nested field paths correctly
+  - Uses flat field structure with `fieldRole` for primary title identification
   - Works identically for characters, locations, and future entity types
 
 *Current Entity Types:*

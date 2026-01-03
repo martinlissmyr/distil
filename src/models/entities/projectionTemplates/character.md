@@ -6,14 +6,14 @@
 **Role in story**: {{roleInStory}}
 {{/if}}
 
-{{#if hasContent(identity.age)}}
-**Age**: {{identity.age}}
+{{#if hasContent(age)}}
+**Age**: {{age}}
 {{/if}}
 
-{{#if hasContent(identity.gender)}}
-**Gender**: {{identity.gender}}
+{{#if hasContent(gender)}}
+**Gender**: {{gender}}
 {{/if}}
 
-{{#if hasContent(identity.aliases)}}
-**Aliases**: {{identity.aliases}}
+{{#if hasContent(aliases)}}
+**Aliases**: {{aliases}}
 {{/if}}

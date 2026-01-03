@@ -31,7 +31,8 @@ export const characterType = defineType({
     // Identity
     // --------------------
     defineField({
-      name: 'identity.name',
+      name: 'name',
+      fieldRole: 'primaryTitle',
       group: 'identity',
       type: 'text',
       label: 'Name',
@@ -41,7 +42,7 @@ export const characterType = defineType({
     }),
 
     defineField({
-      name: 'identity.aliases',
+      name: 'aliases',
       group: 'identity',
       type: 'text',
       label: 'Aliases',
@@ -51,7 +52,7 @@ export const characterType = defineType({
     }),
 
     defineField({
-      name: 'identity.age',
+      name: 'age',
       group: 'identity',
       type: 'text',
       label: 'Age',
@@ -61,7 +62,7 @@ export const characterType = defineType({
     }),
 
     defineField({
-      name: 'identity.gender',
+      name: 'gender',
       group: 'identity',
       type: 'text',
       label: 'Gender',

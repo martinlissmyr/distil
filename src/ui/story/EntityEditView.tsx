@@ -16,7 +16,6 @@ import { buildEntityProjection } from '../../helpers/entityProjectionUtils';
 import type { DocRefWithKind } from '../../types/docRef';
 import { getContextDocs } from '../../chat/contextSelector';
 import { useAppStore } from '../../state/useAppStore';
-import { getNestedValue, setNestedValue } from '../../helpers/nestedObjectUtils';
 import { getZodDefault, getRequiredFields } from '../../helpers/zodHelpers';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
@@ -136,7 +135,7 @@ export function EntityEditView<T extends Record<string, any>>({
   };
 
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
-    setFormData((prev) => setNestedValue({ ...prev }, fieldName, value));
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -171,7 +170,7 @@ export function EntityEditView<T extends Record<string, any>>({
   const canSave = useMemo(() => {
     const requiredFields = getRequiredFields(schema);
     return requiredFields.every((field) => {
-      const value = getNestedValue(formData, field.name);
+      const value = formData[field.name];
       if (value === null || value === undefined) return false;
       if (typeof value === 'string' && value.trim().length === 0) return false;
       return true;
@@ -195,7 +194,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
     const items = fields
       .map((field) => {
-        const raw = getNestedValue(formData, field.name);
+        const raw = formData[field.name];
 
         if (field.type === 'text') {
           const value = raw ?? '';
@@ -240,7 +239,7 @@ export function EntityEditView<T extends Record<string, any>>({
   // Render ungrouped fields (textareas + any ungrouped text/select)
   const renderUngroupedFields = (fields: FieldDef[]) => {
     return fields.map((field) => {
-      const raw = getNestedValue(formData, field.name);
+      const raw = formData[field.name];
 
       if (field.type === 'textarea') {
         const value = raw ?? '';

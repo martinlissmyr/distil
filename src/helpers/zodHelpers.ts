@@ -67,12 +67,13 @@ export function isZodFieldRequired(schema: any): boolean {
       return false;
     }
 
-    // ZodEnum is required (no inherent default unless .default() is called)
-    if (typeName === 'ZodEnum') return true;
+    // ZodEnum without .default() should be optional (enums should have defaults or be optional)
+    if (typeName === 'ZodEnum') return false;
 
-    // Other types without explicit optional/nullable/default are considered required
-    // This includes ZodNumber, ZodBoolean, ZodObject, ZodArray, etc.
-    return true;
+    // All other types are optional by default unless explicitly marked as required
+    // In the entity schema system, fields use .optional() or .default() to mark themselves as not required
+    // Only fields with explicit validators like .min(1) are truly required
+    return false;
   } catch {
     // If introspection fails, assume not required to avoid false positives
     return false;

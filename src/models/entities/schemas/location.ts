@@ -31,7 +31,8 @@ export const locationType = defineType({
     // Identity
     // --------------------
     defineField({
-      name: 'identity.name',
+      name: 'name',
+      fieldRole: 'primaryTitle',
       group: 'identity',
       type: 'text',
       label: 'Name',
@@ -40,7 +41,7 @@ export const locationType = defineType({
     }),
 
     defineField({
-      name: 'identity.aliases',
+      name: 'aliases',
       group: 'identity',
       type: 'text',
       label: 'Aliases',
