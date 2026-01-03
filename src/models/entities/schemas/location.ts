@@ -1,7 +1,7 @@
 // src/schemas/character.ts
 import { z } from 'zod';
 import { defineField, defineType } from './types';
-import { buildZodFromSchema } from '../../../helpers/buidZodFromSchema';
+import { buildZodFromSchema } from '../../../helpers/buildZodFromSchema';
 
 export const LocationTierSchema = z.enum(['primary', 'significant', 'secondary']);
 

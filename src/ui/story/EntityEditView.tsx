@@ -16,6 +16,8 @@ import { buildEntityProjection } from '../../helpers/entityProjectionUtils';
 import type { DocRefWithKind } from '../../types/docRef';
 import { getContextDocs } from '../../chat/contextSelector';
 import { useAppStore } from '../../state/useAppStore';
+import { getNestedValue, setNestedValue } from '../../helpers/nestedObjectUtils';
+import { getZodDefault, getRequiredFields } from '../../helpers/zodHelpers';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
   projectId: string;
@@ -30,38 +32,6 @@ type EntityEditViewProps<T extends Record<string, any>> = {
   /** Doc reference for chat context */
   doc?: DocRefWithKind;
 };
-
-// Helper to get nested value from object using dot path
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
-}
-
-// Helper to set nested value in object using dot path
-function setNestedValue(obj: any, path: string, value: any): any {
-  const keys = path.split('.');
-  const lastKey = keys.pop()!;
-  const target = keys.reduce((current, key) => {
-    if (!current[key]) current[key] = {};
-    return current[key];
-  }, obj);
-  target[lastKey] = value;
-  return { ...obj };
-}
-
-// Best-effort default extraction (works for z.string().default(...) and z.enum(...).default(...))
-function getZodDefault(schema: any): any {
-  try {
-    // zod default() wraps with ZodDefault and stores defaultValue()
-    if (schema?._def?.typeName === 'ZodDefault' && typeof schema._def.defaultValue === 'function') {
-      return schema._def.defaultValue();
-    }
-    // sometimes you might have optional(default(...)) etc
-    if (schema?._def?.innerType) return getZodDefault(schema._def.innerType);
-  } catch {
-    // ignore
-  }
-  return undefined;
-}
 
 export function EntityEditView<T extends Record<string, any>>({
   projectId,
@@ -165,7 +135,6 @@ export function EntityEditView<T extends Record<string, any>>({
     });
   };
 
-
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
     setFormData((prev) => setNestedValue({ ...prev }, fieldName, value));
   }, []);
@@ -197,6 +166,17 @@ export function EntityEditView<T extends Record<string, any>>({
       setSaving(false);
     }
   }, [entityDoc?.createdAt, entityDoc?.id, formData, onBack, onSave, schema.name, schema.version, setDirty]);
+
+  // Check if we can save (all required fields must have values)
+  const canSave = useMemo(() => {
+    const requiredFields = getRequiredFields(schema);
+    return requiredFields.every((field) => {
+      const value = getNestedValue(formData, field.name);
+      if (value === null || value === undefined) return false;
+      if (typeof value === 'string' && value.trim().length === 0) return false;
+      return true;
+    });
+  }, [formData, schema]);
 
   // Group fields by group (or ungrouped)
   const fieldsByGroup = useMemo(() => {
@@ -330,14 +310,6 @@ export function EntityEditView<T extends Record<string, any>>({
     });
   };
 
-  // Check if we can save (e.g., name required)
-  const nameField = useMemo(
-    () => schema.fields.find((f) => f.name.endsWith('.name') || f.name === 'name'),
-    [schema.fields]
-  );
-  const nameValue = nameField ? getNestedValue(formData, nameField.name) : '';
-  const canSave = Boolean(nameValue && String(nameValue).trim().length > 0);
-
   return (
     <Box
       className={styles.root}
@@ -353,14 +325,13 @@ export function EntityEditView<T extends Record<string, any>>({
         />
       </Box>
 
-      <Box style={{ flex: 1, minHeight: 0, display: 'flex', position: 'relative' }}>
+      <Box className={styles.contentWrapper}>
         <ScrollArea
-          className={styles.scrollArea}
-          style={{ flex: 1, height: '100%' }}
+          className={`${styles.scrollArea} ${styles.scrollAreaWrapper}`}
           type="auto"
           scrollbarSize={8}
         >
-          <Stack gap="lg" pt={120} pb={40} className={styles.editor}>
+          <Stack gap="lg" className={`${styles.editor} ${styles.editorContent}`}>
             {/* Render groups first */}
             {schema.groups?.map((group: any) => {
               const fields = fieldsByGroup.get(group.id) || [];
@@ -375,17 +346,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
         {/* Chat aside */}
         {withChat && doc && (
-          <Box
-            style={{
-              position: 'absolute',
-              top: '12px',
-              bottom: '12px',
-              right: 'var(--aside-offset)',
-              width: 'calc(100% - var(--aside-offset) - (var(--editor-gutter) * 2 + var(--editor-width)))',
-              zIndex: 20,
-              display: 'flex',
-            }}
-          >
+          <Box className={styles.chatAsideWrapper}>
             <ChatAside
               doc={doc}
               title={title}

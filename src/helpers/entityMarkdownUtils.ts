@@ -1,4 +1,5 @@
 import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
+import { getNestedValue } from './nestedObjectUtils';
 
 export function entityToMarkdown(
   formData: Record<string, any>,
@@ -97,8 +98,4 @@ export function entityToMarkdown(
   }
 
   return lines.join('\n').trim();
-}
-
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
 }
