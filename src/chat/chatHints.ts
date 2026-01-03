@@ -5,7 +5,7 @@ import type { OpenWizardCommand } from '../wizards/types';
 import type { WritingLanguage } from '../types/language';
 import { interpolate } from '../helpers/interpolate';
 import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
-import { docKinds, contextLayerOrder, type DocKindId } from '../models/docs';
+import { docKinds, contextLayerOrder } from '../models/docs';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -17,7 +17,20 @@ export type NavigateCommand =
   | { type: 'navigateToStorySection'; section: StoryDocKindId }
   | { type: 'navigateToManifest' };
 
+export type LocalizedString = Record<WritingLanguage, string>;
+
+// Multi-language action definition (as stored in index.ts)
 export type SuggestionAction = {
+  id: string;
+  label: LocalizedString;
+  kind: SuggestionActionKind;
+  prompt?: string;
+  displayMessage?: LocalizedString;
+  command?: OpenWizardCommand | NavigateCommand;
+};
+
+// Single-language action for UI rendering
+export type LocalizedSuggestionAction = {
   id: string;
   label: string;
   kind: SuggestionActionKind;
@@ -28,7 +41,7 @@ export type SuggestionAction = {
 
 export type AssistantHint = {
   introMessage: string;
-  actions: SuggestionAction[];
+  actions: LocalizedSuggestionAction[];
 };
 
 export type DocState = 'missing' | 'empty' | 'hasContent';
@@ -41,8 +54,6 @@ export type HintContext = {
   language: WritingLanguage;
 };
 
-type LocalizedText = string | Partial<Record<WritingLanguage, string>>;
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -52,7 +63,7 @@ const isEmpty = (s?: DocState) => s === 'empty';
 const isMissing = (s?: DocState) => s === 'missing';
 
 // Only doc kinds that have hint templates
-type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief' | 'characters' | 'locations';
+type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief' | 'world' | 'characters' | 'locations';
 
 function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'prose') return 'prose';
@@ -65,23 +76,23 @@ function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   return null;
 }
 
-function pickLang(text: LocalizedText | undefined, lang: WritingLanguage): string | undefined {
-  if (!text) return undefined;
-  if (typeof text === 'string') return text;
-
-  // fallback order: exact lang -> default lang -> any existing -> undefined
+// Helper to pick a localized string from LocalizedString
+function pickLocalizedString(text: LocalizedString, lang: WritingLanguage): string {
+  // fallback order: exact lang -> default lang -> first available
   return (
     text[lang] ??
     text[DEFAULT_WRITING_LANGUAGE] ??
-    Object.values(text).find((v) => typeof v === 'string' && v.length > 0)
+    Object.values(text).find((v) => typeof v === 'string' && v.length > 0) ??
+    ''
   );
 }
 
-function localizeAction(action: any, lang: WritingLanguage): SuggestionAction {
+// Converts multi-language action to single-language action for use in UI
+function localizeAction(action: SuggestionAction, lang: WritingLanguage): LocalizedSuggestionAction {
   return {
     ...action,
-    label: pickLang(action.label, lang) ?? action.id,
-    displayMessage: pickLang(action.displayMessage, lang),
+    label: pickLocalizedString(action.label, lang),
+    displayMessage: action.displayMessage ? pickLocalizedString(action.displayMessage, lang) : undefined,
   };
 }
 
@@ -180,11 +191,11 @@ async function renderIntro(
 // Actions (per-kind only)
 // ---------------------------------------------------------------------------
 
-type ActionStrategy = (ctx: HintContext) => SuggestionAction[];
+type ActionStrategy = (ctx: HintContext) => LocalizedSuggestionAction[];
 
 /* PROSE */
 const proseActions: ActionStrategy = ({ upstream, language, kind }) => {
-  const out: SuggestionAction[] = [];
+  const out: LocalizedSuggestionAction[] = [];
 
   const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
   if (actionForTopmostMissingUpstreamDoc) {
@@ -196,7 +207,7 @@ const proseActions: ActionStrategy = ({ upstream, language, kind }) => {
 
 /* MANIFEST */
 const manifestActions: ActionStrategy = ({ selfState, language }) => {
-  const out: SuggestionAction[] = [];
+  const out: LocalizedSuggestionAction[] = [];
   if (isEmpty(selfState)) out.push(localizeAction(actions.manifestStart, language));
   if (hasContent(selfState)) out.push(localizeAction(actions.manifestGaps, language));
   return out;
@@ -204,7 +215,7 @@ const manifestActions: ActionStrategy = ({ selfState, language }) => {
 
 /* OUTLINE */
 const outlineActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
-  const out: SuggestionAction[] = [];
+  const out: LocalizedSuggestionAction[] = [];
 
   const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
   if (actionForTopmostMissingUpstreamDoc) {
@@ -220,7 +231,7 @@ const outlineActions: ActionStrategy = ({ selfState, upstream, language, kind })
 
 /* BRIEF */
 const briefActions: ActionStrategy = ({ selfState, upstream, language, kind }) => {
-  const out: SuggestionAction[] = [];
+  const out: LocalizedSuggestionAction[] = [];
 
   const actionForTopmostMissingUpstreamDoc = getWriteActionForTopmostMissingUpstreamDoc(kind, upstream);
   if (actionForTopmostMissingUpstreamDoc) {

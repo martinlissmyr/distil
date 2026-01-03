@@ -1,7 +1,8 @@
 // src/chat/buildPrompt.ts
 import type { EditorKind, QuestionScope } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
-import type { WritingLanguage, DEFAULT_WRITING_LANGUAGE } from '../types/language';
+import type { WritingLanguage } from '../types/language';
+import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
 
 import {
   buildSystemPrompt,
