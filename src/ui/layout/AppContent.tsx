@@ -11,7 +11,6 @@ import { StoryWorldView } from '../story/StoryWorldView';
 import { StoryBriefView } from '../story/StoryBriefView';
 import { EntityIndexView } from '../story/EntityIndexView';
 import type { Project, StoryMeta } from '../../api/client';
-import type { ProseDoc } from '../editor/ProseEditor';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
 import { getSectionConfig, isSectionImplemented, type SectionId } from '../../models/sections';
 import type { DocKindId } from '../../models/docs';
@@ -30,7 +29,7 @@ export interface AppContentProps {
   currentProject: Project | undefined;
 
   // Editor state
-  currentDoc: ProseDoc | null;
+  currentDoc: any;
   currentTitle: string;
 
   // Handlers
@@ -40,7 +39,9 @@ export interface AppContentProps {
   handleSelectStory: (id: string) => void;
   handleCreateStory: () => void;
   handleOpenEditStory: (id: string) => void;
-  handleDocChange: (doc: ProseDoc) => void;
+  handleDocChange: (doc: any) => void;
+  onReorderProjects: (ids: string[]) => void;
+  onReorderStories: (ids: string[]) => void;
 }
 
 /**

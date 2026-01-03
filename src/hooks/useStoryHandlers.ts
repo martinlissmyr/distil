@@ -1,6 +1,7 @@
 // src/hooks/useStoryHandlers.ts
 import { useState, useCallback } from 'react';
 import { client, StoryMeta, StoryData } from '../api/client';
+import type { StorySection } from './useNavigation';
 
 interface EntityCRUD<T> {
   items: T[];
@@ -15,7 +16,7 @@ interface EntityCRUD<T> {
 
 export interface StoryHandlersParams {
   goToProject: (projectId: string) => void;
-  goToStory: (projectId: string, storyId: string, section?: string) => void;
+  goToStory: (projectId: string, storyId: string, section?: StorySection) => void;
   clearEditor: () => void;
 
   loadStory: (story: StoryData) => void;
