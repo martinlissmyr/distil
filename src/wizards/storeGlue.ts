@@ -17,29 +17,7 @@ export function createWizardActions(args: {
     mockMode: false,
     mockDelayMs: 800,
 
-    resolveMetaDocsMarkdown: async (ctx) => {
-      const metaDocs: Record<string, MetaDocState> = args.get().metaDocs;
-
-      // no hard-coded keys: derive all meta docs from doc model
-      const keys = Object.keys(docKinds).filter((k) => docKinds[k as any].role === 'meta') as MetaDocKey[];
-      const out: Partial<Record<MetaDocKey, string | null>> = {};
-
-      for (const key of keys) {
-        const scope =
-          docKinds[key].scope === 'root'
-            ? ({ scope: 'root' } as const)
-            : ctx.ref.scope === 'story'
-              ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
-              : ({ scope: 'root' } as const);
-
-        out[key] = metaDocs[metaId(scope, key)]?.markdown ?? null;
-      }
-
-      return out;
-    },
-
     insertIntoEditor: async (ctx, text) => {
-      console.log(ctx);
       const editor = ctx.targetEditor;
       const inputRef = ctx.targetInputRef;
 
@@ -71,7 +49,7 @@ export function createWizardActions(args: {
       }
 
       if (inputRef) {
-        const ok = insertIntoTextarea(inputRef, text, 'append');
+        const ok = insertIntoTextarea(inputRef, text, 'replace');
         if (!ok) {
           args.set((s: any) => ({ wizardResult: text }));
         }

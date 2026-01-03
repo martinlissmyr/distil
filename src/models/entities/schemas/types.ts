@@ -47,7 +47,6 @@ export type FieldDef<TGroup extends string = string> = {
   schema: z.ZodTypeAny;
 
   wizard?: WizardId;
-  wizardLabel?: string;
   
   // Optional: future projection/indexing hints
   index?: boolean;

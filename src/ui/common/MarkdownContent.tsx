@@ -1,4 +1,4 @@
-// src/ui/editor/chat/MarkdownContent.tsx
+// src/ui/common/MarkdownContent.tsx
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -6,11 +6,17 @@ import styles from './MarkdownContent.module.scss';
 
 type MarkdownContentProps = {
   content: string;
+  size?: string;
+  compact?: boolean;
 };
 
-export const MarkdownContent: React.FC<MarkdownContentProps> = ({ content }) => {
+export const MarkdownContent: React.FC<MarkdownContentProps> = ({
+  content,
+  size = 'sm',
+  compact = true,
+}) => {
   return (
-    <div className={styles.markdown}>
+    <div className={styles.markdown} data-size={size} data-compact={compact}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

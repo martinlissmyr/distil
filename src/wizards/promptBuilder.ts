@@ -2,7 +2,7 @@
 import type { LlmProcessingStep, WizardContext, ActiveWizard } from './types';
 import type { MetaDocKey } from '../types/metaDoc';
 import { interpolate } from '../helpers/interpolate';
-import { WRITING_LANGUAGE_LABEL } from '../types/language';
+import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE } from '../types/language';
 
 // Vite prompt loading (./prompts/<key>.md)
 const promptLoaders = import.meta.glob('./configs/prompts/*.md', {
@@ -33,11 +33,6 @@ export async function loadPromptByKey(key: string): Promise<string> {
 }
 
 export type PromptBuilderDeps = {
-  // Resolve markdown for meta docs used in interpolation (manifest/brief/outline/world/etc)
-  resolveMetaDocsMarkdown: (
-    ctx: WizardContext
-  ) => Promise<Partial<Record<MetaDocKey, string | null>>>;
-
   // Get current writing language
   getWritingLanguage: () => string;
 };
@@ -59,16 +54,15 @@ export async function buildPromptForStep(
   deps: PromptBuilderDeps,
   useTestPrompt = false
 ): Promise<BuiltPrompt> {
-  const metaDocsMarkdown = await deps.resolveMetaDocsMarkdown(wizardContext);
-
   const writingLanguage = deps.getWritingLanguage();
-  const writingLanguageName = WRITING_LANGUAGE_LABEL[writingLanguage] || 'Swedish';
+  const writingLanguageName = WRITING_LANGUAGE_LABEL[writingLanguage] || WRITING_LANGUAGE_LABEL[DEFAULT_WRITING_LANGUAGE];
 
-  // Merge contexts: answers, llmResults, and non-null metaDocs
+  // Merge contexts: answers, llmResults, and metaDocs
   const vars = {
     ...answers,
     ...llmResults,
-    ...Object.fromEntries(Object.entries(metaDocsMarkdown).filter(([_, v]) => v !== null)),
+    contextDocumentsMarkdown: wizardContext.llmContext?.markdown || '',
+    currentContent: wizardContext.currentContent || '',
     writingLanguageName,
   };
 
@@ -80,9 +74,10 @@ export async function buildPromptForStep(
 
   const systemTemplate = systemTemplateKey ? await loadPromptByKey(systemTemplateKey) : '';
   const userTemplate = await loadPromptByKey(userTemplateKey);
+  const assistantTemplate = await loadPromptByKey('assistant');
 
   // Interpolate system and user separately
-  const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
   if (systemTemplate.trim()) {
     messages.push({
@@ -92,14 +87,24 @@ export async function buildPromptForStep(
   }
 
   messages.push({
+    role: 'assistant',
+    content: interpolate(assistantTemplate, vars),
+  });
+
+  messages.push({
     role: 'user',
     content: interpolate(userTemplate, vars),
   });
 
+  const summaryHeader = {
+    system: 'SYSTEM PROMPT',
+    user: 'USER PROMPT',
+    assistant: 'ASSISTANT PROMPT',
+  }
+
   const summary = messages
     .map((m) => {
-      const header = m.role === 'system' ? 'SYSTEM PROMPT' : 'USER PROMPT';
-      return `## ${header}\n\n${m.content}`;
+      return `## ${summaryHeader[m.role] || 'UNKNOWN'}\n\n${m.content}`;
     })
     .join('\n\n---\n\n');
 

@@ -6,6 +6,7 @@ import {
 } from '@mantine/core';
 import type { InformationStep } from '../../../wizards/types';
 import classes from './InformationStepView.module.scss';
+import { MarkdownContent } from '../../common/MarkdownContent';
 
 type InformationStepViewProps = {
   step: InformationStep;
@@ -27,9 +28,9 @@ export const InformationStepView: React.FC<InformationStepViewProps> = ({ step }
         </Box>
       )}
       {step.description && (
-        <Text size="md" className={classes.text}>
-          {step.description}
-        </Text>
+        <Box className={classes.text}>
+          <MarkdownContent content={step.description} size="md" compact={false}/>
+        </Box>
       )}
     </Box>
   );

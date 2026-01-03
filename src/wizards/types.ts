@@ -1,6 +1,7 @@
 // src/wizards/types.ts
 import type { EditorKind } from '../types/chat';
 import type { DocRef, MetaScope, MetaDocKey } from '../types/metaDoc';
+import type { RefObject } from 'react';
 
 /**
  * Core wizard configuration
@@ -146,8 +147,14 @@ export type WizardContext = {
   /** Optional: if wizard targets a different doc (usually same as ref) */
   targetKey?: MetaDocKey;
 
-  /** TipTap Editor instance to insert results into */
+  /** TipTap Editor instance or Input Ref to insert results into */
   targetEditor?: any;
+  targetInputRef: RefObject;
+  
+  llmContext?: {
+    kinds: EditorKind[];
+    markdown: string;
+  };
 };
 
 /**
