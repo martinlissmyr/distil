@@ -1,5 +1,16 @@
 Use the following answers to write the character description aspect "Presence & Expression".
 
+### Basic character facts
+{{#if currentProjection.identity.name}}
+Name: {{currentProjection.identity.name}}
+{{/if}}
+{{#if currentProjection.identity.gender}}
+Gender: {{currentProjection.identity.gender}}
+{{/if}}
+{{#if currentProjection.identity.age}}
+Age: {{currentProjection.identity.age}}
+{{/if}}
+
 ### First impression
 {{first_impression}}
 

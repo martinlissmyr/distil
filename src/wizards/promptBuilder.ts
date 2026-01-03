@@ -57,12 +57,13 @@ export async function buildPromptForStep(
   const writingLanguage = deps.getWritingLanguage();
   const writingLanguageName = WRITING_LANGUAGE_LABEL[writingLanguage] || WRITING_LANGUAGE_LABEL[DEFAULT_WRITING_LANGUAGE];
 
-  // Merge contexts: answers, llmResults, and metaDocs
+  // Merge contexts: answers, llmResults, metaDocs, and entity projection
   const vars = {
     ...answers,
     ...llmResults,
     contextDocumentsMarkdown: wizardContext.llmContext?.markdown || '',
     currentContent: wizardContext.currentContent || '',
+    currentProjection: wizardContext.currentProjection || {},
     writingLanguageName,
   };
 

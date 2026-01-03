@@ -48,8 +48,8 @@ export type FieldDef<TGroup extends string = string> = {
 
   wizard?: WizardId;
   
-  // Optional: future projection/indexing hints
-  index?: boolean;
+  // Optional
+  includeInProjection?: boolean;
 };
 
 export const defineField = <T extends FieldDef<any>>(field: T) => field;

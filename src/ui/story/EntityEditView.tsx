@@ -12,6 +12,7 @@ import { useLeaveGuardStore } from '../../hooks/useNavigation';
 import { ChatAside } from '../chat/ChatAside';
 import { useEditorChat } from '../../hooks/useEditorChat';
 import { entityToMarkdown } from '../../helpers/entityMarkdownUtils';
+import { buildEntityProjection } from '../../helpers/entityProjectionUtils';
 import type { DocRefWithKind } from '../../types/docRef';
 import { getContextDocs } from '../../chat/contextSelector';
 import { useAppStore } from '../../state/useAppStore';
@@ -144,9 +145,13 @@ export function EntityEditView<T extends Record<string, any>>({
       language: writingLanguage,
     });
 
+    // Build entity projection from current form data
+    const currentProjection = buildEntityProjection(formData, schema);
+
     // Pass dynamic context directly to handleOpenWizard
     handleOpenWizard({
       ...wizardCmd,
+      currentProjection,
       chatConfig: {
         doc,
         docKind: doc.docKind,
