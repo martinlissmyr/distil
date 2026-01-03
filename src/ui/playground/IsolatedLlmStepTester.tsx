@@ -13,27 +13,33 @@ import {
   SegmentedControl,
   CopyButton,
 } from '@mantine/core';
-import { AlertCircle, RefreshCw, Copy, Check } from 'lucide-react';
+import { AlertCircle, Copy, Check } from 'lucide-react';
 import type { TestableLlmStep } from '../../wizards/testUtils';
-import type { WizardContext } from '../../wizards/types';
 import { buildPromptForStep } from '../../wizards/promptBuilder';
 import { useAppStore } from '../../state/useAppStore';
+import { getContextDocs } from '../../chat/contextSelector';
 
 type IsolatedLlmStepTesterProps = {
   testableStep: TestableLlmStep;
-  wizardContext: WizardContext;
+  wizard: {
+    wizardId: string;
+    storyId: string;
+    projectId: string;
+    docKind: string;
+  };
 };
 
-type ViewTab = 'system' | 'user' | 'result';
+type ViewTab = 'system' | 'user' | 'assistant' | 'result';
 
 export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
   testableStep,
-  wizardContext,
+  wizard,
 }) => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState<string | null>(null);
   const [userPrompt, setUserPrompt] = useState<string | null>(null);
+  const [assistantPrompt, setAssistantPrompt] = useState<string | null>(null);
   const [llmResult, setLlmResult] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ViewTab>('system');
 
@@ -41,8 +47,30 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
     setIsProcessing(true);
     setError(null);
     setSystemPrompt(null);
+    setAssistantPrompt(null);
     setUserPrompt(null);
     setLlmResult(null);
+
+    const {
+      kinds: contextKinds,
+      markdown: contextMarkdown,
+    } = await getContextDocs(wizard.docKind, '', wizard.projectId, wizard.storyId, {
+      language: useAppStore.getState().writingLanguage,
+    });
+
+    const wizardContext = {
+      llmContext: {
+        kinds: contextKinds,
+        markdown: contextMarkdown,
+      },
+      ref: {
+        projectId: wizard.projectId,
+        storyId: wizard.storyId,
+        scope: 'story'
+      },
+      targetEditor: null,
+      currentContent: "Jag har redan lite innehåll.",
+    };
 
     try {
       // Build prompts using test data
@@ -52,48 +80,19 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
         {}, // Empty LLM results
         wizardContext,
         {
-          resolveMetaDocsMarkdown: async (ctx) => {
-            // Load any required meta docs for interpolation
-            const docs: Record<string, string | null> = {};
-            const store = useAppStore.getState();
-
-            // Load manifest (root-level)
-            await store.ensureMetaDocsLoaded({ scope: 'root' }, ['manifest']);
-            const manifestDoc = store.getMetaDoc({ scope: 'root' }, 'manifest');
-            docs.manifest = manifestDoc?.markdown || null;
-
-            // Load story-level docs if applicable
-            if (ctx.ref.scope === 'story' && 'storyId' in ctx.ref) {
-              const storyScope = {
-                scope: 'story' as const,
-                projectId: ctx.ref.projectId,
-                storyId: ctx.ref.storyId,
-              };
-
-              await store.ensureMetaDocsLoaded(storyScope, ['brief', 'outline', 'world']);
-
-              const briefDoc = store.getMetaDoc(storyScope, 'brief');
-              const outlineDoc = store.getMetaDoc(storyScope, 'outline');
-              const worldDoc = store.getMetaDoc(storyScope, 'world');
-
-              docs.brief = briefDoc?.markdown || null;
-              docs.outline = outlineDoc?.markdown || null;
-              docs.world = worldDoc?.markdown || null;
-            }
-
-            return docs;
-          },
           getWritingLanguage: () => useAppStore.getState().writingLanguage,
         },
         true // Use test prompt
       );
 
-      // Extract system and user prompts
+      // Extract prompts
       const systemMsg = messages.find((m) => m.role === 'system');
       const userMsg = messages.find((m) => m.role === 'user');
+      const assistantMsg = messages.find((m) => m.role === 'assistant');
 
       setSystemPrompt(systemMsg?.content || null);
       setUserPrompt(userMsg?.content || 'No user prompt');
+      setAssistantPrompt(assistantMsg?.content || 'No user prompt');
 
       // Send to LLM via window.chat API
       const response = await (window as any).chat.send({ messages });
@@ -120,6 +119,8 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
       return systemPrompt || 'No system prompt';
     } else if (activeTab === 'user') {
       return userPrompt || 'No user prompt';
+    }  else if (activeTab === 'assistant') {
+      return assistantPrompt || 'No assistant prompt';
     } else {
       return llmResult || 'No result yet';
     }
@@ -149,7 +150,7 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
       )}
 
       {/* Results with segmented control */}
-      {!isProcessing && (systemPrompt || userPrompt || llmResult) && (
+      {!isProcessing && (systemPrompt || userPrompt || assistantPrompt || llmResult) && (
         <>
           <Box p={10}>
             <Paper radius="sm" p={10}>
@@ -158,9 +159,10 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
                   value={activeTab}
                   onChange={(value) => setActiveTab(value as ViewTab)}
                   data={[
-                    { label: 'System Prompt', value: 'system' },
-                    { label: 'User Prompt', value: 'user' },
-                    { label: 'LLM Result', value: 'result' },
+                    { label: 'System', value: 'system' },
+                    { label: 'Assistant', value: 'assistant' },
+                    { label: 'User', value: 'user' },
+                    { label: 'Result', value: 'result' },
                   ]}
                 />
                 <Group justify="space-between">

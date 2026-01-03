@@ -8,12 +8,18 @@ import { getDocKind } from '../../models/docs';
 import type { EditorKind } from '../../types/chat';
 
 export type ChatConfig = {
-  kind: EditorKind;
+  kind?: EditorKind;
   storyId?: string;
   storyTitle?: string;
   projectId?: string;
   projectName?: string;
+  doc?: any;
+  docKind?: string;
   onNavigate?: (target: string) => void;
+  llmContext?: {
+    kinds: string[];
+    markdown: string;
+  };
 };
 
 export const ProseEditor = ({

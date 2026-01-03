@@ -1,5 +1,5 @@
 // src/ui/story/EntityEditView.tsx
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, type RefObject } from 'react';
 import { Box, Stack, ScrollArea } from '@mantine/core';
 import type { DocumentTypeDef, FieldDef } from '../../models/entities/schemas/types';
 import { TopNavigation } from '../common/TopNavigation';
@@ -13,6 +13,8 @@ import { ChatAside } from '../chat/ChatAside';
 import { useEditorChat } from '../../hooks/useEditorChat';
 import { entityToMarkdown } from '../../helpers/entityMarkdownUtils';
 import type { DocRefWithKind } from '../../types/docRef';
+import { getContextDocs } from '../../chat/contextSelector';
+import { useAppStore } from '../../state/useAppStore';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
   projectId: string;
@@ -115,15 +117,49 @@ export function EntityEditView<T extends Record<string, any>>({
     setFullTextMarkdown(markdown);
   }, [formData, schema]);
 
-  // Chat integration
-  const chatConfig = doc ? {
-    doc,
-    kind: doc.docKind,
-    projectId,
-    storyId,
-  } : undefined;
+  // Initialize hook with static config (projectId/storyId only)
+  const { handleOpenWizard } = useEditorChat({
+    chatConfig: doc ? {
+      projectId,
+      storyId,
+      doc,
+      docKind: doc.docKind,
+      llmContext: { kinds: [], markdown: '' }, // Will be overridden per-call
+    } : undefined,
+  });
 
-  const { handleOpenWizard } = useEditorChat({ chatConfig });
+  const handleRunWizard = async (wizardCmd: {
+    wizardId: string;
+    targetInputRef?: RefObject<HTMLTextAreaElement>;
+    currentContent?: string;
+  }) => {
+    if (!doc) return;
+
+    // Build chat context dynamically when wizard is triggered
+    const writingLanguage = useAppStore.getState().writingLanguage;
+    const {
+      kinds: contextKinds,
+      markdown: contextMarkdown,
+    } = await getContextDocs(doc.docKind, 'the character as part of the world', projectId, storyId, {
+      language: writingLanguage,
+    });
+
+    // Pass dynamic context directly to handleOpenWizard
+    handleOpenWizard({
+      ...wizardCmd,
+      chatConfig: {
+        doc,
+        docKind: doc.docKind,
+        projectId,
+        storyId,
+        llmContext: {
+          kinds: contextKinds || [],
+          markdown: contextMarkdown || '',
+        },
+      },
+    });
+  };
+
 
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
     setFormData((prev) => setNestedValue({ ...prev }, fieldName, value));
@@ -223,14 +259,16 @@ export function EntityEditView<T extends Record<string, any>>({
 
       if (field.type === 'textarea') {
         const value = raw ?? '';
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         const ref = useRef<HTMLTextAreaElement>(null);
-        const actionButtonLabel = field.wizardLabel ? field.wizardLabel : 'Open wizard';
+        const actionButtonLabel = String(value).trim() === '' ? 'Guide me' : 'Refine';
         const onWizardClick =
           field.wizard
             ? () => {
-                handleOpenWizard({
-                  wizardId: field.wizard,
+                handleRunWizard({
+                  wizardId: field.wizard!,
                   targetInputRef: ref,
+                  currentContent: String(value),
                 });
               }
             : undefined;
