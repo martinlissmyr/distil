@@ -70,7 +70,7 @@ export type StorySection = StorySectionId;
 export type RootSection = RootSectionId;
 export type AppSection = 'root' | 'project' | 'story';
 
-type NavState = {
+export type NavState = {
   appSection: AppSection;
   rootSection: RootSection;
   projectId: string | null;

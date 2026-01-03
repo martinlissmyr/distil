@@ -1,14 +1,7 @@
 // src/hooks/useAppInitialization.ts
 import { useEffect } from 'react';
 import { client, Project, StoryMeta, StoryData } from '../api/client';
-
-type NavState = {
-  appSection: 'root' | 'project' | 'story';
-  rootSection: string;
-  projectId: string | null;
-  storyId: string | null;
-  storySection: string;
-};
+import type { NavState } from './useNavigation';
 
 /**
  * Parameters for the initialization hook

@@ -93,11 +93,13 @@ const App: React.FC = () => {
       }
       return client.updateStory(selectedProjectId, id, data);
     },
-    delete: (id) => {
+    delete: (_id) => {
       if (!selectedProjectId) {
         return Promise.reject(new Error('No project selected'));
       }
-      return client.deleteStory(selectedProjectId, id);
+      // Note: deleteStory is not yet implemented in the client API
+      // Stories are currently not deleted from disk, only removed from UI state
+      return Promise.reject(new Error('Story deletion not implemented'));
     },
     reorder: (ids) => {
       if (!selectedProjectId) {
@@ -251,7 +253,6 @@ const App: React.FC = () => {
       projects={projects}
       selectedProjectId={selectedProjectId}
       onSelectProject={projectHandlers.handleSelectProject}
-      onCreateProject={projectHandlers.handleCreateProject}
       onBackToProjects={projectHandlers.handleBackToProjects}
       stories={stories}
       selectedStoryId={selectedStoryId}
