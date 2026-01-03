@@ -88,7 +88,7 @@ describe('WriteQueue', () => {
     // WITHOUT queue, concurrent increments would cause lost updates
     // WITH queue, all increments are serialized
 
-    const promises = Array.from({ length: 10 }, (_, i) =>
+    const promises = Array.from({ length: 10 }, () =>
       writeQueue.enqueue('file:counter', increment)
     );
 

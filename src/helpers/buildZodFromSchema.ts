@@ -62,7 +62,7 @@ function toZod(value: any): any {
  * Backwards-compatible: accept either fields array or a full document type.
  */
 export function buildZodFromSchema(input: readonly FieldDef[] | DocumentTypeDef<any>) {
-  const fields: readonly FieldDef[] = Array.isArray(input) ? input : input.fields;
+  const fields: readonly FieldDef[] = Array.isArray(input) ? input : (input as DocumentTypeDef<any>).fields;
 
   const shape: any = {};
   for (const f of fields) {

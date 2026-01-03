@@ -11,7 +11,7 @@ export function registerDevModeHandlers(): void {
     return !!VITE_DEV_SERVER_URL;
   });
 
-  safeHandle('devMode:openDevTools', async (event) => {
+  safeHandle('devMode:openDevTools', async (_event) => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) {
       win.webContents.openDevTools(); // or omit options

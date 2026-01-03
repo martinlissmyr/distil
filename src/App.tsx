@@ -6,17 +6,13 @@ import {
   client,
   Project,
   StoryMeta,
-  StoryData,
 } from './api/client';
 import { useAppStore } from './state/useAppStore';
 import { AppLayout } from './ui/layout/AppLayout';
 import { Sidebar } from './ui/layout/Sidebar';
-import type { ProseDoc } from './ui/editor/ProseEditor';
 import { AppContent } from './ui/layout/AppContent';
 import { AppModals } from './ui/layout/AppModals';
 import { useNavigation, useLeaveGuardStore } from './hooks/useNavigation';
-import type { StorySection, RootSection, AppSection } from './hooks/useNavigation';
-import { ConfirmLeaveModal } from './ui/modals/ConfirmLeaveModal';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
@@ -137,7 +133,7 @@ const App: React.FC = () => {
 
   // Story editor hook
   const storyEditor = useStoryEditor(selectedProjectId, selectedStoryId);
-  const { currentTitle, currentDoc, dirty, loadStory, clearEditor, updateDoc, setCurrentTitle, setCurrentDoc, setDirty } = storyEditor;
+  const { currentTitle, currentDoc, loadStory, clearEditor, updateDoc, setCurrentTitle } = storyEditor;
 
   // App initialization hook
   useAppInitialization({
@@ -238,7 +234,7 @@ const App: React.FC = () => {
   });
 
   // ---- Handlers ----
-  const handleDocChange = useCallback((doc: ProseDoc) => {
+  const handleDocChange = useCallback((doc: any) => {
     updateDoc(doc);
   }, [updateDoc]);
 

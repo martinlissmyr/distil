@@ -1,6 +1,6 @@
 // src/hooks/useResolvedUiSchema.ts
 import { useEffect, useMemo, useState } from 'react';
-import type { UiSchemaSetting, UiSchema } from '../types/ui';
+import type { UiSchema } from '../types/ui';
 import { DEFAULT_UI_SCHEMA_SETTING } from '../types/ui';
 import { useAppStore } from '../state/useAppStore';
 
