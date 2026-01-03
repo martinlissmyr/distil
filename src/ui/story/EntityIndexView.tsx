@@ -257,7 +257,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
           withChat={true}
           doc={{
             scope: 'story',
-            docKind: 'characters',
+            docKind,
             projectId,
             storyId,
           }}

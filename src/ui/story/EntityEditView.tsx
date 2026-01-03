@@ -110,7 +110,7 @@ export function EntityEditView<T extends Record<string, any>>({
     const {
       kinds: contextKinds,
       markdown: contextMarkdown,
-    } = await getContextDocs(doc.docKind, 'the character as part of the world', projectId, storyId, {
+    } = await getContextDocs(doc.docKind, '', projectId, storyId, {
       language: writingLanguage,
     });
 
