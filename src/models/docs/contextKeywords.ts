@@ -1,6 +1,6 @@
 // src/models/docs/contextKeywords.ts
-import type { MetaDocKey } from '../types/metaDoc';
-import type WritingLanguage from '../types/language';
+import type { MetaDocKey } from '../../types/metaDoc';
+import type { WritingLanguage } from '../../types/language';
 
 // Keywords that suggest the user needs context documents
 // Organized by language and doc kind

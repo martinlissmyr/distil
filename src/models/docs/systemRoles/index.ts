@@ -1,5 +1,5 @@
 // src/models/docs/systemRoles.ts
-import type { DocKindId } from './index';
+import type { DocKindId } from '../index';
 
 import proseSystemRoleMd from './proseRole.md?raw';
 import manifestSystemRoleMd from './manifestRole.md?raw';
