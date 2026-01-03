@@ -177,6 +177,17 @@ export function EntityEditView<T extends Record<string, any>>({
     });
   }, [formData, schema]);
 
+  // Create refs for all textarea fields upfront (must be at top level, not inside render functions)
+  const textareaRefs = useMemo(() => {
+    const refs = new Map<string, RefObject<HTMLTextAreaElement>>();
+    for (const field of schema.fields) {
+      if (field.type === 'textarea') {
+        refs.set(field.name, { current: null });
+      }
+    }
+    return refs;
+  }, [schema.fields]);
+
   // Group fields by group (or ungrouped)
   const fieldsByGroup = useMemo(() => {
     const map = new Map<string | undefined, FieldDef[]>();
@@ -243,8 +254,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
       if (field.type === 'textarea') {
         const value = raw ?? '';
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const ref = useRef<HTMLTextAreaElement>(null);
+        const ref = textareaRefs.get(field.name)!;
         const actionButtonLabel = String(value).trim() === '' ? 'Guide me' : 'Refine';
         const onWizardClick =
           field.wizard
