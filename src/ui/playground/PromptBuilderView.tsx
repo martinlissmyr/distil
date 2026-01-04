@@ -72,7 +72,7 @@ export const PromptBuilderView: React.FC = () => {
     simulateEmptyContextDocs: {},
 
     scope: 'text',
-    userPrompt: '{{What the user actually writes}}',
+    userPrompt: 'Vad skulle Martin göra i den här situationen?',
 
     loadedTitle: '',
     loadedFullText: '',
