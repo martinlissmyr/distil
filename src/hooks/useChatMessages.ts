@@ -9,6 +9,8 @@ import {
 import { useAppStore, metaId } from '../state/useAppStore';
 import type { MetaDocKey } from '../types/metaDoc';
 import { getContextRulesFor, type DocKindId } from '../models/docs';
+import { computeDocState } from '../models/docs/docState';
+import { DistilClient as client } from '../api/client';
 
 export type ChatMessage = {
   id: string;
@@ -35,28 +37,6 @@ interface UseChatMessagesOptions {
 // helper
 function safeText(md: string | null | undefined): string {
   return (md ?? '').toString();
-}
-
-function computeMetaDocState(
-  metaDocs: Record<string, any>,
-  scope:
-    | { scope: 'root' }
-    | { scope: 'story'; projectId: string; storyId: string },
-  key: MetaDocKey
-): DocState {
-  const id =
-    scope.scope === 'root'
-      ? metaId({ scope: 'root' }, key)
-      : metaId({ scope: 'story', projectId: scope.projectId, storyId: scope.storyId }, key);
-
-  const doc = metaDocs[id];
-
-  if (!doc || doc.json === null) return 'missing';
-
-  const markdown = doc.markdown ?? '';
-  if (!markdown.trim()) return 'empty';
-
-  return 'hasContent';
 }
 
 function computeSelfState(isTextLoaded: boolean, fullTextMarkdown: string | null): DocState {
@@ -146,12 +126,18 @@ export function useChatMessages({
 
       for (const key of upstreamKinds) {
         if (key === 'manifest') {
-          upstreamStates[key] = computeMetaDocState(metaDocs, { scope: 'root' }, 'manifest');
-        } else if (projectId && storyId) {
-          upstreamStates[key] = computeMetaDocState(
+          upstreamStates[key] = await computeDocState('manifest', { scope: 'root' }, {
             metaDocs,
+            loadEntityIndex: client.loadEntityIndex,
+          });
+        } else if (projectId && storyId) {
+          upstreamStates[key] = await computeDocState(
+            key,
             { scope: 'story', projectId, storyId },
-            key
+            {
+              metaDocs,
+              loadEntityIndex: client.loadEntityIndex,
+            }
           );
         } else {
           upstreamStates[key] = 'missing';

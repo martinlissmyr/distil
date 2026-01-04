@@ -34,6 +34,7 @@ import {
   getContextRulesFor,
   isMetaDocKey,
 } from '../../models/docs';
+import { computeDocState } from '../../models/docs/docState';
 
 type DocStatusMap = Partial<Record<MetaDocKey, boolean>>;
 
@@ -256,7 +257,7 @@ export const PromptBuilderView: React.FC = () => {
       }
 
       const ensureMetaDocsLoaded = useAppStore.getState().ensureMetaDocsLoaded;
-      const getMetaDoc = useAppStore.getState().getMetaDoc;
+      const metaDocs = useAppStore.getState().metaDocs;
 
       const next: DocStatusMap = {};
 
@@ -265,8 +266,11 @@ export const PromptBuilderView: React.FC = () => {
       if (rootKeys.length) {
         await ensureMetaDocsLoaded({ scope: 'root' }, rootKeys);
         for (const k of rootKeys) {
-          const doc = getMetaDoc({ scope: 'root' }, k);
-          next[k] = !!doc?.markdown?.trim();
+          const docState = await computeDocState(k, { scope: 'root' }, {
+            metaDocs,
+            loadEntityIndex: client.loadEntityIndex,
+          });
+          next[k] = docState === 'hasContent';
         }
       }
 
@@ -277,8 +281,15 @@ export const PromptBuilderView: React.FC = () => {
         const storyId = state.selectedStoryId!;
         await ensureMetaDocsLoaded({ scope: 'story', projectId, storyId }, storyKeys);
         for (const k of storyKeys) {
-          const doc = getMetaDoc({ scope: 'story', projectId, storyId }, k);
-          next[k] = !!doc?.markdown?.trim();
+          const docState = await computeDocState(
+            k,
+            { scope: 'story', projectId, storyId },
+            {
+              metaDocs,
+              loadEntityIndex: client.loadEntityIndex,
+            }
+          );
+          next[k] = docState === 'hasContent';
         }
       }
 
