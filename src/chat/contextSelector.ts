@@ -20,6 +20,9 @@ import contextClassificationPromptMd from './prompts/contextClassificationPrompt
 import entitySelectionPromptMd from './prompts/entitySelectionPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
 import { loadFixtureEntityIndex } from '../fixtures/fixtureLoader';
+import { characterType } from '../models/entities/schemas/character';
+import { locationType } from '../models/entities/schemas/location';
+import { entityToMarkdown } from '../helpers/entityMarkdownUtils';
 
 
 // -------------------------------------------------------------
@@ -101,85 +104,61 @@ export async function getContextDocs(
     // For each entity type that was deemed relevant, select specific entities
     if (projectId && storyId && entityDepths.size > 0) {
       for (const [docKey, depth] of entityDepths.entries()) {
-        if (docKey === 'characters') {
-          const { selectedEntityIds } = await selectRelevantEntities(
-            rawUserPrompt,
-            projectId,
-            storyId,
-            'character'
-          );
-          if (selectedEntityIds.length > 0) {
-            if (!contexts.entities) contexts.entities = {};
-            contexts.entities.characters = { ids: selectedEntityIds, depth };
-            // Load entity content based on depth
-            for (const entityId of selectedEntityIds) {
-              try {
-                if (depth === 'projection') {
-                  // Load from entity index (already has projections)
-                  const projections = await loadEntityProjections(projectId, storyId, 'character');
-                  const entity = projections.find(p => p.id === entityId);
-                  if (entity?.projection) {
-                    contexts.docs.push({
-                      label: `CHARACTER: ${entityId}`,
-                      content: entity.projection,
-                    });
-                  }
-                } else {
-                  // Load full entity doc
-                  const response = await client.loadEntityDoc(projectId, storyId, 'character', entityId);
-                  if (response.ok && response.data) {
-                    // TODO: Convert entity doc to markdown
-                    // For now, use JSON representation
-                    contexts.docs.push({
-                      label: `CHARACTER (FULL): ${entityId}`,
-                      content: JSON.stringify(response.data, null, 2),
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error(`Failed to load character ${entityId}:`, error);
+        const docKind = getDocKind(docKey);
+
+        // Only process entity index docs
+        if (!isEntityIndexDoc(docKind)) continue;
+
+        const { entityType } = docKind;
+
+        // Select relevant entities using LLM
+        const { selectedEntityIds } = await selectRelevantEntities(
+          rawUserPrompt,
+          projectId,
+          storyId,
+          entityType
+        );
+
+        if (selectedEntityIds.length === 0) continue;
+
+        // Store entity selections
+        if (!contexts.entities) contexts.entities = {};
+        contexts.entities[docKey] = { ids: selectedEntityIds, depth };
+
+        // Extract label prefix from shortDescription (e.g., "Character information" from "Character information (identities/relationships/behaviors)")
+        const labelPrefix = docKind.shortDescription.split(' (')[0];
+
+        // Determine which schema to use
+        const schema = entityType === 'character' ? characterType : locationType;
+
+        // Load entity content based on depth
+        for (const entityId of selectedEntityIds) {
+          try {
+            if (depth === 'projection') {
+              // Load from entity index (has name + projection markdown)
+              const projections = await loadEntityProjections(projectId, storyId, entityType);
+              const entity = projections.find(p => p.id === entityId);
+
+              if (entity?.projection) {
+                contexts.docs.push({
+                  label: `${labelPrefix}: ${entity.name}`,
+                  content: entity.projection,
+                });
+              }
+            } else {
+              // Load full entity doc and convert to markdown
+              const response = await client.loadEntityDoc(projectId, storyId, entityType, entityId);
+
+              if (response.ok && response.data) {
+                const markdown = entityToMarkdown(response.data, schema);
+                contexts.docs.push({
+                  label: `${labelPrefix} (FULL): ${response.data.name}`,
+                  content: markdown,
+                });
               }
             }
-          }
-        } else if (docKey === 'locations') {
-          const { selectedEntityIds } = await selectRelevantEntities(
-            rawUserPrompt,
-            projectId,
-            storyId,
-            'location'
-          );
-          if (selectedEntityIds.length > 0) {
-            if (!contexts.entities) contexts.entities = {};
-            contexts.entities.locations = { ids: selectedEntityIds, depth };
-            // Load entity content based on depth
-            for (const entityId of selectedEntityIds) {
-              try {
-                if (depth === 'projection') {
-                  // Load from entity index (already has projections)
-                  const projections = await loadEntityProjections(projectId, storyId, 'location');
-                  const entity = projections.find(p => p.id === entityId);
-                  if (entity?.projection) {
-                    contexts.docs.push({
-                      label: `LOCATION: ${entityId}`,
-                      content: entity.projection,
-                    });
-                  }
-                } else {
-                  // Load full entity doc
-                  const response = await client.loadEntityDoc(projectId, storyId, 'location', entityId);
-                  if (response.ok && response.data) {
-                    // TODO: Convert entity doc to markdown
-                    // For now, use JSON representation
-                    contexts.docs.push({
-                      label: `LOCATION (FULL): ${entityId}`,
-                      content: JSON.stringify(response.data, null, 2),
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error(`Failed to load location ${entityId}:`, error);
-              }
-            }
+          } catch (error) {
+            console.error(`Failed to load ${entityType} ${entityId}:`, error);
           }
         }
       }
@@ -470,7 +449,7 @@ async function loadEntityProjections(
   projectId: string,
   storyId: string,
   entityType: EntityType
-): Promise<{ id: string; projection: string }[]> {
+): Promise<{ id: string; name: string; projection: string }[]> {
   let index = null;
 
   // Try loading from real data via IPC
@@ -495,6 +474,7 @@ async function loadEntityProjections(
     .filter(entry => entry.projection) // Only include entities with projections
     .map(entry => ({
       id: entry.id,
+      name: entry.name,
       projection: entry.projection!
     }));
 }
