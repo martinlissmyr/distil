@@ -11,6 +11,8 @@ import {
   getContextCriteriaLine,
   getContextDefinitionBlock,
   assertContextGuidanceAvailable,
+  isEntityIndexDoc,
+  getDocKind,
 } from '../models/docs';
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
@@ -70,11 +72,12 @@ export async function getContextDocs(
 
   // 2. Intelligent selection
   if (rules.intelligentlySelect.length > 0) {
-    const { relevantContexts } = await determineContextNeeds(
+    const { relevantContexts, entityDepths } = await determineContextNeeds(
       rawUserPrompt,
       rules.intelligentlySelect,
       { language }
     );
+    // TODO: entityDepths will be used in Phase 2 for entity selection
 
     for (const docKey of relevantContexts) {
       contexts.kinds.push(docKey);
@@ -187,10 +190,17 @@ export function buildPrompt(ambiguousNeededContexts: MetaDocKey[]): string {
 
   // 3. Build JSON field lines
   const jsonFields = keysToDescribe
-    .map(
-      (key) =>
-        `  "${key}": boolean, // true only if story ${key} document is necessary`
-    )
+    .map((key) => {
+      const docKind = getDocKind(key);
+      const baseField = `  "${key}": boolean, // true only if story ${key} document is necessary`;
+
+      if (isEntityIndexDoc(docKind)) {
+        const depthField = `  "${key}Depth": "projection" | "full", // "projection" for high-level/referential queries, "full" for deep psychology/motivations`;
+        return `${baseField}\n${depthField}`;
+      }
+
+      return baseField;
+    })
     .join('\n');
 
   // 4. Interpolate into the markdown template
@@ -207,8 +217,11 @@ export function buildPrompt(ambiguousNeededContexts: MetaDocKey[]): string {
 // LLM-based refinement
 // -------------------------------------------------------------
 
+export type EntityDepth = 'projection' | 'full';
+
 export type LlmContextResult = {
   relevantContexts: MetaDocKey[];
+  entityDepths: Map<MetaDocKey, EntityDepth>; // depth for each entity type
   result: Record<string, any> | null; // raw LLM JSON for testing
 };
 
@@ -241,12 +254,15 @@ export async function determineContextNeedsWithLLMClassification(
       console.error('LLM classification failed:', response.error);
       return {
         relevantContexts: Array.from(new Set(relevantContexts)),
+        entityDepths: new Map(),
         result: null,
       };
     }
 
     const raw = response.data.output_text || '{}';
     const result = JSON.parse(raw) as Record<string, any>;
+
+    const entityDepths = new Map<MetaDocKey, EntityDepth>();
 
     for (const key of ambiguousNeededContexts) {
       const v = result[key];
@@ -255,14 +271,31 @@ export async function determineContextNeedsWithLLMClassification(
       }
     }
 
+    // Extract depth fields for entity types
+    for (const key of ambiguousNeededContexts) {
+      const docKind = getDocKind(key);
+      if (isEntityIndexDoc(docKind) && relevantContexts.includes(key)) {
+        const depthKey = `${key}Depth`;
+        const depthValue = result[depthKey];
+        if (depthValue === 'projection' || depthValue === 'full') {
+          entityDepths.set(key, depthValue);
+        } else {
+          // Default to 'projection' if depth not specified
+          entityDepths.set(key, 'projection');
+        }
+      }
+    }
+
     return {
       relevantContexts: Array.from(new Set(relevantContexts)),
+      entityDepths,
       result,
     };
   } catch (error) {
     console.error('LLM classification failed:', error);
     return {
       relevantContexts: Array.from(new Set(relevantContexts)),
+      entityDepths: new Map(),
       result: null,
     };
   }
@@ -274,6 +307,7 @@ export async function determineContextNeedsWithLLMClassification(
 
 export type ContextNeedsResult = {
   relevantContexts: MetaDocKey[];
+  entityDepths: Map<MetaDocKey, EntityDepth>;
   result: Record<string, any> | null; // null when only heuristics used
 };
 
@@ -300,10 +334,24 @@ export async function determineContextNeeds(
     }
   }
 
-  // If nothing ambiguous, we’re done – heuristics only
+  // Force entity types to LLM classification (need depth determination)
+  // Move any entity index docs from relevantContexts to ambiguousNeededContexts
+  for (let i = relevantContexts.length - 1; i >= 0; i--) {
+    const kind = relevantContexts[i];
+    const docKind = getDocKind(kind);
+    if (isEntityIndexDoc(docKind)) {
+      relevantContexts.splice(i, 1);
+      if (!ambiguousNeededContexts.includes(kind)) {
+        ambiguousNeededContexts.push(kind);
+      }
+    }
+  }
+
+  // If nothing ambiguous, we're done – heuristics only
   if (ambiguousNeededContexts.length === 0) {
     return {
       relevantContexts: Array.from(new Set(relevantContexts)),
+      entityDepths: new Map(),
       result: null,
     };
   }

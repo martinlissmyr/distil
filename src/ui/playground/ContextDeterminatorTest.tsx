@@ -12,6 +12,7 @@ import {
   SegmentedControl,
   Title,
   Code,
+  Collapse,
 } from '@mantine/core';
 import {
   determineContextNeeds,
@@ -20,6 +21,7 @@ import {
   isAboveConfidenceThreshold,
   determineContextNeedsWithLLMClassification,
   type HeuristicCheckResult,
+  type EntityDepth,
 } from '../../chat/contextSelector';
 import type { EditorKind } from '../../types/chat';
 import type { MetaDocKey } from '../../types/metaDoc';
@@ -40,6 +42,10 @@ export const ContextDeterminatorTest: React.FC = () => {
   const [remainingContexts, setRemainingContexts] = useState<MetaDocKey[] | null>(null);
   const [llmPrompt, setLLMPrompt] = useState<string | null>(null);
   const [finalResult, setFinalResult] = useState<MetaDocKey[] | null>(null);
+  const [entityDepths, setEntityDepths] = useState<Map<MetaDocKey, EntityDepth> | null>(null);
+
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [showResponse, setShowResponse] = useState(false);
 
   const resetResults = () => {
     setFinalResult(null);
@@ -48,6 +54,9 @@ export const ContextDeterminatorTest: React.FC = () => {
     setContextualCandidates(null);
     setHeuristicResults(null);
     setRemainingContexts(null);
+    setEntityDepths(null);
+    setShowPrompt(false);
+    setShowResponse(false);
   };
 
   const handleTest = async () => {
@@ -95,7 +104,7 @@ export const ContextDeterminatorTest: React.FC = () => {
           setLLMPrompt(buildPrompt(ambiguousNeededContexts));
           setRemainingContexts(ambiguousNeededContexts);
 
-          const { relevantContexts, result } =
+          const { relevantContexts, result, entityDepths: depths } =
             await determineContextNeedsWithLLMClassification(
               userPrompt,
               Array.from(new Set(heuristicallyRelevantContexts)),
@@ -103,6 +112,7 @@ export const ContextDeterminatorTest: React.FC = () => {
             );
 
           setLLMResponse(result);
+          setEntityDepths(depths);
           setFinalResult([
             ...rules.alwaysInclude,
             ...relevantContexts,
@@ -289,7 +299,7 @@ export const ContextDeterminatorTest: React.FC = () => {
                         {getDocumentLabel(result.kind)}:
                       </Text>
                       <Badge color={getConfidenceColor(result.confidence)}>
-                        {result.confidence >= 0.7 ? 'Include' : 'Undetermined'}
+                        {result.confidence >= 0.7 ? 'Include' : (['characters', 'locations'].includes(result.kind) ? 'Always undetermined' : 'Undetermined')}
                       </Badge>
                     </Group>
                   ))}
@@ -300,32 +310,48 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           {remainingContexts && (() => {
             return (
-              <Paper p="md" withBorder radius="sm"> 
+              <Paper p="md" withBorder radius="sm">
                 <Stack gap="sm">
                   <Title order={5}>LLM Classification</Title>
                   <Text size="sm" fw={500}>
                     Using LLM to see if undetermined context kinds is needed.
                   </Text>
-                  <Text size="sm" fw={500}>
-                    Prompt sent to ChatGPT:
-                  </Text>
-                  <Code
-                    block
-                    style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}
+
+                  <Button
+                    variant="light"
+                    size="xs"
+                    fullWidth={false}
+                    onClick={() => setShowPrompt(!showPrompt)}
                   >
-                    {llmPrompt}
-                  </Code>
+                    {showPrompt ? 'Hide prompt' : 'Show prompt'}
+                  </Button>
+                  <Collapse in={showPrompt}>
+                    <Code
+                      block
+                      style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}
+                    >
+                      {llmPrompt}
+                    </Code>
+                  </Collapse>
+
                   {llmResponse && (
                     <>
-                      <Text size="sm" fw={500} mt="md">
-                        Response (interpreted as final inclusion):
-                      </Text>
-                      <Code
-                        block
-                        style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}
+                      <Button
+                        variant="light"
+                        size="xs"
+                        onClick={() => setShowResponse(!showResponse)}
+                        mt="xs"
                       >
-                        {JSON.stringify(llmResponse, null, 2)}
-                      </Code>
+                        {showResponse ? 'Hide response' : 'Show response'}
+                      </Button>
+                      <Collapse in={showResponse}>
+                        <Code
+                          block
+                          style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}
+                        >
+                          {JSON.stringify(llmResponse, null, 2)}
+                        </Code>
+                      </Collapse>
                     </>
                   )}
                 </Stack>
@@ -352,6 +378,32 @@ export const ContextDeterminatorTest: React.FC = () => {
               </Paper>
             );
           })()}
+
+          {entityDepths && entityDepths.size > 0 && (() => {
+            return (
+              <Paper p="md" withBorder radius="sm">
+                <Stack gap="sm">
+                  <Title order={5}>Entity Depth Determination</Title>
+                  <Text size="sm" fw={500}>
+                    For entity types (characters, locations), the LLM also determines the depth level needed.
+                  </Text>
+                  <Stack gap="xs">
+                    {Array.from(entityDepths.entries()).map(([docKey, depth]) => (
+                      <Group gap="xs" key={docKey}>
+                        <Text size="sm" fw={500} style={{ width: '80px' }}>
+                          {getDocumentLabel(docKey)}:
+                        </Text>
+                        <Badge color={depth === 'full' ? 'orange' : 'blue'}>
+                          {depth === 'full' ? 'Full Document' : 'Projection Only'}
+                        </Badge>
+                      </Group>
+                    ))}
+                  </Stack>
+                </Stack>
+              </Paper>
+            );
+          })()}
+
         </Stack>
       </Box>
     </Group>
