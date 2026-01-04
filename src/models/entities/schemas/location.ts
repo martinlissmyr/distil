@@ -38,6 +38,7 @@ export const locationType = defineType({
       label: 'Name',
       placeholder: 'Location name',
       schema: z.string().min(1, 'Name is required'),
+      includeInProjection: true,
     }),
 
     defineField({
@@ -47,6 +48,7 @@ export const locationType = defineType({
       label: 'Aliases',
       placeholder: 'Location aliases, secondary names, etc.',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
 
     // --------------------
@@ -63,6 +65,7 @@ export const locationType = defineType({
         { value: 'significant', label: 'Significant' },
         { value: 'secondary', label: 'Secondary' },
       ],
+      includeInProjection: true,
     }),
 
     defineField({
@@ -72,6 +75,7 @@ export const locationType = defineType({
       label: 'Narrative function',
       placeholder: 'e.g. home, office, part of a city or village where the story takes place',
       schema: z.string().optional(),
+      includeInProjection: true,
     }),
   ] as const,
 });

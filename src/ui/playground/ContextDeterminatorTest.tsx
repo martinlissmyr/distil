@@ -129,20 +129,20 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           for (const [docKey, depth] of depths.entries()) {
             if (docKey === 'characters' && actualEditorKind === 'prose') {
-              // For testing, use placeholder project/story IDs
+              // For testing, use fixture project/story IDs
               // In real usage, these would come from context
               const result = await selectRelevantEntities(
                 userPrompt,
-                'test-project',
-                'test-story',
+                'project-test-project',
+                'story-test-story',
                 'character'
               );
               selections.characters = result;
             } else if (docKey === 'locations' && actualEditorKind === 'prose') {
               const result = await selectRelevantEntities(
                 userPrompt,
-                'test-project',
-                'test-story',
+                'project-test-project',
+                'story-test-story',
                 'location'
               );
               selections.locations = result;

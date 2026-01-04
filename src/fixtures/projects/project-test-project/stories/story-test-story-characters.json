@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": {
+    "kind": "story",
+    "projectId": "project-test-project",
+    "storyId": "story-test-story"
+  },
+  "entities": [
+    {
+      "id": "character-1767202893756",
+      "name": "Martin Lissmyr",
+      "projection": "# Martin Lissmyr\r\n\r\n**Tier (significance of character)**: primary\r\n\n**Role in story**: huvudperson, jaget\r\n\n**Age**: fyrtioårsåldern\r\n\n**Gender**: Man\r\n\n",
+      "docRef": {
+        "type": "character",
+        "id": "character-1767202893756"
+      }
+    }
+  ],
+  "updatedAt": "2026-01-03T17:56:57.055Z"
+}

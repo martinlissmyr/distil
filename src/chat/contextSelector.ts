@@ -18,6 +18,7 @@ import {
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
 import entitySelectionPromptMd from './prompts/entitySelectionPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
+import { loadFixtureEntityIndex } from '../fixtures/fixtureLoader';
 
 
 // -------------------------------------------------------------
@@ -413,14 +414,26 @@ async function loadEntityProjections(
   storyId: string,
   entityType: EntityType
 ): Promise<{ id: string; projection: string }[]> {
+  let index = null;
+
+  // Try loading from real data via IPC
   const response = await window.distil.loadEntityIndex(projectId, storyId, entityType);
 
-  if (!response.ok || !response.data) {
-    console.error(`Failed to load ${entityType} index:`, response.error);
-    return [];
+  if (response.ok && response.data) {
+    index = response.data;
+  } else {
+    // Fallback to fixture data for test project/story IDs
+    console.log(`IPC failed for ${entityType} index, trying fixtures...`);
+    const fixtureIndex = loadFixtureEntityIndex(projectId, storyId, entityType);
+    if (fixtureIndex) {
+      console.log(`Loaded ${entityType} index from fixtures`);
+      index = fixtureIndex;
+    } else {
+      console.error(`Failed to load ${entityType} index:`, response.error);
+      return [];
+    }
   }
 
-  const index = response.data;
   return index.entities
     .filter(entry => entry.projection) // Only include entities with projections
     .map(entry => ({

@@ -1,0 +1,768 @@
+{
+  "id": "story-test-story",
+  "title": "Intro",
+  "createdAt": "2025-11-23T14:29:54.889Z",
+  "doc": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "dfdgdfgdfg  dfgdfgdfg"
+          }
+        ]
+      }
+    ]
+  },
+  "outlineDoc": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph"
+      }
+    ]
+  },
+  "briefDoc": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph"
+      }
+    ]
+  },
+  "metaDocs": {
+    "brief": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Premiss"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "En person växer upp med en gammal, gåtfull jordglob i föräldrahemmet som blir en portal till drömmar om resor och okända platser. När jordgloben slutligen hamnar i personens ägo, visar den sig inte vara en vanlig karta utan en blandning av verklighet, fantasi och minnen. Drivkraften är längtan – en vilja att upptäcka och förstå världen bortom det bekanta. Resan som följer är lika mycket en yttre färd som en inre utforskning av minnen, tankar och berättelser. "
+            }
+          ]
+        },
+        {
+          "type": "horizontalRule"
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Längtan och drömmar om det okända"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Gränsen mellan verklighet och fantasi"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Minnets och historiens fragmentariska natur"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Resan som en metafor för självupptäckt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Det oförklarliga och mysteriets plats i vardagen  "
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "horizontalRule"
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Hook"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "En gammal jordglob som inte bara visar världen som den är – utan också som den kunde ha varit eller borde ha varit – leder berättarens finger och fötter till platser som existerar i drömmar, bortglömda historier och fantasi. Vad är verkligt? Vad är längtan? Och hur påverkar sökandet efter svar ens egen berättelse?"
+            }
+          ]
+        },
+        {
+          "type": "horizontalRule"
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Nyckelkonflikter"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "- Förvirringen och fascinationen inför globens ofullständiga och motsägelsefulla geografi  "
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "- Kampen att förstå vad globen representerar och vad den betyder för berättaren  "
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "- Längtan efter platser som kanske inte existerar, och vad det gör med känslan av verklighet  "
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "- Balansen mellan att följa en yttre karta och att navigera i inre minnen och tankar  "
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "- Att acceptera att inte alla frågor får svar, och att meningen kan finnas i själva sökandet"
+            }
+          ]
+        },
+        {
+          "type": "paragraph"
+        }
+      ]
+    },
+    "outline": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "Översikt"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "En enkel färd genom skogen utvecklas till en prövning där lydnad, omdöme och fara står i centrum. Berättelsen fungerar som en moralisk varningshistoria snarare än en psykologisk utvecklingsroman, men rymmer ändå tydliga funktionella karaktärsbågar."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "Struktur & scenordning"
+            }
+          ]
+        },
+        {
+          "type": "orderedList",
+          "attrs": {
+            "start": 1,
+            "type": null
+          },
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Introduktion / Uppdraget"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Rödluvan får i uppdrag av sin mor att gå genom skogen till mormodern med mat."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "italic"
+                        }
+                      ],
+                      "text": "Regler etableras"
+                    },
+                    {
+                      "type": "text",
+                      "text": ": håll dig på stigen, tala inte med främlingar."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Första mötet – konfliktens frö"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Rödluvan möter vargen i skogen."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "italic"
+                        }
+                      ],
+                      "text": "Konflikt"
+                    },
+                    {
+                      "type": "text",
+                      "text": ": oskuld vs list."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hon avslöjar vart hon är på väg."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Avvikelsen – första vändpunkten"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Vargen lockar Rödluvan att stanna upp (plocka blommor, ta omvägar)."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "italic"
+                        }
+                      ],
+                      "text": "Regelbrott"
+                    },
+                    {
+                      "type": "text",
+                      "text": ": hon lämnar stigen."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Antagonistens övertag"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Vargen går före till mormoderns hus, lurar och äter henne (eller låser in henne, beroende på version)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Konfrontationen i huset – klimax"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Rödluvan anländer och möter vargen förklädd till mormodern."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Den klassiska dialogen leder till avslöjande och katastrof: även Rödluvan blir uppäten."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Upplösning / Räddning"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "I senare versioner ingriper jägaren, räddar Rödluvan och mormodern, och dödar vargen."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ],
+                      "text": "Efterklang / Moral"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Underförstådd lärdom: lydnad, vaksamhet och respekt för fara."
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Berättelsen avslutas med återställd ordning."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "horizontalRule"
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "Tematiska konflikter"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Lydnad vs nyfikenhet"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Trygg gemenskap vs farlig omvärld"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Oskuld vs rovdjurisk list"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Regelbrott → konsekvens"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "horizontalRule"
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "Sammanfattning"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Berättelsen följer en rak, nästan ritualistisk struktur:"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "Uppdrag → avvikelse → straff → (möjlig) räddning"
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Karaktärsutvecklingen är minimal men funktionell, och varje scen tjänar ett tydligt moraliskt och narrativt syfte."
+            }
+          ]
+        }
+      ]
+    },
+    "world": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Berättelsen utspelar sig i en förmodern, lantlig europeisk värld, starkt förankrad i ett agrart samhälle. Tidsmässigt motsvarar den ungefär sen medeltid till tidigmodern tid, utan exakt historisk datering. Världen präglas av små byar, enkla hushåll och en vardag där människor lever nära naturen och är beroende av den för sin överlevnad."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Platsen är främst landsbygden: en by, en stig genom skogen och en ensam stuga djupt inne i vildmarken. Skogen fungerar som ett gränsland mellan det mänskliga och det okontrollerade. Den är både en resurs och ett hot – fylld av ved, bär och vilt, men också av faror, rovdjur och det okända. Avstånd mäts inte i mil utan i trygghet: ju längre från byn, desto svagare är de sociala skyddsnäten."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Kulturellt präglas världen av tydliga sociala normer, hierarkier och könsroller. Barn förväntas vara lydiga och följa vuxnas instruktioner. Äldre personer – som mormodern – ses som sårbara och i behov av omsorg, men också som bärare av erfarenhet. Moral och uppfostran förmedlas genom berättelser snarare än genom formella institutioner."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Samhälleliga strukturer är enkla och lokala. Det finns inga synliga statliga institutioner i berättelsen; ordning och trygghet upprätthålls genom familj, sedvänjor och gemensam kunskap. Faran i världen är konkret och personlig snarare än abstrakt eller systemisk. Hotet kommer inte från krig eller politik, utan från naturen och från dem som bryter mot sociala regler."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "När det gäller realism befinner sig berättelsen i ett gränsland mellan realism och sagologik. Den vardagliga världen – byn, skogen, resan – är realistisk och igenkännbar. Samtidigt tillåts övernaturliga eller symboliska inslag utan att de ifrågasätts inom berättelsens logik. Det tydligaste exemplet är vargen: ett djur som inte bara talar och lurar människor, utan också kan imitera mänskligt beteende och överskrida naturliga gränser."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "De fantastiska elementen följer dock enkla och konsekventa regler. Världen är inte magisk i teknisk mening; det finns inga trollformler, magiska föremål eller alternativa dimensioner. I stället fungerar det fantastiska som en förlängning av moraliska och psykologiska krafter. Vargen representerar fara, begär, list och överträdelse av gränser, snarare än en biologiskt korrekt varelse."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Berättelsens värld accepterar det osannolika så länge det tjänar dess inre logik: att varna, undervisa och gestalta konsekvenser. Det finns ingen tydlig gräns mellan det realistiska och det symboliska – de samexisterar utan konflikt."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Sammanfattningsvis är Rödluvans värld en lågfantastisk, förmodern landsbygdsvärld där vardaglig realism blandas med sagans förenklade och symboliska mekanismer. Den styrs av sociala regler, muntlig kunskap och naturens makt, och den fungerar främst som en moralisk och psykologisk spelplats snarare än som ett fullt utbyggt realistiskt universum."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": {
+    "kind": "story",
+    "projectId": "project-test-project",
+    "storyId": "story-test-story"
+  },
+  "entities": [
+    {
+      "id": "location-1767473954819",
+      "name": "Kvarteret",
+      "projection": "# Kvarteret\n\n**Tier (significance of location)**: primary\n\n",
+      "docRef": {
+        "type": "location",
+        "id": "location-1767473954819"
+      }
+    }
+  ],
+  "updatedAt": "2026-01-04T16:24:55.935Z"
+}
