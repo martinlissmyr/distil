@@ -186,6 +186,8 @@ export const ContextDeterminatorTest: React.FC = () => {
                   { label: 'Brief', value: 'brief' },
                   { label: 'Outline', value: 'outline' },
                   { label: 'World', value: 'world' },
+                  { label: 'Characters', value: 'characters' },
+                  { label: 'Locations', value: 'locations' },
                 ]}
                 fullWidth
               />
