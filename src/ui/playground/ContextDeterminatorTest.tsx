@@ -20,8 +20,10 @@ import {
   buildPrompt,
   isAboveConfidenceThreshold,
   determineContextNeedsWithLLMClassification,
+  selectRelevantEntities,
   type HeuristicCheckResult,
   type EntityDepth,
+  type EntitySelectionResult,
 } from '../../chat/contextSelector';
 import type { EditorKind } from '../../types/chat';
 import type { MetaDocKey } from '../../types/metaDoc';
@@ -43,6 +45,10 @@ export const ContextDeterminatorTest: React.FC = () => {
   const [llmPrompt, setLLMPrompt] = useState<string | null>(null);
   const [finalResult, setFinalResult] = useState<MetaDocKey[] | null>(null);
   const [entityDepths, setEntityDepths] = useState<Map<MetaDocKey, EntityDepth> | null>(null);
+  const [entitySelections, setEntitySelections] = useState<{
+    characters?: EntitySelectionResult;
+    locations?: EntitySelectionResult;
+  } | null>(null);
 
   const [showPrompt, setShowPrompt] = useState(false);
   const [showResponse, setShowResponse] = useState(false);
@@ -55,6 +61,7 @@ export const ContextDeterminatorTest: React.FC = () => {
     setHeuristicResults(null);
     setRemainingContexts(null);
     setEntityDepths(null);
+    setEntitySelections(null);
     setShowPrompt(false);
     setShowResponse(false);
   };
@@ -113,6 +120,39 @@ export const ContextDeterminatorTest: React.FC = () => {
 
           setLLMResponse(result);
           setEntityDepths(depths);
+
+          // Phase 2: Entity selection
+          const selections: {
+            characters?: EntitySelectionResult;
+            locations?: EntitySelectionResult;
+          } = {};
+
+          for (const [docKey, depth] of depths.entries()) {
+            if (docKey === 'characters' && actualEditorKind === 'prose') {
+              // For testing, use placeholder project/story IDs
+              // In real usage, these would come from context
+              const result = await selectRelevantEntities(
+                userPrompt,
+                'test-project',
+                'test-story',
+                'character'
+              );
+              selections.characters = result;
+            } else if (docKey === 'locations' && actualEditorKind === 'prose') {
+              const result = await selectRelevantEntities(
+                userPrompt,
+                'test-project',
+                'test-story',
+                'location'
+              );
+              selections.locations = result;
+            }
+          }
+
+          if (Object.keys(selections).length > 0) {
+            setEntitySelections(selections);
+          }
+
           setFinalResult([
             ...rules.alwaysInclude,
             ...relevantContexts,
@@ -399,6 +439,51 @@ export const ContextDeterminatorTest: React.FC = () => {
                       </Group>
                     ))}
                   </Stack>
+                </Stack>
+              </Paper>
+            );
+          })()}
+
+          {entitySelections && (entitySelections.characters || entitySelections.locations) && (() => {
+            return (
+              <Paper p="md" withBorder radius="sm">
+                <Stack gap="sm">
+                  <Title order={5}>Entity Selection (Phase 2)</Title>
+                  <Text size="sm" fw={500}>
+                    Specific entities selected based on relevance to the user prompt.
+                  </Text>
+
+                  {entitySelections.characters && (
+                    <Stack gap="xs">
+                      <Text size="sm" fw={600}>Characters:</Text>
+                      {entitySelections.characters.selectedEntityIds.length > 0 ? (
+                        entitySelections.characters.selectedEntityIds.map(id => (
+                          <Group gap="xs" key={id}>
+                            <Badge color="green">{id}</Badge>
+                            <Text size="sm">Selected</Text>
+                          </Group>
+                        ))
+                      ) : (
+                        <Text size="sm" c="dimmed">No characters selected</Text>
+                      )}
+                    </Stack>
+                  )}
+
+                  {entitySelections.locations && (
+                    <Stack gap="xs">
+                      <Text size="sm" fw={600}>Locations:</Text>
+                      {entitySelections.locations.selectedEntityIds.length > 0 ? (
+                        entitySelections.locations.selectedEntityIds.map(id => (
+                          <Group gap="xs" key={id}>
+                            <Badge color="green">{id}</Badge>
+                            <Text size="sm">Selected</Text>
+                          </Group>
+                        ))
+                      ) : (
+                        <Text size="sm" c="dimmed">No locations selected</Text>
+                      )}
+                    </Stack>
+                  )}
                 </Stack>
               </Paper>
             );

@@ -4,6 +4,7 @@ import type { EditorKind } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
 import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
 import type { WritingLanguage } from '../types/language';
+import type { EntityType } from '../models/entities/entityIndex';
 import {
   getContextRulesFor,
   getDocContextLabel,
@@ -15,6 +16,7 @@ import {
   getDocKind,
 } from '../models/docs';
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
+import entitySelectionPromptMd from './prompts/entitySelectionPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
 
 
@@ -50,6 +52,10 @@ export async function getContextDocs(
     kinds: MetaDocKey[];
     docs: { label: string; content: string }[];
     markdown: string;
+    entities?: {
+      characters?: { ids: string[]; depth: EntityDepth };
+      locations?: { ids: string[]; depth: EntityDepth };
+    };
   } = {
     kinds: [],
     docs: [],
@@ -77,7 +83,6 @@ export async function getContextDocs(
       rules.intelligentlySelect,
       { language }
     );
-    // TODO: entityDepths will be used in Phase 2 for entity selection
 
     for (const docKey of relevantContexts) {
       contexts.kinds.push(docKey);
@@ -87,6 +92,38 @@ export async function getContextDocs(
           label: getDocContextLabel(docKey),
           content: markdown,
         });
+      }
+    }
+
+    // 3. Entity selection (Phase 2)
+    // For each entity type that was deemed relevant, select specific entities
+    if (projectId && storyId && entityDepths.size > 0) {
+      for (const [docKey, depth] of entityDepths.entries()) {
+        if (docKey === 'characters') {
+          const { selectedEntityIds } = await selectRelevantEntities(
+            rawUserPrompt,
+            projectId,
+            storyId,
+            'character'
+          );
+          if (selectedEntityIds.length > 0) {
+            if (!contexts.entities) contexts.entities = {};
+            contexts.entities.characters = { ids: selectedEntityIds, depth };
+            // TODO: Load actual entity docs/projections and add to contexts.docs
+          }
+        } else if (docKey === 'locations') {
+          const { selectedEntityIds } = await selectRelevantEntities(
+            rawUserPrompt,
+            projectId,
+            storyId,
+            'location'
+          );
+          if (selectedEntityIds.length > 0) {
+            if (!contexts.entities) contexts.entities = {};
+            contexts.entities.locations = { ids: selectedEntityIds, depth };
+            // TODO: Load actual entity docs/projections and add to contexts.docs
+          }
+        }
       }
     }
   }
@@ -362,4 +399,127 @@ export async function determineContextNeeds(
     Array.from(new Set(relevantContexts)),
     ambiguousNeededContexts
   );
+}
+
+// -------------------------------------------------------------
+// Phase 2: Entity selection
+// -------------------------------------------------------------
+
+/**
+ * Loads entity indices and extracts projections for LLM selection.
+ */
+async function loadEntityProjections(
+  projectId: string,
+  storyId: string,
+  entityType: EntityType
+): Promise<{ id: string; projection: string }[]> {
+  const response = await window.distil.loadEntityIndex(projectId, storyId, entityType);
+
+  if (!response.ok || !response.data) {
+    console.error(`Failed to load ${entityType} index:`, response.error);
+    return [];
+  }
+
+  const index = response.data;
+  return index.entities
+    .filter(entry => entry.projection) // Only include entities with projections
+    .map(entry => ({
+      id: entry.id,
+      projection: entry.projection!
+    }));
+}
+
+export type EntitySelectionResult = {
+  selectedEntityIds: string[];
+  result: Record<string, any> | null; // raw LLM JSON for testing
+};
+
+/**
+ * Uses LLM to select which specific entities are relevant for the user prompt.
+ * Only called when Phase 1 determines entity types are needed.
+ */
+export async function selectRelevantEntities(
+  userPrompt: string,
+  projectId: string,
+  storyId: string,
+  entityType: EntityType
+): Promise<EntitySelectionResult> {
+  const projections = await loadEntityProjections(projectId, storyId, entityType);
+
+  if (projections.length === 0) {
+    return {
+      selectedEntityIds: [],
+      result: null,
+    };
+  }
+
+  // Build prompt with projections
+  const entityTypeLabel = entityType === 'character' ? 'Character' : 'Location';
+
+  // Format projections as markdown sections
+  const projectionsBlock = projections
+    .map(({ id, projection }) => `### ${id}\n\n${projection}`)
+    .join('\n\n');
+
+  // Build JSON fields (one boolean per entity ID)
+  const jsonFields = projections
+    .map(({ id }) => `  "${id}": boolean, // true if ${id} is directly relevant`)
+    .join('\n');
+
+  const prompt = interpolate(entitySelectionPromptMd, {
+    entityType,
+    entityTypeLabel,
+    projections: projectionsBlock,
+    jsonFields,
+  });
+
+  try {
+    const response = await window.chat.send({
+      messages: [
+        {
+          role: 'system',
+          content: prompt,
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      maxTokens: 100,
+      responseFormat: 'json',
+    });
+
+    if (!response.ok) {
+      console.error('Entity selection LLM failed:', response.error);
+      return {
+        selectedEntityIds: [],
+        result: null,
+      };
+    }
+
+    const raw = response.data.output_text || '{}';
+    const result = JSON.parse(raw) as Record<string, any>;
+
+    // Extract selected entity IDs
+    const selectedEntityIds: string[] = [];
+    for (const id of projections.map(p => p.id)) {
+      const value = result[id];
+      if (value === true || value === 'true' || value === 1) {
+        selectedEntityIds.push(id);
+      }
+    }
+
+    return {
+      selectedEntityIds,
+      result,
+    };
+  } catch (error) {
+    console.error('Entity selection failed:', error);
+    return {
+      selectedEntityIds: [],
+      result: null,
+    };
+  }
 }
