@@ -275,7 +275,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - Each metaDoc saves only its own content (~1-10KB) rather than entire story file
 
 **IPC Communication**
-- Frontend calls via `DistilClient` wrapper (`src/api/DistilClient.ts`)
+- Frontend calls via `client` wrapper (`src/api/client.ts`)
 - All calls go through `window.Distil` API exposed by preload
 - Pattern: `ipcMain.handle()` in main process, `ipcRenderer.invoke()` in renderer
 - **Standardized Response Format**: All IPC calls return `IpcResponse<T>`:

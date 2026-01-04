@@ -10,7 +10,7 @@ import { useAppStore, metaId } from '../state/useAppStore';
 import type { MetaDocKey } from '../types/metaDoc';
 import { getContextRulesFor, type DocKindId } from '../models/docs';
 import { computeDocState } from '../models/docs/docState';
-import { DistilClient as client } from '../api/client';
+import { client } from '../api/client';
 
 export type ChatMessage = {
   id: string;

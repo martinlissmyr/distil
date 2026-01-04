@@ -5,6 +5,7 @@ import type { MetaDocKey } from '../types/metaDoc';
 import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
 import type { WritingLanguage } from '../types/language';
 import type { EntityType } from '../models/entities/entityIndex';
+import { client } from '../api/client';
 import {
   getContextRulesFor,
   getDocContextLabel,
@@ -110,7 +111,35 @@ export async function getContextDocs(
           if (selectedEntityIds.length > 0) {
             if (!contexts.entities) contexts.entities = {};
             contexts.entities.characters = { ids: selectedEntityIds, depth };
-            // TODO: Load actual entity docs/projections and add to contexts.docs
+            // Load entity content based on depth
+            for (const entityId of selectedEntityIds) {
+              try {
+                if (depth === 'projection') {
+                  // Load from entity index (already has projections)
+                  const projections = await loadEntityProjections(projectId, storyId, 'character');
+                  const entity = projections.find(p => p.id === entityId);
+                  if (entity?.projection) {
+                    contexts.docs.push({
+                      label: `CHARACTER: ${entityId}`,
+                      content: entity.projection,
+                    });
+                  }
+                } else {
+                  // Load full entity doc
+                  const response = await client.loadEntityDoc(projectId, storyId, 'character', entityId);
+                  if (response.ok && response.data) {
+                    // TODO: Convert entity doc to markdown
+                    // For now, use JSON representation
+                    contexts.docs.push({
+                      label: `CHARACTER (FULL): ${entityId}`,
+                      content: JSON.stringify(response.data, null, 2),
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error(`Failed to load character ${entityId}:`, error);
+              }
+            }
           }
         } else if (docKey === 'locations') {
           const { selectedEntityIds } = await selectRelevantEntities(
@@ -122,7 +151,35 @@ export async function getContextDocs(
           if (selectedEntityIds.length > 0) {
             if (!contexts.entities) contexts.entities = {};
             contexts.entities.locations = { ids: selectedEntityIds, depth };
-            // TODO: Load actual entity docs/projections and add to contexts.docs
+            // Load entity content based on depth
+            for (const entityId of selectedEntityIds) {
+              try {
+                if (depth === 'projection') {
+                  // Load from entity index (already has projections)
+                  const projections = await loadEntityProjections(projectId, storyId, 'location');
+                  const entity = projections.find(p => p.id === entityId);
+                  if (entity?.projection) {
+                    contexts.docs.push({
+                      label: `LOCATION: ${entityId}`,
+                      content: entity.projection,
+                    });
+                  }
+                } else {
+                  // Load full entity doc
+                  const response = await client.loadEntityDoc(projectId, storyId, 'location', entityId);
+                  if (response.ok && response.data) {
+                    // TODO: Convert entity doc to markdown
+                    // For now, use JSON representation
+                    contexts.docs.push({
+                      label: `LOCATION (FULL): ${entityId}`,
+                      content: JSON.stringify(response.data, null, 2),
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error(`Failed to load location ${entityId}:`, error);
+              }
+            }
           }
         }
       }
@@ -417,7 +474,7 @@ async function loadEntityProjections(
   let index = null;
 
   // Try loading from real data via IPC
-  const response = await window.distil.loadEntityIndex(projectId, storyId, entityType);
+  const response = await client.loadEntityIndex(projectId, storyId, entityType);
 
   if (response.ok && response.data) {
     index = response.data;
