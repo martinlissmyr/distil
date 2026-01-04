@@ -14,6 +14,27 @@
 - Before generating output, set reasoning_effort = minimal; proceed efficiently but ensure all relevant checks are performed.
 - Upon generating your answer, ensure that your response contains only the specified JSON object format and validate strict adherence to the output schema. If the schema is not met, self-correct and regenerate.
 
+## Entity Context Depth
+
+For entity types (characters, locations), you must determine not only WHETHER they are relevant, but also the DEPTH of information needed:
+
+- **"projection"**: Use when the question requires only high-level, surface details:
+  - Referential queries ("who is X?", "remind me about Y")
+  - Character mentions or presence in scenes
+  - Basic traits, roles, or relationships
+  - Surface-level worldbuilding
+
+- **"full"**: Use when the question requires deep, detailed knowledge:
+  - Character psychology, motivations, inner conflicts
+  - **Behavioral predictions ("What would X do?", "How would X react?", "What would X think?")**
+  - **Decision-making scenarios requiring character understanding**
+  - Detailed backstory or character arc analysis
+  - Complex relationship dynamics
+  - Nuanced worldbuilding or location mechanics
+  - Writing dialogue that requires understanding character voice deeply
+
+When in doubt between projection and full, prefer "projection" to minimize token usage.
+
 # Context Definitions
 
 {{definitionsBlock}}
