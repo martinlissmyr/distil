@@ -10,7 +10,8 @@ export function useResolvedUiSchema() {
   const uiSchemaLoaded = useAppStore((s) => s.uiSchemaLoaded);
   const loadUiSchema = useAppStore((s) => s.loadUiSchema);
 
-  const [systemScheme, setSystemScheme] = useState<UiSchema>(DEFAULT_UI_SCHEMA_SETTING);
+  // systemScheme holds the actual system theme ('dark' or 'light'), defaulting to 'dark' until fetched
+  const [systemScheme, setSystemScheme] = useState<UiSchema>('dark');
 
   // ✅ Load persisted setting once (via store)
   useEffect(() => {
@@ -36,10 +37,8 @@ export function useResolvedUiSchema() {
   useEffect(() => {
     if (setting !== 'system') return;
 
-    const unsubscribe = window.theme.onChange((next) => setSystemScheme(next));
-    return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
+    window.theme.onChange((next) => setSystemScheme(next));
+    // Note: window.theme.onChange returns void, no cleanup needed
   }, [setting]);
 
   const resolved: UiSchema = useMemo(() => {

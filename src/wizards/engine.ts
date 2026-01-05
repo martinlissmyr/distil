@@ -1,5 +1,4 @@
 // src/wizards/engine.ts
-import type { MetaDocKey } from '../types/metaDoc';
 import type {
   WizardContext,
   LlmProcessingStep,
@@ -45,7 +44,6 @@ export function createWizardEngine(deps: WizardDeps) {
   async function startWizard(
     wizardId: string,
     context: WizardContext,
-    currentContent: string = '',
   ): Promise<Pick<WizardState, 'activeWizard' | 'wizardContext'>> {
     const config = getWizardConfig(wizardId);
 

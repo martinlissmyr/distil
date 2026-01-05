@@ -107,6 +107,7 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
     {
       id: 'delete',
       type: 'button',
+      label: ' ',
       buttonLabel: deleteConfirm ? 'Click again to delete' : `Delete ${deleteLabel}`,
       onClick: handleDeleteClick,
       disabled: isClosing,

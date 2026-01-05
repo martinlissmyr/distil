@@ -38,16 +38,16 @@ export const SettingsRootView: React.FC<SettingsRootViewProps> = ({
   onWritingLanguageChange,
   onUiSchemaChange,
 }) => {
-  const rootItems: SettingItem[] = useMemo(() => {
+  const rootItems = useMemo(() => {
     const langDisabled = loading || writingLanguageSaving;
     const uiDisabled = loading || uiSchemaSaving;
 
-    const languageOptions = SUPPORTED_WRITING_LANGUAGES.map((lang) => ({
+    const languageOptions: { value: string; label: string }[] = SUPPORTED_WRITING_LANGUAGES.map((lang) => ({
       value: lang,
       label: WRITING_LANGUAGE_LABEL[lang] ?? lang,
     }));
 
-    const uiSchemaOptions = SUPPORTED_UI_SCHEMA_SETTINGS.map((v) => ({
+    const uiSchemaOptions: { value: string; label: string }[] = SUPPORTED_UI_SCHEMA_SETTINGS.map((v) => ({
       value: v,
       label: UI_SCHEMA_LABEL[v] ?? v,
     }));
@@ -55,30 +55,30 @@ export const SettingsRootView: React.FC<SettingsRootViewProps> = ({
     return [
       {
         id: 'api-key-settings-nav',
-        type: 'navigation',
+        type: 'navigation' as const,
         label: 'OpenAI API key',
         rightText: apiKeySaved.trim() ? 'sk-*********************' : 'Add a key',
         onClick: onNavigate,
       },
       {
         id: 'lang-setting',
-        type: 'select',
+        type: 'select' as const,
         label: 'Writing language',
         value: writingLanguage,
-        onChange: onWritingLanguageChange,
+        onChange: (value: string | null) => onWritingLanguageChange(value as WritingLanguage | null),
         disabled: langDisabled,
         data: languageOptions,
       },
       {
         id: 'ui-schema-setting',
-        type: 'select',
+        type: 'select' as const,
         label: 'UI Theme',
         value: uiSchema,
-        onChange: onUiSchemaChange,
+        onChange: (value: string | null) => onUiSchemaChange(value as UiSchemaSetting | null),
         disabled: uiDisabled,
         data: uiSchemaOptions,
       },
-    ];
+    ] satisfies SettingItem[];
   }, [
     apiKeySaved,
     writingLanguage,

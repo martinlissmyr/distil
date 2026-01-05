@@ -1,4 +1,5 @@
 // src/wizards/storeGlue.ts
+import type { RefObject } from 'react';
 import type { WizardActions, WizardContext, WizardState, LlmProcessingStep } from './types';
 import { createWizardEngine } from './engine';
 import { docIdForMeta } from '../state/useAppStore';
@@ -46,7 +47,7 @@ export function createWizardActions(args: {
       }
 
       if (inputRef) {
-        const ok = insertIntoTextarea(inputRef, text, 'replace');
+        const ok = insertIntoTextarea(inputRef as RefObject<HTMLTextAreaElement>, text, 'replace');
         if (!ok) {
           args.set(() => ({ wizardResult: text }));
         }
@@ -149,7 +150,10 @@ export function createWizardActions(args: {
         args.set(() => ({ wizardResult: text }));
         return;
       }
-      await service['insertIntoEditor']?.(ctx, text);
+      const insertFn = (service as any)['insertIntoEditor'];
+      if (insertFn) {
+        await insertFn(ctx, text);
+      }
     },
   };
 
