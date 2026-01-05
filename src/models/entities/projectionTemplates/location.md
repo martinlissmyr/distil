@@ -9,3 +9,8 @@
 {{#if roleInStory}}
 **Role in story**: {{roleInStory}}
 {{/if}}
+
+{{#if hasContent(relationships)}}
+**Connections & context (how does it relate to other locations)**:
+{{relationships}}
+{{/if}}

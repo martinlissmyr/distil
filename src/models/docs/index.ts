@@ -375,6 +375,7 @@ export {
 } from './contextKeywords';
 
 export { getSystemRoleForDocKind } from './systemRoles';
+export { getSystemTriggersForDocKind } from './systemTriggers';
 
 // ---------------------------------------------------------------------------
 // Context rules derived from the model
