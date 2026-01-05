@@ -201,14 +201,27 @@ export const PromptBuilderView: React.FC = () => {
       const storyId = state.selectedStoryId!;
 
       if (state.kind === 'prose') {
-        const res = await client.loadStory(projectId, storyId);
-        if (!res.ok) return;
+        const metadataRes = await client.loadStoryMetadata(projectId, storyId);
+        if (!metadataRes.ok) return;
 
-        const markdown = jsonToMarkdown(res.data.doc, 'prose');
+        const metadata = metadataRes.data;
+
+        // Load first part if available
+        let partDoc: any;
+        if (metadata.parts.length > 0) {
+          const firstPart = metadata.parts[0];
+          const partRes = await client.loadPartDoc(projectId, storyId, firstPart.id);
+          if (!partRes.ok) return;
+          partDoc = partRes.data.doc;
+        } else {
+          partDoc = { type: 'doc', content: [] };
+        }
+
+        const markdown = jsonToMarkdown(partDoc, 'prose');
 
         setState((s) => ({
           ...s,
-          loadedTitle: res.data.title,
+          loadedTitle: metadata.title,
           loadedFullText: markdown,
         }));
         setMainHasContent(!!markdown.trim());
@@ -226,8 +239,8 @@ export const PromptBuilderView: React.FC = () => {
         const markdown = metaDoc?.markdown ?? '';
 
         // Also load story title to present consistent title
-        const storyRes = await client.loadStory(projectId, storyId);
-        const storyTitle = storyRes.ok ? storyRes.data.title : '';
+        const metadataRes = await client.loadStoryMetadata(projectId, storyId);
+        const storyTitle = metadataRes.ok ? metadataRes.data.title : '';
 
         setState((s) => ({
           ...s,

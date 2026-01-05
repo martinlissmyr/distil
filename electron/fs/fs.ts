@@ -25,18 +25,36 @@ export type ManifestData = {
   updatedAt: string
 }
 
-// Flexible story file type
-type StoryFile = {
+// Story metadata stored in story.json
+export type StoryMetadata = {
   id: string
   title: string
-  createdAt: string
   order: number
+  partsEnabled: boolean
+  parts: PartIndexEntry[]
+  createdAt: string
+  updatedAt: string
+}
+
+// Part index entry (lightweight projection stored in story.json)
+export type PartIndexEntry = {
+  id: string
+  order: number
+  projection?: {
+    summary: string
+    generatedAt: string
+  }
+  comment?: string
+  wordCount?: number
+  createdAt: string
+  updatedAt: string
+}
+
+// Part document (full TipTap doc stored in parts/part-{id}.json)
+export type PartDoc = {
+  id: string
   doc: JSONContent
-  // New flexible meta docs
-  metaDocs?: Record<string, JSONContent>
-  // Legacy fields – kept for backwards compatibility (optional)
-  outlineDoc?: JSONContent
-  briefDoc?: JSONContent
+  updatedAt: string
 }
 
 const getRootDir = () => {
@@ -93,8 +111,20 @@ const getProjectFile = (projectId: string) =>
   path.join(getProjectDir(projectId), 'project.json')
 const getStoriesDir = (projectId: string) =>
   path.join(getProjectDir(projectId), 'stories')
-const getStoryFile = (projectId: string, storyId: string) =>
-  path.join(getStoriesDir(projectId), `${sanitizeId(storyId)}.json`)
+
+// Story folder structure (multi-part documents)
+const getStoryDir = (projectId: string, storyId: string) =>
+  path.join(getStoriesDir(projectId), sanitizeId(storyId))
+const getStoryMetadataFile = (projectId: string, storyId: string) =>
+  path.join(getStoryDir(projectId, storyId), 'story.json')
+const getPartsDir = (projectId: string, storyId: string) =>
+  path.join(getStoryDir(projectId, storyId), 'parts')
+const getPartFile = (projectId: string, storyId: string, partId: string) =>
+  path.join(getPartsDir(projectId, storyId), `${sanitizeId(partId)}.json`)
+const getStoryMetaDocFile = (projectId: string, storyId: string, key: string) =>
+  path.join(getStoryDir(projectId, storyId), `${key}.json`)
+const getEntitiesDir = (projectId: string, storyId: string) =>
+  path.join(getStoryDir(projectId, storyId), 'entities')
 
 // ---- Projects ----
 
@@ -214,36 +244,32 @@ export async function listStories(projectId: string): Promise<StoryMeta[]> {
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true })
     const stories: StoryMeta[] = []
+
     for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith('.json')) continue
+      // Only look for story folders
+      if (!entry.isDirectory()) continue
 
-      // Skip entity index files (e.g., story-123-characters.json, story-123-locations.json)
-      if (
-        entry.name.includes('-characters.json') ||
-        entry.name.includes('-locations.json')
-      ) {
-        continue
-      }
-
-      const fullPath = path.join(dir, entry.name)
+      const storyId = entry.name
+      const metadataFile = getStoryMetadataFile(projectId, storyId)
       try {
-        const raw = await fs.readFile(fullPath, 'utf-8')
-        const json = JSON.parse(raw) as StoryFile
+        const raw = await fs.readFile(metadataFile, 'utf-8')
+        const json = JSON.parse(raw) as StoryMetadata
         stories.push({
           id: json.id,
           title: json.title,
-          createdAt: json.createdAt ?? new Date().toISOString(),
-          order: json.order ?? 0,
+          createdAt: json.createdAt,
+          order: json.order,
         })
       } catch (err: unknown) {
-        // Skip broken/corrupted story files but log the issue
+        // Skip broken/corrupted story metadata but log the issue
         console.warn(
-          `[listStories] Skipping broken story ${entry.name}:`,
+          `[listStories] Skipping broken story folder ${storyId}:`,
           err instanceof Error ? err.message : 'Unknown error'
         )
       }
     }
-    stories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+    stories.sort((a, b) => a.order - b.order)
     return stories
   } catch (err: unknown) {
     // Stories directory doesn't exist yet - expected for new projects
@@ -265,76 +291,84 @@ export async function createStory(
     existing.length > 0 ? Math.max(...existing.map((s) => s.order ?? 0)) : 0
 
   const id = `story-${Date.now()}`
-  const file = getStoryFile(projectId, id)
-  await fs.mkdir(getStoriesDir(projectId), { recursive: true })
+  const now = new Date().toISOString()
 
+  // NEW: Create story folder structure
+  const storyDir = getStoryDir(projectId, id)
+  const partsDir = getPartsDir(projectId, id)
+  await fs.mkdir(partsDir, { recursive: true })
+
+  // Create first part with empty document
+  const partId = `part-${Date.now()}`
   const emptyDoc: JSONContent = {
     type: 'doc',
     content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
   }
 
-  const story: StoryFile = {
-    id,
-    title,
-    createdAt: new Date().toISOString(),
-    order: maxOrder + 1,
+  const firstPart: PartDoc = {
+    id: partId,
     doc: emptyDoc,
-    metaDocs: {}, // start empty
+    updatedAt: now,
   }
 
-  // Serialize + atomic write (same key pattern as other story writes)
+  // Create story metadata with parts index
+  const metadata: StoryMetadata = {
+    id,
+    title,
+    order: maxOrder + 1,
+    partsEnabled: false, // Start with single-document mode
+    parts: [
+      {
+        id: partId,
+        order: 0,
+        wordCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ],
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  // Serialize + atomic write
   await writeQueue.enqueue(`story:${projectId}:${id}`, async () => {
-    await writeJsonAtomic(file, story)
+    await writeJsonAtomic(getStoryMetadataFile(projectId, id), metadata)
+    await writeJsonAtomic(getPartFile(projectId, id, partId), firstPart)
   })
 
   return {
     id,
     title,
-    createdAt: story.createdAt,
-    order: story.order,
+    createdAt: metadata.createdAt,
+    order: metadata.order,
   }
 }
 
-export async function loadStory(
+// Load story metadata
+export async function loadStoryMetadata(
   projectId: string,
   storyId: string
-): Promise<StoryFile> {
-  const file = getStoryFile(projectId, storyId)
+): Promise<StoryMetadata> {
+  const file = getStoryMetadataFile(projectId, storyId)
   const raw = await fs.readFile(file, 'utf-8')
-  return JSON.parse(raw) as StoryFile
+  return JSON.parse(raw) as StoryMetadata
 }
 
-export async function saveStory(
+// Save story metadata (updates story.json with parts index)
+export async function saveStoryMetadata(
   projectId: string,
   storyId: string,
-  payload: StoryFile
+  metadata: StoryMetadata
 ): Promise<void> {
-  // Use write queue to prevent race conditions when multiple autosaves
-  // (prose, outline, brief) trigger simultaneously
   const queueKey = `story:${projectId}:${storyId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getStoryFile(projectId, storyId)
-    const raw = await fs.readFile(file, 'utf-8').catch(() => null)
-    const existing: StoryFile =
-      raw != null
-        ? (JSON.parse(raw) as StoryFile)
-        : {
-            id: storyId,
-            title: payload.title,
-            createdAt: new Date().toISOString(),
-            order: 0,
-            doc: payload.doc,
-            metaDocs: {},
-          }
-
-    const story: StoryFile = {
-      ...existing,
-      ...payload,
-      metaDocs: payload.metaDocs ?? existing.metaDocs ?? {},
+    const file = getStoryMetadataFile(projectId, storyId)
+    const updated: StoryMetadata = {
+      ...metadata,
+      updatedAt: new Date().toISOString(),
     }
-
-    await writeJsonAtomic(file, story)
+    await writeJsonAtomic(file, updated)
   })
 }
 
@@ -348,13 +382,14 @@ export async function updateStory(
   return writeQueue.enqueue(queueKey, async () => {
     assertUpdatesObject(updates, 'updateStory(updates)')
 
-    const file = getStoryFile(projectId, storyId)
+    const file = getStoryMetadataFile(projectId, storyId)
     const raw = await fs.readFile(file, 'utf-8')
-    const existing = JSON.parse(raw) as StoryFile
+    const existing = JSON.parse(raw) as StoryMetadata
 
-    const updated: StoryFile = {
+    const updated: StoryMetadata = {
       ...existing,
       ...(updates as any),
+      updatedAt: new Date().toISOString(),
     }
 
     await writeJsonAtomic(file, updated)
@@ -362,8 +397,8 @@ export async function updateStory(
     return {
       id: updated.id,
       title: updated.title,
-      createdAt: updated.createdAt ?? new Date().toISOString(),
-      order: updated.order ?? 0,
+      createdAt: updated.createdAt,
+      order: updated.order,
     }
   })
 }
@@ -372,8 +407,8 @@ export async function deleteStory(
   projectId: string,
   storyId: string
 ): Promise<void> {
-  const file = getStoryFile(projectId, storyId)
-  await fs.rm(file, { force: true })
+  const storyDir = getStoryDir(projectId, storyId)
+  await fs.rm(storyDir, { recursive: true, force: true })
 }
 
 export async function reorderStories(
@@ -392,17 +427,18 @@ export async function reorderStories(
       if (!s) continue
       s.order = index++
 
-      const file = getStoryFile(projectId, id)
+      const file = getStoryMetadataFile(projectId, id)
       const raw = await fs.readFile(file, 'utf-8')
-      const json = JSON.parse(raw) as StoryFile
+      const json = JSON.parse(raw) as StoryMetadata
       json.order = s.order
+      json.updatedAt = new Date().toISOString()
 
       await writeJsonAtomic(file, json)
     }
   })
 }
 
-// ---- metaDocs helpers ----
+// ---- metaDocs helpers (separated files) ----
 
 export async function loadStoryMetaDoc(
   projectId: string,
@@ -410,12 +446,12 @@ export async function loadStoryMetaDoc(
   key: string
 ): Promise<JSONContent | null> {
   try {
-    const story = await loadStory(projectId, storyId) // existing helper
-    const meta = story.metaDocs ?? {}
-    return meta[key] ?? null
+    const file = getStoryMetaDocFile(projectId, storyId, key)
+    const raw = await fs.readFile(file, 'utf-8')
+    return JSON.parse(raw) as JSONContent
   } catch (err: unknown) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      // Story file (or project dir) doesn't exist yet → no metaDoc
+      // MetaDoc file doesn't exist yet
       return null
     }
     throw err
@@ -428,33 +464,12 @@ export async function saveStoryMetaDoc(
   key: string,
   doc: JSONContent
 ): Promise<void> {
-  // CRITICAL: Use same queue key as saveStory because they write to the same file
-  // This prevents race conditions between prose saves and metaDoc saves
-  const queueKey = `story:${projectId}:${storyId}`
+  // Each metaDoc has its own queue key to allow independent writes
+  const queueKey = `metaDoc:${projectId}:${storyId}:${key}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getStoryFile(projectId, storyId)
-    const raw = await fs.readFile(file, 'utf-8').catch(() => null)
-    const existing: StoryFile =
-      raw != null
-        ? (JSON.parse(raw) as StoryFile)
-        : {
-            id: storyId,
-            title: '',
-            createdAt: new Date().toISOString(),
-            order: 0,
-            doc,
-            metaDocs: {},
-          }
-
-    const metaDocs = { ...(existing.metaDocs ?? {}), [key]: doc }
-
-    const updated: StoryFile = {
-      ...existing,
-      metaDocs,
-    }
-
-    await writeJsonAtomic(file, updated)
+    const file = getStoryMetaDocFile(projectId, storyId, key)
+    await writeJsonAtomic(file, doc)
   })
 }
 
@@ -539,13 +554,13 @@ export async function saveRootMetaDoc(
   // For now, let's just no-op.
 }
 
-// ---- Entity Indices ----
+// ---- Entity Indices (now inside story folder) ----
 
 const getEntityIndexFile = (
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location'
-) => path.join(getStoriesDir(projectId), `${sanitizeId(storyId)}-${entityType}s.json`)
+) => path.join(getStoryDir(projectId, storyId), `${entityType}s.json`)
 
 export async function loadEntityIndex(
   projectId: string,
@@ -580,21 +595,23 @@ export async function saveEntityIndex(
   })
 }
 
-// ---- Entity Documents ----
+// ---- Entity Documents (now inside story/entities folder) ----
 
-// Entity document storage path (separate from index)
+// Entity document storage path (inside story folder)
 const getEntityDocFile = (
   projectId: string,
+  storyId: string,
   entityType: 'character' | 'location',
   entityId: string
-) => path.join(getStoriesDir(projectId), 'entities', `${entityType}s`, `${sanitizeId(entityId)}.json`)
+) => path.join(getEntitiesDir(projectId, storyId), `${entityType}s`, `${sanitizeId(entityId)}.json`)
 
 export async function loadEntityDoc(
   projectId: string,
+  storyId: string,
   entityType: 'character' | 'location',
   entityId: string
 ): Promise<any | null> {
-  const file = getEntityDocFile(projectId, entityType, entityId)
+  const file = getEntityDocFile(projectId, storyId, entityType, entityId)
   try {
     const raw = await fs.readFile(file, 'utf-8')
     return JSON.parse(raw)
@@ -609,19 +626,106 @@ export async function loadEntityDoc(
 
 export async function saveEntityDoc(
   projectId: string,
+  storyId: string,
   entityType: 'character' | 'location',
   entityId: string,
   doc: any
 ): Promise<void> {
   // Use write queue to prevent race conditions
-  const queueKey = `entityDoc:${projectId}:${entityType}:${entityId}`
+  const queueKey = `entityDoc:${projectId}:${storyId}:${entityType}:${entityId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getEntityDocFile(projectId, entityType, entityId)
+    const file = getEntityDocFile(projectId, storyId, entityType, entityId)
 
     // Ensure directory exists
     await fs.mkdir(path.dirname(file), { recursive: true })
 
     await writeJsonAtomic(file, doc)
   })
+}
+
+// ---- Parts (multi-part document support) ----
+
+export async function loadPartDoc(
+  projectId: string,
+  storyId: string,
+  partId: string
+): Promise<PartDoc> {
+  const file = getPartFile(projectId, storyId, partId)
+  const raw = await fs.readFile(file, 'utf-8')
+  return JSON.parse(raw) as PartDoc
+}
+
+export async function savePartDoc(
+  projectId: string,
+  storyId: string,
+  partId: string,
+  doc: JSONContent
+): Promise<void> {
+  // Each part has its own queue key
+  const queueKey = `part:${projectId}:${storyId}:${partId}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getPartFile(projectId, storyId, partId)
+    const partDoc: PartDoc = {
+      id: partId,
+      doc,
+      updatedAt: new Date().toISOString(),
+    }
+    await writeJsonAtomic(file, partDoc)
+  })
+}
+
+export async function createPart(
+  projectId: string,
+  storyId: string,
+  order: number
+): Promise<PartIndexEntry> {
+  const partId = `part-${Date.now()}`
+  const now = new Date().toISOString()
+
+  const emptyDoc: JSONContent = {
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
+  }
+
+  // Create part document
+  const partDoc: PartDoc = {
+    id: partId,
+    doc: emptyDoc,
+    updatedAt: now,
+  }
+
+  // Create part index entry
+  const indexEntry: PartIndexEntry = {
+    id: partId,
+    order,
+    wordCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  // Write part document to disk
+  await savePartDoc(projectId, storyId, partId, emptyDoc)
+
+  return indexEntry
+}
+
+export async function deletePart(
+  projectId: string,
+  storyId: string,
+  partId: string
+): Promise<void> {
+  const file = getPartFile(projectId, storyId, partId)
+  await fs.rm(file, { force: true })
+}
+
+export async function reorderParts(
+  projectId: string,
+  storyId: string,
+  idsInOrder: string[]
+): Promise<void> {
+  // Reordering just updates the parts index in story.json
+  // This is handled by saveStoryMetadata, no file operations needed here
+  // The parts themselves don't store their order - only the index does
 }

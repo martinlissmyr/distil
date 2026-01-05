@@ -73,7 +73,7 @@ The build process runs: `tsc && vite build && electron-builder`
 - Service name: "Distil", account: "openai_api_key"
 - IMPORTANT: keytar is marked as external in vite.config.ts and must not be imported in preload or renderer
 
-**File System** (`electron/fs/DistilFs.ts`)
+**File System** (`electron/fs/fs.ts`)
 - All data stored in `~/Distil` directory
 - Structure: `~/Distil/projects/{projectId}/stories/{storyId}.json`
 - MetaDocs stored separately: `~/Distil/projects/{projectId}/stories/{storyId}-{key}.json`

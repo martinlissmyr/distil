@@ -328,9 +328,13 @@ export function EntityEditView<T extends Record<string, any>>({
         <TopNavigation
           title={title}
           onBack={handleBack}
-          onSave={handleSave}
-          canSave={canSave || saving}
-          saveLabel={isNew ? 'Create' : 'Save'}
+          buttons={[
+            {
+              label: isNew ? 'Create' : 'Save',
+              onClick: handleSave,
+              enabled: canSave && !saving,
+            }
+          ]}
         />
       </Box>
 

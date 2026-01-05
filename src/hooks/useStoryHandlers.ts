@@ -1,7 +1,8 @@
 // src/hooks/useStoryHandlers.ts
 import { useState, useCallback } from 'react';
-import { client, StoryMeta, StoryData } from '../api/client';
+import { client, StoryMeta } from '../api/client';
 import type { StorySection } from './useNavigation';
+import type { JSONContent } from '@tiptap/react';
 
 interface EntityCRUD<T> {
   items: T[];
@@ -19,7 +20,7 @@ export interface StoryHandlersParams {
   goToStory: (projectId: string, storyId: string, section?: StorySection) => void;
   clearEditor: () => void;
 
-  loadStory: (story: StoryData) => void;
+  loadStory: (data: { title: string; doc: JSONContent }) => void;
   setCurrentTitle: (title: string) => void;
 
   storiesCRUD: EntityCRUD<StoryMeta>;
@@ -98,12 +99,32 @@ export function useStoryHandlers(params: StoryHandlersParams): StoryHandlers {
     if (!selectedProjectId) return;
     goToStory(selectedProjectId, id, 'prose');
 
-    const storyResponse = await client.loadStory(selectedProjectId, id);
-    if (!storyResponse.ok) {
-      console.error('Failed to load story:', storyResponse.error);
+    const metadataResponse = await client.loadStoryMetadata(selectedProjectId, id);
+    if (!metadataResponse.ok) {
+      console.error('Failed to load story metadata:', metadataResponse.error);
       return;
     }
-    loadStory(storyResponse.data);
+
+    const metadata = metadataResponse.data;
+
+    // Load first part if available
+    let partDoc: JSONContent;
+    if (metadata.parts.length > 0) {
+      const firstPart = metadata.parts[0];
+      const partResponse = await client.loadPartDoc(selectedProjectId, id, firstPart.id);
+      if (!partResponse.ok) {
+        console.error('Failed to load part document:', partResponse.error);
+        return;
+      }
+      partDoc = partResponse.data.doc;
+    } else {
+      partDoc = { type: 'doc', content: [] };
+    }
+
+    loadStory({
+      title: metadata.title,
+      doc: partDoc,
+    });
   }, [selectedProjectId, goToStory, loadStory]);
 
   const handleBackToProjectFromStory = useCallback(() => {

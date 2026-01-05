@@ -1,7 +1,8 @@
 // src/hooks/useAppInitialization.ts
 import { useEffect } from 'react';
-import { client, Project, StoryMeta, StoryData } from '../api/client';
+import { client, Project, StoryMeta } from '../api/client';
 import type { NavState } from './useNavigation';
+import type { JSONContent } from '@tiptap/react';
 
 /**
  * Parameters for the initialization hook
@@ -17,7 +18,7 @@ export interface InitializationCallbacks {
   setStories: (stories: StoryMeta[]) => void;
 
   // Editor
-  loadStory: (story: StoryData) => void;
+  loadStory: (data: { title: string; doc: JSONContent }) => void;
   clearEditor: () => void;
 }
 
@@ -134,15 +135,41 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           storySection: saved.storySection ?? 'prose',
         });
 
-        const storyResponse = await client.loadStory(
+        // Load story metadata
+        const metadataResponse = await client.loadStoryMetadata(
           saved.projectId!,
           saved.storyId
         );
-        if (!storyResponse.ok) {
-          console.error('Failed to load story:', storyResponse.error);
+        if (!metadataResponse.ok) {
+          console.error('Failed to load story metadata:', metadataResponse.error);
           return;
         }
-        loadStory(storyResponse.data);
+
+        const metadata = metadataResponse.data;
+
+        // Load the first part's document (or create one if no parts exist)
+        let partDoc: JSONContent;
+        if (metadata.parts.length > 0) {
+          const firstPart = metadata.parts[0];
+          const partResponse = await client.loadPartDoc(
+            saved.projectId!,
+            saved.storyId,
+            firstPart.id
+          );
+          if (!partResponse.ok) {
+            console.error('Failed to load part document:', partResponse.error);
+            return;
+          }
+          partDoc = partResponse.data.doc;
+        } else {
+          // No parts yet - use empty document
+          partDoc = { type: 'doc', content: [] };
+        }
+
+        loadStory({
+          title: metadata.title,
+          doc: partDoc,
+        });
 
         // hydrate outline/brief if present on disk
       } finally {
