@@ -30,7 +30,6 @@ export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
       preloadMetaKeys={['world', 'brief', 'outline']}
     >
       <MetaTextEditor
-        mode="bound"
         scope={{ scope: 'story', projectId, storyId }}
         metaKey="world"
         title={title}

@@ -36,7 +36,6 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
       preloadMetaKeys={['brief']}
     >
       <MetaTextEditor
-        mode="bound"
         scope={scope}
         metaKey="brief"
         title={title}

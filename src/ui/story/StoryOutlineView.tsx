@@ -30,7 +30,6 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
       preloadMetaKeys={['outline', 'brief']}
     >
       <MetaTextEditor
-        mode="bound"
         scope={{ scope: 'story', projectId, storyId }}
         metaKey="outline"
         title={title}

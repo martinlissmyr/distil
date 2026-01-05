@@ -35,7 +35,6 @@ export const PlaygroundOutput: React.FC<PlaygroundOutputProps> = ({
   return (
     <Stack gap="sm" style={{ flexGrow: 1, minHeight: 0 }}>
       <Box
-        radius="none"
         p={10}
       >
 
