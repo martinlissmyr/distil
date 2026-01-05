@@ -54,19 +54,20 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
     const {
       kinds: contextKinds,
       markdown: contextMarkdown,
-    } = await getContextDocs(wizard.docKind, '', wizard.projectId, wizard.storyId, {
+    } = await getContextDocs(wizard.docKind as any, '', wizard.projectId, wizard.storyId, {
       language: useAppStore.getState().writingLanguage,
     });
 
     const wizardContext = {
       llmContext: {
-        kinds: contextKinds,
+        kinds: contextKinds as any[],
         markdown: contextMarkdown,
       },
       ref: {
         projectId: wizard.projectId,
         storyId: wizard.storyId,
-        scope: 'story'
+        scope: 'story' as const,
+        docKind: wizard.docKind as any,
       },
       targetEditor: null,
       currentContent: "Jag har redan lite innehåll.",
@@ -88,7 +89,7 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
       // Extract prompts
       const systemMsg = messages.find((m) => m.role === 'system');
       const userMsg = messages.find((m) => m.role === 'user');
-      const assistantMsg = messages.find((m) => m.role === 'assistant');
+      const assistantMsg = messages.find((m) => m.role !== 'system' && m.role !== 'user');
 
       setSystemPrompt(systemMsg?.content || null);
       setUserPrompt(userMsg?.content || 'No user prompt');

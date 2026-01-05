@@ -13,7 +13,6 @@ export const ManifestView: React.FC = () => {
       }}
     >
       <MetaTextEditor
-        mode="bound"
         scope={{ scope: 'root' }}
         metaKey="manifest"
         title="Author Manifest"

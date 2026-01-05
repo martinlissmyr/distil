@@ -38,7 +38,7 @@ export const InitialHintsTest: React.FC = () => {
 
   // Initialize all meta-docs as "missing" by default.
   // These keys come from the doc model, not hard-coded.
-  const initialUpstream: Record<MetaDocKey, boolean> = {};
+  const initialUpstream: Partial<Record<MetaDocKey, boolean>> = {};
 
   for (const key of Object.keys(docKinds) as DocKindId[]) {
     if (docKinds[key].role === 'meta') {
@@ -47,7 +47,7 @@ export const InitialHintsTest: React.FC = () => {
   }
 
   const [upstreamPresence, setUpstreamPresence] =
-    useState<Record<MetaDocKey, boolean>>(initialUpstream);
+    useState<Partial<Record<MetaDocKey, boolean>>>(initialUpstream);
 
   const [result, setResult] = useState<AssistantHint | null>(null);
 
