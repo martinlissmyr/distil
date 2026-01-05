@@ -25,16 +25,28 @@ contextBridge.exposeInMainWorld('distil', {
     ipcRenderer.invoke('stories:list', projectId),
   createStory: (projectId: string, title: string) =>
     ipcRenderer.invoke('story:create', projectId, title),
-  loadStory: (projectId: string, storyId: string) =>
-    ipcRenderer.invoke('story:load', projectId, storyId),
-  saveStory: (projectId: string, storyId: string, payload: any) =>
-    ipcRenderer.invoke('story:save', projectId, storyId, payload),
-  reorderStories: (projectId: string, ids: string[]) =>
-    ipcRenderer.invoke('stories:reorder', projectId, ids),
+  loadStoryMetadata: (projectId: string, storyId: string) =>
+    ipcRenderer.invoke('story:loadMetadata', projectId, storyId),
+  saveStoryMetadata: (projectId: string, storyId: string, metadata: any) =>
+    ipcRenderer.invoke('story:saveMetadata', projectId, storyId, metadata),
   updateStory: (projectId: string, storyId: string, updates: any) =>
     ipcRenderer.invoke('story:update', projectId, storyId, updates),
   deleteStory: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('story:delete', projectId, storyId),
+  reorderStories: (projectId: string, ids: string[]) =>
+    ipcRenderer.invoke('stories:reorder', projectId, ids),
+
+  // -------- parts (multi-part documents) ----------
+  loadPartDoc: (projectId: string, storyId: string, partId: string) =>
+    ipcRenderer.invoke('part:load', projectId, storyId, partId),
+  savePartDoc: (projectId: string, storyId: string, partId: string, doc: any) =>
+    ipcRenderer.invoke('part:save', projectId, storyId, partId, doc),
+  createPart: (projectId: string, storyId: string, order: number) =>
+    ipcRenderer.invoke('part:create', projectId, storyId, order),
+  deletePart: (projectId: string, storyId: string, partId: string) =>
+    ipcRenderer.invoke('part:delete', projectId, storyId, partId),
+  reorderParts: (projectId: string, storyId: string, ids: string[]) =>
+    ipcRenderer.invoke('parts:reorder', projectId, storyId, ids),
 
   // -------- metaDocs (flexible keys) ----------
   loadStoryMetaDoc: (projectId: string, storyId: string, key: string) =>

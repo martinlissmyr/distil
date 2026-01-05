@@ -1,14 +1,26 @@
-// src/ui/stories/StoryTextView.tsx
-import React from 'react';
-import { ProseEditor } from '../editor/ProseEditor';
+// src/ui/story/StoryTextView.tsx
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, ScrollArea } from '@mantine/core';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import { StorySectionShell } from './StorySectionShell';
 import { useEditorChat } from '../../hooks/useEditorChat';
+import { useEditorSync } from '../../hooks/useEditorSync';
+import { ChatAside } from '../chat/ChatAside';
+import { TopNavigation, type TopNavigationMenuItem } from '../common/TopNavigation';
+import { useChapterNavigationButtons } from './ChapterNavigation';
+import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
+import { createExtensionsFromConfig, createToolbarFromConfig } from '../editor/editorConfigFactory';
+import { getDocKind } from '../../models/docs';
+import { jsonToMarkdown } from '../../helpers/markdownUtils';
+import { useAppStore } from '../../state/useAppStore';
+import styles from '../editor/BaseEditor.module.scss';
 
 type StoryTextViewProps = {
   projectId: string;
   storyId: string;
   doc: any;
-  onChange: (id: string) => void;
+  onChange: (doc: any) => void;
   title: string;
 };
 
@@ -19,14 +31,173 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
-  const { handleNavigate } = useEditorChat({
-    chatConfig: {
-      kind: 'prose',
-      storyId,
-      storyTitle: title,
-      projectId,
-    },
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
+  const [selectionMarkdown, setSelectionMarkdown] = useState('');
+  const [hasSelection, setHasSelection] = useState(false);
+
+  // Track if user has ever made a selection (menu stays open once triggered)
+  const hadSelectionRef = useRef(false);
+
+  // Get parts state from app store
+  const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
+  const currentPartId = useAppStore((state) => state.currentPartId);
+  const loadStoryMetadata = useAppStore((state) => state.loadStoryMetadata);
+  const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
+  const enableParts = useAppStore((state) => state.enableParts);
+
+  // Load story metadata on mount
+  useEffect(() => {
+    loadStoryMetadata(projectId, storyId);
+  }, [projectId, storyId, loadStoryMetadata]);
+
+  const partsEnabled = currentStoryMetadata?.partsEnabled ?? false;
+  const parts = currentStoryMetadata?.parts ?? [];
+  const currentPartIndex = parts.findIndex((p) => p.id === currentPartId);
+  const totalParts = parts.length;
+
+  // Get editor config from doc model
+  const docKind = getDocKind('prose');
+  const editorConfig = { ...(docKind as any).editorConfig };
+  editorConfig.placeholder = "Start writing your story...";
+
+  const editor = useEditor({
+    extensions: createExtensionsFromConfig(editorConfig),
+    content: doc ?? defaultEmptyDoc,
   });
+
+  useEditorSync(editor, doc, onChange);
+
+  const toolbar = createToolbarFromConfig(editorConfig, editor);
+
+  // Chat configuration
+  const chatConfig = {
+    kind: 'prose' as const,
+    storyId,
+    storyTitle: title,
+    projectId,
+  };
+
+  const { handleNavigate, handleOpenWizard } = useEditorChat({
+    chatConfig,
+    editor: editor ?? undefined,
+  });
+
+  // Extract full text markdown when editor content changes
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateMarkdown = () => {
+      try {
+        const json = editor.getJSON();
+        const markdown = jsonToMarkdown(json, 'prose');
+        setFullTextMarkdown(markdown);
+      } catch (error) {
+        console.error('Failed to extract markdown:', error);
+        setFullTextMarkdown('');
+      }
+    };
+
+    updateMarkdown();
+
+    const handleUpdate = () => updateMarkdown();
+    editor.on('update', handleUpdate);
+
+    return () => {
+      editor.off('update', handleUpdate);
+    };
+  }, [editor]);
+
+  // Track selection changes
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateSelection = () => {
+      const { from, to } = editor.state.selection;
+      const hasActiveSelection = from !== to;
+      setHasSelection(hasActiveSelection);
+
+      // Update ref for bubble menu - once set, stays true forever
+      if (hasActiveSelection) {
+        hadSelectionRef.current = true;
+      }
+
+      if (hasActiveSelection) {
+        try {
+          const slice = editor.state.doc.slice(from, to);
+          const selectedContent = slice.content.toJSON();
+          const markdown = jsonToMarkdown({ type: 'doc', content: selectedContent }, 'prose');
+          setSelectionMarkdown(markdown);
+        } catch (error) {
+          console.error('Failed to extract selection markdown:', error);
+          setSelectionMarkdown('');
+        }
+      } else {
+        setSelectionMarkdown('');
+      }
+    };
+
+    updateSelection();
+
+    const handleSelectionUpdate = () => updateSelection();
+    editor.on('selectionUpdate', handleSelectionUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+    };
+  }, [editor]);
+
+  // Chapter navigation handlers
+  const handleEnableParts = async () => {
+    try {
+      await enableParts(projectId, storyId);
+    } catch (error) {
+      console.error('Failed to enable parts:', error);
+    }
+  };
+
+  const handlePreviousPart = () => {
+    if (currentPartIndex > 0) {
+      const previousPart = parts[currentPartIndex - 1];
+      setCurrentPartId(previousPart.id);
+    }
+  };
+
+  const handleNextPart = () => {
+    if (currentPartIndex < totalParts - 1) {
+      const nextPart = parts[currentPartIndex + 1];
+      setCurrentPartId(nextPart.id);
+    }
+  };
+
+  const handleOpenOverview = () => {
+    // TODO: Open chapter overview modal/view
+    console.log('Open chapter overview');
+  };
+
+  const chapterNavButtons = useChapterNavigationButtons({
+    partsEnabled,
+    currentPartIndex,
+    totalParts,
+    onPreviousPart: handlePreviousPart,
+    onNextPart: handleNextPart,
+    onOpenOverview: handleOpenOverview,
+    canGoPrevious: true,
+    canGoNext: true,
+  });
+
+  // Build menu items for the story menu
+  const menuItems: TopNavigationMenuItem[] = [];
+  if (!partsEnabled) {
+    menuItems.push({
+      label: 'Enable Chapters',
+      onClick: handleEnableParts,
+      icon: 'parts',
+    });
+  }
+  // Future: Add more menu items here (story settings, export, etc.)
+
+  if (!editor) return null;
 
   return (
     <StorySectionShell
@@ -34,21 +205,66 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       storyId={storyId}
       preloadMetaKeys={['brief', 'outline']}
     >
-      <ProseEditor
-        key={storyId}
-        doc={doc}
-        onChange={onChange}
-        title={title}
-        placeholder="Start writing your story..."
-        withChat
-        chatConfig={{
-          kind: 'prose',
-          storyId,
-          storyTitle: title,
-          projectId,
-          onNavigate: handleNavigate,
+      <BubbleMenu
+        editor={editor}
+        updateDelay={250}
+        options={{
+          placement: 'top',
+          offset: 8,
+          flip: true,
         }}
-      />
+        className={styles.toolbarBubble}
+        data-ui="bubble-menu"
+      >
+        {toolbar}
+      </BubbleMenu>
+      <Box className={styles.root}>
+        <Box py={20} px={30} className={styles.topNavigation}>
+          <TopNavigation
+            title={title}
+            buttons={chapterNavButtons}
+            menuItems={menuItems}
+          />
+        </Box>
+        <Box
+          className={styles.topOverlay}
+          style={{
+            opacity: isScrolled ? 1 : 0,
+          }}
+        />
+
+        <ScrollArea
+          className={styles.scrollAreaWrapper}
+          type="hover"
+          scrollbarSize={10}
+          styles={{
+            thumb: {
+              zIndex: 20, // Above topOverlay
+            }
+          }}
+          onScrollPositionChange={({ y }) => {
+            setIsScrolled(y > 0);
+          }}
+        >
+          <Box className={styles.editor}>
+            <EditorContent editor={editor} />
+          </Box>
+        </ScrollArea>
+
+        <Box className={styles.chatAside}>
+          <ChatAside
+            {...chatConfig}
+            fullTextMarkdown={fullTextMarkdown || ''}
+            selectionMarkdown={selectionMarkdown}
+            hasSelection={hasSelection}
+            title={title}
+            isTextLoaded={fullTextMarkdown !== null}
+            editor={editor}
+            onNavigate={handleNavigate}
+            onOpenWizard={handleOpenWizard}
+          />
+        </Box>
+      </Box>
     </StorySectionShell>
   );
 };

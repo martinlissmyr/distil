@@ -123,7 +123,7 @@ export const docKinds = {
       'the request calls for a detailed depiction of locations, eras, or world-specific characteristics.',
   } satisfies RichTextDocConfig,
   prose: {
-    storageType: 'richText',
+    storageType: 'multiPartText',
     id: 'prose',
     scope: 'story',
     role: 'primary',
@@ -132,7 +132,7 @@ export const docKinds = {
     contextLayer: 'storyText',
     isContextDoc: false,
     editorConfig: proseEditorConfig,
-  } satisfies RichTextDocConfig,
+  } satisfies MultiPartTextDocConfig,
   characters: {
     storageType: 'entityIndex',
     id: 'characters',
@@ -221,10 +221,29 @@ export interface EntityIndexDocConfig {
 }
 
 /**
- * Discriminated union of all document configurations.
- * Use type guards (isRichTextDoc, isEntityIndexDoc) to narrow types.
+ * Multi-part text documents store prose as multiple parts/chapters.
+ * Each part is a separate TipTap document stored independently.
  */
-export type DocKindConfig = RichTextDocConfig | EntityIndexDocConfig;
+export interface MultiPartTextDocConfig {
+  storageType: 'multiPartText';
+  id: string;
+  scope: DocScopeLevel;
+  role: DocRole;
+  title: string;
+  shortDescription: string;
+  contextLayer: ContextLayer;
+  isContextDoc: boolean;
+  editorConfig: EditorConfig;
+  contextCriteria?: string;
+  contextIncludes?: string[];
+  contextUsageHint?: string;
+}
+
+/**
+ * Discriminated union of all document configurations.
+ * Use type guards (isRichTextDoc, isEntityIndexDoc, isMultiPartTextDoc) to narrow types.
+ */
+export type DocKindConfig = RichTextDocConfig | EntityIndexDocConfig | MultiPartTextDocConfig;
 
 // ---------------------------------------------------------------------------
 // Type guards
@@ -244,6 +263,14 @@ export function isRichTextDoc(config: DocKindConfig): config is RichTextDocConfi
  */
 export function isEntityIndexDoc(config: DocKindConfig): config is EntityIndexDocConfig {
   return config.storageType === 'entityIndex';
+}
+
+/**
+ * Type guard to check if a document configuration is a multi-part text document.
+ * Use this to safely access editorConfig for multi-part prose.
+ */
+export function isMultiPartTextDoc(config: DocKindConfig): config is MultiPartTextDocConfig {
+  return config.storageType === 'multiPartText';
 }
 
 // ---------------------------------------------------------------------------

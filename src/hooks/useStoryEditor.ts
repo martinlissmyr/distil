@@ -1,7 +1,7 @@
 // src/hooks/useStoryEditor.ts
 import { useState, useEffect, useCallback } from 'react';
 import type { JSONContent } from '@tiptap/react';
-import { client, StoryData } from '../api/client';
+import { client } from '../api/client';
 
 /**
  * Custom hook to manage story editor state and autosave
@@ -26,7 +26,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   /**
    * Load a story's content into the editor
    */
-  const loadStory = useCallback((story: StoryData) => {
+  const loadStory = useCallback((story: { title: string; doc: JSONContent }) => {
     setCurrentTitle(story.title);
     setCurrentDoc(story.doc);
     setDirty(false);
@@ -59,27 +59,62 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
   /**
    * Manually save the current story
+   * TODO: Update to use proper part ID from app store
    */
   const save = useCallback(async (projectId: string, storyId: string): Promise<boolean> => {
     if (!currentDoc) return false;
 
-    const response = await client.saveStory(projectId, storyId, {
-      id: storyId,
-      title: currentTitle || 'Untitled',
-      doc: currentDoc,
-    });
+    try {
+      // Load metadata to get the first part ID
+      const metadataResponse = await client.loadStoryMetadata(projectId, storyId);
+      if (!metadataResponse.ok) {
+        console.error('Failed to load story metadata:', metadataResponse.error);
+        return false;
+      }
 
-    if (response.ok) {
-      setDirty(false);
-      return true;
-    } else {
-      console.error('Save failed:', response.error);
+      const metadata = metadataResponse.data;
+
+      // If no parts exist, create the first part
+      if (metadata.parts.length === 0) {
+        const createResponse = await client.createPart(projectId, storyId, 0);
+        if (!createResponse.ok) {
+          console.error('Failed to create part:', createResponse.error);
+          return false;
+        }
+        metadata.parts = [createResponse.data];
+      }
+
+      const firstPartId = metadata.parts[0].id;
+
+      // Save the document to the first part
+      const saveResponse = await client.savePartDoc(projectId, storyId, firstPartId, currentDoc);
+
+      // Also update the story title if changed
+      if (currentTitle !== metadata.title) {
+        const updateResponse = await client.updateStory(projectId, storyId, {
+          title: currentTitle || 'Untitled',
+        });
+        if (!updateResponse.ok) {
+          console.error('Failed to update story title:', updateResponse.error);
+        }
+      }
+
+      if (saveResponse.ok) {
+        setDirty(false);
+        return true;
+      } else {
+        console.error('Save failed:', saveResponse.error);
+        return false;
+      }
+    } catch (e) {
+      console.error('Save failed:', e);
       return false;
     }
   }, [currentDoc, currentTitle]);
 
   /**
    * Autosave effect - saves 1000ms after changes when dirty
+   * TODO: Update to use proper part ID from app store
    */
   useEffect(() => {
     // Don't autosave if not dirty, no content, or no story selected
@@ -88,15 +123,44 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
     const timeout = setTimeout(() => {
       (async () => {
         try {
-          const response = await client.saveStory(projectId, storyId, {
-            id: storyId,
-            title: currentTitle || 'Untitled',
-            doc: currentDoc,
-          });
-          if (response.ok) {
+          // Load metadata to get the first part ID
+          const metadataResponse = await client.loadStoryMetadata(projectId, storyId);
+          if (!metadataResponse.ok) {
+            console.error('Failed to load story metadata:', metadataResponse.error);
+            return;
+          }
+
+          const metadata = metadataResponse.data;
+
+          // If no parts exist, create the first part
+          if (metadata.parts.length === 0) {
+            const createResponse = await client.createPart(projectId, storyId, 0);
+            if (!createResponse.ok) {
+              console.error('Failed to create part:', createResponse.error);
+              return;
+            }
+            metadata.parts = [createResponse.data];
+          }
+
+          const firstPartId = metadata.parts[0].id;
+
+          // Save the document to the first part
+          const saveResponse = await client.savePartDoc(projectId, storyId, firstPartId, currentDoc);
+
+          // Also update the story title if changed
+          if (currentTitle !== metadata.title) {
+            const updateResponse = await client.updateStory(projectId, storyId, {
+              title: currentTitle || 'Untitled',
+            });
+            if (!updateResponse.ok) {
+              console.error('Failed to update story title:', updateResponse.error);
+            }
+          }
+
+          if (saveResponse.ok) {
             setDirty(false);
           } else {
-            console.error('Autosave failed:', response.error);
+            console.error('Autosave failed:', saveResponse.error);
           }
         } catch (e) {
           console.error('Autosave failed', e);

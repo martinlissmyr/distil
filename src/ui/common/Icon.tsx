@@ -28,15 +28,61 @@ import {
   Minus,
   CircleAlert,
   Circle,
+  Ellipsis,
+  LayoutGrid,
 } from 'lucide-react';
 
-export const Icon = ({type, size = 20, ...props}: {type: string, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
+export type IconType =
+  | 'parts'
+  | 'more'
+  | 'validationError'
+  | 'validationOk'
+  | 'validationEmpty'
+  | 'projects'
+  | 'project'
+  | 'manifest'
+  | 'playground'
+  | 'stories'
+  | 'story'
+  | 'prose'
+  | 'brief'
+  | 'outline'
+  | 'world'
+  | 'characters'
+  | 'character'
+  | 'locations'
+  | 'location'
+  | 'console'
+  | 'settings'
+  | 'back'
+  | 'forward'
+  | 'edit'
+  | 'add'
+  | 'prompt'
+  | 'navigate'
+  | 'wizard'
+  | 'close'
+  | 'selection'
+  | 'check'
+  | 'h2'
+  | 'h3'
+  | 'bulletList'
+  | 'orderedList'
+  | 'horizontalRule';
+
+export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
 	const iconProps = {
     strokeWidth: 1.5,
     size: size,
     ...props
 	}
 	switch (type) {
+		case 'parts': {
+			return <LayoutGrid {...iconProps}/>
+		}
+		case 'more': {
+			return <Ellipsis {...iconProps}/>
+		}
 		case 'validationError': {
 			return <CircleAlert {...iconProps}/>
 		}

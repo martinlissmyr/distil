@@ -1,7 +1,21 @@
 // src/ui/common/TopNavigation.tsx
 import React from 'react';
-import { ActionIcon, Box, Group, Text, Button } from '@mantine/core';
-import {Icon} from './Icon';
+import { ActionIcon, Box, Group, Text, Button, Menu } from '@mantine/core';
+import { Icon } from './Icon';
+import type { IconType } from './Icon';
+
+export type TopNavigationButton = {
+  label?: string;
+  onClick: () => void;
+  icon?: IconType;
+  enabled?: boolean;
+};
+
+export type TopNavigationMenuItem = {
+  label: string;
+  onClick: () => void;
+  icon?: IconType;
+};
 
 type TopNavigationProps = {
   title: string;
@@ -14,10 +28,11 @@ type TopNavigationProps = {
   onClose?: () => void;
   closeLabel?: string;
 
-  /** Optional save button */
-  onSave?: () => void;
-  saveLabel?: string;
-  canSave?: boolean;
+  /** Buttons to render in the right slot (replaces onSave/saveLabel/canSave) */
+  buttons?: TopNavigationButton[];
+
+  /** Menu items to render in a "more" menu button */
+  menuItems?: TopNavigationMenuItem[];
 
   /** Layout/styling */
   zIndex?: number;
@@ -36,11 +51,12 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   backLabel = 'Back',
   onClose,
   closeLabel = 'Close',
-  onSave,
-  canSave = true,
-  saveLabel = 'Save',
+  buttons = [],
+  menuItems = [],
   zIndex = 10,
 }) => {
+  const hasRightContent = buttons.length > 0 || menuItems.length > 0 || onClose;
+
   return (
     <Box
       style={{
@@ -87,16 +103,70 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
       {/* Right slot */}
       <Group justify="flex-end" gap="xs" style={{ minWidth: 0 }}>
-        {onSave && (
-          <Button
-            variant="light"
-            size="sm"
-            radius="xl"
-            onClick={onSave}
-            disabled={!canSave}
-          >
-            {saveLabel}
-          </Button>
+        {/* Button group */}
+        {buttons.length > 0 && (
+          <Button.Group>
+            {buttons.map((button, index) => {
+              const enabled = button.enabled ?? true;
+
+              // Icon-only button
+              if (button.icon && !button.label) {
+                return (
+                  <Button
+                    key={index}
+                    aria-label={button.icon}
+                    variant="light"
+                    size="sm"
+                    onClick={button.onClick}
+                    disabled={!enabled}
+                  >
+                    <Icon type={button.icon} size={20} />
+                  </Button>
+                );
+              }
+
+              // Button with label (and optional icon)
+              return (
+                <Button
+                  key={index}
+                  variant="light"
+                  size="sm"
+                  onClick={button.onClick}
+                  disabled={!enabled}
+                  leftSection={button.icon ? <Icon type={button.icon} size={16} /> : undefined}
+                >
+                  {button.label}
+                </Button>
+              );
+            })}
+          </Button.Group>
+        )}
+
+        {/* Menu button */}
+        {menuItems.length > 0 && (
+          <Menu position="bottom-end" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                aria-label="More options"
+                variant="light"
+                size="lg"
+                radius="xl"
+              >
+                <Icon type="more" size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {menuItems.map((item, index) => (
+                <Menu.Item
+                  key={index}
+                  leftSection={item.icon ? <Icon type={item.icon} size={16} /> : undefined}
+                  onClick={item.onClick}
+                >
+                  {item.label}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
         )}
 
         {onClose && (
@@ -111,7 +181,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           </ActionIcon>
         )}
 
-        {!onClose && !onSave && (
+        {!hasRightContent && (
           <ButtonPlaceholder/>
         )}
       </Group>
