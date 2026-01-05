@@ -15,7 +15,7 @@ import { SelectionPill } from './SelectionPill';
 import { TypingIndicator } from './TypingIndicator';
 import styles from './ChatAside.module.scss';
 
-// ✅ docs-model driven scope
+// docs-model driven scope
 import { getDocScope } from '../../models/docs';
 
 type ChatAsideProps = {
@@ -225,8 +225,8 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   };
 
   const handleSendClick = async () => {
-    await handleSend(input);
     setInput('');
+    await handleSend(input);
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
@@ -253,20 +253,9 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
       {/* Messages container with overlays */}
       <Box style={{ flex: 1, minHeight: 0, position: 'relative' }}>
         {/* Top overlay */}
-        <Box
+        <Box className={styles.topOverlay}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: scrollbarOffset,
-            height: 60,
-            pointerEvents: 'none',
-            zIndex: 10,
             opacity: isScrolledTop ? 1 : 0,
-            transition: 'opacity 120ms ease-out',
-            background: 'linear-gradient(to bottom, var(--bg-editor-aside), transparent)',
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
           }}
         />
 
@@ -275,8 +264,14 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
           className={styles.chatScrollArea}
           style={{ height: '100%' }}
           viewportRef={viewportRef}
-          type="auto"
-          scrollbarSize={8}
+          type="hover"
+          scrollbarSize={10}
+          offsetScrollbars
+          styles={{
+            thumb: {
+              zIndex: 20, // over topOverlay
+            }
+          }}
           onScrollPositionChange={(position) => {
             const viewport = viewportRef.current;
             if (!viewport) return;
@@ -342,20 +337,26 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
           borderRadius: '10px',
         }}
       >
-        <Textarea
-          variant="unstyled"
-          value={input}
-          onChange={(e) => setInput(e.currentTarget.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={scope === 'selection' ? 'Ask something about the selected text…' : 'Ask anything…'}
-          autosize
-          minRows={2}
-          maxRows={4}
-          radius={0}
-          classNames={{
-            input: styles.textArea
-          }}
-        />
+        <ScrollArea.Autosize
+          mah={200}
+          type="hover"
+          scrollbarSize={10}
+          offsetScrollbars
+        >
+          <Textarea
+            variant="unstyled"
+            value={input}
+            onChange={(e) => setInput(e.currentTarget.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={scope === 'selection' ? 'Ask something about the selected text…' : 'Ask anything…'}
+            autosize
+            minRows={2}
+            radius={0}
+            classNames={{
+              input: styles.textArea
+            }}
+          />
+        </ScrollArea.Autosize>
         <Group justify="flex-end" mt={4}>
           <Button
             size="xs"

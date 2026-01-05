@@ -336,9 +336,14 @@ export function EntityEditView<T extends Record<string, any>>({
 
       <Box className={styles.contentWrapper}>
         <ScrollArea
-          className={`${styles.scrollArea} ${styles.scrollAreaWrapper}`}
-          type="auto"
-          scrollbarSize={8}
+          className={styles.scrollAreaWrapper}
+          type="hover"
+          scrollbarSize={10}
+          styles={{
+            thumb: {
+              zIndex: 20, // Above topOverlay
+            }
+          }}
         >
           <Stack gap="lg" className={`${styles.editor} ${styles.editorContent}`}>
             {/* Render groups first */}
