@@ -1,6 +1,6 @@
 // src/ui/editor/BaseEditor.tsx
 import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react';
-import { Box, Group } from '@mantine/core';
+import { Box, Group, ScrollArea } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { ChatAside } from '../chat/ChatAside';
@@ -29,7 +29,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   chatConfig,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [asideOffset, setAsideOffset] = useState(12);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
@@ -109,27 +108,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
     };
   }, [editor, schema]);
 
-  // Measure scrollbar width on mount + resize
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const update = () => {
-      const scrollbarWidth = el.offsetWidth - el.clientWidth;
-      setAsideOffset(scrollbarWidth + 12);
-    };
-
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    window.addEventListener('resize', update);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', update);
-    };
-  }, []);
-
   if (!editor) return null;
 
   return (
@@ -148,25 +126,37 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
         {toolbar}
       </BubbleMenu>
       <Box
-        className={`${styles.root} ${isScrolled ? styles.scrolled : ''}`}
-        style={{ '--aside-offset': `${asideOffset}px` } as React.CSSProperties}
+        className={styles.root}
       >
         <Box py={20} px={30} className={styles.topNavigation}>
           <TopNavigation
             title={title}
           />
         </Box>
-        <Box className={styles.topOverlay} />
-
         <Box
-          ref={scrollRef}
-          className={styles.scrollArea}
-          onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
+          className={styles.topOverlay}
+          style={{
+            opacity: isScrolled ? 1 : 0,
+          }}
+        />
+
+        <ScrollArea
+          className={styles.scrollAreaWrapper}
+          type="hover"
+          scrollbarSize={10}
+          styles={{
+            thumb: {
+              zIndex: 20, // Above topOverlay
+            }
+          }}
+          onScrollPositionChange={({x, y}) => {
+            setIsScrolled(y > 0)}
+          }
         >
           <Box className={styles.editor}>
             <EditorContent editor={editor} />
           </Box>
-        </Box>
+        </ScrollArea>
 
         {withChat && (
           <Box className={styles.chatAside}>

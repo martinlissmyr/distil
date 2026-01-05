@@ -56,7 +56,7 @@ export function useChatScroll(messages: ChatMessage[]) {
       return;
     }
 
-    const desiredOffset = 60;
+    const desiredOffset = 140;
     const clientHeight = vp.clientHeight;
 
     // Get the bottom of the user message
@@ -100,7 +100,7 @@ export function useChatScroll(messages: ChatMessage[]) {
   }, [calculateSpacer]);
 
   // Scroll to last user message when messages change
-  useEffect(() => {
+/*  useEffect(() => {
     const vp = viewportRef.current;
     if (!vp || messages.length === 0) return;
 
@@ -123,7 +123,22 @@ export function useChatScroll(messages: ChatMessage[]) {
         vp.scrollTo({ top: scrollToPosition, behavior: 'smooth' });
       }
     });
-  }, [messages]);
+  }, [messages]);*/
+
+ // Scroll to bottom when messages change (after last message is rendered)
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp || messages.length === 0) return;
+
+    // Wait for DOM to update
+    requestAnimationFrame(() => {
+      // Scroll to the absolute bottom
+      vp.scrollTo({
+        top: vp.scrollHeight - vp.clientHeight,
+        behavior: 'smooth',
+      });
+    });
+  }, [messages]); 
 
   return { viewportRef, contentRef, spacerRef, spacerHeight };
 }

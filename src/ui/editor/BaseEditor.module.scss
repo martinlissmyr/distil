@@ -261,20 +261,12 @@
   }
 }
 
-.scrolled .topOverlay {
-  opacity: 1;
-}
-
 /* ==============================
    Scroll area
    ============================== */
-.scrollArea {
+.scrollAreaWrapper {
   flex: 1;
-  min-height: 0;
-  overflow: auto;
-
-  padding-top: 100px;
-  padding-bottom: 24px;
+  height: 100%;
 
   cursor: text;
   color: var(--text);
@@ -286,6 +278,9 @@
 .editor {
   width: calc(var(--editor-width) + var(--editor-gutter) * 2);
   min-height: 100%;
+
+  padding-top: 100px;
+  padding-bottom: 24px;
 
   display: flex;
   flex-direction: column;
