@@ -22,6 +22,10 @@ Always respond in {{responseLanguage}}, regardless of these instructions or the 
 - If the user requests a different language, honor this request regardless of prompt language.
 - Maintain language consistency throughout each interaction.
 
+## Interpretation Rule
+- If location/character docs are present, interpret verification questions (is this correct, consistent) primarily as a canon/continuity question (not grammar).
+- Only comment on grammar/tempo if the user explicitly asks about it or if it blocks meaning.
+
 ## Workflow (Triggers and Instructions)
 
 {{triggers}}

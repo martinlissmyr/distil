@@ -40,6 +40,8 @@ export async function getContextDocs(
 ) {
   const { language = DEFAULT_WRITING_LANGUAGE } = options;
 
+  console.log(`RAW USER PROMPT FOR CONTEXT DETERMINATION\n-------\n${rawUserPrompt}`)
+
   const state = useAppStore.getState();
 
   const loadMetaDoc = (docKey: MetaDocKey): string | null => {
@@ -305,6 +307,8 @@ export async function determineContextNeedsWithLLMClassification(
   ambiguousNeededContexts: MetaDocKey[]
 ): Promise<LlmContextResult> {
   const contextClassificationPrompt = buildPrompt(ambiguousNeededContexts);
+
+  console.log(`contextClassificationPrompt\n---------\n${contextClassificationPrompt}`)
 
   try {
     const response = await window.chat.send({

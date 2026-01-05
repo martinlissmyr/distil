@@ -43,10 +43,18 @@ export async function buildPrompt({
   storyId,
   language = DEFAULT_WRITING_LANGUAGE,
 }: BuildPromptArgs): Promise<BuiltPrompt> {
+
+  // First, build a preliminary user prompt for use in context determination
+  const preliminaryUserPrompt = buildUserPrompt({
+    rawUserPrompt,
+    selectionMarkdown,
+    scope,
+  });
+
   const {
     kinds: contextKinds,
     markdown: contextMarkdown,
-  } = await getContextDocs(kind, rawUserPrompt, projectId, storyId, {
+  } = await getContextDocs(kind, preliminaryUserPrompt, projectId, storyId, {
     language,
   });
 
@@ -103,6 +111,7 @@ export async function buildPrompt({
     rawUserPrompt,
     contextSummary,
     fullTextMarkdown,
+    selectionMarkdown,
     scope,
   });
 

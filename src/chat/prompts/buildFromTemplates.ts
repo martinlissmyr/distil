@@ -28,7 +28,7 @@ export function buildSystemPrompt(params: {
     responseLanguage: WRITING_LANGUAGE_LABEL[language],
   });
 
-  console.log(prompt);
+  console.log(`SYSTEM PROMPT\n-----------\n${prompt}`);
 
   return prompt;
 }
@@ -45,13 +45,17 @@ export function buildAssistantContext(params: {
 }): string {
   const { title, fullTextMarkdown, contextMarkdown, selectionMarkdown, scope } = params;
 
-  return interpolate(contextTemplateMd, {
+  const prompt = interpolate(contextTemplateMd, {
     title,
     fullTextMarkdown: fullTextMarkdown || '',
     contextDocumentsMarkdown: contextMarkdown || '',
     selectionMarkdown: selectionMarkdown || '',
     hasSelection: scope === 'selection' && selectionMarkdown,
   }).trim();
+
+  console.log(`ASSISTANT PROMPT\n-----------\n${prompt}`);
+
+  return prompt;
 }
 
 /**
@@ -60,15 +64,19 @@ export function buildAssistantContext(params: {
 export function buildUserPrompt(params: {
   rawUserPrompt: string;
   contextSummary: string;
-  fullTextMarkdown: string;
+  selectionMarkdown?: string;
   scope: 'selection' | 'text';
 }): string {
-  const { rawUserPrompt, contextSummary, fullTextMarkdown, scope } = params;
+  const { rawUserPrompt, contextSummary, selectionMarkdown, scope } = params;
 
-  return interpolate(TaskMd, {
+  const prompt = interpolate(TaskMd, {
     rawUserPrompt,
     contextSummary: contextSummary || '',
-    fullTextMarkdown: fullTextMarkdown || '',
+    selectionMarkdown: selectionMarkdown || '',
     hasSelection: scope === 'selection',
   }).trim();
+
+  console.log(`USER PROMPT\n-----------\n${prompt}`);
+
+  return prompt;
 }
