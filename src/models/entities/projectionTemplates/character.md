@@ -17,3 +17,8 @@
 {{#if hasContent(gender)}}
 **Gender**: {{gender}}
 {{/if}}
+
+{{#if hasContent(relationships)}}
+**Relationships & Dynamics**:
+{{relationships}}
+{{/if}}

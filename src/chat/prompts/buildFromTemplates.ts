@@ -8,7 +8,7 @@ import contextTemplateMd from './assistant/context.md?raw';
 import TaskMd from './user/task.md?raw';
 
 import {interpolate} from '../../helpers/interpolate';
-import { getSystemRoleForDocKind } from '../../models/docs';
+import { getSystemRoleForDocKind, getSystemTriggersForDocKind } from '../../models/docs';
 
 /**
  * Build the system message with dynamic content
@@ -20,11 +20,17 @@ export function buildSystemPrompt(params: {
   const { kind, language = DEFAULT_WRITING_LANGUAGE } = params;
 
   const roleMd = getSystemRoleForDocKind(kind);
+  const triggersMd = getSystemTriggersForDocKind(kind);
 
-  return interpolate(systemMd, {
+  const prompt = interpolate(systemMd, {
     role: roleMd,
+    triggers: triggersMd,
     responseLanguage: WRITING_LANGUAGE_LABEL[language],
   });
+
+  console.log(prompt);
+
+  return prompt;
 }
 
 /**

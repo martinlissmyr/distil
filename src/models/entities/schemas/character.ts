@@ -33,6 +33,7 @@ export const characterType = defineType({
     defineField({
       name: 'name',
       fieldRole: 'primaryTitle',
+      documentRoleDescription: 'Name (primary identifier)',
       group: 'identity',
       type: 'text',
       label: 'Name',
@@ -43,6 +44,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'aliases',
+      documentRoleDescription: 'Aliases (nicknames or internal names)',
       group: 'identity',
       type: 'text',
       label: 'Aliases',
@@ -53,6 +55,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'age',
+      documentRoleDescription: 'Age (actual or approximate)',
       group: 'identity',
       type: 'text',
       label: 'Age',
@@ -63,6 +66,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'gender',
+      documentRoleDescription: 'Gender (identity or self-description)',
       group: 'identity',
       type: 'text',
       label: 'Gender',
@@ -76,6 +80,7 @@ export const characterType = defineType({
     // --------------------
     defineField({
       name: 'tier',
+      documentRoleDescription: 'Importance (the significance of the character: primary, significant, secondary)',
       group: 'role',
       type: 'select',
       label: 'Importance',
@@ -90,6 +95,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'roleInStory',
+      documentRoleDescription: 'Narrative role',
       group: 'role',
       type: 'text',
       label: 'Narrative role',
@@ -104,6 +110,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'relationships',
+      documentRoleDescription: 'Relationships & Dynamics (key connections with other characters)',
       type: 'textarea',
       label: 'Relationships & Dynamics',
       description: 'Key relationships, dynamics, and connections with other characters. Describe both emotional bonds and narrative functions.',
@@ -115,6 +122,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'positionAndLivelihood',
+      documentRoleDescription: 'Position in the world (how the character lives and is situated in their world (work, calling, social position etc))',
       type: 'textarea',
       label: 'Position in the world (livelihood, status, belonging)',
       description:
@@ -127,6 +135,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'presenceAndExpression',
+      documentRoleDescription: 'Presence & Expression (how the character comes across — physically, socially, and behaviorally)',
       type: 'textarea',
       label: 'Presence & Expression (what others see and feel)',
       description:
@@ -139,6 +148,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'voiceSamples',
+      documentRoleDescription: 'Voice & Thought Samples (how they speak or think)',
       type: 'textarea',
       label: 'Voice & Thought Samples (how they speak or think)',
       description:
@@ -150,6 +160,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'innerOrientation',
+      documentRoleDescription: 'Inner orientation (what quietly guides them)',
       type: 'textarea',
       label: 'Inner orientation (what quietly guides them)',
       description:
@@ -162,6 +173,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'externalConstraints',
+      documentRoleDescription: 'External constraints (forces outside the character that shape what\'s possible)',
       type: 'textarea',
       label: 'External constraints (what limits choice)',
       description:
@@ -174,6 +186,7 @@ export const characterType = defineType({
 
     defineField({
       name: 'notesAndFacts',
+      documentRoleDescription: 'Other notes and facts',
       type: 'textarea',
       label: 'Other notes and facts',
       description:

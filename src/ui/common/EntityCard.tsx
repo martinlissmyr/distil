@@ -41,7 +41,7 @@ export function EntityCard<T>({
           </Box>
         </Stack>
       </Card>
-      <Text fw={700} ta="center">
+      <Text fw={700} ta="center" overflow="ellipsis" lineClamp={2}>
         {label}
       </Text>
     </Stack>

@@ -37,6 +37,9 @@ export type FieldDef<TGroup extends string = string> = {
   description?: string;
   placeholder?: string;
   
+  // Internal description, used in LLMs
+  documentRoleDescription?: string;
+
   // UI behavior
   type: FieldType;
   group?: TGroup;
