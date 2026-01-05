@@ -173,7 +173,7 @@ export const docKinds = {
       'Hazards and constraints',
       'Spatial relationships',
     ],
-    contextUsageHint: 'the request involves scene-setting, location-specific details, or spatial context.',
+    contextUsageHint: 'the request involves descriptions of locations, scene-setting, location-specific details, or spatial context.',
   } satisfies EntityIndexDocConfig,
 } as const;
 
