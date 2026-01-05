@@ -1,5 +1,5 @@
 // src/wizards/validation.ts
-import type { WizardConfig, WizardStep, BaseStep } from './types';
+import type { WizardConfig } from './types';
 
 /**
  * Validates a wizard configuration

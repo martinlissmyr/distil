@@ -7,7 +7,6 @@ import {
   Switch,
   Select,
   TextInput,
-  PasswordInput,
   Textarea,
   UnstyledButton,
   Flex,
@@ -70,16 +69,9 @@ type TextItemBase = BaseSettingItem & {
 export type TextSettingItem =
   | (TextItemBase & {
       multiline?: false;
-      /**
-       * If true, renders a PasswordInput (masked) but styled like the normal unstyled input.
-       * (only valid for single-line)
-       */
-      masked?: boolean;
     })
   | (TextItemBase & {
       multiline: true;
-      /** Textarea autosize controls */
-      masked?: never;
     });
 
 export type SelectSettingItem = BaseSettingItem & {
@@ -112,10 +104,6 @@ export type ButtonSettingItem = BaseSettingItem & {
   buttonLabel: string;
 
   onClick: () => void;
-
-  /** Optional button styling */
-  buttonVariant?: React.ComponentProps<typeof Button>['variant']; // default: "subtle"
-  buttonColor?: React.ComponentProps<typeof Button>['color']; // optional
 };
 
 export type SettingItem =
@@ -285,8 +273,6 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         if (!t.onCmdEnter) return;
 
         // Don’t trigger while composing (IME)
-        // (nativeEvent.isComposing exists on KeyboardEvent)
-        // @ts-expect-error - isComposing exists at runtime
         if (e.nativeEvent?.isComposing) return;
 
         const isEnter = e.key === 'Enter';
@@ -320,22 +306,6 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
           classNames={{
             root: classes.unstyledInputRoot,
             input: classes.unstyledTextarea,
-          }}
-        />
-      ) : t.masked ? (
-        <PasswordInput
-          {...common}
-          // PasswordInput doesn't always forward unknown props to the <input>.
-          // inputProps is the safe place for autofocus/data-autofocus AND key handling.
-          inputProps={{
-            onKeyDown: handleKeyDown,
-            ...(t.autoFocus ? { autoFocus: true, 'data-autofocus': true } : {}),
-          } as any}
-          onChange={(e) => t.onChange(e.currentTarget.value)}
-          radius={0}
-          classNames={{
-            root: classes.unstyledInputRoot,
-            innerInput: classes.unstyledInput,
           }}
         />
       ) : (
@@ -483,8 +453,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
       const btn = item as ButtonSettingItem;
       return (
         <Button
-          variant={btn.buttonVariant ?? 'light'}
-          color={btn.buttonColor}
+          variant="light"
           size="compact-xs"
           radius="sm"
           onClick={disabled ? undefined : btn.onClick}

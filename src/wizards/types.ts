@@ -1,6 +1,6 @@
 // src/wizards/types.ts
 import type { EditorKind } from '../types/chat';
-import type { DocRef, MetaScope, MetaDocKey } from '../types/metaDoc';
+import type { DocRef, MetaDocKey } from '../types/metaDoc';
 import type { RefObject } from 'react';
 
 /**

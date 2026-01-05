@@ -37,13 +37,8 @@ export const ApiKeyView: React.FC<ApiKeyViewProps> = ({
       type: 'text',
       label: 'API key',
       value: apiKeyDraft,
-
       multiline: true,
-      minRows: 2,
-      maxRows: 6,
-
       placeholder: 'sk-...',
-      disabled,
       onChange,
       validate: apiKeyValidateForUi,
     },
@@ -55,9 +50,6 @@ export const ApiKeyView: React.FC<ApiKeyViewProps> = ({
             label: ' ',
             buttonLabel: deleteConfirm ? 'Click again to remove' : 'Remove key',
             onClick: onClear,
-            color: 'red',
-            variant: deleteConfirm ? 'filled' : 'subtle',
-            disabled,
           } as SettingItem,
         ]
       : []),
@@ -65,8 +57,8 @@ export const ApiKeyView: React.FC<ApiKeyViewProps> = ({
 
   return (
     <Stack gap="sm">
-      <SettingsGroup items={apiKeyItems} ariaLabel="OpenAI API key settings" disabled={false} />
-      <SettingsGroupLabel description="The API Key is stored securely in your system keychain on this device. Changes are saved automatically." />
+      <SettingsGroup items={apiKeyItems} ariaLabel="OpenAI API key settings" disabled={disabled} />
+      <SettingsGroupLabel label="" description="The API Key is stored securely in your system keychain on this device. Changes are saved automatically." />
     </Stack>
   );
 };

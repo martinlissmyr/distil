@@ -54,14 +54,13 @@ export async function buildPromptForStep(
   useTestPrompt = false
 ): Promise<BuiltPrompt> {
   const writingLanguage = deps.getWritingLanguage();
-  const writingLanguageName = WRITING_LANGUAGE_LABEL[writingLanguage] || WRITING_LANGUAGE_LABEL[DEFAULT_WRITING_LANGUAGE];
+  const writingLanguageName = (WRITING_LANGUAGE_LABEL as Record<string, string>)[writingLanguage] || (WRITING_LANGUAGE_LABEL as Record<string, string>)[DEFAULT_WRITING_LANGUAGE];
 
   // Merge contexts: answers, llmResults, metaDocs, and entity projection
   const vars = {
     ...answers,
     ...llmResults,
     contextDocumentsMarkdown: wizardContext.llmContext?.markdown || '',
-    currentContent: wizardContext.currentContent || '',
     currentProjection: wizardContext.currentProjection || {},
     writingLanguageName,
   };
@@ -96,11 +95,11 @@ export async function buildPromptForStep(
     content: interpolate(userTemplate, vars),
   });
 
-  const summaryHeader = {
+  const summaryHeader: Record<string, string> = {
     system: 'SYSTEM PROMPT',
     user: 'USER PROMPT',
     assistant: 'ASSISTANT PROMPT',
-  }
+  };
 
   const summary = messages
     .map((m) => {
@@ -108,7 +107,10 @@ export async function buildPromptForStep(
     })
     .join('\n\n---\n\n');
 
-  return { messages, summary };
+  // Filter out assistant messages for the actual API call
+  const apiMessages = messages.filter(m => m.role !== 'assistant') as Array<{ role: 'system' | 'user'; content: string }>;
+
+  return { messages: apiMessages, summary };
 }
 
 /**
