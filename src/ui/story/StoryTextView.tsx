@@ -175,6 +175,25 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     console.log('Open chapter overview');
   };
 
+  const handleCreatePart = async () => {
+    if (!currentStoryMetadata) return;
+
+    try {
+      // Determine order for new part (after current part)
+      const newOrder = currentPartIndex >= 0 ? currentPartIndex + 1 : parts.length;
+
+      // Create the new part
+      const createPart = useAppStore.getState().createPart;
+      const newPartId = await createPart(projectId, storyId, newOrder);
+
+      // Switch to the new part
+      setCurrentPartId(newPartId);
+    } catch (error) {
+      console.error('Failed to create part:', error);
+    }
+  };
+
+
   const chapterNavButtons = useChapterNavigationButtons({
     partsEnabled,
     currentPartIndex,
@@ -193,6 +212,18 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       label: 'Enable Chapters',
       onClick: handleEnableParts,
       icon: 'parts',
+    });
+  }
+  if (partsEnabled) {
+    menuItems.push({
+      label: 'Chapters View',
+      onClick: handleOpenOverview,
+      icon: 'parts',
+    });
+    menuItems.push({
+      label: 'Add a chapter',
+      onClick: handleCreatePart,
+      icon: 'add',
     });
   }
   // Future: Add more menu items here (story settings, export, etc.)

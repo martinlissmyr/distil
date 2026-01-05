@@ -116,9 +116,14 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                     key={index}
                     aria-label={button.icon}
                     variant="light"
-                    size="sm"
+                    size="compact-sm"
                     onClick={button.onClick}
                     disabled={!enabled}
+                    styles={{
+                      root: {
+                        height: 36,
+                      }
+                    }}
                   >
                     <Icon type={button.icon} size={20} />
                   </Button>
@@ -130,7 +135,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 <Button
                   key={index}
                   variant="light"
-                  size="sm"
+                  size="compact-sm"
                   onClick={button.onClick}
                   disabled={!enabled}
                   leftSection={button.icon ? <Icon type={button.icon} size={16} /> : undefined}
@@ -147,7 +152,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
               <ActionIcon
-                aria-label="More options"
+                aria-label="Options"
                 variant="light"
                 size="lg"
                 radius="xl"
@@ -155,9 +160,15 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 <Icon type="more" size={20} />
               </ActionIcon>
             </Menu.Target>
-            <Menu.Dropdown>
+            <Menu.Dropdown styles={{
+              dropdown: {
+                borderRadius: 8,
+              },
+            }}>
               {menuItems.map((item, index) => (
-                <Menu.Item
+                <Menu.Item style={{
+                  borderRadius: 4,
+                }}
                   key={index}
                   leftSection={item.icon ? <Icon type={item.icon} size={16} /> : undefined}
                   onClick={item.onClick}
