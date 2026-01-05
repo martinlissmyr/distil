@@ -55,7 +55,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   return (
     <div style={{ position: 'relative' }} className={classes.group}>
       <Radio.Group value={value} onChange={onChange}>
-        <SimpleGrid cols={cols} gap="sm" overflow="hidden">
+        <SimpleGrid cols={cols} spacing="sm">
           {options.map((option) => (
             <Box key={option.value}>
               <Radio.Card

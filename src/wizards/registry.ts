@@ -6,7 +6,7 @@ import { validateWizardConfig } from './validation';
 const modules = import.meta.glob('./configs/*.json', { eager: true });
 
 const RAW_REGISTRY: Record<WizardId, any> = {};
-for (const [path, mod] of Object.entries(modules)) {
+for (const [, mod] of Object.entries(modules)) {
   // Vite puts JSON on `default`
   const raw = (mod as any).default ?? mod;
   if (raw?.id) RAW_REGISTRY[raw.id as WizardId] = raw;

@@ -25,12 +25,12 @@ export function metaExtensions(
       BulletList.configure({
         keepMarks: true,
         keepAttributes: true,
-      }),
+      }) as Extension,
       OrderedList.configure({
         keepMarks: true,
         keepAttributes: true,
-      }),
-      HorizontalRule,
+      }) as Extension,
+      HorizontalRule as Extension,
     ],
   });
 }

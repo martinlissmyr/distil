@@ -216,7 +216,12 @@ export function isStepComplete(
     return step.subSteps.every((subStep) => isStepComplete(subStep, answers));
   }
 
-  // Question step
+  if (step.type === 'information') {
+    // Information steps are always complete (just display text)
+    return true;
+  }
+
+  // Question step (type === 'question')
   const answer = answers[step.id];
 
   if (step.required && !answer) {

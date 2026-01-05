@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Button } from '@mantine/core';
+import { Button } from '@mantine/core';
 
 export type ToolbarItem = {
   id: string;
@@ -12,7 +12,7 @@ type EditorToolbarProps = {
   items: ToolbarItem[];
 };
 
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ items, editorType = "prose" }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({ items }) => {
   return (
     <>
       {items.map((item) => (

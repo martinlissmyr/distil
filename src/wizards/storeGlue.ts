@@ -1,10 +1,7 @@
 // src/wizards/storeGlue.ts
-import type { MetaDocKey } from '../types/metaDoc';
 import type { WizardActions, WizardContext, WizardState, LlmProcessingStep } from './types';
 import { createWizardEngine } from './engine';
-import { docIdForMeta, metaId } from '../state/useAppStore';
-import type { MetaDocState } from '../types/metaDoc';
-import { docKinds } from '../models/docs';
+import { docIdForMeta } from '../state/useAppStore';
 import { insertIntoTextarea } from '../helpers/inputHelpers';
 
 export function createWizardActions(args: {
@@ -23,7 +20,7 @@ export function createWizardActions(args: {
 
       if (!editor && !inputRef) {
         // fallback: store wizardResult
-        args.set((s: any) => ({ wizardResult: text }));
+        args.set(() => ({ wizardResult: text }));
         return;
       }
 
@@ -43,7 +40,7 @@ export function createWizardActions(args: {
           args.get().bumpDocRevision(docId);
           return;
         } catch {
-          args.set((s: any) => ({ wizardResult: text }));
+          args.set(() => ({ wizardResult: text }));
           return;
         }
       }
@@ -51,7 +48,7 @@ export function createWizardActions(args: {
       if (inputRef) {
         const ok = insertIntoTextarea(inputRef, text, 'replace');
         if (!ok) {
-          args.set((s: any) => ({ wizardResult: text }));
+          args.set(() => ({ wizardResult: text }));
         }
       }
     },

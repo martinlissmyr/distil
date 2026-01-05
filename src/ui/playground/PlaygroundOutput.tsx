@@ -1,6 +1,6 @@
 // src/ui/playground/PlaygroundOutput.tsx
 import React, { useState } from 'react';
-import { Title, SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack, Badge, Paper } from '@mantine/core';
+import { SegmentedControl, Code, Text, Group, CopyButton, Button, Box, Stack, Badge, Paper } from '@mantine/core';
 import { Copy, Check } from 'lucide-react';
 
 type PlaygroundOutputProps = {

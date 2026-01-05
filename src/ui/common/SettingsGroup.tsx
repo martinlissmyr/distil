@@ -134,7 +134,7 @@ export type SettingsGroupProps = {
   disabled?: boolean;
 };
 
-export const SettingsGroupLabel = ({ label, description }) => {
+export const SettingsGroupLabel = ({ label, description }: { label: any; description: any }) => {
   return (
     <Box px={12}>
       {label && (
@@ -304,6 +304,7 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         placeholder: t.placeholder,
         disabled,
         variant: 'unstyled' as const,
+        color: undefined as any,
         autoComplete: 'off',
         onKeyDown: handleKeyDown,
       };
@@ -327,9 +328,9 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
           // PasswordInput doesn't always forward unknown props to the <input>.
           // inputProps is the safe place for autofocus/data-autofocus AND key handling.
           inputProps={{
-            ...focusProps,
             onKeyDown: handleKeyDown,
-          }}
+            ...(t.autoFocus ? { autoFocus: true, 'data-autofocus': true } : {}),
+          } as any}
           onChange={(e) => t.onChange(e.currentTarget.value)}
           radius={0}
           classNames={{

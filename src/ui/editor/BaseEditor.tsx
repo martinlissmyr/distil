@@ -1,6 +1,6 @@
 // src/ui/editor/BaseEditor.tsx
-import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react';
-import { Box, Group, ScrollArea } from '@mantine/core';
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, ScrollArea } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { ChatAside } from '../chat/ChatAside';
@@ -29,7 +29,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   chatConfig,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
@@ -149,7 +148,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
               zIndex: 20, // Above topOverlay
             }
           }}
-          onScrollPositionChange={({x, y}) => {
+          onScrollPositionChange={({ y }) => {
             setIsScrolled(y > 0)}
           }
         >
@@ -162,7 +161,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
           <Box className={styles.chatAside}>
             <ChatAside
               {...chatConfig}
-              fullTextMarkdown={fullTextMarkdown}
+              fullTextMarkdown={fullTextMarkdown || ''}
               selectionMarkdown={selectionMarkdown}
               hasSelection={hasSelection}
               title={title}

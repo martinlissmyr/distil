@@ -1,14 +1,13 @@
 // src/ui/wizard/WizardModal.tsx
 import React, { useEffect, useRef } from 'react';
-import { Box, Stack, Text, Button, Group, ActionIcon, ScrollArea } from '@mantine/core';
-import { Icon } from '../common/Icon';
+import { Box, Stack, Text, Button, Group, ScrollArea } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { useAppStore } from '../../state/useAppStore';
 import { getCurrentStep } from '../../wizards/navigation';
 import { QuestionStepView } from './steps/QuestionStepView';
 import { InformationStepView } from './steps/InformationStepView';
 import { LlmProcessingStepView } from './steps/LlmProcessingStepView';
-import type { QuestionStep, LlmProcessingStep, LlmApprovalStep, InformationStep } from '../../wizards/types';
+import type { QuestionStep, LlmProcessingStep, InformationStep } from '../../wizards/types';
 import { TopNavigation } from '../common/TopNavigation';
 
 type WizardModalProps = {

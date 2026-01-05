@@ -10,7 +10,6 @@ import type { LocationDoc } from '../../models/entities/schemas/location';
 import { EntityEditView } from './EntityEditView';
 import { characterType } from '../../models/entities/schemas/character';
 import { locationType } from '../../models/entities/schemas/location';
-import type { DocumentTypeDef } from '../../models/entities/schemas/types';
 import { client } from '../../api/client';
 import styles from './EntityIndexView.module.scss';
 import { EntityGrid } from '../common/EntityGrid';
@@ -236,6 +235,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
                   getId={(e) => e.id}
                   getLabel={(e) => e.name}
                   onSelect={handleEditEntity}
+                  onEdit={() => {}}
                   onCreate={handleAddEntity}
                   onReorderEntities={handleReorderEntities}
                   icon="character"

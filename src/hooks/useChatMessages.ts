@@ -6,7 +6,7 @@ import {
   type LocalizedSuggestionAction,
   type DocState,
 } from '../chat/chatHints';
-import { useAppStore, metaId } from '../state/useAppStore';
+import { useAppStore } from '../state/useAppStore';
 import type { MetaDocKey } from '../types/metaDoc';
 import { getContextRulesFor, type DocKindId } from '../models/docs';
 import { computeDocState } from '../models/docs/docState';

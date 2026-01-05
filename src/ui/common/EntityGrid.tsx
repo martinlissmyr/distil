@@ -1,6 +1,6 @@
 // src/ui/common/EntityGrid.tsx
 import React from 'react';
-import { Box, Group, Flex } from '@mantine/core';
+import { Box, Flex } from '@mantine/core';
 import { EntityCard, CreateEntityCard } from './EntityCard';
 import {
   SortableContext,
@@ -59,8 +59,8 @@ type EntityGridProps<T> = {
   /** called with reordered ids after drag */
   onReorderEntities: (ids: string[]) => void;
 
-  /** icon component passed through to EntityCard */
-  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: React.CSSProperties }>;
+  /** icon string passed through to EntityCard */
+  icon: string;
 
   title?: string;
   createLabel?: string;

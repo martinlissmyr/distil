@@ -1,6 +1,5 @@
 // src/wizards/promptBuilder.ts
-import type { LlmProcessingStep, WizardContext, ActiveWizard } from './types';
-import type { MetaDocKey } from '../types/metaDoc';
+import type { LlmProcessingStep, WizardContext } from './types';
 import { interpolate } from '../helpers/interpolate';
 import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE } from '../types/language';
 

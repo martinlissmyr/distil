@@ -1,7 +1,6 @@
 // src/ui/wizard/steps/InformationStepView.tsx
-import { 
-  Box, 
-  Text,
+import {
+  Box,
   Image,
 } from '@mantine/core';
 import type { InformationStep } from '../../../wizards/types';
@@ -17,7 +16,7 @@ export const InformationStepView: React.FC<InformationStepViewProps> = ({ step }
     <Box className={classes.layout}>
       {/* Question text */}
       {step.illustration && (
-        <Box my={40} justify="center">
+        <Box my={40} style={{ display: 'flex', justifyContent: 'center' }}>
           <Image
             src={`/src/assets/illustrations/${step.illustration}.svg`}
             h={300}

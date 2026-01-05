@@ -22,6 +22,15 @@ export type ChatConfig = {
   };
 };
 
+export type ProseEditorProps = {
+  doc: any;
+  onChange: (doc: any) => void;
+  title?: string;
+  placeholder: string;
+  withChat?: boolean;
+  chatConfig: ChatConfig;
+};
+
 export const ProseEditor = ({
   doc,
   onChange,
@@ -29,7 +38,7 @@ export const ProseEditor = ({
   placeholder,
   withChat = true,
   chatConfig,
-}) => {
+}: ProseEditorProps) => {
   // Get editor config from doc model
   const docKind = getDocKind('prose');
   // 'prose' is always a rich text doc, so editorConfig is guaranteed to exist

@@ -31,17 +31,17 @@ export function createExtensionsFromConfig(config: EditorConfig): Extension[] {
       BulletList.configure({
         keepMarks: true,
         keepAttributes: true,
-      }),
+      }) as Extension,
       OrderedList.configure({
         keepMarks: true,
         keepAttributes: true,
-      })
+      }) as Extension
     );
   }
 
   // Add horizontal rule if enabled
   if (config.horizontalRule) {
-    extraExtensions.push(HorizontalRule);
+    extraExtensions.push(HorizontalRule as Extension);
   }
 
   return createBaseExtensions({
@@ -69,6 +69,8 @@ function getToolbarItemIcon(item: ToolbarItem): React.ReactNode {
           return <Icon type="h2" />
         case 'H3':
           return <Icon type="h3" />
+        default:
+          return null;
       }
     }
     case 'bulletList':

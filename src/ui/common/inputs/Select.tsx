@@ -16,9 +16,8 @@ type SelectProps = {
 export const Select: React.FC<SelectProps> = ({
   value,
   onChange,
-  label, 
+  label,
   description,
-  placeholder,
   data,
 }) => {
   return (
@@ -27,7 +26,7 @@ export const Select: React.FC<SelectProps> = ({
         label={label}
         value={value}
         checkIconPosition="right"
-        onChange={onChange}
+        onChange={(value) => onChange(value || '')}
         radius="sm"
         data={data}
         classNames={{

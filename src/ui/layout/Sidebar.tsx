@@ -48,8 +48,13 @@ const SidebarCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // NAVIGATION ITEM – shared wrapper around Mantine NavLink
 // ─────────────────────────────────────────────────────────────
 
-type NavItemProps = Omit<React.ComponentProps<typeof NavLink>, 'leftSection'> & {
+type NavItemProps = {
   icon?: string;
+  label?: string;
+  active?: boolean;
+  p?: string;
+  onClick?: () => void;
+  [key: string]: any;
 };
 
 const NavItem: React.FC<NavItemProps> = ({
@@ -77,7 +82,7 @@ const NavItem: React.FC<NavItemProps> = ({
 
 const NavGroupLabel = ({
   title
-}) => {
+}: { title: any }) => {
   return (
     <Group m="xs" mt="lg">
       <Text size="sm" fw={700}>
@@ -90,7 +95,7 @@ const NavGroupLabel = ({
 const BackButton = ({
   onBack,
   label = "Back"
-}) => {
+}: { onBack: any, label?: string }) => {
   return (
     <Group p="xs">
       <Button
@@ -112,18 +117,12 @@ const BackButton = ({
 // ─────────────────────────────────────────────────────────────
 
 type ProjectsSidebarProps = {
-  projects: Project[];
-  selectedProjectId: string | null;
-  onSelectProject: (id: string) => void;
   rootSection: RootSection;
   onSelectRootSection: (section: RootSection) => void;
   isDevMode: boolean;
 };
 
 const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
-  projects,
-  selectedProjectId,
-  onSelectProject,
   rootSection,
   onSelectRootSection,
   isDevMode,
@@ -163,18 +162,12 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
 
 type ProjectSidebarProps = {
   currentProject: Project | undefined;
-  stories: StoryMeta[];
-  selectedStoryId: string | null;
   onBackToProjects: () => void;
-  onSelectStory: (id: string) => void;
 };
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   currentProject,
-  stories,
-  selectedStoryId,
   onBackToProjects,
-  onSelectStory,
 }) => {
   return (
     <SidebarCard>
@@ -188,7 +181,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           label="Stories"
           active={true}
           p="xs"
-          onClick={() => onSelectRootSection(section.id as RootSection)}
+          onClick={() => {}}
         />
       </Stack>
     </SidebarCard>
@@ -200,7 +193,6 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
 // ─────────────────────────────────────────────────────────────
 
 type StorySidebarProps = {
-  currentProject: Project | undefined;
   currentStory: StoryMeta | undefined;
   section: StorySection;
   onBackToProjectFromStory: () => void;
@@ -208,7 +200,6 @@ type StorySidebarProps = {
 };
 
 const StorySidebar: React.FC<StorySidebarProps> = ({
-  currentProject,
   currentStory,
   section,
   onBackToProjectFromStory,
@@ -243,12 +234,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mode,
   projects,
   selectedProjectId,
-  onSelectProject,
   onBackToProjects,
 
   stories,
   selectedStoryId,
-  onSelectStory,
 
   storySection,
   onSelectStorySection,
@@ -277,9 +266,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (mode === 'projects') {
     content = (
       <ProjectsSidebar
-        projects={projects}
-        selectedProjectId={selectedProjectId}
-        onSelectProject={onSelectProject}
         rootSection={rootSection}
         onSelectRootSection={onSelectRootSection}
         isDevMode={isDevMode}
@@ -289,7 +275,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // STORY MODE
     content = (
       <StorySidebar
-        currentProject={currentProject}
         currentStory={currentStory}
         section={storySection}
         onBackToProjectFromStory={onBackToProjectFromStory}
@@ -301,10 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     content = (
       <ProjectSidebar
         currentProject={currentProject}
-        stories={stories}
-        selectedStoryId={selectedStoryId}
         onBackToProjects={onBackToProjects}
-        onSelectStory={onSelectStory}
       />
     );
   }

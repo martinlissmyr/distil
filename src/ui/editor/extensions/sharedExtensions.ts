@@ -34,8 +34,8 @@ export function createBaseExtensions({
       ...starterKitConfig,
     }),
     Heading.configure({
-      levels: headingLevels,
-    }),
+      levels: headingLevels as [2, 3] | [1, 2],
+    }) as Extension,
     ...extraExtensions,
     Placeholder.configure({
       placeholder,

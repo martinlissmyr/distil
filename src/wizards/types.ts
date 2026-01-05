@@ -45,7 +45,6 @@ export type BaseStep = {
 export type WizardStep =
   | QuestionStep
   | LlmProcessingStep
-  | LlmApprovalStep
   | InformationStep
   | CompoundStep;
 
@@ -149,7 +148,7 @@ export type WizardContext = {
 
   /** TipTap Editor instance or Input Ref to insert results into */
   targetEditor?: any;
-  targetInputRef: RefObject;
+  targetInputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
 
   llmContext?: {
     kinds: EditorKind[];

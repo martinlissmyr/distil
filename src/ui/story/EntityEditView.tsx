@@ -308,7 +308,7 @@ export function EntityEditView<T extends Record<string, any>>({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={value} // IMPORTANT: keep null when empty
+            value={value || ''} // IMPORTANT: keep null when empty
             data={field.options || []}
             onChange={(val: string | null) => handleFieldChange(field.name, val)}
           />

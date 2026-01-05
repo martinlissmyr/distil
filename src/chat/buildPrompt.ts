@@ -45,8 +45,10 @@ export async function buildPrompt({
 }: BuildPromptArgs): Promise<BuiltPrompt> {
 
   // First, build a preliminary user prompt for use in context determination
+  // Note: We don't have contextSummary yet, so pass empty string
   const preliminaryUserPrompt = buildUserPrompt({
     rawUserPrompt,
+    contextSummary: '',
     selectionMarkdown,
     scope,
   });
@@ -110,7 +112,6 @@ export async function buildPrompt({
   prompt.user = buildUserPrompt({
     rawUserPrompt,
     contextSummary,
-    fullTextMarkdown,
     selectionMarkdown,
     scope,
   });
