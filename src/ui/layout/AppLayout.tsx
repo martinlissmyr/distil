@@ -17,6 +17,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ sidebar, main }) => {
       header={{ height: 0, collapsed: false }}
       navbar={{
         width: NAV_WIDTH,
+        breakpoint: 'sm',
         collapsed: { mobile: false, desktop: false },
       }}
       padding={0}

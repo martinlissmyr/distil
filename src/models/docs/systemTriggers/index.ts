@@ -13,7 +13,7 @@ import { interpolate } from '../../../helpers/interpolate';
 import { extractDocumentRoleDescriptionsMarkdown } from '../../../helpers/entityDocumentRoleHelper';
 
 function buildEntityTriggers(
-  schema: DocumentTypeDef,
+  schema: DocumentTypeDef<any>,
   md: string,
 ): string {
   const fieldsMd = extractDocumentRoleDescriptionsMarkdown(schema) || '';

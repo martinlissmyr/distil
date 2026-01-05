@@ -1,25 +1,24 @@
-import React from 'react';
-import { Text, ActionIcon, Group, Card, Box, Stack } from '@mantine/core';
+import { Text, ActionIcon, Card, Box, Stack } from '@mantine/core';
 import styles from './EntityCard.module.scss';
 import {Icon} from './Icon'
 
-type EntityCardProps<T> = {
+type EntityCardProps = {
   id: string;
   label: string;
   onSelect: (id: string) => void;
   onEdit?: (id: string) => void;
-  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: any }>;
+  icon: string;
 };
 
-export function EntityCard<T>({
+export function EntityCard({
   id,
   label,
   onSelect,
   onEdit,
   icon,
-}: EntityCardProps<T>) {
+}: EntityCardProps) {
   return (
-    <Stack space={1} onClick={() => onSelect(id)} className={styles.entityCardWrapper}>
+    <Stack gap={1} onClick={() => onSelect(id)} className={styles.entityCardWrapper}>
       <Card className={styles.entityCard}>
         {onEdit && (
           <ActionIcon
@@ -27,7 +26,7 @@ export function EntityCard<T>({
             size="md"
             style={{ position: 'absolute', top: 12, right: 12 }}
             onClick={(e) => {
-              e.stopPropagation(); // don’t also select
+              e.stopPropagation(); // don't also select
               onEdit(id);
             }}
           >
@@ -41,24 +40,24 @@ export function EntityCard<T>({
           </Box>
         </Stack>
       </Card>
-      <Text fw={700} ta="center" overflow="ellipsis" lineClamp={2}>
+      <Text fw={700} ta="center" lineClamp={2}>
         {label}
       </Text>
     </Stack>
   );
 }
 
-type CreateEntityCardProps<T> = {
+type CreateEntityCardProps = {
   onCreate: () => void;
   label?: string;
 };
 
-export function CreateEntityCard<T>({
+export function CreateEntityCard({
   onCreate,
   label = "New"
-}: CreateEntityCardProps<T>) {
+}: CreateEntityCardProps) {
   return (
-    <Stack space={1} onClick={onCreate} className={styles.entityCardWrapper}>
+    <Stack gap={1} onClick={onCreate} className={styles.entityCardWrapper}>
       <Card className={styles.entityCard}>
         <Icon type="add" size={60} strokeWidth={1}/>
       </Card>

@@ -4,7 +4,7 @@ import type { EditorKind } from '../types/chat';
 import type { MetaDocKey } from '../types/metaDoc';
 import { DEFAULT_WRITING_LANGUAGE } from '../types/language';
 import type { WritingLanguage } from '../types/language';
-import type { EntityType } from '../models/entities/entityIndex';
+import type { EntityType, EntityIndexEntry } from '../models/entities/entityIndex';
 import { client } from '../api/client';
 import {
   getContextRulesFor,
@@ -125,7 +125,11 @@ export async function getContextDocs(
 
         // Store entity selections
         if (!contexts.entities) contexts.entities = {};
-        contexts.entities[docKey] = { ids: selectedEntityIds, depth };
+        if (entityType === 'character') {
+          contexts.entities.characters = { ids: selectedEntityIds, depth };
+        } else if (entityType === 'location') {
+          contexts.entities.locations = { ids: selectedEntityIds, depth };
+        }
 
         // Extract label prefix from shortDescription (e.g., "Character information" from "Character information (identities/relationships/behaviors)")
         const labelPrefix = docKind.shortDescription.split(' (')[0];
@@ -469,17 +473,19 @@ async function loadEntityProjections(
       console.log(`Loaded ${entityType} index from fixtures`);
       index = fixtureIndex;
     } else {
-      console.error(`Failed to load ${entityType} index:`, response.error);
+      console.error(`Failed to load ${entityType} index:`, !response.ok ? response.error : 'Unknown error');
       return [];
     }
   }
 
   return index.entities
-    .filter(entry => entry.projection) // Only include entities with projections
-    .map(entry => ({
+    .filter((entry: EntityIndexEntry): entry is EntityIndexEntry & { projection: string } =>
+      Boolean(entry.projection)
+    )
+    .map((entry: EntityIndexEntry & { projection: string }) => ({
       id: entry.id,
       name: entry.name,
-      projection: entry.projection!
+      projection: entry.projection
     }));
 }
 

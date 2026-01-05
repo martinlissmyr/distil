@@ -6,7 +6,6 @@ import {
   Text,
   Box,
   Group,
-  ActionIcon,
   Button,
 } from '@mantine/core';
 import classes from './Textarea.module.scss';
@@ -33,7 +32,7 @@ type TextareaProps = {
   actionButtonText?: string;
   onActionButtonClick?: (value: string) => void;
 
-  textareaRef: RefObject;
+  textareaRef?: RefObject<HTMLTextAreaElement>;
 
   /** Optional external error override */
   error?: string;
@@ -124,7 +123,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   return (
     <div className={classes.wrapper}>
       <Group justify="space-between" gap={10} className={classes.textareaLabelGroup}>
-        <Text size="sm" overflow="ellipsis" lineClamp={1} flex={1} className={classes.textareaLabel}>
+        <Text size="sm" lineClamp={1} flex={1} className={classes.textareaLabel}>
           {label}
         </Text>
         {onActionButtonClick && (
@@ -133,7 +132,7 @@ export const Textarea: React.FC<TextareaProps> = ({
               size="compact-xs"
               variant="filled"
               aria-label={actionButtonText}
-              onClick={onActionButtonClick}
+              onClick={() => onActionButtonClick(value)}
               rightSection={<Icon type={actionButtonIcon} size={12}/>}
             >
               {actionButtonText}

@@ -1,15 +1,8 @@
 // src/ui/wizard/steps/QuestionStepView.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  Stack, 
-  Text, 
-  Group, 
-  Badge, 
-  Radio, 
-  Checkbox, 
-  Box, 
-  SimpleGrid, 
-  Flex, 
+import {
+  Stack,
+  Text,
   Title
 } from '@mantine/core';
 import type { QuestionStep } from '../../../wizards/types';
@@ -49,7 +42,6 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   };
 
   const [value, setValue] = useState<any>(getInitialValue());
-  const [error, setError] = useState<string>('');
 
   // Update local state if answer changes externally
   useEffect(() => {
@@ -65,19 +57,15 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   }, [value, step.id, setAnswer]);
 
   const validateAnswer = (val: any): boolean => {
-    // Reset error
-    setError('');
 
     // Check required for text/textarea
     if (step.questionType === 'text' || step.questionType === 'textarea') {
       if (step.required && !String(val || '').trim()) {
-        setError('Required');
         return false;
       }
 
       // Check minLength
       if (step.minLength && String(val || '').trim().length < step.minLength) {
-        setError('Required');
         return false;
       }
 
@@ -90,28 +78,21 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
     // Check required for select types
     if (step.questionType === 'single-select' || step.questionType === 'multi-select') {
       if (step.required && (!val || (Array.isArray(val) && val.length === 0))) {
-        setError('Required');
         return false;
       }
 
       // Check min/max selections for multi-select
       if (step.questionType === 'multi-select' && Array.isArray(val)) {
         if (step.minSelections && val.length < step.minSelections) {
-          setError('Required');
           return false;
         }
         if (step.maxSelections && val.length > step.maxSelections) {
-          setError('Required');
           return false;
         }
       }
     }
 
     return true;
-  };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.currentTarget.value);
   };
 
   const handleScaleChange = (newValue: number) => {
@@ -121,18 +102,6 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   const handleSingleSelectChange = (newValue: string) => {
     setValue(newValue);
   };
-
-  const handleMultiSelectToggle = (optionValue: string) => {
-    const currentValues = Array.isArray(value) ? value : [];
-    const newValues = currentValues.includes(optionValue)
-      ? currentValues.filter((v) => v !== optionValue)
-      : [...currentValues, optionValue];
-    setValue(newValues);
-  };
-
-  // Character counter for textarea
-  const showCounter = step.questionType === 'textarea' && step.maxLength;
-  const charCount = String(value || '').length;
 
   // Get options array (handle both static arrays and dynamic variables)
   const getOptions = () => {
@@ -183,7 +152,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
           required={step.required}
           minLength={step.minLength}
           maxLength={step.maxLength}
-          description={<>Tip: Use dictation to answer longer questions. Read about <a target="_blank" href="https://support.apple.com/sv-se/guide/mac-help/mh40584/mac">how to enable it</a> on you mac. Remember to select the correct language the first time you use dictation.</>}
+          description={"Tip: Use dictation to answer longer questions. Read about how to enable it on your mac. Remember to select the correct language the first time you use dictation."}
         />
       )}
 
@@ -204,7 +173,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
           onChange={handleScaleChange}
           min={step.min ?? 0}
           max={step.max ?? 10}
-          labels={step.scaleLabels}
+          labels={step.scaleLabels as any}
         />
       )}
 

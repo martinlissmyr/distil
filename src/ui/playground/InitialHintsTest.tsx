@@ -23,7 +23,6 @@ import {
   type DocKindId,
   getContextRulesFor,
   getDocTitle,
-  getDocDescription,
 } from '../../models/docs';
 
 // Mirror what chatHints uses internally

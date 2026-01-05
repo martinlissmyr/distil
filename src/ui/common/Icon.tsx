@@ -27,11 +27,10 @@ import {
   ListOrdered,
   Minus,
   CircleAlert,
-  CircleCheck,
   Circle,
 } from 'lucide-react';
 
-export const Icon = ({type, size = 20, ...props}) => {
+export const Icon = ({type, size = 20, ...props}: {type: string, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
 	const iconProps = {
     strokeWidth: 1.5,
     size: size,

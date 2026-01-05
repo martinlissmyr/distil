@@ -90,7 +90,7 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
         </Badge>
       )}
 
-      <SimpleGrid cols={cols} gap="sm" overflow="hidden">
+      <SimpleGrid cols={cols} spacing="sm">
         {options.map((option) => {
           const checked = selected.includes(option.value);
 

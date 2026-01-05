@@ -1,6 +1,6 @@
 // src/ui/common/ConfirmLeaveModal.tsx
 import React from 'react';
-import { Box, Group, Text, Button, ActionIcon } from '@mantine/core';
+import { Box, Group, Text, Button } from '@mantine/core';
 import { BaseModal } from '../common/BaseModal';
 import { TopNavigation } from '../common/TopNavigation';
 
@@ -51,7 +51,7 @@ export const ConfirmLeaveModal: React.FC<ConfirmLeaveModalProps> = ({
       }
     >
       <Box px={20} py={24}>
-        <Text size="sm" c="dimmed" align="center">
+        <Text size="sm" c="dimmed" style={{ textAlign: 'center' }}>
           {message}
         </Text>
       </Box>

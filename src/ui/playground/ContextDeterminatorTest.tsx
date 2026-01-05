@@ -15,7 +15,6 @@ import {
   Collapse,
 } from '@mantine/core';
 import {
-  determineContextNeeds,
   quickHeuristicCheck,
   buildPrompt,
   isAboveConfidenceThreshold,
@@ -74,9 +73,7 @@ export const ContextDeterminatorTest: React.FC = () => {
 
     try {
       // Get API key
-      const apiKeyResponse = await window.settings.getApiKey();
-      const apiKey =
-        apiKeyResponse.ok && apiKeyResponse.data ? apiKeyResponse.data : undefined;
+      await window.settings.getApiKey();
 
       // Determine which editor kind’s rules to use
       const actualEditorKind: EditorKind =
@@ -127,7 +124,7 @@ export const ContextDeterminatorTest: React.FC = () => {
             locations?: EntitySelectionResult;
           } = {};
 
-          for (const [docKey, depth] of depths.entries()) {
+          for (const [docKey] of depths.entries()) {
             if (docKey === 'characters' && actualEditorKind === 'prose') {
               // For testing, use fixture project/story IDs
               // In real usage, these would come from context

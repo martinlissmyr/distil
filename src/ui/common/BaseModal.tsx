@@ -1,16 +1,16 @@
 // src/ui/common/BaseModal.tsx
 import React from 'react';
 import { Box, ScrollArea } from '@mantine/core';
-import { Modal, type ModalProps } from '@mantine/core';
+import { Modal } from '@mantine/core';
 import type { ModalProps as MantineModalProps } from '@mantine/core';
 
 export type BaseModalVariant = 'dialog' | 'sheet';
 export type OverlayPreset = 'glassLight' | 'glassStrong' | 'none';
 
 const overlayPresets: Record<OverlayPreset, MantineModalProps['overlayProps']> = {
-  glassLight: { backgroundOpacity: 0.16, blur: '20px', saturate: '135%' },
-  glassStrong: { backgroundOpacity: 0.22, blur: '24px', saturate: '150%' },
-  none: { backgroundOpacity: 0, blur: 0, saturate: '100%' },
+  glassLight: { backgroundOpacity: 0.16, blur: '20px' },
+  glassStrong: { backgroundOpacity: 0.22, blur: '24px' },
+  none: { backgroundOpacity: 0, blur: 0 },
 };
 
 type BaseModalProps = {

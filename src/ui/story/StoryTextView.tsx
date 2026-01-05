@@ -1,13 +1,13 @@
 // src/ui/stories/StoryTextView.tsx
 import React from 'react';
-import { ProseEditor, ProseDoc } from '../editor/ProseEditor';
+import { ProseEditor } from '../editor/ProseEditor';
 import { StorySectionShell } from './StorySectionShell';
 import { useEditorChat } from '../../hooks/useEditorChat';
 
 type StoryTextViewProps = {
   projectId: string;
   storyId: string;
-  doc: ProseDoc;
+  doc: any;
   onChange: (id: string) => void;
   title: string;
 };
@@ -39,6 +39,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
         doc={doc}
         onChange={onChange}
         title={title}
+        placeholder="Start writing your story..."
         withChat
         chatConfig={{
           kind: 'prose',

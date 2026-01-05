@@ -43,13 +43,13 @@ export function validateWizardConfig(data: any): WizardConfig {
   const stepIds = new Set<string>();
 
   // Validate each step recursively
-  const validateStep = (step: any, path: string): void => {
+  const validateStep = (step: any): void => {
     if (!step || typeof step !== 'object') {
-      throw new Error(`Step at ${path} must be an object`);
+      throw new Error(`Step must be an object`);
     }
 
     if (typeof step.id !== 'string' || !step.id) {
-      throw new Error(`Step at ${path} must have an id (string)`);
+      throw new Error(`Step must have an id (string)`);
     }
 
     if (stepIds.has(step.id)) {
@@ -68,23 +68,22 @@ export function validateWizardConfig(data: any): WizardConfig {
     // Validate based on step type
     switch (step.type) {
       case 'question':
-        validateQuestionStep(step, path);
+        validateQuestionStep(step);
         break;
       case 'llm-processing':
-        validateLlmProcessingStep(step, path);
+        validateLlmProcessingStep(step);
         break;
       case 'compound':
-        validateCompoundStep(step, path);
+        validateCompoundStep(step);
         break;
       case 'information':
-        validateInformationStep(step, path);
         break;
       default:
         throw new Error(`Step ${step.id} has unknown type: ${step.type}`);
     }
   };
 
-  const validateQuestionStep = (step: any, path: string): void => {
+  const validateQuestionStep = (step: any): void => {
     const validTypes = ['text', 'textarea', 'scale', 'multi-select', 'single-select'];
     if (!validTypes.includes(step.questionType)) {
       throw new Error(
@@ -140,7 +139,7 @@ export function validateWizardConfig(data: any): WizardConfig {
     }
   };
 
-  const validateLlmProcessingStep = (step: any, path: string): void => {
+  const validateLlmProcessingStep = (step: any): void => {
     if (typeof step.hidden !== 'boolean') {
       throw new Error(`LLM processing step ${step.id} must have hidden (boolean)`);
     }
@@ -160,34 +159,19 @@ export function validateWizardConfig(data: any): WizardConfig {
     }
   };
 
-  const validateLlmApprovalStep = (step: any, path: string): void => {
-    if (typeof step.sourceKey !== 'string' || !step.sourceKey) {
-      throw new Error(`LLM approval step ${step.id} must have a sourceKey (string)`);
-    }
-
-    const validFormats = ['text', 'list', 'json'];
-    if (!validFormats.includes(step.displayFormat)) {
-      throw new Error(
-        `LLM approval step ${step.id} has invalid displayFormat: ${step.displayFormat}. Must be one of: ${validFormats.join(', ')}`
-      );
-    }
-  };
-
-  const validateCompoundStep = (step: any, path: string): void => {
+  const validateCompoundStep = (step: any): void => {
     if (!Array.isArray(step.subSteps) || step.subSteps.length === 0) {
       throw new Error(`Compound step ${step.id} must have at least one sub-step`);
     }
 
-    step.subSteps.forEach((subStep: any, i: number) => {
-      validateStep(subStep, `${path}.subSteps[${i}]`);
+    step.subSteps.forEach((subStep: any) => {
+      validateStep(subStep);
     });
   };
 
-  const validateInformationStep = (step: any, path: string): void => {};
-
   // Validate all top-level steps
-  data.steps.forEach((step: any, i: number) => {
-    validateStep(step, `steps[${i}]`);
+  data.steps.forEach((step: any) => {
+    validateStep(step);
   });
 
   return data as WizardConfig;

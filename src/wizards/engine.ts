@@ -2,7 +2,6 @@
 import type { MetaDocKey } from '../types/metaDoc';
 import type {
   WizardContext,
-  WizardStep,
   LlmProcessingStep,
   WizardState,
 } from './types';
@@ -39,16 +38,6 @@ export type WizardDeps = {
   mockDelayMs?: number;
 };
 
-function toEditableString(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value == null) return '';
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
 export function createWizardEngine(deps: WizardDeps) {
   // NOTE: do NOT use zustand hook inside here. Use getState().
   const getWritingLanguage = () => useAppStore.getState().writingLanguage;
@@ -74,10 +63,7 @@ export function createWizardEngine(deps: WizardDeps) {
         startedAt: Date.now(),
         hasUnsavedProgress: false,
       },
-      wizardContext: {
-        currentContent,
-        ...context
-      },
+      wizardContext: context,
     };
   }
 

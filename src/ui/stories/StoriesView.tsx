@@ -6,7 +6,7 @@ import { TopNavigation } from '../common/TopNavigation';
 
 type StoriesViewProps = {
   stories: StoryMeta[];
-  currentProject: string;
+  currentProject: { id: string; name: string } | undefined;
   onSelectStory: (id: string) => void;
   onCreateStory: () => void;
   onEditStory: (id: string) => void;
@@ -25,7 +25,7 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
     <Box>
       <Box py={20} px={30}>
         <TopNavigation
-          title={currentProject.name}
+          title={currentProject?.name || 'Untitled Project'}
         />
       </Box>
 
@@ -37,7 +37,7 @@ export const StoriesView: React.FC<StoriesViewProps> = ({
         onEdit={onEditStory}
         onCreate={onCreateStory}
         icon="story"
-        title={currentProject.name}
+        title={currentProject?.name}
         onReorderEntities={onReorderStories}
       />
     </Box>

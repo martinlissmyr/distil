@@ -1,6 +1,6 @@
 // src/ui/playground/PlaygroundView.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Stack, Title, SegmentedControl } from '@mantine/core';
+import { Box, Stack, SegmentedControl } from '@mantine/core';
 import { ContextDeterminatorTest } from './ContextDeterminatorTest';
 import { InitialHintsTest } from './InitialHintsTest';
 import { WizardTesterView } from './WizardTesterView';
