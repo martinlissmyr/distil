@@ -51,9 +51,9 @@ type EntityGridProps<T> = {
   getLabel: (item: T) => string;
 
   onSelect: (id: string) => void;
-  onEdit: (id: string) => void;
+  onEdit?: (id: string) => void;
 
-  /** called when the “+” card is clicked */
+  /** called when the "+" card is clicked */
   onCreate: () => void;
 
   /** called with reordered ids after drag */
@@ -64,6 +64,21 @@ type EntityGridProps<T> = {
 
   title?: string;
   createLabel?: string;
+
+  /** display mode: 'grid' (default) or 'list' */
+  mode?: 'grid' | 'list';
+
+  /** optional: get text content to display in list mode */
+  getText?: (item: T) => string | undefined;
+
+  /** optional: get comment for item */
+  getComment?: (item: T) => string | undefined;
+
+  /** optional: called when comment changes */
+  onCommentChange?: (id: string, newComment: string) => void;
+
+  /** optional: called when delete button is clicked */
+  onDelete?: (id: string) => void;
 };
 
 export function EntityGrid<T>({
@@ -76,6 +91,11 @@ export function EntityGrid<T>({
   onReorderEntities,
   icon,
   createLabel,
+  mode = 'grid',
+  getText,
+  getComment,
+  onCommentChange,
+  onDelete,
 }: EntityGridProps<T>) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -109,9 +129,9 @@ export function EntityGrid<T>({
     <Box p="xl">
       <Flex
         gap="lg"
-        justify="center"
-        direction="row"
-        wrap="wrap"
+        justify={mode === 'grid' ? "center" : "flex-start"}
+        direction={mode === 'grid' ? "row" : "column"}
+        wrap={mode === 'grid' ? "wrap" : "nowrap"}
       >
         <DndContext
           sensors={sensors}
@@ -129,6 +149,11 @@ export function EntityGrid<T>({
                     onEdit={onEdit}
                     onSelect={onSelect}
                     icon={icon}
+                    mode={mode}
+                    text={getText ? getText(item) : undefined}
+                    comment={getComment ? getComment(item) : undefined}
+                    onCommentChange={onCommentChange ? (newComment) => onCommentChange(id, newComment) : undefined}
+                    onDelete={onDelete}
                   />
                 </SortableItem>
               );
@@ -136,7 +161,7 @@ export function EntityGrid<T>({
           </SortableContext>
         </DndContext>
 
-        <CreateEntityCard onCreate={onCreate} label={createLabel} />
+        <CreateEntityCard onCreate={onCreate} label={createLabel} mode={mode} />
       </Flex>
     </Box>
   );

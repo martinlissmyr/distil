@@ -30,10 +30,13 @@ import {
   Circle,
   Ellipsis,
   LayoutGrid,
+  StretchHorizontal,
+  Trash2,
 } from 'lucide-react';
 
 export type IconType =
   | 'parts'
+  | 'part'
   | 'more'
   | 'validationError'
   | 'validationOk'
@@ -58,6 +61,7 @@ export type IconType =
   | 'forward'
   | 'edit'
   | 'add'
+  | 'trash'
   | 'prompt'
   | 'navigate'
   | 'wizard'
@@ -79,6 +83,9 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
 	switch (type) {
 		case 'parts': {
 			return <LayoutGrid {...iconProps}/>
+		}
+		case 'part': {
+			return <StretchHorizontal {...iconProps}/>
 		}
 		case 'more': {
 			return <Ellipsis {...iconProps}/>
@@ -151,6 +158,9 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
 		}
 		case 'add': {
 			return <Plus {...iconProps}/>
+		}
+		case 'trash': {
+			return <Trash2 {...iconProps}/>
 		}
     case 'prompt':
       return <MessageCircleQuestionMark {...iconProps}/>

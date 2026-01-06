@@ -1,11 +1,12 @@
 $width: 220px;
 $height: 260px;
+$listHeight: 120px;
 
-.entityCardWrapper {
+.entityGridCardWrapper {
   cursor: pointer;
   width: $width;
 
-  .entityCard {
+  .entityGridCard {
     height: $height;
     position: relative;
     border-radius: 16px;
@@ -15,8 +16,53 @@ $height: 260px;
   }
 
   &:hover {
-    .entityCard {
+    .entityGridCard {
       background: var(--card-subtle-hover);
     }
+  }
+}
+
+.commentField {
+}
+
+.entityListCardWrapper {
+  height: $listHeight;
+  width: $listHeight;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: top;
+  gap: 0px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background-color: var(--card-subtle);
+
+  &:hover {
+    background: var(--card-subtle-hover);
+  }
+
+  .editButton {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+  }
+
+  .listCardIcon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+  }
+
+  .listCardContent {
+    padding: 20px 0;
+  }
+
+  .entityListCard {
+    position: relative;
+    align-items: center;
+    justify-content: center;
   }
 }

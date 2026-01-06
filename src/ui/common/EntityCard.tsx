@@ -1,4 +1,6 @@
-import { Text, ActionIcon, Card, Box, Stack } from '@mantine/core';
+import { Text, ActionIcon, Card, Box, Stack, Textarea, Flex } from '@mantine/core';
+import { useDebouncedCallback } from '@mantine/hooks';
+import { useState, useEffect } from 'react';
 import styles from './EntityCard.module.scss';
 import {Icon} from './Icon'
 
@@ -7,7 +9,12 @@ type EntityCardProps = {
   label: string;
   onSelect: (id: string) => void;
   onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
   icon: string;
+  mode?: 'grid' | 'list';
+  text?: string;
+  comment?: string;
+  onCommentChange?: (newComment: string) => void;
 };
 
 export function EntityCard({
@@ -15,11 +22,101 @@ export function EntityCard({
   label,
   onSelect,
   onEdit,
+  onDelete,
   icon,
+  mode = 'grid',
+  text,
+  comment,
+  onCommentChange,
 }: EntityCardProps) {
+  const isListMode = mode === 'list';
+
+  // Local state for smooth typing experience
+  const [localComment, setLocalComment] = useState(comment || '');
+
+  // Sync local state when prop changes (e.g., switching entities)
+  useEffect(() => {
+    setLocalComment(comment || '');
+  }, [comment]);
+
+  const debouncedCommentChange = useDebouncedCallback((value: string) => {
+    if (onCommentChange) {
+      onCommentChange(value);
+    }
+  }, 800);
+
+  const handleCommentChange = (value: string) => {
+    setLocalComment(value); // Update immediately for smooth typing
+    debouncedCommentChange(value); // Debounce the callback to parent
+  };
+
+  if (isListMode) {
+    return (
+      <Box onClick={() => onSelect(id)} className={styles.entityListCardWrapper}>
+        <Flex align="center" justify="center" className={styles.listCardIcon}>
+          <Icon type={icon} size={40} strokeWidth={1} style={{opacity: .3}}/>
+        </Flex>
+        <Stack gap={4} style={{ flex: 1 }} className={styles.listCardContent}>
+          <Text size="md" fw={700} span>
+            {label}
+          </Text>
+          {text && (
+            <Text size="sm" c="dimmed" span>
+              {text}
+            </Text>
+          )}
+          {onCommentChange && (
+            <Textarea
+              value={localComment}
+              onChange={(e) => handleCommentChange(e.currentTarget.value)}
+              placeholder="Add a note..."
+              variant="unstyled"
+              autosize
+              minRows={1}
+              maxRows={4}
+              size="sm"
+              classNames={{
+                input: styles.commentField,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </Stack>
+        <Flex gap="xs">
+          {onEdit && (
+            <ActionIcon
+              variant="subtle"
+              size="md"
+              className={styles.editButton}
+              onClick={(e) => {
+                e.stopPropagation(); // don't also select
+                onEdit(id);
+              }}
+            >
+              <Icon type="edit" size={16} />
+            </ActionIcon>
+          )}
+          {onDelete && (
+            <ActionIcon
+              variant="subtle"
+              size="md"
+              className={styles.editButton}
+              onClick={(e) => {
+                e.stopPropagation(); // don't also select
+                onDelete(id);
+              }}
+            >
+              <Icon type="trash" size={16} />
+            </ActionIcon>
+          )}
+        </Flex>
+      </Box>
+    );
+  }
+
   return (
-    <Stack gap={1} onClick={() => onSelect(id)} className={styles.entityCardWrapper}>
-      <Card className={styles.entityCard}>
+    <Stack gap={1} onClick={() => onSelect(id)} className={styles.entityGridCardWrapper}>
+      <Card className={styles.entityGridCard}>
         {onEdit && (
           <ActionIcon
             variant="subtle"
@@ -50,15 +147,36 @@ export function EntityCard({
 type CreateEntityCardProps = {
   onCreate: () => void;
   label?: string;
+  mode?: 'grid' | 'list';
 };
 
 export function CreateEntityCard({
   onCreate,
-  label = "New"
+  label = "New",
+  mode = 'grid',
 }: CreateEntityCardProps) {
+  const isListMode = mode === 'list';
+  const wrapperClass = isListMode ? styles.entityListCardWrapper : styles.entityGridCardWrapper;
+  const cardClass = isListMode ? styles.entityListCard : styles.entityGridCard;
+
+  if (isListMode) {
+    return (
+      <Box onClick={onCreate} className={styles.entityListCardWrapper}>
+        <Flex align="center" justify="center" className={styles.listCardIcon}>
+          <Icon type="add" size={40} strokeWidth={1}/>
+        </Flex>
+        <Box className={styles.listCardContent}>
+          <Text fw={700} ta="left" style={{ flex: 1 }}>
+            {label}
+          </Text>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
-    <Stack gap={1} onClick={onCreate} className={styles.entityCardWrapper}>
-      <Card className={styles.entityCard}>
+    <Stack gap={1} onClick={onCreate} className={wrapperClass}>
+      <Card className={cardClass}>
         <Icon type="add" size={60} strokeWidth={1}/>
       </Card>
       <Text fw={700} ta="center">
