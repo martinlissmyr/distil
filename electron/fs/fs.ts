@@ -294,7 +294,6 @@ export async function createStory(
   const now = new Date().toISOString()
 
   // NEW: Create story folder structure
-  const storyDir = getStoryDir(projectId, id)
   const partsDir = getPartsDir(projectId, id)
   await fs.mkdir(partsDir, { recursive: true })
 
@@ -302,7 +301,7 @@ export async function createStory(
   const partId = `part-${Date.now()}`
   const emptyDoc: JSONContent = {
     type: 'doc',
-    content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
+    content: [],
   }
 
   const firstPart: PartDoc = {
@@ -686,14 +685,7 @@ export async function createPart(
 
   const emptyDoc: JSONContent = {
     type: 'doc',
-    content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
-  }
-
-  // Create part document
-  const partDoc: PartDoc = {
-    id: partId,
-    doc: emptyDoc,
-    updatedAt: now,
+    content: [],
   }
 
   // Create part index entry
@@ -705,10 +697,35 @@ export async function createPart(
     updatedAt: now,
   }
 
-  // Write part document to disk
-  await savePartDoc(projectId, storyId, partId, emptyDoc)
+  // Use write queue to ensure atomic update of both part doc and story metadata
+  const queueKey = `story:${projectId}:${storyId}`
 
-  return indexEntry
+  return writeQueue.enqueue(queueKey, async () => {
+    // Write part document to disk
+    await savePartDoc(projectId, storyId, partId, emptyDoc)
+
+    // Load current story metadata
+    console.log('[createPart] Loading metadata for story:', storyId)
+    const metadata = await loadStoryMetadata(projectId, storyId)
+    console.log('[createPart] Current parts.length:', metadata.parts.length)
+
+    // Add new part to the index
+    metadata.parts.push(indexEntry)
+    console.log('[createPart] After push, parts.length:', metadata.parts.length)
+    console.log('[createPart] New part entry:', indexEntry)
+
+    // Save updated metadata directly (already in write queue)
+    const file = getStoryMetadataFile(projectId, storyId)
+    const updated: StoryMetadata = {
+      ...metadata,
+      updatedAt: new Date().toISOString(),
+    }
+    console.log('[createPart] Saving updated metadata with', updated.parts.length, 'parts')
+    await writeJsonAtomic(file, updated)
+    console.log('[createPart] Metadata saved successfully')
+
+    return indexEntry
+  })
 }
 
 export async function deletePart(
@@ -716,8 +733,33 @@ export async function deletePart(
   storyId: string,
   partId: string
 ): Promise<void> {
-  const file = getPartFile(projectId, storyId, partId)
-  await fs.rm(file, { force: true })
+  // Use write queue to ensure atomic update of both part doc and story metadata
+  const queueKey = `story:${projectId}:${storyId}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    // Delete part document file
+    const file = getPartFile(projectId, storyId, partId)
+    await fs.rm(file, { force: true })
+
+    // Load current story metadata
+    console.log('[deletePart] Loading metadata for story:', storyId)
+    const metadata = await loadStoryMetadata(projectId, storyId)
+    console.log('[deletePart] Current parts.length:', metadata.parts.length)
+
+    // Remove part from the index
+    metadata.parts = metadata.parts.filter(p => p.id !== partId)
+    console.log('[deletePart] After filter, parts.length:', metadata.parts.length)
+
+    // Save updated metadata directly (already in write queue)
+    const metadataFile = getStoryMetadataFile(projectId, storyId)
+    const updated: StoryMetadata = {
+      ...metadata,
+      updatedAt: new Date().toISOString(),
+    }
+    console.log('[deletePart] Saving updated metadata with', updated.parts.length, 'parts')
+    await writeJsonAtomic(metadataFile, updated)
+    console.log('[deletePart] Metadata saved successfully')
+  })
 }
 
 export async function reorderParts(

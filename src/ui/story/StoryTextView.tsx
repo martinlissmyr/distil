@@ -9,6 +9,7 @@ import { useEditorSync } from '../../hooks/useEditorSync';
 import { ChatAside } from '../chat/ChatAside';
 import { TopNavigation, type TopNavigationMenuItem } from '../common/TopNavigation';
 import { useChapterNavigationButtons } from './ChapterNavigation';
+import { ChapterOverview } from './ChapterOverview';
 import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
 import { createExtensionsFromConfig, createToolbarFromConfig } from '../editor/editorConfigFactory';
 import { getDocKind } from '../../models/docs';
@@ -24,6 +25,8 @@ type StoryTextViewProps = {
   title: string;
 };
 
+type Subview = 'editor' | 'chapters';
+
 export const StoryTextView: React.FC<StoryTextViewProps> = ({
   projectId,
   storyId,
@@ -31,6 +34,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
+  const [subview, setSubview] = useState<Subview>('editor');
   const [isScrolled, setIsScrolled] = useState(false);
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
@@ -42,8 +46,10 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   // Get parts state from app store
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
   const currentPartId = useAppStore((state) => state.currentPartId);
+  const currentPartDoc = useAppStore((state) => state.currentPartDoc);
   const loadStoryMetadata = useAppStore((state) => state.loadStoryMetadata);
   const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
+  const loadCurrentPartDoc = useAppStore((state) => state.loadCurrentPartDoc);
   const enableParts = useAppStore((state) => state.enableParts);
 
   // Load story metadata on mount
@@ -51,10 +57,16 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     loadStoryMetadata(projectId, storyId);
   }, [projectId, storyId, loadStoryMetadata]);
 
+  // Reset subview to editor when navigation changes (e.g., returning from chapters view)
+  useEffect(() => {
+    setSubview('editor');
+  }, [projectId, storyId]);
+
   const partsEnabled = currentStoryMetadata?.partsEnabled ?? false;
   const parts = currentStoryMetadata?.parts ?? [];
   const currentPartIndex = parts.findIndex((p) => p.id === currentPartId);
   const totalParts = parts.length;
+  const partTitle = 'Chapter ' + (currentPartIndex + 1);
 
   // Get editor config from doc model
   const docKind = getDocKind('prose');
@@ -67,6 +79,19 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   });
 
   useEditorSync(editor, doc, onChange);
+
+  // Load part document when currentPartId changes
+  useEffect(() => {
+    if (!currentPartId) return;
+    void loadCurrentPartDoc(projectId, storyId, currentPartId);
+  }, [projectId, storyId, currentPartId, loadCurrentPartDoc]);
+
+  // Sync currentPartDoc from store to parent onChange (which flows to editor)
+  useEffect(() => {
+    if (currentPartDoc) {
+      onChange(currentPartDoc);
+    }
+  }, [currentPartDoc, onChange]);
 
   const toolbar = createToolbarFromConfig(editorConfig, editor);
 
@@ -156,28 +181,29 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     }
   };
 
-  const handlePreviousPart = () => {
+  const handlePreviousPart = async () => {
     if (currentPartIndex > 0) {
       const previousPart = parts[currentPartIndex - 1];
       setCurrentPartId(previousPart.id);
+      await loadCurrentPartDoc(projectId, storyId, previousPart.id);
     }
   };
 
-  const handleNextPart = () => {
+  const handleNextPart = async () => {
     if (currentPartIndex < totalParts - 1) {
       const nextPart = parts[currentPartIndex + 1];
       setCurrentPartId(nextPart.id);
+      await loadCurrentPartDoc(projectId, storyId, nextPart.id);
     }
   };
 
   const handleOpenOverview = () => {
-    // TODO: Open chapter overview modal/view
-    console.log('Open chapter overview');
+    setSubview('chapters');
   };
 
   const handleCreatePart = async () => {
-    if (!currentStoryMetadata) return;
-
+    // Don't check currentStoryMetadata - the store action will reload it
+    // Just use the current parts array from the store
     try {
       // Determine order for new part (after current part)
       const newOrder = currentPartIndex >= 0 ? currentPartIndex + 1 : parts.length;
@@ -193,14 +219,12 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     }
   };
 
-
   const chapterNavButtons = useChapterNavigationButtons({
     partsEnabled,
     currentPartIndex,
     totalParts,
     onPreviousPart: handlePreviousPart,
     onNextPart: handleNextPart,
-    onOpenOverview: handleOpenOverview,
     canGoPrevious: true,
     canGoNext: true,
   });
@@ -230,6 +254,25 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   if (!editor) return null;
 
+  // Show chapters overview subview
+  if (subview === 'chapters') {
+    return (
+      <StorySectionShell
+        projectId={projectId}
+        storyId={storyId}
+        preloadMetaKeys={['brief', 'outline']}
+      >
+        <ChapterOverview
+          projectId={projectId}
+          storyId={storyId}
+          currentStoryTitle={title}
+          onNavigateToEditor={() => setSubview('editor')}
+        />
+      </StorySectionShell>
+    );
+  }
+
+  // Show main editor subview
   return (
     <StorySectionShell
       projectId={projectId}
@@ -252,7 +295,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       <Box className={styles.root}>
         <Box py={20} px={30} className={styles.topNavigation}>
           <TopNavigation
-            title={title}
+            title={partsEnabled ? partTitle : title}
             buttons={chapterNavButtons}
             menuItems={menuItems}
           />
