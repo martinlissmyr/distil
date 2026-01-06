@@ -7,6 +7,7 @@ import {
   useSortable,
   arrayMove,
   rectSortingStrategy,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -128,7 +129,7 @@ export function EntityGrid<T>({
   return (
     <Box p="xl">
       <Flex
-        gap="lg"
+        gap={mode === 'grid' ? "lg" : "xs"}
         justify={mode === 'grid' ? "center" : "flex-start"}
         direction={mode === 'grid' ? "row" : "column"}
         wrap={mode === 'grid' ? "wrap" : "nowrap"}
@@ -138,7 +139,7 @@ export function EntityGrid<T>({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={ids} strategy={rectSortingStrategy}>
+          <SortableContext items={ids} strategy={mode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
             {items.map((item) => {
               const id = getId(item);
               return (

@@ -16,6 +16,7 @@ export type ChapterNavigationConfig = {
   canGoPrevious?: boolean;
   /** Whether next button should be disabled */
   canGoNext?: boolean;
+  onOpenOverview?: () => void;
 };
 
 /**
@@ -37,6 +38,7 @@ export function useChapterNavigationButtons({
   onNextPart,
   canGoPrevious = true,
   canGoNext = true,
+  onOpenOverview,
 }: ChapterNavigationConfig): TopNavigationButton[] {
   if (!partsEnabled) {
     // Single-part mode: no navigation buttons (menu will handle "Enable Chapters")
@@ -46,12 +48,22 @@ export function useChapterNavigationButtons({
   // Multi-part mode: show navigation buttons
   return [
     {
-      icon: 'back',
+      icon: 'up',
+      iconOnly: true,
+      label: 'Previous Chapter',
       onClick: () => onPreviousPart?.(),
       enabled: canGoPrevious && currentPartIndex > 0,
     },
     {
-      icon: 'forward',
+      icon: 'parts',
+      iconOnly: true,
+      label: 'Chapters Overview',
+      onClick: () => onOpenOverview?.(),
+    },
+    {
+      icon: 'down',
+      iconOnly: true,
+      label: 'Next Chapter',
       onClick: () => onNextPart?.(),
       enabled: canGoNext && currentPartIndex < totalParts - 1,
     },

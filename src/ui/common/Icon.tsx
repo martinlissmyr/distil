@@ -5,6 +5,8 @@ import {
   Bug,
   ChevronRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   Brush,
   Lightbulb,
   Route,
@@ -30,7 +32,7 @@ import {
   Circle,
   Ellipsis,
   LayoutGrid,
-  StretchHorizontal,
+  Bookmark,
   Trash2,
 } from 'lucide-react';
 
@@ -59,6 +61,8 @@ export type IconType =
   | 'settings'
   | 'back'
   | 'forward'
+  | 'up'
+  | 'down'
   | 'edit'
   | 'add'
   | 'trash'
@@ -81,11 +85,17 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
     ...props
 	}
 	switch (type) {
+		case 'up': {
+			return <ChevronUp {...iconProps}/>
+		}
+		case 'down': {
+			return <ChevronDown {...iconProps}/>
+		}
 		case 'parts': {
 			return <LayoutGrid {...iconProps}/>
 		}
 		case 'part': {
-			return <StretchHorizontal {...iconProps}/>
+			return <Bookmark {...iconProps}/>
 		}
 		case 'more': {
 			return <Ellipsis {...iconProps}/>

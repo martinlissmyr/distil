@@ -767,7 +767,39 @@ export async function reorderParts(
   storyId: string,
   idsInOrder: string[]
 ): Promise<void> {
-  // Reordering just updates the parts index in story.json
-  // This is handled by saveStoryMetadata, no file operations needed here
-  // The parts themselves don't store their order - only the index does
+  const queueKey = `story:${projectId}:${storyId}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    // Load current story metadata
+    const metadata = await loadStoryMetadata(projectId, storyId)
+
+    // Create a map of parts by ID for quick lookup
+    const partsById = new Map(metadata.parts.map(p => [p.id, p]))
+
+    // Create new parts array with updated order
+    const reorderedParts: PartIndexEntry[] = []
+    let newOrder = 0
+
+    for (const id of idsInOrder) {
+      const part = partsById.get(id)
+      if (!part) continue // Skip invalid IDs
+
+      // Update the order field
+      reorderedParts.push({
+        ...part,
+        order: newOrder++,
+        updatedAt: new Date().toISOString(),
+      })
+    }
+
+    // Save updated metadata with reordered parts
+    const file = getStoryMetadataFile(projectId, storyId)
+    const updated: StoryMetadata = {
+      ...metadata,
+      parts: reorderedParts,
+      updatedAt: new Date().toISOString(),
+    }
+
+    await writeJsonAtomic(file, updated)
+  })
 }
