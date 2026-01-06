@@ -39,6 +39,10 @@ $listHeight: 120px;
   border-radius: 12px;
   background-color: var(--card-subtle);
 
+  &.entityListCreateCardWrapper {
+    align-items: center;
+  }
+
   &:hover {
     background: var(--card-subtle-hover);
   }

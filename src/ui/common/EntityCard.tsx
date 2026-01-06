@@ -161,7 +161,7 @@ export function CreateEntityCard({
 
   if (isListMode) {
     return (
-      <Box onClick={onCreate} className={styles.entityListCardWrapper}>
+      <Box onClick={onCreate} className={`${styles.entityListCardWrapper} ${styles.entityListCreateCardWrapper}`}>
         <Flex align="center" justify="center" className={styles.listCardIcon}>
           <Icon type="add" size={40} strokeWidth={1}/>
         </Flex>

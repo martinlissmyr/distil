@@ -1,13 +1,15 @@
 // src/ui/common/TopNavigation.tsx
 import React from 'react';
-import { ActionIcon, Box, Group, Text, Button, Menu } from '@mantine/core';
+import { ActionIcon, Box, Group, Text, Button, Menu, Tooltip } from '@mantine/core';
 import { Icon } from './Icon';
 import type { IconType } from './Icon';
+import classes from './TopNavigation.module.scss';
 
 export type TopNavigationButton = {
-  label?: string;
+  label: string;
   onClick: () => void;
   icon?: IconType;
+  iconOnly?: boolean;
   enabled?: boolean;
 };
 
@@ -110,23 +112,26 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               const enabled = button.enabled ?? true;
 
               // Icon-only button
-              if (button.icon && !button.label) {
+              if (button.icon && button.iconOnly) {
                 return (
-                  <Button
+                  <Tooltip
                     key={index}
-                    aria-label={button.icon}
-                    variant="light"
-                    size="compact-sm"
-                    onClick={button.onClick}
-                    disabled={!enabled}
-                    styles={{
-                      root: {
-                        height: 36,
-                      }
-                    }}
+                    label={button.label}
+                    transitionProps={{ transition: 'pop', duration: 300 }}
                   >
-                    <Icon type={button.icon} size={20} />
-                  </Button>
+                    <Button
+                      aria-label={button.icon}
+                      variant="default"
+                      size="compact-sm"
+                      onClick={button.onClick}
+                      disabled={!enabled}
+                      classNames={{
+                        root: classes.groupedButton,
+                      }}
+                    >
+                      <Icon type={button.icon} size={20} />
+                    </Button>
+                  </Tooltip>
                 );
               }
 
@@ -139,6 +144,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   onClick={button.onClick}
                   disabled={!enabled}
                   leftSection={button.icon ? <Icon type={button.icon} size={16} /> : undefined}
+                  classNames={{
+                    root: classes.groupedButton,
+                  }}
                 >
                   {button.label}
                 </Button>

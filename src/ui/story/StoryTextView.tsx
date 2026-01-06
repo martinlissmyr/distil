@@ -227,6 +227,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     onNextPart: handleNextPart,
     canGoPrevious: true,
     canGoNext: true,
+    onOpenOverview: handleOpenOverview,
   });
 
   // Build menu items for the story menu
@@ -240,12 +241,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   }
   if (partsEnabled) {
     menuItems.push({
-      label: 'Chapters View',
-      onClick: handleOpenOverview,
-      icon: 'parts',
-    });
-    menuItems.push({
-      label: 'Add a chapter',
+      label: 'Add chapter',
       onClick: handleCreatePart,
       icon: 'add',
     });
@@ -296,8 +292,12 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
         <Box py={20} px={30} className={styles.topNavigation}>
           <TopNavigation
             title={partsEnabled ? partTitle : title}
-            buttons={chapterNavButtons}
             menuItems={menuItems}
+          />
+        </Box>
+        <Box py={20} px={30} className={styles.bottomNavigation}>
+          <TopNavigation
+            buttons={chapterNavButtons}
           />
         </Box>
         <Box
