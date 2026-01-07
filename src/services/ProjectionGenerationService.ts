@@ -1,8 +1,9 @@
+// src/services/ProjectionGenerationService.ts
 import { useAppStore } from '../state/useAppStore';
 import { client } from '../api/client';
 import { proseJsonToMarkdown } from '../helpers/markdownUtils';
 import { isProjectionStale, hasContent } from '../models/story';
-import projectionPromptMd from '../chat/prompts/projectionGenerationPrompt.md?raw';
+import { generateProjectionSummary } from './projectionUtils';
 
 /**
  * Background service that generates part projections (summaries):
@@ -113,23 +114,16 @@ class ProjectionGenerationService {
     const markdown = proseJsonToMarkdown(doc);
 
     // Generate projection using LLM
-    const chatResponse = await window.chat.send({
-      messages: [
-        { role: 'system', content: projectionPromptMd },
-        { role: 'user', content: markdown }
-      ],
-      model: 'gpt-4o-mini',
-      temperature: 0.5,
-      maxTokens: 200
-    });
+    const result = await generateProjectionSummary(markdown);
 
-    if (!chatResponse.ok) {
-      console.error(`Failed to generate projection for part ${partId}: ${chatResponse.error}`);
+    if (result.error) {
+      console.error(`Failed to generate projection for part ${partId}: ${result.error}`);
       return;
     }
 
-    const summary = chatResponse.data.output_text.trim();
+    const summary = result.summary;
     console.log(`[ProjectionService] Generated projection for part ${partId}: "${summary.substring(0, 50)}..."`);
+
 
     // Update metadata with new projection
     const updatedParts = currentStoryMetadata.parts.map(part => {

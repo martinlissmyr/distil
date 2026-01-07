@@ -5,12 +5,14 @@ import { ContextDeterminatorTest } from './ContextDeterminatorTest';
 import { InitialHintsTest } from './InitialHintsTest';
 import { WizardTesterView } from './WizardTesterView';
 import { PromptBuilderView } from './PromptBuilderView';
+import { PlaygroundSummarization } from './PlaygroundSummarization';
 
 type PlaygroundMode =
   | 'prompt-builder'
   | 'context-determinator'
   | 'initial-hints-test'
-  | 'wizard-tester';
+  | 'wizard-tester'
+  | 'summarization';
 
 const PLAYGROUND_MODE_KEY = 'distil:playgroundMode:v1';
 
@@ -25,6 +27,7 @@ function loadPlaygroundMode(): PlaygroundMode {
       'context-determinator',
       'initial-hints-test',
       'wizard-tester',
+      'summarization',
     ];
     if (validModes.includes(parsed)) return parsed;
 
@@ -61,11 +64,14 @@ export const PlaygroundView: React.FC = () => {
             { label: 'Context Determinator', value: 'context-determinator' },
             { label: 'Initial Hints', value: 'initial-hints-test' },
             { label: 'Wizard Tester', value: 'wizard-tester' },
+            { label: 'Summarization', value: 'summarization' },
           ]}
         />
       </Stack>
 
-      {mode === 'wizard-tester' ? (
+      {mode === 'summarization' ? (
+        <PlaygroundSummarization />
+      ) : mode === 'wizard-tester' ? (
         <WizardTesterView />
       ) : mode === 'initial-hints-test' ? (
         <InitialHintsTest />
