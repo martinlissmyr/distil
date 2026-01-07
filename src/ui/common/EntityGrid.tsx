@@ -33,7 +33,6 @@ function SortableItem({
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
   };
 
   return (
