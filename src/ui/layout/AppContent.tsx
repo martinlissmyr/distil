@@ -126,7 +126,7 @@ export const AppContent: React.FC<AppContentProps> = ({
             storyId={selectedStoryId}
             doc={currentDoc}
             onChange={handleDocChange}
-            title={`${currentTitle} – Text`}
+            title={currentTitle}
           />
         );
 

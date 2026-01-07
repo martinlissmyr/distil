@@ -49,7 +49,7 @@ export function registerEntityHandlers(): void {
         throw new Error('Invalid entity ID');
       }
 
-      return loadEntityDoc(projectId, entityType, entityId);
+      return loadEntityDoc(projectId, storyId, entityType, entityId);
     }
   );
 
@@ -65,7 +65,7 @@ export function registerEntityHandlers(): void {
         throw new Error('Invalid entity ID');
       }
 
-      await saveEntityDoc(projectId, entityType, entityId, doc);
+      await saveEntityDoc(projectId, storyId, entityType, entityId, doc);
       return undefined; // void return
     }
   );

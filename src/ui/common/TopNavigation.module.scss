@@ -1,0 +1,15 @@
+
+
+.groupedButton {
+	height: 36px !important;
+	border-top: 0 !important;
+	border-bottom: 0 !important;
+	border-color: rgba(0,0,0,.2) !important;
+
+	&:first-child {
+		border-left: 0 !important;
+	}
+	&:last-child {
+		border-right: 0 !important;
+	}
+}

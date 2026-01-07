@@ -113,12 +113,33 @@ const App: React.FC = () => {
       if (!selectedProjectId) return;
       goToStory(selectedProjectId, created.id, 'prose');
 
-      const storyResponse = await client.loadStory(selectedProjectId, created.id);
-      if (!storyResponse.ok) {
-        console.error('Failed to load story:', storyResponse.error);
+      // Load story metadata
+      const metadataResponse = await client.loadStoryMetadata(selectedProjectId, created.id);
+      if (!metadataResponse.ok) {
+        console.error('Failed to load story metadata:', metadataResponse.error);
         return;
       }
-      loadStory(storyResponse.data);
+
+      const metadata = metadataResponse.data;
+
+      // Load the first part's document (or use empty if no parts)
+      let partDoc: any;
+      if (metadata.parts.length > 0) {
+        const firstPart = metadata.parts[0];
+        const partResponse = await client.loadPartDoc(selectedProjectId, created.id, firstPart.id);
+        if (!partResponse.ok) {
+          console.error('Failed to load part document:', partResponse.error);
+          return;
+        }
+        partDoc = partResponse.data.doc;
+      } else {
+        partDoc = { type: 'doc', content: [] };
+      }
+
+      loadStory({
+        title: metadata.title,
+        doc: partDoc,
+      });
     },
     onDelete: (deletedId) => {
       // Navigate away if deleted story was selected

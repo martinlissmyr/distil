@@ -1,8 +1,9 @@
 // src/api/client.ts
 import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from '../types/language';
-import type { UiSchemaSetting } from '../types/ui'; // ✅ add
+import type { UiSchemaSetting } from '../types/ui';
 import type { EntityType } from '../models/entities/entityIndex';
+import type { StoryMetadata, PartIndexEntry, PartDoc } from '../models/story';
 
 export type Project = {
   id: string;
@@ -16,15 +17,6 @@ export type StoryMeta = {
   title: string;
   createdAt: string;
   order: number;
-};
-
-export type StoryData = {
-  id: string;
-  title: string;
-  createdAt?: string;
-  doc: JSONContent;
-  outlineDoc?: JSONContent;
-  briefDoc?: JSONContent;
 };
 
 // ---- Manifest types ----
@@ -59,35 +51,44 @@ export const client = {
     return window.distil.reorderProjects(ids);
   },
 
-  // -------- Stories --------
+  // -------- Stories (multi-part structure) --------
   listStories(projectId: string) {
     return window.distil.listStories(projectId);
   },
   createStory(projectId: string, title: string) {
     return window.distil.createStory(projectId, title);
   },
-  updateStory(
-    projectId: string,
-    storyId: string,
-    updates: {
-      title?: string;
-      outlineDoc?: JSONContent;
-      briefDoc?: JSONContent;
-    }
-  ) {
-    // NOTE: your global.d.ts types updateStory as { title?: string }
-    // but you appear to pass outline/brief too. If your IPC handler supports it,
-    // you should update global.d.ts accordingly. Leaving this as-is for runtime parity.
-    return window.distil.updateStory(projectId, storyId, updates as any);
+  loadStoryMetadata(projectId: string, storyId: string) {
+    return window.distil.loadStoryMetadata(projectId, storyId);
   },
-  loadStory(projectId: string, storyId: string) {
-    return window.distil.loadStory(projectId, storyId);
+  saveStoryMetadata(projectId: string, storyId: string, metadata: StoryMetadata) {
+    return window.distil.saveStoryMetadata(projectId, storyId, metadata);
   },
-  saveStory(projectId: string, storyId: string, payload: StoryData) {
-    return window.distil.saveStory(projectId, storyId, payload);
+  updateStory(projectId: string, storyId: string, updates: { title?: string }) {
+    return window.distil.updateStory(projectId, storyId, updates);
+  },
+  deleteStory(projectId: string, storyId: string) {
+    return window.distil.deleteStory(projectId, storyId);
   },
   reorderStories(projectId: string, ids: string[]) {
     return window.distil.reorderStories(projectId, ids);
+  },
+
+  // -------- Parts (multi-part documents) --------
+  loadPartDoc(projectId: string, storyId: string, partId: string) {
+    return window.distil.loadPartDoc(projectId, storyId, partId);
+  },
+  savePartDoc(projectId: string, storyId: string, partId: string, doc: JSONContent) {
+    return window.distil.savePartDoc(projectId, storyId, partId, doc);
+  },
+  createPart(projectId: string, storyId: string, order: number) {
+    return window.distil.createPart(projectId, storyId, order);
+  },
+  deletePart(projectId: string, storyId: string, partId: string) {
+    return window.distil.deletePart(projectId, storyId, partId);
+  },
+  reorderParts(projectId: string, storyId: string, ids: string[]) {
+    return window.distil.reorderParts(projectId, storyId, ids);
   },
 
   // -------- Story metaDocs (flexible) --------
