@@ -10,8 +10,10 @@ type EntityCardProps = {
   onSelect: (id: string) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
-  icon: string;
+  icon?: string;
+  number: number;
   mode?: 'grid' | 'list';
+  sorting?: boolean;
   text?: string;
   comment?: string;
   onCommentChange?: (newComment: string) => void;
@@ -24,7 +26,9 @@ export function EntityCard({
   onEdit,
   onDelete,
   icon,
+  number,
   mode = 'grid',
+  sorting = true,
   text,
   comment,
   onCommentChange,
@@ -50,18 +54,60 @@ export function EntityCard({
     debouncedCommentChange(value); // Debounce the callback to parent
   };
 
+  const actionButtons = (
+    <Flex gap="xs" className={styles.actionButtons}>
+      {onEdit && (
+        <ActionIcon
+          variant="subtle"
+          size="md"
+          onClick={(e) => {
+            e.stopPropagation(); // don't also select
+            onEdit(id);
+          }}
+        >
+          <Icon type="edit" size={16} />
+        </ActionIcon>
+      )}
+      {onDelete && (
+        <ActionIcon
+          variant="subtle"
+          size="md"
+          onClick={(e) => {
+            e.stopPropagation(); // don't also select
+            onDelete(id);
+          }}
+        >
+          <Icon type="trash" size={16} />
+        </ActionIcon>
+      )}
+    </Flex>
+  );
+
   if (isListMode) {
     return (
-      <Box onClick={() => onSelect(id)} className={styles.entityListCardWrapper}>
+      <Box
+        onClick={(e) => {
+          if (sorting) return;
+          onSelect(id);
+        }}
+        className={styles.entityListCardWrapper}
+      >
         <Flex align="center" justify="center" className={styles.listCardIcon}>
-          <Icon type={icon} size={40} strokeWidth={1} style={{opacity: .3}}/>
+          {icon && (
+            <Icon type={icon} size={40} strokeWidth={1} style={{opacity: .3}}/>
+          )}
+          {!icon && number && (
+            <>{number}</>
+          )}
         </Flex>
         <Stack gap={4} style={{ flex: 1 }} className={styles.listCardContent}>
-          <Text size="md" fw={700} span>
-            {label}
-          </Text>
+          {label && (
+            <Text size="md" fw={700}>
+              {label}
+            </Text>
+          )}
           {text && (
-            <Text size="sm" c="dimmed" span>
+            <Text size="sm">
               {text}
             </Text>
           )}
@@ -72,9 +118,8 @@ export function EntityCard({
               placeholder="Add a note..."
               variant="unstyled"
               autosize
-              minRows={1}
-              maxRows={4}
               size="sm"
+              radius={0}
               classNames={{
                 input: styles.commentField,
               }}
@@ -82,60 +127,20 @@ export function EntityCard({
             />
           )}
         </Stack>
-        <Flex gap="xs">
-          {onEdit && (
-            <ActionIcon
-              variant="subtle"
-              size="md"
-              className={styles.editButton}
-              onClick={(e) => {
-                e.stopPropagation(); // don't also select
-                onEdit(id);
-              }}
-            >
-              <Icon type="edit" size={16} />
-            </ActionIcon>
-          )}
-          {onDelete && (
-            <ActionIcon
-              variant="subtle"
-              size="md"
-              className={styles.editButton}
-              onClick={(e) => {
-                e.stopPropagation(); // don't also select
-                onDelete(id);
-              }}
-            >
-              <Icon type="trash" size={16} />
-            </ActionIcon>
-          )}
-        </Flex>
+        {actionButtons}
       </Box>
     );
   }
 
   return (
-    <Stack gap={1} onClick={() => onSelect(id)} className={styles.entityGridCardWrapper}>
+    <Stack gap={8} onClick={() => onSelect(id)} className={styles.entityGridCardWrapper}>
       <Card className={styles.entityGridCard}>
-        {onEdit && (
-          <ActionIcon
-            variant="subtle"
-            size="md"
-            style={{ position: 'absolute', top: 12, right: 12 }}
-            onClick={(e) => {
-              e.stopPropagation(); // don't also select
-              onEdit(id);
-            }}
-          >
-            <Icon type="edit" size={16} />
-          </ActionIcon>
-        )}
-
         <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
           <Box>
             <Icon type={icon} size={60} strokeWidth={1} style={{opacity: .3}}/>
           </Box>
         </Stack>
+        {actionButtons}
       </Card>
       <Text fw={700} ta="center" lineClamp={2}>
         {label}
@@ -175,7 +180,7 @@ export function CreateEntityCard({
   }
 
   return (
-    <Stack gap={1} onClick={onCreate} className={wrapperClass}>
+    <Stack gap={8} onClick={onCreate} className={wrapperClass}>
       <Card className={cardClass}>
         <Icon type="add" size={60} strokeWidth={1}/>
       </Card>

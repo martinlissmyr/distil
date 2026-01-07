@@ -1,6 +1,6 @@
 // src/ui/common/TopNavigation.tsx
 import React from 'react';
-import { ActionIcon, Box, Group, Text, Button, Menu, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Group, Text, Button, Menu, Tooltip, Flex } from '@mantine/core';
 import { Icon } from './Icon';
 import type { IconType } from './Icon';
 import classes from './TopNavigation.module.scss';
@@ -32,6 +32,7 @@ type TopNavigationProps = {
 
   /** Buttons to render in the right slot (replaces onSave/saveLabel/canSave) */
   buttons?: TopNavigationButton[];
+  buttonsLayout?: 'grouped' | 'separate';
 
   /** Menu items to render in a "more" menu button */
   menuItems?: TopNavigationMenuItem[];
@@ -54,10 +55,60 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   onClose,
   closeLabel = 'Close',
   buttons = [],
+  buttonsLayout = 'grouped',
   menuItems = [],
   zIndex = 10,
 }) => {
   const hasRightContent = buttons.length > 0 || menuItems.length > 0 || onClose;
+
+  const Buttons = (
+    <>
+      {buttons.map((button, index) => {
+        const enabled = button.enabled ?? true;
+
+        // Icon-only button
+        if (button.icon && button.iconOnly) {
+          return (
+            <Tooltip
+              key={index}
+              label={button.label}
+              transitionProps={{ transition: 'pop', duration: 300 }}
+            >
+              <Button
+                aria-label={button.icon}
+                variant="default"
+                size="compact-sm"
+                onClick={button.onClick}
+                disabled={!enabled}
+                classNames={{
+                  root: classes.groupedButton,
+                }}
+              >
+                <Icon type={button.icon} size={20} />
+              </Button>
+            </Tooltip>
+          );
+        }
+
+        // Button with label (and optional icon)
+        return (
+          <Button
+            key={index}
+            variant="light"
+            size="compact-sm"
+            onClick={button.onClick}
+            disabled={!enabled}
+            leftSection={button.icon ? <Icon type={button.icon} size={16} /> : undefined}
+            classNames={{
+              root: classes.groupedButton,
+            }}
+          >
+            {button.label}
+          </Button>
+        );
+      })}
+    </>
+  );
 
   return (
     <Box
@@ -107,52 +158,18 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
       <Group justify="flex-end" gap="xs" style={{ minWidth: 0 }}>
         {/* Button group */}
         {buttons.length > 0 && (
-          <Button.Group>
-            {buttons.map((button, index) => {
-              const enabled = button.enabled ?? true;
-
-              // Icon-only button
-              if (button.icon && button.iconOnly) {
-                return (
-                  <Tooltip
-                    key={index}
-                    label={button.label}
-                    transitionProps={{ transition: 'pop', duration: 300 }}
-                  >
-                    <Button
-                      aria-label={button.icon}
-                      variant="default"
-                      size="compact-sm"
-                      onClick={button.onClick}
-                      disabled={!enabled}
-                      classNames={{
-                        root: classes.groupedButton,
-                      }}
-                    >
-                      <Icon type={button.icon} size={20} />
-                    </Button>
-                  </Tooltip>
-                );
-              }
-
-              // Button with label (and optional icon)
-              return (
-                <Button
-                  key={index}
-                  variant="light"
-                  size="compact-sm"
-                  onClick={button.onClick}
-                  disabled={!enabled}
-                  leftSection={button.icon ? <Icon type={button.icon} size={16} /> : undefined}
-                  classNames={{
-                    root: classes.groupedButton,
-                  }}
-                >
-                  {button.label}
-                </Button>
-              );
-            })}
-          </Button.Group>
+          <>
+            {buttonsLayout === 'grouped' && (
+              <Button.Group>
+                {Buttons}
+              </Button.Group>
+            )}
+            {buttonsLayout === 'separate' && (
+              <Flex gap={4}>
+                {Buttons}
+              </Flex>
+            )}
+          </>
         )}
 
         {/* Menu button */}

@@ -31,7 +31,7 @@ import {
   CircleAlert,
   Circle,
   Ellipsis,
-  LayoutGrid,
+  Rows3,
   Bookmark,
   Trash2,
 } from 'lucide-react';
@@ -92,7 +92,7 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
 			return <ChevronDown {...iconProps}/>
 		}
 		case 'parts': {
-			return <LayoutGrid {...iconProps}/>
+			return <Rows3 {...iconProps}/>
 		}
 		case 'part': {
 			return <Bookmark {...iconProps}/>

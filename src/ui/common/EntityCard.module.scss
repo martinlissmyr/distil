@@ -1,6 +1,6 @@
 $width: 220px;
 $height: 260px;
-$listHeight: 120px;
+$listItemHeightWhenSorting: 80px;
 
 .entityGridCardWrapper {
   cursor: pointer;
@@ -23,21 +23,43 @@ $listHeight: 120px;
 }
 
 .commentField {
+  color: var(--mantine-color-dimmed) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  [data-sorting='true'] & {
+    display: none;
+  }
+}
+
+.actionButtons {
+  position: absolute;
+  right: 10px;
+  top: 10px;
 }
 
 .entityListCardWrapper {
-  height: $listHeight;
-  width: $listHeight;
   position: relative;
   cursor: pointer;
   width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
   display: flex;
   flex-direction: row;
   align-items: top;
   gap: 0px;
+  padding-right: 80px;
   flex-shrink: 0;
   border-radius: 12px;
   background-color: var(--card-subtle);
+
+  [data-sorting='true'] & {
+    height: $listItemHeightWhenSorting;
+    cursor: move;
+    .actionButtons {
+      display: none;
+    }
+  }
 
   &.entityListCreateCardWrapper {
     align-items: center;
@@ -47,21 +69,16 @@ $listHeight: 120px;
     background: var(--card-subtle-hover);
   }
 
-  .editButton {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-  }
-
   .listCardIcon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 20px;
+    width: 80px;
+    border-right: 1px solid rgba(255,255,255,.03);
   }
 
   .listCardContent {
-    padding: 20px 0;
+    padding: 20px;
   }
 
   .entityListCard {

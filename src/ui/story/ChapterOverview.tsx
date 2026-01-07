@@ -1,5 +1,5 @@
 // src/ui/story/ChapterOverview.tsx
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
 import { useAppStore } from '../../state/useAppStore';
 import { EntityGrid } from '../common/EntityGrid';
@@ -68,7 +68,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
       const newPartId = await createPart(projectId, storyId, newOrder);
       setCurrentPartId(newPartId);
       // createPart already loads the doc, so we can navigate directly
-      onNavigateToEditor();
+      //onNavigateToEditor();
     } catch (error) {
       console.error('Failed to create part:', error);
     }
@@ -116,29 +116,45 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     onNavigateToEditor();
   };
 
+  const [organise, setOrganise] = useState(false);
+  const buttons = [
+    {
+      label: organise ? 'View' : 'Organise',
+      onClick: () => setOrganise(!organise),
+    },
+    {
+      icon: 'add',
+      label: 'Add chapter',
+      iconOnly: true,
+      onClick: () => handleCreate(),
+    },
+  ];
+
   return (
     <Box className={styles.root}>
       <Box py={20} px={30}>
         <TopNavigation
           title={`${currentStoryTitle} – Chapters`}
           onBack={handleBack}
+          buttons={buttons}
+          buttonsLayout='separate'
         />
       </Box>
       <Box p="xl">
         <EntityGrid<ChapterGridItem>
           items={gridItems}
           getId={(item) => item.id}
-          getLabel={(item) => item.name}
-          getText={(item) => item.text}
+          getText={(item) => item.text || 'No content'}
           getComment={(item) => item.comment}
+          getOrderNumber={(item) => item.order + 1}
           onSelect={handleEdit}
           onDelete={handleDelete}
           onCreate={handleCreate}
           onReorderEntities={handleReorder}
           onCommentChange={handleCommentChange}
-          icon="part"
           createLabel="New Chapter"
           mode="list"
+          sorting={organise}
         />
       </Box>
     </Box>
