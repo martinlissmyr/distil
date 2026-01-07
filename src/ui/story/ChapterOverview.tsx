@@ -1,9 +1,10 @@
 // src/ui/story/ChapterOverview.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Box } from '@mantine/core';
 import { useAppStore } from '../../state/useAppStore';
 import { EntityGrid } from '../common/EntityGrid';
 import { TopNavigation } from '../common/TopNavigation';
+import { projectionService } from '../../services/ProjectionGenerationService';
 import styles from './EntityIndexView.module.scss';
 
 type ChapterOverviewProps = {
@@ -129,6 +130,17 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
       onClick: () => handleCreate(),
     },
   ];
+
+  // Get current part ID from store
+  const currentPartId = useAppStore((state) => state.currentPartId);
+
+  // Generate projection for current part when opening chapter overview
+  useEffect(() => {
+    if (currentPartId && projectId && storyId) {
+      console.log(`[ChapterOverview] Triggering projection generation for current part ${currentPartId}`);
+      projectionService.generateForPart(projectId, storyId, currentPartId);
+    }
+  }, []); // Only run on mount
 
   return (
     <Box className={styles.root}>

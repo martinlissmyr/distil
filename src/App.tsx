@@ -18,6 +18,7 @@ import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { useProjectHandlers } from './hooks/useProjectHandlers';
 import { useStoryHandlers } from './hooks/useStoryHandlers';
+import { projectionService } from './services/ProjectionGenerationService';
 
 const App: React.FC = () => {
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
@@ -26,6 +27,46 @@ const App: React.FC = () => {
   useEffect(() => {
     void ensureMetaDocsLoaded({ scope: 'root' }, ['manifest']);
   }, [ensureMetaDocsLoaded]);
+
+  // Start projection generation service
+  useEffect(() => {
+    projectionService.start();
+    return () => {
+      projectionService.stop();
+    };
+  }, []);
+
+  // Generate projection when navigating away from a part
+  useEffect(() => {
+    let previousPartId = useAppStore.getState().currentPartId;
+
+    const unsubscribe = useAppStore.subscribe(() => {
+      const state = useAppStore.getState();
+      const currentPartId = state.currentPartId;
+      const metadata = state.currentStoryMetadata;
+
+      // When part ID changes, generate projection for the OLD part
+      if (previousPartId && previousPartId !== currentPartId && metadata) {
+        // Get projectId from navigation state
+        const navState = localStorage.getItem('Distil:navState:v3');
+        if (navState) {
+          try {
+            const parsed = JSON.parse(navState);
+            if (parsed.selectedProjectId) {
+              console.log(`[App] Triggering projection generation for part ${previousPartId} (navigated away)`);
+              projectionService.generateForPart(parsed.selectedProjectId, metadata.id, previousPartId);
+            }
+          } catch (err) {
+            console.error('Failed to parse navigation state:', err);
+          }
+        }
+      }
+
+      previousPartId = currentPartId;
+    });
+
+    return unsubscribe;
+  }, []); // Empty dependency array - subscribe once on mount
 
   // Navigation hook
   const navigation = useNavigation();
