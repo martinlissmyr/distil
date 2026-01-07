@@ -5,6 +5,8 @@ import {
   Bug,
   ChevronRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   Brush,
   Lightbulb,
   Route,
@@ -28,15 +30,76 @@ import {
   Minus,
   CircleAlert,
   Circle,
+  Ellipsis,
+  Rows3,
+  Bookmark,
+  Trash2,
 } from 'lucide-react';
 
-export const Icon = ({type, size = 20, ...props}: {type: string, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
+export type IconType =
+  | 'parts'
+  | 'part'
+  | 'more'
+  | 'validationError'
+  | 'validationOk'
+  | 'validationEmpty'
+  | 'projects'
+  | 'project'
+  | 'manifest'
+  | 'playground'
+  | 'stories'
+  | 'story'
+  | 'prose'
+  | 'brief'
+  | 'outline'
+  | 'world'
+  | 'characters'
+  | 'character'
+  | 'locations'
+  | 'location'
+  | 'console'
+  | 'settings'
+  | 'back'
+  | 'forward'
+  | 'up'
+  | 'down'
+  | 'edit'
+  | 'add'
+  | 'trash'
+  | 'prompt'
+  | 'navigate'
+  | 'wizard'
+  | 'close'
+  | 'selection'
+  | 'check'
+  | 'h2'
+  | 'h3'
+  | 'bulletList'
+  | 'orderedList'
+  | 'horizontalRule';
+
+export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
 	const iconProps = {
     strokeWidth: 1.5,
     size: size,
     ...props
 	}
 	switch (type) {
+		case 'up': {
+			return <ChevronUp {...iconProps}/>
+		}
+		case 'down': {
+			return <ChevronDown {...iconProps}/>
+		}
+		case 'parts': {
+			return <Rows3 {...iconProps}/>
+		}
+		case 'part': {
+			return <Bookmark {...iconProps}/>
+		}
+		case 'more': {
+			return <Ellipsis {...iconProps}/>
+		}
 		case 'validationError': {
 			return <CircleAlert {...iconProps}/>
 		}
@@ -105,6 +168,9 @@ export const Icon = ({type, size = 20, ...props}: {type: string, size?: number, 
 		}
 		case 'add': {
 			return <Plus {...iconProps}/>
+		}
+		case 'trash': {
+			return <Trash2 {...iconProps}/>
 		}
     case 'prompt':
       return <MessageCircleQuestionMark {...iconProps}/>

@@ -1,4 +1,3 @@
-// src/ui/common/EntityGrid.tsx
 import React from 'react';
 import { Box, Flex } from '@mantine/core';
 import { EntityCard, CreateEntityCard } from './EntityCard';
@@ -7,6 +6,7 @@ import {
   useSortable,
   arrayMove,
   rectSortingStrategy,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/core';
 
 // ─────────────────────────────────────────────────────────────
-// Sortable item wrapper
+// Sortable item wrapper (only used when sorting=true)
 // ─────────────────────────────────────────────────────────────
 function SortableItem({
   id,
@@ -33,7 +33,6 @@ function SortableItem({
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
   };
 
   return (
@@ -43,44 +42,55 @@ function SortableItem({
   );
 }
 
+// Non-sortable wrapper
+function StaticItem({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
+}
+
 type EntityGridProps<T> = {
   items: T[];
-  /** unique id for each item */
   getId: (item: T) => string;
-  /** label / title to show in the card */
-  getLabel: (item: T) => string;
+  getLabel?: (item: T) => string;
+  getOrderNumber?: (item: T) => number;
 
   onSelect: (id: string) => void;
-  onEdit: (id: string) => void;
-
-  /** called when the “+” card is clicked */
+  onEdit?: (id: string) => void;
   onCreate: () => void;
-
-  /** called with reordered ids after drag */
   onReorderEntities: (ids: string[]) => void;
 
-  /** icon string passed through to EntityCard */
   icon: string;
 
   title?: string;
   createLabel?: string;
+  mode?: 'grid' | 'list';
+  sorting?: boolean;
+
+  getText?: (item: T) => string | undefined;
+  getComment?: (item: T) => string | undefined;
+  onCommentChange?: (id: string, newComment: string) => void;
+  onDelete?: (id: string) => void;
 };
 
 export function EntityGrid<T>({
   items,
   getId,
   getLabel,
+  getOrderNumber,
   onSelect,
   onEdit,
   onCreate,
   onReorderEntities,
   icon,
   createLabel,
+  mode = 'grid',
+  sorting = true,
+  getText,
+  getComment,
+  onCommentChange,
+  onDelete,
 }: EntityGridProps<T>) {
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   const ids = React.useMemo(() => items.map(getId), [items, getId]);
@@ -91,52 +101,75 @@ export function EntityGrid<T>({
 
       const activeId = String(active.id);
       const overId = String(over.id);
-
       if (activeId === overId) return;
 
       const oldIndex = ids.indexOf(activeId);
       const newIndex = ids.indexOf(overId);
-
       if (oldIndex < 0 || newIndex < 0) return;
 
-      const reorderedIds = arrayMove(ids, oldIndex, newIndex);
-      onReorderEntities(reorderedIds);
+      onReorderEntities(arrayMove(ids, oldIndex, newIndex));
     },
     [ids, onReorderEntities]
   );
 
+  const itemList = (
+    <>
+      {items.map((item, n) => {
+        const id = getId(item);
+        const Wrapper = sorting ? SortableItem : StaticItem;
+
+        return (
+          <Wrapper key={id} {...(sorting ? { id } : {})}>
+            <EntityCard
+              id={id}
+              label={getLabel ? getLabel(item) : undefined}
+              onEdit={onEdit}
+              onSelect={onSelect}
+              icon={icon || undefined}
+              number={getOrderNumber ? getOrderNumber(item) : n}
+              mode={mode}
+              sorting={sorting}
+              text={getText ? getText(item) : undefined}
+              comment={getComment ? getComment(item) : undefined}
+              onCommentChange={
+                onCommentChange ? (newComment) => onCommentChange(id, newComment) : undefined
+              }
+              onDelete={onDelete}
+            />
+          </Wrapper>
+        );
+      })}
+    </>
+  );
+
+  const strategy = mode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy;
+
   return (
     <Box p="xl">
       <Flex
-        gap="lg"
-        justify="center"
-        direction="row"
-        wrap="wrap"
+        gap={mode === 'grid' ? 'lg' : 8}
+        justify={mode === 'grid' ? 'center' : 'flex-start'}
+        direction={mode === 'grid' ? 'row' : 'column'}
+        wrap={mode === 'grid' ? 'wrap' : 'nowrap'}
+        data-sorting={sorting}
       >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={ids} strategy={rectSortingStrategy}>
-            {items.map((item) => {
-              const id = getId(item);
-              return (
-                <SortableItem key={id} id={id}>
-                  <EntityCard
-                    id={id}
-                    label={getLabel(item)}
-                    onEdit={onEdit}
-                    onSelect={onSelect}
-                    icon={icon}
-                  />
-                </SortableItem>
-              );
-            })}
-          </SortableContext>
-        </DndContext>
+        {sorting ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={ids} strategy={strategy}>
+              {itemList}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          itemList
+        )}
 
-        <CreateEntityCard onCreate={onCreate} label={createLabel} />
+        {mode === 'grid' && (
+          <CreateEntityCard onCreate={onCreate} label={createLabel} mode={mode} />
+        )}
       </Flex>
     </Box>
   );

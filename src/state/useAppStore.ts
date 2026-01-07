@@ -17,6 +17,7 @@ import {
   DEFAULT_WRITING_LANGUAGE,
   SUPPORTED_WRITING_LANGUAGES,
 } from '../types/language';
+import type { StoryMetadata } from '../models/story';
 
 type ApiState = { hasApiKey: boolean | null };
 
@@ -51,6 +52,21 @@ type AppStore = {
   docRevision: Record<string, number>;
   bumpDocRevision: (docId: string) => void;
   getDocRevision: (docId: string) => number;
+
+  // ---- Story parts state ----
+  currentStoryMetadata: StoryMetadata | null;
+  currentPartId: string | null;
+  currentPartDoc: any | null; // TipTap JSONContent for current part
+
+  loadStoryMetadata: (projectId: string, storyId: string) => Promise<void>;
+  setCurrentPartId: (partId: string | null) => void;
+  loadCurrentPartDoc: (projectId: string, storyId: string, partId: string) => Promise<void>;
+
+  enableParts: (projectId: string, storyId: string) => Promise<void>;
+  createPart: (projectId: string, storyId: string, order: number) => Promise<string>;
+  deletePart: (projectId: string, storyId: string, partId: string) => Promise<void>;
+  reorderParts: (projectId: string, storyId: string, partIds: string[]) => Promise<void>;
+  updatePartComment: (projectId: string, storyId: string, partId: string, comment: string) => Promise<void>;
 
 } & WizardState &
   WizardActions;
@@ -118,6 +134,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
     })),
 
   getDocRevision: (docId) => get().docRevision[docId] ?? 0,
+
+  // ---- Story parts state ----
+  currentStoryMetadata: null,
+  currentPartId: null,
+  currentPartDoc: null,
 
   uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING,
   uiSchemaLoaded: false,
@@ -367,6 +388,152 @@ export const useAppStore = create<AppStore>((set, get) => ({
         console.error('[useAppStore] saveStoryMetaDoc failed:', response.error);
         throw new Error(response.error);
       }
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Story parts actions
+  // ---------------------------------------------------------------------------
+  async loadStoryMetadata(projectId, storyId) {
+    const response = await client.loadStoryMetadata(projectId, storyId);
+    if (response.ok) {
+      const metadata = response.data;
+      set({ currentStoryMetadata: metadata });
+
+      // Set current part to first part if available and not already set
+      if (metadata.parts.length > 0 && !get().currentPartId) {
+        const firstPartId = metadata.parts[0].id;
+        set({ currentPartId: firstPartId });
+        // Also load the first part's document
+        await get().loadCurrentPartDoc(projectId, storyId, firstPartId);
+      }
+    } else {
+      console.error('[useAppStore] loadStoryMetadata failed:', response.error);
+      throw new Error(response.error);
+    }
+  },
+
+  setCurrentPartId(partId) {
+    set({ currentPartId: partId });
+    // Note: loadCurrentPartDoc will be called separately by the action that changes partId
+  },
+
+  async loadCurrentPartDoc(projectId, storyId, partId) {
+    const response = await client.loadPartDoc(projectId, storyId, partId);
+    if (response.ok) {
+      set({ currentPartDoc: response.data.doc });
+    } else {
+      console.error('[useAppStore] loadCurrentPartDoc failed:', response.error);
+      // Set to empty doc on error
+      set({ currentPartDoc: { type: 'doc', content: [] } });
+    }
+  },
+
+  async enableParts(projectId, storyId) {
+    const metadata = get().currentStoryMetadata;
+    if (!metadata) {
+      throw new Error('No story metadata loaded');
+    }
+
+    // Update metadata to enable parts
+    const updatedMetadata: StoryMetadata = {
+      ...metadata,
+      partsEnabled: true,
+    };
+
+    const response = await client.saveStoryMetadata(projectId, storyId, updatedMetadata);
+    if (response.ok) {
+      set({ currentStoryMetadata: updatedMetadata });
+
+      // If no parts exist yet, create the first one
+      if (updatedMetadata.parts.length === 0) {
+        await get().createPart(projectId, storyId, 0);
+      }
+    } else {
+      console.error('[useAppStore] enableParts failed:', response.error);
+      throw new Error(response.error);
+    }
+  },
+
+  async createPart(projectId, storyId, order) {
+    const response = await client.createPart(projectId, storyId, order);
+    if (response.ok) {
+      const newPart = response.data;
+
+      // Reload metadata to get updated parts array
+      await get().loadStoryMetadata(projectId, storyId);
+
+      // Load the new part's document
+      await get().loadCurrentPartDoc(projectId, storyId, newPart.id);
+
+      return newPart.id;
+    } else {
+      console.error('[useAppStore] createPart failed:', response.error);
+      throw new Error(response.error);
+    }
+  },
+
+  async deletePart(projectId, storyId, partId) {
+    const response = await client.deletePart(projectId, storyId, partId);
+    if (response.ok) {
+      // If deleting current part, switch to first available part and load its doc
+      if (get().currentPartId === partId) {
+        const metadata = get().currentStoryMetadata;
+        if (metadata && metadata.parts.length > 1) {
+          const otherPart = metadata.parts.find((p) => p.id !== partId);
+          if (otherPart) {
+            set({ currentPartId: otherPart.id });
+            await get().loadCurrentPartDoc(projectId, storyId, otherPart.id);
+          }
+        } else {
+          set({ currentPartId: null, currentPartDoc: null });
+        }
+      }
+
+      // Reload metadata to get updated parts array
+      await get().loadStoryMetadata(projectId, storyId);
+    } else {
+      console.error('[useAppStore] deletePart failed:', response.error);
+      throw new Error(response.error);
+    }
+  },
+
+  async reorderParts(projectId, storyId, partIds) {
+    const response = await client.reorderParts(projectId, storyId, partIds);
+    if (response.ok) {
+      // Reload metadata to get updated parts array
+      await get().loadStoryMetadata(projectId, storyId);
+    } else {
+      console.error('[useAppStore] reorderParts failed:', response.error);
+      throw new Error(response.error);
+    }
+  },
+
+  async updatePartComment(projectId: string, storyId: string, partId: string, comment: string) {
+    const metadata = get().currentStoryMetadata;
+    if (!metadata) {
+      throw new Error('No story metadata loaded');
+    }
+
+    // Update the part's comment
+    const updatedParts = metadata.parts.map(part =>
+      part.id === partId
+        ? { ...part, comment, updatedAt: new Date().toISOString() }
+        : part
+    );
+
+    const updatedMetadata: StoryMetadata = {
+      ...metadata,
+      parts: updatedParts,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const response = await client.saveStoryMetadata(projectId, storyId, updatedMetadata);
+    if (response.ok) {
+      set({ currentStoryMetadata: updatedMetadata });
+    } else {
+      console.error('[useAppStore] updatePartComment failed:', response.error);
+      throw new Error(response.error);
     }
   },
 

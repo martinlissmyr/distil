@@ -29,28 +29,76 @@ declare global {
       deleteProject: (projectId: string) => Promise<IpcResponse<undefined>>;
       reorderProjects: (ids: string[]) => Promise<IpcResponse<undefined>>;
 
-      // Stories
+      // Stories (multi-part structure)
       listStories: (projectId: string) => Promise<
         IpcResponse<{ id: string; title: string; createdAt: string; order: number }[]>
       >;
       createStory: (projectId: string, title: string) => Promise<
         IpcResponse<{ id: string; title: string; createdAt: string; order: number }>
       >;
-      loadStory: (projectId: string, storyId: string) => Promise<
-        IpcResponse<{ id: string; title: string; createdAt?: string; doc: any }>
+      loadStoryMetadata: (projectId: string, storyId: string) => Promise<
+        IpcResponse<{
+          id: string;
+          title: string;
+          order: number;
+          partsEnabled: boolean;
+          parts: Array<{
+            id: string;
+            order: number;
+            projection?: { summary: string; generatedAt: string };
+            comment?: string;
+            wordCount?: number;
+            createdAt: string;
+            updatedAt: string;
+          }>;
+          createdAt: string;
+          updatedAt: string;
+        }>
       >;
-      saveStory: (
+      saveStoryMetadata: (
         projectId: string,
         storyId: string,
-        payload: { id: string; title: string; doc: unknown }
+        metadata: {
+          id: string;
+          title: string;
+          order: number;
+          partsEnabled: boolean;
+          parts: any[];
+          createdAt: string;
+          updatedAt: string;
+        }
       ) => Promise<IpcResponse<undefined>>;
-      reorderStories: (projectId: string, ids: string[]) => Promise<IpcResponse<undefined>>;
       updateStory: (
         projectId: string,
         storyId: string,
         updates: { title?: string }
       ) => Promise<IpcResponse<{ id: string; title: string; createdAt: string; order: number }>>;
       deleteStory: (projectId: string, storyId: string) => Promise<IpcResponse<undefined>>;
+      reorderStories: (projectId: string, ids: string[]) => Promise<IpcResponse<undefined>>;
+
+      // Parts (multi-part documents)
+      loadPartDoc: (projectId: string, storyId: string, partId: string) => Promise<
+        IpcResponse<{ id: string; doc: any; updatedAt: string }>
+      >;
+      savePartDoc: (
+        projectId: string,
+        storyId: string,
+        partId: string,
+        doc: any
+      ) => Promise<IpcResponse<undefined>>;
+      createPart: (projectId: string, storyId: string, order: number) => Promise<
+        IpcResponse<{
+          id: string;
+          order: number;
+          projection?: { summary: string; generatedAt: string };
+          comment?: string;
+          wordCount?: number;
+          createdAt: string;
+          updatedAt: string;
+        }>
+      >;
+      deletePart: (projectId: string, storyId: string, partId: string) => Promise<IpcResponse<undefined>>;
+      reorderParts: (projectId: string, storyId: string, ids: string[]) => Promise<IpcResponse<undefined>>;
 
       // MetaDocs
       loadStoryMetaDoc: (

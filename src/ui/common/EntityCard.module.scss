@@ -1,11 +1,12 @@
 $width: 220px;
 $height: 260px;
+$listItemHeightWhenSorting: 80px;
 
-.entityCardWrapper {
+.entityGridCardWrapper {
   cursor: pointer;
   width: $width;
 
-  .entityCard {
+  .entityGridCard {
     height: $height;
     position: relative;
     border-radius: 16px;
@@ -15,8 +16,74 @@ $height: 260px;
   }
 
   &:hover {
-    .entityCard {
+    .entityGridCard {
       background: var(--card-subtle-hover);
     }
+  }
+}
+
+.commentField {
+  color: var(--mantine-color-dimmed) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  [data-sorting='true'] & {
+    display: none;
+  }
+}
+
+.actionButtons {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.entityListCardWrapper {
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: top;
+  gap: 0px;
+  padding-right: 80px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background-color: var(--card-subtle);
+
+  [data-sorting='true'] & {
+    height: $listItemHeightWhenSorting;
+    cursor: move;
+    .actionButtons {
+      display: none;
+    }
+  }
+
+  &.entityListCreateCardWrapper {
+    align-items: center;
+  }
+
+  &:hover {
+    background: var(--card-subtle-hover);
+  }
+
+  .listCardIcon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+    border-right: 1px solid rgba(255,255,255,.03);
+  }
+
+  .listCardContent {
+    padding: 20px;
+  }
+
+  .entityListCard {
+    position: relative;
+    align-items: center;
+    justify-content: center;
   }
 }
