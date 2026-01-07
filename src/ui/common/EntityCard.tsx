@@ -107,7 +107,7 @@ export function EntityCard({
             </Text>
           )}
           {text && (
-            <Text size="sm">
+            <Text size="sm" lineClamp={sorting ? 2 : 10} overflow="ellipsis">
               {text}
             </Text>
           )}
