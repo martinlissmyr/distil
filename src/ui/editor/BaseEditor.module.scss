@@ -267,7 +267,6 @@
 .scrollAreaWrapper {
   flex: 1;
   height: 100%;
-
   cursor: text;
   color: var(--text);
 }
@@ -277,7 +276,7 @@
    ============================== */
 .editor {
   width: calc(var(--editor-width) + var(--editor-gutter) * 2);
-  min-height: 100%;
+  min-height: 100vh;
 
   padding-top: 100px;
   padding-bottom: 24px;

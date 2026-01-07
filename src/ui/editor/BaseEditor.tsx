@@ -140,7 +140,9 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
         />
 
         <ScrollArea
-          className={styles.scrollAreaWrapper}
+          classNames={{
+            root: styles.scrollAreaWrapper
+          }}
           type="hover"
           scrollbarSize={10}
           styles={{
