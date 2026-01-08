@@ -46,9 +46,29 @@ class ProjectionGenerationService {
   /**
    * Generates a projection for a specific part.
    * Called explicitly when navigating away from a part or opening chapter overview.
+   * Only regenerates if the projection is stale.
    */
   public async generateForPart(projectId: string, storyId: string, partId: string): Promise<void> {
-    console.log(`[ProjectionService] Generating projection for part ${partId}`);
+    const { currentStoryMetadata } = useAppStore.getState();
+
+    if (!currentStoryMetadata) {
+      return;
+    }
+
+    // Find the part in metadata
+    const part = currentStoryMetadata.parts.find(p => p.id === partId);
+    if (!part) {
+      console.warn(`[ProjectionService] Part ${partId} not found in metadata`);
+      return;
+    }
+
+    // Only regenerate if projection is stale
+    if (!isProjectionStale(part)) {
+      console.log(`[ProjectionService] Projection for part ${partId} is up-to-date, skipping`);
+      return;
+    }
+
+    console.log(`[ProjectionService] Projection for part ${partId} is stale, regenerating`);
     await this.generateProjection(projectId, storyId, partId);
   }
 
