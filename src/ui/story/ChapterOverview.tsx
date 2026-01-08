@@ -32,6 +32,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
 
   // Get store actions
+  const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
   const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
   const loadCurrentPartDoc = useAppStore((state) => state.loadCurrentPartDoc);
   const createPart = useAppStore((state) => state.createPart);
@@ -57,7 +58,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
 
   // Navigate to part
   const handleEdit = async (partId: string) => {
-    setCurrentPartId(partId);
+    setCurrentPartId(storyId, partId);
     await loadCurrentPartDoc(projectId, storyId, partId);
     onNavigateToEditor();
   };
@@ -67,7 +68,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     try {
       const newOrder = parts.length;
       const newPartId = await createPart(projectId, storyId, newOrder);
-      setCurrentPartId(newPartId);
+      setCurrentPartId(storyId, newPartId);
       // createPart already loads the doc, so we can navigate directly
       //onNavigateToEditor();
     } catch (error) {
@@ -132,7 +133,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   ];
 
   // Get current part ID from store
-  const currentPartId = useAppStore((state) => state.currentPartId);
+  const currentPartId = getCurrentPartId(storyId);
 
   // Generate projection for current part when opening chapter overview
   useEffect(() => {

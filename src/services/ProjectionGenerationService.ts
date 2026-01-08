@@ -53,7 +53,7 @@ class ProjectionGenerationService {
   }
 
   private periodicCheck(): void {
-    const { currentStoryMetadata, currentPartId } = useAppStore.getState();
+    const { currentStoryMetadata, currentPartIdMap } = useAppStore.getState();
 
     // Only check if story has parts enabled
     if (!currentStoryMetadata || !currentStoryMetadata.partsEnabled) return;
@@ -61,6 +61,8 @@ class ProjectionGenerationService {
     const projectId = this.getProjectIdFromNavigation();
     const storyId = currentStoryMetadata.id;
     if (!projectId) return;
+
+    const currentPartId = currentPartIdMap[storyId];
 
     // Process all stale parts EXCEPT the current one
     for (const part of currentStoryMetadata.parts) {
@@ -75,7 +77,7 @@ class ProjectionGenerationService {
 
   private getProjectIdFromNavigation(): string | null {
     // Read navigation state from localStorage
-    const navStateKey = 'Distil:navState:v3';
+    const navStateKey = 'Distil:navState:v4';
     const raw = window.localStorage.getItem(navStateKey);
     if (!raw) return null;
 

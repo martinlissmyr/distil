@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { client, Project, StoryMeta } from '../api/client';
 import type { NavState } from './useNavigation';
 import type { JSONContent } from '@tiptap/react';
+import { useAppStore } from '../state/useAppStore';
 
 /**
  * Parameters for the initialization hook
@@ -69,6 +70,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             projectId: null,
             storyId: null,
             storySection: 'prose',
+            currentPartIdMap: {},
           });
           clearEditor();
           return;
@@ -82,6 +84,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             projectId: null,
             storyId: null,
             storySection: 'prose',
+            currentPartIdMap: saved.currentPartIdMap ?? {},
           });
           clearEditor();
           return;
@@ -99,6 +102,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             projectId: null,
             storyId: null,
             storySection: 'prose',
+            currentPartIdMap: saved.currentPartIdMap ?? {},
           });
           clearEditor();
           return;
@@ -121,6 +125,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             projectId: saved.projectId,
             storyId: null,
             storySection: 'prose',
+            currentPartIdMap: saved.currentPartIdMap ?? {},
           });
           clearEditor();
           return;
@@ -133,43 +138,51 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           projectId: saved.projectId,
           storyId: saved.storyId,
           storySection: saved.storySection ?? 'prose',
+          currentPartIdMap: saved.currentPartIdMap ?? {},
         });
 
-        // Load story metadata
-        const metadataResponse = await client.loadStoryMetadata(
+        // Use loadStoryForView to load metadata and part document
+        // This ensures proper state updates and no race conditions
+        const savedPartId = saved.currentPartIdMap[saved.storyId];
+        console.log('[INIT] Calling loadStoryForView with restorePartId:', savedPartId);
+
+        await useAppStore.getState().loadStoryForView(
           saved.projectId!,
-          saved.storyId
+          saved.storyId,
+          savedPartId ? { restorePartId: savedPartId } : undefined
         );
-        if (!metadataResponse.ok) {
-          console.error('Failed to load story metadata:', metadataResponse.error);
+
+        // Get the loaded data from store
+        const state = useAppStore.getState();
+        const metadata = state.currentStoryMetadata;
+        const partDoc = state.currentPartDoc;
+        const actualPartId = state.currentPartIdMap[saved.storyId];
+
+        if (!metadata) {
+          console.error('[INIT] loadStoryForView did not set metadata');
           return;
         }
 
-        const metadata = metadataResponse.data;
+        console.log('[INIT] loadStoryForView completed, loaded part:', actualPartId);
 
-        // Load the first part's document (or create one if no parts exist)
-        let partDoc: JSONContent;
-        if (metadata.parts.length > 0) {
-          const firstPart = metadata.parts[0];
-          const partResponse = await client.loadPartDoc(
-            saved.projectId!,
-            saved.storyId,
-            firstPart.id
-          );
-          if (!partResponse.ok) {
-            console.error('Failed to load part document:', partResponse.error);
-            return;
-          }
-          partDoc = partResponse.data.doc;
-        } else {
-          // No parts yet - use empty document
-          partDoc = { type: 'doc', content: [] };
+        // If we loaded a different part than what was saved, update the navigation state
+        if (actualPartId && actualPartId !== savedPartId) {
+          const updatedMap = { ...saved.currentPartIdMap, [saved.storyId]: actualPartId };
+          restoreState({
+            appSection: 'story',
+            rootSection: saved.rootSection ?? 'projects',
+            projectId: saved.projectId!,
+            storyId: saved.storyId,
+            storySection: saved.storySection ?? 'prose',
+            currentPartIdMap: updatedMap,
+          });
         }
 
         loadStory({
           title: metadata.title,
-          doc: partDoc,
+          doc: partDoc ?? { type: 'doc', content: [] },
         });
+        console.log('[INIT] Called loadStory with doc for part:', actualPartId);
 
         // hydrate outline/brief if present on disk
       } finally {

@@ -15,6 +15,7 @@ import { createExtensionsFromConfig, createToolbarFromConfig } from '../editor/e
 import { getDocKind } from '../../models/docs';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { useAppStore } from '../../state/useAppStore';
+import { useNavigation } from '../../hooks/useNavigation';
 import styles from '../editor/BaseEditor.module.scss';
 
 type StoryTextViewProps = {
@@ -45,17 +46,45 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   // Get parts state from app store
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
-  const currentPartId = useAppStore((state) => state.currentPartId);
-  const currentPartDoc = useAppStore((state) => state.currentPartDoc);
-  const loadStoryMetadata = useAppStore((state) => state.loadStoryMetadata);
+  const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
+  const currentPartId = getCurrentPartId(storyId);
   const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
   const loadCurrentPartDoc = useAppStore((state) => state.loadCurrentPartDoc);
   const enableParts = useAppStore((state) => state.enableParts);
 
-  // Load story metadata on mount
+  // Get navigation store setter for persistence
+  const { setCurrentPartId: setNavCurrentPartId } = useNavigation();
+
+  // Load story metadata on mount (only if not already loaded)
+  const [isLoading, setIsLoading] = React.useState(false);
+  const hasLoadedRef = useRef(false);
+
   useEffect(() => {
-    loadStoryMetadata(projectId, storyId);
-  }, [projectId, storyId, loadStoryMetadata]);
+    // Only run this logic once on mount, not on subsequent part changes
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+
+    if (!currentStoryMetadata || currentStoryMetadata.storyId !== storyId) {
+      console.log('[STORYVIEW] Metadata not loaded for story', storyId, ', calling loadStoryForView');
+      setIsLoading(true);
+      void useAppStore.getState().loadStoryForView(projectId, storyId).finally(() => {
+        setIsLoading(false);
+      });
+    } else if (currentPartId) {
+      // Metadata already loaded, but ensure part doc is loaded for current part
+      // This prevents showing stale content when navigating back to a story
+      console.log('[STORYVIEW] Metadata already loaded, ensuring part doc loaded for:', currentPartId);
+      setIsLoading(true);
+      void useAppStore.getState().loadCurrentPartDoc(projectId, storyId, currentPartId).finally(() => {
+        setIsLoading(false);
+      });
+    }
+  }, [projectId, storyId, currentStoryMetadata, currentPartId]);
+
+  // Reset the ref when story changes
+  useEffect(() => {
+    hasLoadedRef.current = false;
+  }, [projectId, storyId]);
 
   // Reset subview to editor when navigation changes (e.g., returning from chapters view)
   useEffect(() => {
@@ -80,18 +109,20 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   useEditorSync(editor, doc, onChange);
 
-  // Load part document when currentPartId changes
+  // Load part document when currentPartId changes and sync to navigation store
   useEffect(() => {
     if (!currentPartId) return;
-    void loadCurrentPartDoc(projectId, storyId, currentPartId);
-  }, [projectId, storyId, currentPartId, loadCurrentPartDoc]);
 
-  // Sync currentPartDoc from store to parent onChange (which flows to editor)
-  useEffect(() => {
-    if (currentPartDoc) {
-      onChange(currentPartDoc);
-    }
-  }, [currentPartDoc, onChange]);
+    console.log('[STORYVIEW] currentPartId changed to:', currentPartId);
+    // Sync to navigation store for persistence
+    setNavCurrentPartId(storyId, currentPartId);
+
+    void loadCurrentPartDoc(projectId, storyId, currentPartId);
+  }, [projectId, storyId, currentPartId, loadCurrentPartDoc, setNavCurrentPartId]);
+
+  // Note: We do NOT sync currentPartDoc from store back to parent onChange.
+  // The editor content flows correctly via the `doc` prop from parent.
+  // Syncing store → parent would create circular data flow and overwrite correct content with stale data.
 
   const toolbar = createToolbarFromConfig(editorConfig, editor);
 
@@ -184,7 +215,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   const handlePreviousPart = async () => {
     if (currentPartIndex > 0) {
       const previousPart = parts[currentPartIndex - 1];
-      setCurrentPartId(previousPart.id);
+      setCurrentPartId(storyId, previousPart.id);
       await loadCurrentPartDoc(projectId, storyId, previousPart.id);
     }
   };
@@ -192,7 +223,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   const handleNextPart = async () => {
     if (currentPartIndex < totalParts - 1) {
       const nextPart = parts[currentPartIndex + 1];
-      setCurrentPartId(nextPart.id);
+      setCurrentPartId(storyId, nextPart.id);
       await loadCurrentPartDoc(projectId, storyId, nextPart.id);
     }
   };
@@ -213,7 +244,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       const newPartId = await createPart(projectId, storyId, newOrder);
 
       // Switch to the new part
-      setCurrentPartId(newPartId);
+      setCurrentPartId(storyId, newPartId);
     } catch (error) {
       console.error('Failed to create part:', error);
     }
@@ -248,7 +279,8 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   }
   // Future: Add more menu items here (story settings, export, etc.)
 
-  if (!editor) return null;
+  // Don't render editor until part data is synced
+  if (!editor || isLoading) return null;
 
   // Show chapters overview subview
   if (subview === 'chapters') {
