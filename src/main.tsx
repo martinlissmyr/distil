@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
@@ -11,13 +11,22 @@ import type { UiMode } from './types/ui';
 
 function Root() {
   const { resolved } = useResolvedUiSchema();
-
   const { leafId } = useNavigation();
 
   const uiMode: UiMode = useMemo(() => {
     const sectionConfig = getSectionConfig(leafId);
     return (sectionConfig?.uiMode as UiMode) ?? 'default';
   }, [leafId]);
+
+  // 🔑 Sync uiMode → <body data-ui-mode="...">
+  useEffect(() => {
+    document.body.dataset.uiMode = uiMode;
+
+    return () => {
+      // Optional cleanup (mostly relevant if Root could unmount)
+      delete document.body.dataset.uiMode;
+    };
+  }, [uiMode]);
 
   const themeByUiMode = useMemo(() => {
     if (uiMode === 'prose') return proseTheme;
@@ -31,12 +40,7 @@ function Root() {
       defaultColorScheme="dark"
       forceColorScheme={resolved}
     >
-      <div data-ui-mode={uiMode} style={{ 
-        height: '100%',
-        backgroundColor: 'var(--body)',
-      }}>
-        <App />
-      </div>
+      <App />
     </MantineProvider>
   );
 }
