@@ -80,6 +80,7 @@ export type NavState = {
 };
 
 type NavigationStore = NavState & {
+  isInitializing: boolean;
   setAppSection: (section: AppSection) => void;
   setRootSection: (section: RootSection) => void;
   setStorySection: (section: StorySection) => void;
@@ -88,17 +89,52 @@ type NavigationStore = NavState & {
   getCurrentPartId: (storyId: string) => string | undefined;
   setCurrentPartId: (storyId: string, partId: string | null) => void;
   restoreState: (state: NavState) => void;
+  finishInitialization: () => void;
 };
 
 const NAV_STATE_KEY = 'distil:navState:v4';
 
+// Load saved state synchronously before creating store
+// This ensures leafId/theme are correct from first render
+function getInitialNavState(): Omit<NavState, 'currentPartIdMap'> & { currentPartIdMap: { [storyId: string]: string } } {
+  try {
+    const raw = window.localStorage.getItem(NAV_STATE_KEY);
+    if (!raw) {
+      return {
+        appSection: 'root',
+        rootSection: 'projects',
+        storySection: 'prose',
+        projectId: null,
+        storyId: null,
+        currentPartIdMap: {},
+      };
+    }
+    const parsed = JSON.parse(raw) as Partial<NavState>;
+    return {
+      appSection: parsed.appSection ?? 'root',
+      rootSection: parsed.rootSection ?? 'projects',
+      storySection: parsed.storySection ?? 'prose',
+      projectId: parsed.projectId ?? null,
+      storyId: parsed.storyId ?? null,
+      currentPartIdMap: parsed.currentPartIdMap ?? {},
+    };
+  } catch {
+    return {
+      appSection: 'root',
+      rootSection: 'projects',
+      storySection: 'prose',
+      projectId: null,
+      storyId: null,
+      currentPartIdMap: {},
+    };
+  }
+}
+
+const initialNavState = getInitialNavState();
+
 const useNavigationStore = create<NavigationStore>((set, get) => ({
-  appSection: 'root',
-  rootSection: 'projects',
-  storySection: 'prose',
-  projectId: null,
-  storyId: null,
-  currentPartIdMap: {},
+  ...initialNavState,
+  isInitializing: true,
 
   setAppSection: (appSection) => set({ appSection }),
   setRootSection: (rootSection) => set({ rootSection }),
@@ -126,6 +162,7 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
       storySection: state.storySection,
       currentPartIdMap: state.currentPartIdMap,
     }),
+  finishInitialization: () => set({ isInitializing: false }),
 }));
 
 function loadNavState(): NavState | null {
@@ -177,6 +214,7 @@ export function useNavigation() {
   const selectedProjectId = useNavigationStore((s) => s.projectId);
   const selectedStoryId = useNavigationStore((s) => s.storyId);
   const currentPartIdMap = useNavigationStore((s) => s.currentPartIdMap);
+  const isInitializing = useNavigationStore((s) => s.isInitializing);
 
   const setAppSection = useNavigationStore((s) => s.setAppSection);
   const setRootSection = useNavigationStore((s) => s.setRootSection);
@@ -186,15 +224,15 @@ export function useNavigation() {
   const getCurrentPartId = useNavigationStore((s) => s.getCurrentPartId);
   const setCurrentPartId = useNavigationStore((s) => s.setCurrentPartId);
   const restoreStateToStore = useNavigationStore((s) => s.restoreState);
+  const finishInitializationInStore = useNavigationStore((s) => s.finishInitialization);
 
   // NEW: single guard entrypoint
   const requestNavigate = useLeaveGuardStore((s) => s.requestNavigate);
 
   const leaf = computeLeaf(appSection, rootSection, storySection);
-  const isInitializing = useRef(true);
 
   useEffect(() => {
-    if (isInitializing.current) return;
+    if (isInitializing) return;
 
     const nav: NavState = {
       appSection,
@@ -205,7 +243,7 @@ export function useNavigation() {
       currentPartIdMap,
     };
     saveNavState(nav);
-  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection, currentPartIdMap]);
+  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection, currentPartIdMap, isInitializing]);
 
   // Wrap ALL actions with requestNavigate
   const goToProjects = useCallback(() => {
@@ -276,8 +314,8 @@ export function useNavigation() {
   );
 
   const finishInitializationCallback = useCallback(() => {
-    isInitializing.current = false;
-  }, []);
+    finishInitializationInStore();
+  }, [finishInitializationInStore]);
 
   return {
     appSection,
@@ -286,6 +324,7 @@ export function useNavigation() {
     selectedProjectId,
     selectedStoryId,
     currentPartIdMap,
+    isInitializing,
     leaf,
     leafId: leaf.id,
 

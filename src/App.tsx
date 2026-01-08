@@ -12,6 +12,7 @@ import { AppLayout } from './ui/layout/AppLayout';
 import { Sidebar } from './ui/layout/Sidebar';
 import { AppContent } from './ui/layout/AppContent';
 import { AppModals } from './ui/layout/AppModals';
+import { LoadingSplash } from './ui/common/LoadingSplash';
 import { useNavigation, useLeaveGuardStore } from './hooks/useNavigation';
 import { useEntityCRUD } from './hooks/useEntityCRUD';
 import { useStoryEditor } from './hooks/useStoryEditor';
@@ -82,6 +83,7 @@ const App: React.FC = () => {
     storySection,
     selectedProjectId,
     selectedStoryId,
+    isInitializing,
     goToProjects,
     goToProject,
     goToStory,
@@ -361,6 +363,11 @@ const App: React.FC = () => {
       handleDocChange={handleDocChange}
     />
   );
+
+  // Show loading splash during initialization
+  if (isInitializing) {
+    return <LoadingSplash />;
+  }
 
   return (
     <>
