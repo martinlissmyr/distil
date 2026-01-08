@@ -20,10 +20,24 @@ import { useAppStore } from '../state/useAppStore';
  * @param storyId - Current story ID (for autosave)
  */
 export function useStoryEditor(projectId: string | null, storyId: string | null) {
-  const currentPartId = useAppStore((state) => state.currentPartId);
+  const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
+  const currentPartId = storyId ? getCurrentPartId(storyId) : undefined;
   const [currentTitle, setCurrentTitle] = useState('');
   const [currentDoc, setCurrentDoc] = useState<JSONContent | null>(null);
   const [dirty, setDirty] = useState(false);
+
+  // Watch store's currentPartDoc for part switching
+  const currentPartDoc = useAppStore((state) => state.currentPartDoc);
+
+  useEffect(() => {
+    if (!currentPartDoc) return;
+
+    console.log('[EDITOR] currentPartDoc changed, updating editor');
+    // Update local editor state when part doc changes in store
+    // Use setCurrentDoc directly to avoid triggering loadStory's dirty reset
+    setCurrentDoc(currentPartDoc);
+    setDirty(false); // New part is clean
+  }, [currentPartDoc]);
 
   /**
    * Load a story's content into the editor

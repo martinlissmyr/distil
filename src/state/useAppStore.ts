@@ -55,11 +55,13 @@ type AppStore = {
 
   // ---- Story parts state ----
   currentStoryMetadata: StoryMetadata | null;
-  currentPartId: string | null;
+  currentPartIdMap: { [storyId: string]: string };
   currentPartDoc: any | null; // TipTap JSONContent for current part
 
   loadStoryMetadata: (projectId: string, storyId: string) => Promise<void>;
-  setCurrentPartId: (partId: string | null) => void;
+  loadStoryForView: (projectId: string, storyId: string, options?: { restorePartId?: string }) => Promise<void>;
+  getCurrentPartId: (storyId: string) => string | undefined;
+  setCurrentPartId: (storyId: string, partId: string | null) => void;
   loadCurrentPartDoc: (projectId: string, storyId: string, partId: string) => Promise<void>;
 
   enableParts: (projectId: string, storyId: string) => Promise<void>;
@@ -137,7 +139,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // ---- Story parts state ----
   currentStoryMetadata: null,
-  currentPartId: null,
+  currentPartIdMap: {},
   currentPartDoc: null,
 
   uiSchemaSetting: DEFAULT_UI_SCHEMA_SETTING,
@@ -400,33 +402,125 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const metadata = response.data;
       set({ currentStoryMetadata: metadata });
 
-      // Set current part to first part if available and not already set
-      if (metadata.parts.length > 0 && !get().currentPartId) {
-        const firstPartId = metadata.parts[0].id;
-        set({ currentPartId: firstPartId });
-        // Also load the first part's document
-        await get().loadCurrentPartDoc(projectId, storyId, firstPartId);
+      const currentPartId = get().currentPartIdMap[storyId];
+      console.log('[METADATA] currentPartId for story', storyId, 'when loadStoryMetadata called:', currentPartId);
+
+      if (currentPartId) {
+        // If there IS a current part ID, validate it exists in metadata
+        console.log('[METADATA] Validating currentPartId exists in metadata');
+        const partExists = metadata.parts.some((p) => p.id === currentPartId);
+        if (!partExists) {
+          console.warn(`Part ${currentPartId} not found in metadata for story ${storyId}, clearing part state`);
+          const { [storyId]: _, ...rest } = get().currentPartIdMap;
+          set({ currentPartIdMap: rest, currentPartDoc: null });
+        }
       }
+      // Fallback logic removed - use loadStoryForView() for initial story loading
     } else {
       console.error('[useAppStore] loadStoryMetadata failed:', response.error);
       throw new Error(response.error);
     }
   },
 
-  setCurrentPartId(partId) {
-    set({ currentPartId: partId });
-    // Note: loadCurrentPartDoc will be called separately by the action that changes partId
+  getCurrentPartId(storyId) {
+    return get().currentPartIdMap[storyId];
+  },
+
+  setCurrentPartId(storyId, partId) {
+    console.log('[STORE] setCurrentPartId called for story', storyId, 'with:', partId);
+    const currentMap = get().currentPartIdMap;
+    if (partId === null) {
+      // Remove entry if partId is null
+      const { [storyId]: _, ...rest } = currentMap;
+      set({ currentPartIdMap: rest });
+    } else {
+      // Add or update entry
+      set({ currentPartIdMap: { ...currentMap, [storyId]: partId } });
+    }
+    // Note: Navigation store is updated separately by StoryTextView for persistence
+    // loadCurrentPartDoc will be called separately by the action that changes partId
   },
 
   async loadCurrentPartDoc(projectId, storyId, partId) {
+    console.log('[STORE] loadCurrentPartDoc called for part:', partId);
     const response = await client.loadPartDoc(projectId, storyId, partId);
     if (response.ok) {
+      console.log('[STORE] Loaded part doc, setting currentPartDoc for part:', partId);
       set({ currentPartDoc: response.data.doc });
     } else {
       console.error('[useAppStore] loadCurrentPartDoc failed:', response.error);
       // Set to empty doc on error
       set({ currentPartDoc: { type: 'doc', content: [] } });
     }
+  },
+
+  async loadStoryForView(projectId, storyId, options) {
+    console.log('[STORE] loadStoryForView called for story:', storyId, 'options:', options);
+
+    // 1. Load metadata
+    const response = await client.loadStoryMetadata(projectId, storyId);
+    if (!response.ok) {
+      console.error('[useAppStore] loadStoryForView: loadStoryMetadata failed:', response.error);
+      throw new Error(response.error);
+    }
+
+    const metadata = response.data;
+
+    // 2. Determine which part to show (priority order)
+    let targetPartId: string | null = null;
+
+    if (metadata.parts.length > 0) {
+      // Priority 1: Explicit restore option
+      if (options?.restorePartId) {
+        const partExists = metadata.parts.some(p => p.id === options.restorePartId);
+        if (partExists) {
+          targetPartId = options.restorePartId;
+          console.log('[STORE] loadStoryForView: Using restorePartId:', targetPartId);
+        } else {
+          console.warn('[STORE] loadStoryForView: restorePartId not found in metadata, falling back');
+        }
+      }
+
+      // Priority 2: Already in store
+      if (!targetPartId) {
+        const storePartId = get().currentPartIdMap[storyId];
+        if (storePartId) {
+          const partExists = metadata.parts.some(p => p.id === storePartId);
+          if (partExists) {
+            targetPartId = storePartId;
+            console.log('[STORE] loadStoryForView: Using store currentPartId:', targetPartId);
+          }
+        }
+      }
+
+      // Priority 3: First part (fallback)
+      if (!targetPartId) {
+        targetPartId = metadata.parts[0].id;
+        console.log('[STORE] loadStoryForView: Using first part as fallback:', targetPartId);
+      }
+    }
+
+    // 3. Set store state using proper setState (not direct mutation)
+    if (targetPartId) {
+      set({
+        currentStoryMetadata: metadata,
+        currentPartIdMap: { ...get().currentPartIdMap, [storyId]: targetPartId }
+      });
+
+      // 4. Load part document
+      await get().loadCurrentPartDoc(projectId, storyId, targetPartId);
+    } else {
+      // No parts yet - set empty state
+      set({
+        currentStoryMetadata: metadata,
+        currentPartDoc: null
+      });
+      // Remove this story from the part ID map
+      const { [storyId]: _, ...restMap } = get().currentPartIdMap;
+      set({ currentPartIdMap: restMap });
+    }
+
+    console.log('[STORE] loadStoryForView completed for story:', storyId, 'part:', targetPartId);
   },
 
   async enableParts(projectId, storyId) {
@@ -477,16 +571,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const response = await client.deletePart(projectId, storyId, partId);
     if (response.ok) {
       // If deleting current part, switch to first available part and load its doc
-      if (get().currentPartId === partId) {
+      if (get().currentPartIdMap[storyId] === partId) {
         const metadata = get().currentStoryMetadata;
         if (metadata && metadata.parts.length > 1) {
           const otherPart = metadata.parts.find((p) => p.id !== partId);
           if (otherPart) {
-            set({ currentPartId: otherPart.id });
+            set({ currentPartIdMap: { ...get().currentPartIdMap, [storyId]: otherPart.id } });
             await get().loadCurrentPartDoc(projectId, storyId, otherPart.id);
           }
         } else {
-          set({ currentPartId: null, currentPartDoc: null });
+          const { [storyId]: _, ...rest } = get().currentPartIdMap;
+          set({ currentPartIdMap: rest, currentPartDoc: null });
         }
       }
 

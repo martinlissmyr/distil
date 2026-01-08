@@ -76,6 +76,7 @@ export type NavState = {
   projectId: string | null;
   storyId: string | null;
   storySection: StorySection;
+  currentPartIdMap: { [storyId: string]: string };
 };
 
 type NavigationStore = NavState & {
@@ -84,23 +85,38 @@ type NavigationStore = NavState & {
   setStorySection: (section: StorySection) => void;
   setSelectedProjectId: (id: string | null) => void;
   setSelectedStoryId: (id: string | null) => void;
+  getCurrentPartId: (storyId: string) => string | undefined;
+  setCurrentPartId: (storyId: string, partId: string | null) => void;
   restoreState: (state: NavState) => void;
 };
 
-const NAV_STATE_KEY = 'distil:navState:v3';
+const NAV_STATE_KEY = 'distil:navState:v4';
 
-const useNavigationStore = create<NavigationStore>((set) => ({
+const useNavigationStore = create<NavigationStore>((set, get) => ({
   appSection: 'root',
   rootSection: 'projects',
   storySection: 'prose',
   projectId: null,
   storyId: null,
+  currentPartIdMap: {},
 
   setAppSection: (appSection) => set({ appSection }),
   setRootSection: (rootSection) => set({ rootSection }),
   setStorySection: (storySection) => set({ storySection }),
   setSelectedProjectId: (projectId) => set({ projectId }),
   setSelectedStoryId: (storyId) => set({ storyId }),
+  getCurrentPartId: (storyId) => get().currentPartIdMap[storyId],
+  setCurrentPartId: (storyId, partId) => {
+    const currentMap = get().currentPartIdMap;
+    if (partId === null) {
+      // Remove entry if partId is null
+      const { [storyId]: _, ...rest } = currentMap;
+      set({ currentPartIdMap: rest });
+    } else {
+      // Add or update entry
+      set({ currentPartIdMap: { ...currentMap, [storyId]: partId } });
+    }
+  },
   restoreState: (state) =>
     set({
       appSection: state.appSection,
@@ -108,6 +124,7 @@ const useNavigationStore = create<NavigationStore>((set) => ({
       projectId: state.projectId,
       storyId: state.storyId,
       storySection: state.storySection,
+      currentPartIdMap: state.currentPartIdMap,
     }),
 }));
 
@@ -123,6 +140,7 @@ function loadNavState(): NavState | null {
       projectId: parsed.projectId ?? null,
       storyId: parsed.storyId ?? null,
       storySection: parsed.storySection ?? 'prose',
+      currentPartIdMap: parsed.currentPartIdMap ?? {},
     };
   } catch {
     return null;
@@ -158,12 +176,15 @@ export function useNavigation() {
   const storySection = useNavigationStore((s) => s.storySection);
   const selectedProjectId = useNavigationStore((s) => s.projectId);
   const selectedStoryId = useNavigationStore((s) => s.storyId);
+  const currentPartIdMap = useNavigationStore((s) => s.currentPartIdMap);
 
   const setAppSection = useNavigationStore((s) => s.setAppSection);
   const setRootSection = useNavigationStore((s) => s.setRootSection);
   const setStorySection = useNavigationStore((s) => s.setStorySection);
   const setSelectedProjectId = useNavigationStore((s) => s.setSelectedProjectId);
   const setSelectedStoryId = useNavigationStore((s) => s.setSelectedStoryId);
+  const getCurrentPartId = useNavigationStore((s) => s.getCurrentPartId);
+  const setCurrentPartId = useNavigationStore((s) => s.setCurrentPartId);
   const restoreStateToStore = useNavigationStore((s) => s.restoreState);
 
   // NEW: single guard entrypoint
@@ -181,9 +202,10 @@ export function useNavigation() {
       projectId: selectedProjectId,
       storyId: selectedStoryId,
       storySection,
+      currentPartIdMap,
     };
     saveNavState(nav);
-  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection]);
+  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection, currentPartIdMap]);
 
   // Wrap ALL actions with requestNavigate
   const goToProjects = useCallback(() => {
@@ -263,6 +285,7 @@ export function useNavigation() {
     storySection,
     selectedProjectId,
     selectedStoryId,
+    currentPartIdMap,
     leaf,
     leafId: leaf.id,
 
@@ -272,6 +295,8 @@ export function useNavigation() {
     goToProject,
     goToStory,
     setStorySection: guardedSetStorySection,
+    getCurrentPartId,
+    setCurrentPartId,
 
     loadSavedState: loadNavState,
     restoreState: restoreStateCallback,
