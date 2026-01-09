@@ -111,17 +111,13 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   );
 
   return (
-    <Box
+    <Box className={classes.navigation}
       style={{
-        position: 'relative',
-        display: 'grid',
-        gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center',
         zIndex,
       }}
     >
       {/* Left slot */}
-      <Group justify="flex-start" gap="xs" style={{ minWidth: 0 }}>
+      <Group justify="flex-start" gap="xs" className={classes.leftSlot}>
         {onBack ? (
           <ActionIcon
             aria-label={backLabel}
@@ -129,6 +125,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             size="lg"
             radius="xl"
             onClick={onBack}
+            classNames={classes.backButton}
           >
             <Icon type="back" size={26} />
           </ActionIcon>
@@ -140,32 +137,23 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
       {/* Center title (always truly centered in the viewport) */}
       <Text
         fw={600}
-        style={{
-          justifySelf: 'center',
-          textAlign: 'center',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          maxWidth: '100%',
-          userSelect: 'none',
-          pointerEvents: 'none',
-        }}
+        className={classes.title}
       >
         {title}
       </Text>
 
       {/* Right slot */}
-      <Group justify="flex-end" gap="xs" style={{ minWidth: 0 }}>
+      <Group justify="flex-end" gap="xs" className={classes.rightSlot}>
         {/* Button group */}
         {buttons.length > 0 && (
           <>
             {buttonsLayout === 'grouped' && (
-              <Button.Group>
+              <Button.Group className={classes.buttonGroup}>
                 {Buttons}
               </Button.Group>
             )}
             {buttonsLayout === 'separate' && (
-              <Flex gap={4}>
+              <Flex gap={4} className={classes.buttonGroup}>
                 {Buttons}
               </Flex>
             )}
@@ -174,7 +162,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
         {/* Menu button */}
         {menuItems.length > 0 && (
-          <Menu position="bottom-end" withinPortal>
+          <Menu position="bottom-end" withinPortal className={classes.menu}>
             <Menu.Target>
               <ActionIcon
                 aria-label="Options"
@@ -212,6 +200,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             size="lg"
             radius="xl"
             onClick={onClose}
+            className={classes.closeButton}
           >
             <Icon type="close" size={26} />
           </ActionIcon>
