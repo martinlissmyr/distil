@@ -724,18 +724,20 @@ export async function createPart(
   const queueKey = `story:${projectId}:${storyId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    // Write part document to disk
-    await savePartDoc(projectId, storyId, partId, emptyDoc)
+    // Write part document to disk (directly, to avoid nested queue lock)
+    const partFile = getPartFile(projectId, storyId, partId)
+    const partDoc: PartDoc = {
+      id: partId,
+      doc: emptyDoc,
+      updatedAt: now,
+    }
+    await writeJsonAtomic(partFile, partDoc)
 
     // Load current story metadata
-    console.log('[createPart] Loading metadata for story:', storyId)
     const metadata = await loadStoryMetadata(projectId, storyId)
-    console.log('[createPart] Current parts.length:', metadata.parts.length)
 
     // Add new part to the index
     metadata.parts.push(indexEntry)
-    console.log('[createPart] After push, parts.length:', metadata.parts.length)
-    console.log('[createPart] New part entry:', indexEntry)
 
     // Save updated metadata directly (already in write queue)
     const file = getStoryMetadataFile(projectId, storyId)
@@ -743,9 +745,7 @@ export async function createPart(
       ...metadata,
       updatedAt: new Date().toISOString(),
     }
-    console.log('[createPart] Saving updated metadata with', updated.parts.length, 'parts')
     await writeJsonAtomic(file, updated)
-    console.log('[createPart] Metadata saved successfully')
 
     return indexEntry
   })

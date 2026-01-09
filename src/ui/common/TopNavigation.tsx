@@ -125,7 +125,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             size="lg"
             radius="xl"
             onClick={onBack}
-            classNames={classes.backButton}
+            className={classes.backButton}
           >
             <Icon type="back" size={26} />
           </ActionIcon>

@@ -1,6 +1,6 @@
 // src/ui/chat/SelectionPill.tsx
 import React from 'react';
-import { Box, Group, Text, ActionIcon } from '@mantine/core';
+import { Box, Group, Text, ActionIcon, Flex } from '@mantine/core';
 import { Icon } from '../common/Icon';
 
 type SelectionPillProps = {
@@ -21,12 +21,12 @@ export const SelectionPill: React.FC<SelectionPillProps> = ({ onDismiss }) => {
           gap: 6,
         }}
       >
-        <Group gap="4px">
-          <Icon type="selection" size={14} />
-          <Text size="xs" fw={500}>
+        <Flex gap="4px">
+          <Icon type="selection" size={14} flex={0}/>
+          <Text size="xs" fw={500} flex={1} overflow="ellipsis" lineClamp={1}>
             Using selected text as context
           </Text>
-        </Group>
+        </Flex>
         <ActionIcon
           size="xs"
           radius="xl"
