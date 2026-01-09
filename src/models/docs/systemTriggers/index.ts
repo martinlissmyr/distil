@@ -12,6 +12,10 @@ import { locationType } from '../../entities/schemas/location';
 import { interpolate } from '../../../helpers/interpolate';
 import { extractDocumentRoleDescriptionsMarkdown } from '../../../helpers/entityDocumentRoleHelper';
 
+/* 
+  For entity kind docs we want to include all the fields
+  that are available to fill in based on the entity schema 
+*/
 function buildEntityTriggers(
   schema: DocumentTypeDef<any>,
   md: string,

@@ -1,6 +1,6 @@
 // src/hooks/useChatSend.ts
 import { useState, useCallback } from 'react';
-import { buildPrompt } from '../chat/buildPrompt';
+import { buildPrompt } from '../chat/buildChatPrompt';
 import type { EditorKind, QuestionScope } from '../types/chat';
 import type { ChatMessage } from './useChatMessages';
 import { useAppStore } from '../state/useAppStore';

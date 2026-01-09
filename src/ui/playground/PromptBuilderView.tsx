@@ -17,7 +17,7 @@ import {
 import { Check, AlertTriangle } from 'lucide-react';
 
 import { client, type Project, type StoryMeta } from '../../api/client';
-import { buildPrompt, type BuiltPrompt } from '../../chat/buildPrompt';
+import { buildPrompt, type BuiltPrompt } from '../../chat/buildChatPrompt';
 import type { QuestionScope } from '../../types/chat';
 import { useAppStore, metaId } from '../../state/useAppStore';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
