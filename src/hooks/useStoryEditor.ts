@@ -21,6 +21,7 @@ import { useAppStore } from '../state/useAppStore';
  */
 export function useStoryEditor(projectId: string | null, storyId: string | null) {
   const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
+  const loadStoryMetadata = useAppStore((state) => state.loadStoryMetadata);
   const currentPartId = storyId ? getCurrentPartId(storyId) : undefined;
   const [currentTitle, setCurrentTitle] = useState('');
   const [currentDoc, setCurrentDoc] = useState<JSONContent | null>(null);
@@ -104,6 +105,8 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
       if (saveResponse.ok) {
         setDirty(false);
+        // Reload story metadata to keep store in sync after saving part
+        await loadStoryMetadata(projectId, storyId);
         return true;
       } else {
         console.error('Save failed:', saveResponse.error);
@@ -149,6 +152,8 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
           if (saveResponse.ok) {
             setDirty(false);
+            // Reload story metadata to keep store in sync after saving part
+            await loadStoryMetadata(projectId, storyId);
           } else {
             console.error('Autosave failed:', saveResponse.error);
           }

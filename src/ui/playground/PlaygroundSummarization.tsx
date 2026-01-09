@@ -8,13 +8,14 @@ import { generateProjectionSummary } from '../../services/projectionUtils';
 import { createExtensionsFromConfig } from '../editor/editorConfigFactory';
 import { proseEditorConfig } from '../../models/docs/editorConfig';
 
-type TabValue = 'system' | 'user' | 'summary';
+type TabValue = 'system' | 'assistant' | 'user' | 'summary';
 
 export const PlaygroundSummarization: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabValue>('summary');
   const [result, setResult] = useState<{
     systemPrompt: string;
+    assistantPrompt: string;
     userPrompt: string;
     summary: string;
     error?: string;
@@ -37,6 +38,7 @@ export const PlaygroundSummarization: React.FC = () => {
       if (!markdown.trim()) {
         setResult({
           systemPrompt: '',
+          assistantPrompt: '',
           userPrompt: '',
           summary: '',
           error: 'Please enter some chapter text first.',
@@ -52,6 +54,7 @@ export const PlaygroundSummarization: React.FC = () => {
     } catch (error) {
       setResult({
         systemPrompt: '',
+        assistantPrompt: '',
         userPrompt: '',
         summary: '',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -65,6 +68,7 @@ export const PlaygroundSummarization: React.FC = () => {
   const renderContent = () => {
     if (!result) return 'Click "Summarize" to generate a summary...';
     if (activeTab === 'system') return result.systemPrompt;
+    if (activeTab === 'assistant') return result.assistantPrompt;
     if (activeTab === 'user') return result.userPrompt;
     return result.error || result.summary;
   };
@@ -110,6 +114,7 @@ export const PlaygroundSummarization: React.FC = () => {
             onChange={(value) => setActiveTab(value as TabValue)}
             data={[
               { label: 'System Prompt', value: 'system' },
+              { label: 'Assistant Prompt', value: 'assistant' },
               { label: 'User Prompt', value: 'user' },
               { label: 'Summary', value: 'summary' },
             ]}

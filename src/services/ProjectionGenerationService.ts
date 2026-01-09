@@ -3,7 +3,11 @@ import { useAppStore } from '../state/useAppStore';
 import { client } from '../api/client';
 import { proseJsonToMarkdown } from '../helpers/markdownUtils';
 import { isProjectionStale, hasContent } from '../models/story';
-import { generateProjectionSummary } from './projectionUtils';
+import {
+  generateProjectionSummary,
+  loadPreviousProjection,
+  loadPrimaryCharacterProjections
+} from './projectionUtils';
 
 /**
  * Background service that generates part projections (summaries):
@@ -135,8 +139,24 @@ class ProjectionGenerationService {
     // Convert to markdown
     const markdown = proseJsonToMarkdown(doc);
 
-    // Generate projection using LLM
-    const result = await generateProjectionSummary(markdown);
+    // Load previous part's projection (if available)
+    const previousProjection = await loadPreviousProjection(
+      currentStoryMetadata.parts,
+      partId
+    );
+
+    // Load primary character projections for context
+    const characterProjections = await loadPrimaryCharacterProjections(
+      projectId,
+      storyId
+    );
+
+    // Generate projection using LLM (with optional previous projection and character context)
+    const result = await generateProjectionSummary(
+      markdown,
+      previousProjection,
+      characterProjections || undefined
+    );
 
     if (result.error) {
       console.error(`Failed to generate projection for part ${partId}: ${result.error}`);

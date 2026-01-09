@@ -77,7 +77,6 @@ export function isProjectionStale(part: PartIndexEntry): boolean {
 
   const docUpdated = new Date(part.updatedAt)
   const projectionGenerated = new Date(part.projection.generatedAt)
-
   return docUpdated > projectionGenerated
 }
 
