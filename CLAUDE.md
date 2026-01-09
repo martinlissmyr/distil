@@ -268,7 +268,7 @@ The build process runs: `tsc && vite build && electron-builder`
 ### Key Patterns
 
 **Autosave**
-- All editors have debounced autosave (800-1000ms)
+- All editors (except entities) have debounced autosave (800-1000ms)
 - Uses `useEffect` hooks that watch dirty state + content
 - **ProseEditor**: Main story prose autosaved from App.tsx when dirty
 - **MetaTextEditor**: Outline/brief/manifest editors manage their own autosave independently

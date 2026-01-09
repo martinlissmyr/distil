@@ -661,17 +661,40 @@ export async function savePartDoc(
   partId: string,
   doc: JSONContent
 ): Promise<void> {
-  // Each part has its own queue key
-  const queueKey = `part:${projectId}:${storyId}:${partId}`
+  // Save the timestamp once to keep it consistent across both operations
+  const now = new Date().toISOString()
 
-  return writeQueue.enqueue(queueKey, async () => {
+  // Save part document first (with its own queue key)
+  const partQueueKey = `part:${projectId}:${storyId}:${partId}`
+  await writeQueue.enqueue(partQueueKey, async () => {
     const file = getPartFile(projectId, storyId, partId)
     const partDoc: PartDoc = {
       id: partId,
       doc,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await writeJsonAtomic(file, partDoc)
+  })
+
+  // Update the part's updatedAt in story metadata (separate queue key)
+  const metadataQueueKey = `story:${projectId}:${storyId}`
+  await writeQueue.enqueue(metadataQueueKey, async () => {
+    // Load current story metadata
+    const metadata = await loadStoryMetadata(projectId, storyId)
+
+    // Find the part in the index and update its timestamp
+    const partIndex = metadata.parts.findIndex(p => p.id === partId)
+    if (partIndex !== -1) {
+      metadata.parts[partIndex].updatedAt = now
+    }
+
+    // Save updated metadata
+    const file = getStoryMetadataFile(projectId, storyId)
+    const updated: StoryMetadata = {
+      ...metadata,
+      updatedAt: now,
+    }
+    await writeJsonAtomic(file, updated)
   })
 }
 
