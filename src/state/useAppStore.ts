@@ -551,6 +551,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   async createPart(projectId, storyId, order) {
     const response = await client.createPart(projectId, storyId, order);
+
     if (response.ok) {
       const newPart = response.data;
 

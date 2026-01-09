@@ -68,13 +68,14 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     try {
       const newOrder = parts.length;
       const newPartId = await createPart(projectId, storyId, newOrder);
+
       setCurrentPartId(storyId, newPartId);
       // createPart already loads the doc, so we can navigate directly
-      //onNavigateToEditor();
+      onNavigateToEditor();
     } catch (error) {
       console.error('Failed to create part:', error);
     }
-  }, [parts.length, createPart, projectId, storyId, setCurrentPartId]);
+  }, [parts.length, createPart, projectId, storyId, setCurrentPartId, onNavigateToEditor]);
 
   // Delete part with confirmation
   const handleDelete = useCallback(async (partId: string) => {
