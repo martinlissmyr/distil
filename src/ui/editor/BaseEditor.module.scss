@@ -18,6 +18,7 @@
   padding-top: 100px;
   padding-bottom: 24px;
   color: var(--editor-text-color);
+  min-height: 120vh;
 
   & > * {
     margin-top: 0;
@@ -28,7 +29,6 @@
   outline: none;
   box-sizing: border-box;
   flex: 1 1 auto;
-  min-height: 0;
 
   /* selection */
   :global(.selection),
@@ -278,7 +278,6 @@
    ============================== */
 .editor {
   width: calc(var(--editor-width) + var(--editor-gutter) * 2);
-  min-height: 100vh;
 
   display: flex;
   flex-direction: column;

@@ -55,6 +55,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
   const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
   const currentPartId = getCurrentPartId(storyId);
+  const currentPartDoc = useAppStore((state) => state.currentPartDoc);
   const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
   const loadCurrentPartDoc = useAppStore((state) => state.loadCurrentPartDoc);
   const enableParts = useAppStore((state) => state.enableParts);
@@ -71,13 +72,13 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
 
-    if (!currentStoryMetadata || currentStoryMetadata.storyId !== storyId) {
+    if (!currentStoryMetadata || currentStoryMetadata.id !== storyId) {
       console.log('[STORYVIEW] Metadata not loaded for story', storyId, ', calling loadStoryForView');
       setIsLoading(true);
       void useAppStore.getState().loadStoryForView(projectId, storyId).finally(() => {
         setIsLoading(false);
       });
-    } else if (currentPartId) {
+    } else if (currentPartId && !currentPartDoc) {
       // Metadata already loaded, but ensure part doc is loaded for current part
       // This prevents showing stale content when navigating back to a story
       console.log('[STORYVIEW] Metadata already loaded, ensuring part doc loaded for:', currentPartId);
@@ -217,29 +218,62 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     };
   }, [editor]);
 
-  // Reset scroll flag when part changes
+  // Reset scroll flag when part changes, switching to editor subview, or loading completes
   useEffect(() => {
-    hasScrolledRef.current = false;
-  }, [currentPartId]);
+    if (subview === 'editor' || !isLoading) {
+      hasScrolledRef.current = false;
+    }
+  }, [currentPartId, subview, isLoading]);
 
-  // Scroll anchor effect: hide previous preview on mount
+  // Scroll anchor effect: hide previous chapter preview on mount
   useLayoutEffect(() => {
-    if (!showPreviousPreview || hasScrolledRef.current) return;
+    if (!showPreviousPreview || hasScrolledRef.current || !editor || isLoading) return;
 
     const viewport = scrollViewportRef.current;
     const preview = previousPreviewRef.current;
 
-    if (!viewport || !preview) return;
+    if (!viewport || !preview) {
+      return;
+    }
 
     // Measure preview height
     const previewHeight = preview.getBoundingClientRect().height;
 
-    // Scroll down to hide it (happens before paint)
-    viewport.scrollTop = previewHeight;
+    // Use requestAnimationFrame to ensure scroll happens after all layout operations
+    requestAnimationFrame(() => {
+      viewport.scrollTop = previewHeight;
+      hasScrolledRef.current = true;
+    });
+  }, [showPreviousPreview, currentPartId, subview, editor, isLoading]);
 
-    // Mark as scrolled
-    hasScrolledRef.current = true;
-  }, [showPreviousPreview, currentPartId]);
+  // Monitor scroll position and re-apply anchor if it gets reset
+  useEffect(() => {
+    if (!showPreviousPreview || !scrollViewportRef.current || !previousPreviewRef.current) return;
+
+    const viewport = scrollViewportRef.current;
+    const preview = previousPreviewRef.current;
+
+    // Set up a check interval
+    const checkInterval = setInterval(() => {
+      // If scroll position is at top but we should be scrolled down, re-apply
+      if (viewport.scrollTop === 0 && hasScrolledRef.current) {
+        const previewHeight = preview.getBoundingClientRect().height;
+        if (previewHeight > 0) {
+          viewport.scrollTop = previewHeight;
+        }
+      }
+    }, 50); // Check every 50ms
+
+    // Clear interval after 2 seconds (enough time for all async operations)
+    const timeout = setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 2000);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+    };
+  }, [showPreviousPreview, currentPartId, subview, isLoading]);
 
   // Chapter navigation handlers
   const handleEnableParts = async () => {
