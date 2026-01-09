@@ -186,7 +186,7 @@ The build process runs: `tsc && vite build && electron-builder`
   - Easy to add new sections by updating model only
 
 **AI Chat Integration** (`src/chat/`) - **Meta-Level Context Reasoning**
-- **buildPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
+- **buildChatPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
   - Calls context selector to determine which LCRF layers are relevant
   - Builds from templates with interpolated content
   - Returns structured BuiltPrompt with included context list
