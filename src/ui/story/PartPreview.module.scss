@@ -1,6 +1,6 @@
 .preview {
   width: 100%;
-  padding: 32px var(--editor-gutter);
+  padding: 0 var(--editor-gutter);
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.2s ease;
@@ -15,11 +15,13 @@
   }
 
   &[data-position='previous'] {
-    margin-bottom: 120px;
+    margin-top: 56px;
+    padding-top: 32px;
   }
 
   &[data-position='next'] {
-    margin-top: 48px;
+    margin-bottom: 64px;
+    padding-bottom: 32px;
   }
 }
 
