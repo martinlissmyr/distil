@@ -1,0 +1,43 @@
+{
+  "id": "story-1767911030957",
+  "title": "Guldsjön #1",
+  "order": 1,
+  "partsEnabled": true,
+  "parts": [
+    {
+      "id": "part-1767911030958",
+      "order": 0,
+      "wordCount": 0,
+      "createdAt": "2026-01-08T22:23:50.957Z",
+      "updatedAt": "2026-01-08T22:23:50.957Z",
+      "projection": {
+        "summary": "Kapiteltexten inleds med en vanlig höstdag där berättaren och hennes bror Espen råkar gå hem tillsammans efter skolan. De går längs sjön, där de observerar killar som badar och pratar om gamla ruiner i skogen, vilket leder till en diskussion om det förflutna. När de kommer hem upptäcker de att deras nya lägenhet är trång och rörig, och de får pizza till middag istället för den planerade grytan. Kapitel avslutas med att berättaren känner sig motstridig inför att besöka sin farmor, som hon knappt känner, och beslutar sig för att eventuellt skylla på läxor för att slippa.",
+        "generatedAt": "2026-01-08T22:43:50.757Z"
+      }
+    },
+    {
+      "id": "part-1767912170662",
+      "order": 1,
+      "wordCount": 0,
+      "createdAt": "2026-01-08T22:42:50.662Z",
+      "updatedAt": "2026-01-08T22:42:50.662Z",
+      "projection": {
+        "summary": "Kapitel börjar med att Daga sitter på sängen och spelar, medan hennes pappa diskar i köket. Daga får ett meddelande från sin mamma som bor i Danmark, och mitt under detta hör hon ett knackande på dörren, vilket visar sig vara Gösta, som informerar hennes pappa om en tom vindsvåning som de kan hyra. Pappa är entusiastisk och föreslår att de ska titta på lägenheten, vilket gör Daga upprörd över tanken på att flytta igen, men hon går med på att följa med när de ska se den. Kapitel avslutas med att Daga och pappa står framför den stora dörren till våningen, och Daga känner sig pirrig när de förbereder sig att gå in.",
+        "generatedAt": "2026-01-08T22:43:43.899Z"
+      }
+    },
+    {
+      "id": "part-1767912187244",
+      "order": 2,
+      "wordCount": 0,
+      "createdAt": "2026-01-08T22:43:07.244Z",
+      "updatedAt": "2026-01-08T22:43:07.244Z",
+      "projection": {
+        "summary": "Det är mörkt och dammigt när Pappa och Daga går in i en gammal lägenhet. Pappa lyckas tända en lampa och de börjar utforska rummen, där de hittar möbler och gamla föremål som verkar ha lämnats kvar av den tidigare hyresgästen. Daga blir entusiastisk över möjligheten att få ett eget rum och finner ett litet rum med en garderob, där hon hittar ett gammalt bokmärke. Kapitel avslutas med att Daga och Pappa diskuterar att flytta in i lägenheten, vilket Daga ser fram emot, och Pappa bekräftar att de kan flytta in så snart som möjligt.",
+        "generatedAt": "2026-01-08T22:43:26.183Z"
+      }
+    }
+  ],
+  "createdAt": "2026-01-08T22:23:50.957Z",
+  "updatedAt": "2026-01-08T22:43:50.757Z"
+}
