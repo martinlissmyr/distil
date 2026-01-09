@@ -13,6 +13,7 @@ import {
   SegmentedControl,
   Text,
   Divider,
+  ScrollArea,
 } from '@mantine/core';
 import { Check, AlertTriangle } from 'lucide-react';
 
@@ -379,221 +380,232 @@ export const PromptBuilderView: React.FC = () => {
 
   return (
     <Group gap="md" style={{ flex: 1, minHeight: 0 }} grow align="flex-start">
-      <Stack
-        gap="sm"
-        p="sm"
-        style={{
-          minHeight: 0,
-          height: '100%',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--overlay)',
-        }}
-      >
+      <Box style={{ height: '100%' }}>
         {/* Target Selection */}
-        <Paper p="md" radius="sm">
-          <Title order={4} mb="sm">
-            Target Document
-          </Title>
-          <Stack gap="md">
-            <Select
-              label="Doc kind"
-              placeholder="Select a doc kind"
-              data={docKindOptions}
-              value={state.kind}
-              onChange={(value) => {
-                const kind = (value as DocKindId) || 'prose';
-                setState((s) => ({
-                  ...s,
-                  kind,
-                  // reset doc-related UI state
-                  emptyMainDoc: false,
-                  simulateEmptyContextDocs: {},
-                  scope: 'text',
-                  loadedTitle: '',
-                  loadedFullText: '',
-                  loadedSelection: '',
-                }));
-              }}
-              searchable
-              clearable={false}
-            />
+        <ScrollArea
+          style={{ height: '100%' }}
+          type="hover"
+          scrollbarSize={10}
+          offsetScrollbars
+          styles={{
+            thumb: {
+              zIndex: 20, // over topOverlay
+            }
+          }}
+        >
+          <Stack
+            gap="sm"
+            p="sm"
+            style={{
+              minHeight: 0,
+              height: '100%',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'var(--overlay)',
+            }}
+          >
+          <Paper p="md" radius="sm">
+            <Stack gap="md">
+              <Select
+                label="Doc kind"
+                placeholder="Select a doc kind"
+                data={docKindOptions}
+                value={state.kind}
+                onChange={(value) => {
+                  const kind = (value as DocKindId) || 'prose';
+                  setState((s) => ({
+                    ...s,
+                    kind,
+                    // reset doc-related UI state
+                    emptyMainDoc: false,
+                    simulateEmptyContextDocs: {},
+                    scope: 'text',
+                    loadedTitle: '',
+                    loadedFullText: '',
+                    loadedSelection: '',
+                  }));
+                }}
+                searchable
+                clearable={false}
+              />
 
-            {needsStory && (
-              <>
-                <Select
-                  label="Project"
-                  placeholder="Select a project"
-                  data={projects.map((p) => ({ value: p.id, label: p.name }))}
-                  value={state.selectedProjectId}
-                  onChange={(value) =>
-                    setState((s) => ({
-                      ...s,
-                      selectedProjectId: value,
-                      selectedStoryId: null,
-                    }))
-                  }
-                  clearable
-                />
-
-                {state.selectedProjectId && (
+              {needsStory && (
+                <>
                   <Select
-                    label="Story"
-                    placeholder="Select a story"
-                    data={stories.map((s) => ({ value: s.id, label: s.title }))}
-                    value={state.selectedStoryId}
-                    onChange={(value) => setState((s) => ({ ...s, selectedStoryId: value }))}
+                    label="Project"
+                    placeholder="Select a project"
+                    data={projects.map((p) => ({ value: p.id, label: p.name }))}
+                    value={state.selectedProjectId}
+                    onChange={(value) =>
+                      setState((s) => ({
+                        ...s,
+                        selectedProjectId: value,
+                        selectedStoryId: null,
+                      }))
+                    }
                     clearable
                   />
-                )}
-              </>
-            )}
-          </Stack>
-        </Paper>
 
-        {/* Only show configuration sections when ready */}
-        {canConfigure && (
-          <>
-            {/* Main Document Status */}
-            <Paper p="md" radius="sm">
-              <Stack gap="md">
-                {mainHasContent ? (
-                  <>
-                    <Group justify="space-between" align="center">
-                      <Group gap="xs">
-                        <Check size={16} color="var(--mantine-color-green-6)" />
-                        <Text size="sm" fw={500}>
-                          Main document has content ({getDocTitle(state.kind)})
-                        </Text>
-                      </Group>
-                      <Switch
-                        label="Simulate empty"
-                        checked={state.emptyMainDoc}
-                        onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
-                        size="xs"
-                      />
-                    </Group>
+                  {state.selectedProjectId && (
+                    <Select
+                      label="Story"
+                      placeholder="Select a story"
+                      data={stories.map((s) => ({ value: s.id, label: s.title }))}
+                      value={state.selectedStoryId}
+                      onChange={(value) => setState((s) => ({ ...s, selectedStoryId: value }))}
+                      clearable
+                    />
+                  )}
+                </>
+              )}
+            </Stack>
+          </Paper>
 
-                    {!state.emptyMainDoc && (
-                      <Box>
-                        <SegmentedControl
-                          value={state.scope}
-                          onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
-                          data={[
-                            { label: 'Full Text', value: 'text' },
-                            { label: 'Selection', value: 'selection' },
-                          ]}
+          {/* Only show configuration sections when ready */}
+          {canConfigure && (
+            <>
+              {/* Main Document Status */}
+              <Paper p="md" radius="sm">
+                <Stack gap="md">
+                  {mainHasContent ? (
+                    <>
+                      <Group justify="space-between" align="center">
+                        <Group gap="xs">
+                          <Check size={16} color="var(--mantine-color-green-6)" />
+                          <Text size="sm" fw={500}>
+                            Main document has content ({getDocTitle(state.kind)})
+                          </Text>
+                        </Group>
+                        <Switch
+                          label="Simulate empty"
+                          checked={state.emptyMainDoc}
+                          onChange={(e) => setState((s) => ({ ...s, emptyMainDoc: e.currentTarget.checked }))}
+                          size="xs"
                         />
+                      </Group>
 
-                        {state.scope === 'selection' && (
-                          <Textarea
-                            label="Selection Text"
-                            placeholder="Paste text that represents the selection..."
-                            value={state.loadedSelection}
-                            onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
-                            minRows={4}
-                            radius="sm"
-                            mt="md"
+                      {!state.emptyMainDoc && (
+                        <Box>
+                          <SegmentedControl
+                            value={state.scope}
+                            onChange={(value) => setState((s) => ({ ...s, scope: value as QuestionScope }))}
+                            data={[
+                              { label: 'Full Text', value: 'text' },
+                              { label: 'Selection', value: 'selection' },
+                            ]}
                           />
-                        )}
-                      </Box>
-                    )}
-                  </>
-                ) : (
-                  <Group gap="xs">
-                    <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                    <Text size="sm" fw={500}>
-                      Main document is missing ({getDocTitle(state.kind)})
+
+                          {state.scope === 'selection' && (
+                            <Textarea
+                              label="Selection Text"
+                              placeholder="Paste text that represents the selection..."
+                              value={state.loadedSelection}
+                              onChange={(e) => setState((s) => ({ ...s, loadedSelection: e.currentTarget.value }))}
+                              minRows={4}
+                              radius="sm"
+                              mt="md"
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </>
+                  ) : (
+                    <Group gap="xs">
+                      <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
+                      <Text size="sm" fw={500}>
+                        Main document is missing ({getDocTitle(state.kind)})
+                      </Text>
+                    </Group>
+                  )}
+                </Stack>
+              </Paper>
+
+              {/* Derived Context Status (from docs model rules) */}
+              <Paper p="md" radius="sm">
+                <Stack gap="md">
+                  <Title order={5}>Derived Context Docs</Title>
+
+                  {contextDocKeys.length === 0 ? (
+                    <Text size="sm" c="dimmed">
+                      No context docs for this target.
                     </Text>
-                  </Group>
-                )}
-              </Stack>
-            </Paper>
+                  ) : (
+                    contextDocKeys.map((k, idx) => {
+                      const has = !!contextStatus[k];
+                      const simulatedEmpty = !!state.simulateEmptyContextDocs[k];
 
-            {/* Derived Context Status (from docs model rules) */}
-            <Paper p="md" radius="sm">
-              <Stack gap="md">
-                <Title order={5}>Derived Context Docs</Title>
+                      return (
+                        <React.Fragment key={k}>
+                          {idx > 0 && <Divider />}
 
-                {contextDocKeys.length === 0 ? (
-                  <Text size="sm" c="dimmed">
-                    No context docs for this target.
-                  </Text>
-                ) : (
-                  contextDocKeys.map((k, idx) => {
-                    const has = !!contextStatus[k];
-                    const simulatedEmpty = !!state.simulateEmptyContextDocs[k];
+                          {has ? (
+                            <Group justify="space-between" align="center">
+                              <Group gap="xs">
+                                <Check size={16} color="var(--mantine-color-green-6)" />
+                                <Stack gap={0}>
+                                  <Text size="sm" fw={500}>
+                                    {getDocTitle(k)}
+                                  </Text>
+                                  <Text size="xs" c="dimmed">
+                                    {getDocDescription(k)}
+                                  </Text>
+                                </Stack>
+                              </Group>
 
-                    return (
-                      <React.Fragment key={k}>
-                        {idx > 0 && <Divider />}
-
-                        {has ? (
-                          <Group justify="space-between" align="center">
-                            <Group gap="xs">
-                              <Check size={16} color="var(--mantine-color-green-6)" />
+                              <Switch
+                                label="Simulate empty"
+                                checked={simulatedEmpty}
+                                onChange={(e) =>
+                                  setState((s) => ({
+                                    ...s,
+                                    simulateEmptyContextDocs: {
+                                      ...s.simulateEmptyContextDocs,
+                                      [k]: e.currentTarget.checked,
+                                    },
+                                  }))
+                                }
+                                size="xs"
+                              />
+                            </Group>
+                          ) : (
+                            <Group gap="xs" align="flex-start">
+                              <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
                               <Stack gap={0}>
                                 <Text size="sm" fw={500}>
-                                  {getDocTitle(k)}
+                                  {getDocTitle(k)} is missing
                                 </Text>
                                 <Text size="xs" c="dimmed">
                                   {getDocDescription(k)}
                                 </Text>
                               </Stack>
                             </Group>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </Stack>
+              </Paper>
 
-                            <Switch
-                              label="Simulate empty"
-                              checked={simulatedEmpty}
-                              onChange={(e) =>
-                                setState((s) => ({
-                                  ...s,
-                                  simulateEmptyContextDocs: {
-                                    ...s.simulateEmptyContextDocs,
-                                    [k]: e.currentTarget.checked,
-                                  },
-                                }))
-                              }
-                              size="xs"
-                            />
-                          </Group>
-                        ) : (
-                          <Group gap="xs" align="flex-start">
-                            <AlertTriangle size={16} color="var(--mantine-color-orange-6)" />
-                            <Stack gap={0}>
-                              <Text size="sm" fw={500}>
-                                {getDocTitle(k)} is missing
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                {getDocDescription(k)}
-                              </Text>
-                            </Stack>
-                          </Group>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </Stack>
-            </Paper>
+              {/* User Prompt */}
+              <Textarea
+                label="User Prompt"
+                placeholder="Enter your question or instruction..."
+                value={state.userPrompt}
+                onChange={(e) => setState((s) => ({ ...s, userPrompt: e.currentTarget.value }))}
+                minRows={3}
+                radius="sm"
+              />
 
-            {/* User Prompt */}
-            <Textarea
-              label="User Prompt"
-              placeholder="Enter your question or instruction..."
-              value={state.userPrompt}
-              onChange={(e) => setState((s) => ({ ...s, userPrompt: e.currentTarget.value }))}
-              minRows={3}
-              radius="sm"
-            />
-
-            <Button onClick={handleBuildPrompt} disabled={needsStory && !state.selectedStoryId}>
-              Build Prompt
-            </Button>
-          </>
-        )}
-      </Stack>
+              <Button onClick={handleBuildPrompt} disabled={needsStory && !state.selectedStoryId}>
+                Build Prompt
+              </Button>
+            </>
+          )}
+        </Stack>
+        </ScrollArea>
+      </Box>
 
       {/* Right Column - Output */}
       <Box
