@@ -3,8 +3,8 @@ import type { EntityIndex } from '../models/entities/entityIndex';
 import type { EntityType } from '../models/entities/entityIndex';
 
 // Import fixture JSON files directly
-import characterIndexFixture from './projects/project-test-project/stories/story-test-story-characters.json';
-import locationIndexFixture from './projects/project-test-project/stories/story-test-story-locations.json';
+import characterIndexFixture from './projects/project-test-project/stories/characters.json';
+import locationIndexFixture from './projects/project-test-project/stories/locations.json';
 
 /**
  * Loads entity index from fixture data.
