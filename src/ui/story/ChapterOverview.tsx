@@ -1,5 +1,5 @@
 // src/ui/story/ChapterOverview.tsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box } from '@mantine/core';
 import { useAppStore } from '../../state/useAppStore';
 import { EntityGrid } from '../common/EntityGrid';
@@ -57,14 +57,14 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   }, [parts]);
 
   // Navigate to part
-  const handleEdit = async (partId: string) => {
+  const handleEdit = useCallback(async (partId: string) => {
     setCurrentPartId(storyId, partId);
     await loadCurrentPartDoc(projectId, storyId, partId);
     onNavigateToEditor();
-  };
+  }, [storyId, projectId, setCurrentPartId, loadCurrentPartDoc, onNavigateToEditor]);
 
   // Create new part
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     try {
       const newOrder = parts.length;
       const newPartId = await createPart(projectId, storyId, newOrder);
@@ -74,10 +74,10 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     } catch (error) {
       console.error('Failed to create part:', error);
     }
-  };
+  }, [parts.length, createPart, projectId, storyId, setCurrentPartId]);
 
   // Delete part with confirmation
-  const handleDelete = async (partId: string) => {
+  const handleDelete = useCallback(async (partId: string) => {
     const part = parts.find((p) => p.id === partId);
     if (!part) return;
 
@@ -93,33 +93,33 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
         console.error('Failed to delete part:', error);
       }
     }
-  };
+  }, [parts, deletePart, projectId, storyId]);
 
   // Reorder parts
-  const handleReorder = async (reorderedIds: string[]) => {
+  const handleReorder = useCallback(async (reorderedIds: string[]) => {
     try {
       await reorderParts(projectId, storyId, reorderedIds);
     } catch (error) {
       console.error('Failed to reorder parts:', error);
     }
-  };
+  }, [reorderParts, projectId, storyId]);
 
   // Update part comment
-  const handleCommentChange = async (partId: string, newComment: string) => {
+  const handleCommentChange = useCallback(async (partId: string, newComment: string) => {
     try {
       await updatePartComment(projectId, storyId, partId, newComment);
     } catch (error) {
       console.error('Failed to update part comment:', error);
     }
-  };
+  }, [updatePartComment, projectId, storyId]);
 
   // Back to prose editor
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     onNavigateToEditor();
-  };
+  }, [onNavigateToEditor]);
 
   const [organise, setOrganise] = useState(false);
-  const buttons = [
+  const buttons = useMemo(() => [
     {
       label: organise ? 'View' : 'Organise',
       onClick: () => setOrganise(!organise),
@@ -128,9 +128,9 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
       icon: 'add',
       label: 'Add chapter',
       iconOnly: true,
-      onClick: () => handleCreate(),
+      onClick: handleCreate,
     },
-  ];
+  ], [organise, handleCreate]);
 
   // Get current part ID from store
   const currentPartId = getCurrentPartId(storyId);

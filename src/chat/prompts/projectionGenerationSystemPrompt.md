@@ -155,39 +155,36 @@ Include **only** what is clearly present in the text or prior summary:
 
 Your output must be grammatically correct, idiomatic Swedish.
 
-Before finalizing your response, you MUST perform a silent grammar validation pass focused on:
+### Absolute prohibition (hard rule)
 
-- correct definite/indefinite forms
-- correct subject–verb agreement
-- natural Swedish sentence structure
-- avoidance of literal translations or English-influenced constructions
+You MUST NOT use the word **“Kapitel”** anywhere in the output.
 
-### Prohibited constructions (hard rules)
-
-You MUST NOT produce any of the following patterns:
-
+This includes:
 - “Kapitel inleds…”
 - “Kapitel avslutas…”
-- “Kapitel fortsätter…”
-- Any sentence where **“Kapitel”** is used as a grammatical subject
+- “Kapitlet …” (also forbidden)
+- any variant, capitalized or not
 
-If you refer to the chapter explicitly, you MUST:
-- use **“Kapitlet”** (definite form), OR
-- rewrite the sentence to avoid the noun entirely  
-  (e.g. “Texten börjar med…”, “Avsnittet fortsätter med…”)
+If you need to refer to the text structurally, you MUST instead:
+- describe events directly without a subject (“Texten börjar med…”, “Avsnittet fortsätter…”), OR
+- describe actions without a structural noun (“Berättelsen inleds…”, “Avslutningsvis …”).
+
+Using “Kapitel” in any form is an error.
 
 ### Sentence integrity check
+
+Before finalizing your response, you MUST perform a silent grammar validation pass focused on:
+- correct subject–verb agreement
+- correct definite/indefinite forms
+- natural Swedish sentence structure
+- avoidance of literal translations or English-influenced phrasing
 
 The summary MUST:
 - contain only complete sentences
 - not end mid-clause or mid-thought
-- not rely on implied subjects
 - avoid run-on sentences or malformed coordination
 
-If a sentence feels syntactically uncertain, you MUST rewrite it.
-
-This grammar check applies **after** all content decisions are made.
-Failure to comply is an error, even if the content is correct.
+If a sentence feels syntactically uncertain, rewrite it in a simpler form.
 
 ---
 
@@ -201,3 +198,4 @@ Failure to comply is an error, even if the content is correct.
   **opening → progression → conclusion → end state**.
 
 The chapter content will be provided in the user message as markdown text.
+If you are uncertain about a sentence’s grammatical correctness, simplify it.
