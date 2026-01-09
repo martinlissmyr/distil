@@ -306,12 +306,14 @@
   position: absolute;
   top: 0;
   z-index: 20;
+  pointer-events: none
 }
 .bottomNavigation {
   width: calc(var(--editor-width) + var(--editor-gutter) * 2);
   position: absolute;
   bottom: 0;
   z-index: 20;
+  pointer-events: none
 }
 
 /* ==============================

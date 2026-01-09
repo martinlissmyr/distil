@@ -1,5 +1,5 @@
 // src/ui/story/StoryTextView.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
@@ -16,6 +16,8 @@ import { getDocKind } from '../../models/docs';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { useAppStore } from '../../state/useAppStore';
 import { useNavigation } from '../../hooks/useNavigation';
+import { getNextPart, getPreviousPart } from '../../models/story';
+import { PartPreview } from './PartPreview';
 import styles from '../editor/BaseEditor.module.scss';
 
 type StoryTextViewProps = {
@@ -43,6 +45,11 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   // Track if user has ever made a selection (menu stays open once triggered)
   const hadSelectionRef = useRef(false);
+
+  // Refs for part preview scroll anchoring
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const previousPreviewRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
 
   // Get parts state from app store
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
@@ -96,6 +103,13 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   const currentPartIndex = parts.findIndex((p) => p.id === currentPartId);
   const totalParts = parts.length;
   const partTitle = 'Chapter ' + (currentPartIndex + 1);
+
+  // Compute previous/next parts for preview
+  const previousPart = currentPartId ? getPreviousPart(parts, currentPartId) : null;
+  const nextPart = currentPartId ? getNextPart(parts, currentPartId) : null;
+
+  const showPreviousPreview = partsEnabled && previousPart?.projection?.summary;
+  const showNextPreview = partsEnabled && nextPart?.projection?.summary;
 
   // Get editor config from doc model
   const docKind = getDocKind('prose');
@@ -203,6 +217,30 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     };
   }, [editor]);
 
+  // Reset scroll flag when part changes
+  useEffect(() => {
+    hasScrolledRef.current = false;
+  }, [currentPartId]);
+
+  // Scroll anchor effect: hide previous preview on mount
+  useLayoutEffect(() => {
+    if (!showPreviousPreview || hasScrolledRef.current) return;
+
+    const viewport = scrollViewportRef.current;
+    const preview = previousPreviewRef.current;
+
+    if (!viewport || !preview) return;
+
+    // Measure preview height
+    const previewHeight = preview.getBoundingClientRect().height;
+
+    // Scroll down to hide it (happens before paint)
+    viewport.scrollTop = previewHeight;
+
+    // Mark as scrolled
+    hasScrolledRef.current = true;
+  }, [showPreviousPreview, currentPartId]);
+
   // Chapter navigation handlers
   const handleEnableParts = async () => {
     try {
@@ -247,6 +285,20 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       setCurrentPartId(storyId, newPartId);
     } catch (error) {
       console.error('Failed to create part:', error);
+    }
+  };
+
+  const handleClickPreviousPreview = () => {
+    if (previousPart) {
+      setCurrentPartId(storyId, previousPart.id);
+      void loadCurrentPartDoc(projectId, storyId, previousPart.id);
+    }
+  };
+
+  const handleClickNextPreview = () => {
+    if (nextPart) {
+      setCurrentPartId(storyId, nextPart.id);
+      void loadCurrentPartDoc(projectId, storyId, nextPart.id);
     }
   };
 
@@ -340,6 +392,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
         />
 
         <ScrollArea
+          viewportRef={scrollViewportRef}
           className={styles.scrollAreaWrapper}
           type="hover"
           scrollbarSize={10}
@@ -353,7 +406,25 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
           }}
         >
           <Box className={styles.editor}>
+            {showPreviousPreview && (
+              <Box ref={previousPreviewRef}>
+                <PartPreview
+                  summary={previousPart!.projection!.summary}
+                  position="previous"
+                  onClick={handleClickPreviousPreview}
+                />
+              </Box>
+            )}
+
             <EditorContent editor={editor} />
+
+            {showNextPreview && (
+              <PartPreview
+                summary={nextPart!.projection!.summary}
+                position="next"
+                onClick={handleClickNextPreview}
+              />
+            )}
           </Box>
         </ScrollArea>
 

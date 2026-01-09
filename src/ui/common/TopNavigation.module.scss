@@ -1,11 +1,43 @@
+.navigation {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  pointer-events: none;
+}
 
+.leftSlot {
+	minWidth: 0;
+}
+
+.rightSlot {
+	minWidth: 0;
+}
+
+.backButton,
+.closeButton,
+.buttonGroup,
+.menu {
+	pointer-events: auto;
+}
+
+.title {
+  justify-self: center;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  user-select: none;
+  pointer-events: none;
+}
 
 .groupedButton {
 	height: 36px !important;
 	border-top: 0 !important;
 	border-bottom: 0 !important;
 	border-color: rgba(0,0,0,.2) !important;
-
+	
 	&:first-child {
 		border-left: 0 !important;
 	}
