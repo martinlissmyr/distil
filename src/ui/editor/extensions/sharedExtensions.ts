@@ -4,8 +4,17 @@ import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 import { Selection } from '@tiptap/extensions/selection';
-
+import { Extension } from '@tiptap/core'
 import type { Extension } from '@tiptap/core';
+import { search } from 'prosemirror-search'
+
+const Search = Extension.create({
+  addProseMirrorPlugins() {
+    return [
+      search(),
+    ]
+  },
+});
 
 export type BaseExtensionsOptions = {
   placeholder?: string;
@@ -29,6 +38,7 @@ export function createBaseExtensions({
   return [
     Markdown.configure({}),
     Selection,
+    Search,
     StarterKit.configure({
       heading: false, // we always use Heading extension explicitly
       ...starterKitConfig,

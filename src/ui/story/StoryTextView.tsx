@@ -18,6 +18,7 @@ import { useAppStore } from '../../state/useAppStore';
 import { useNavigation } from '../../hooks/useNavigation';
 import { getNextPart, getPreviousPart } from '../../models/story';
 import { PartPreview } from './PartPreview';
+import { SearchPanel } from '../editor/SearchPanel';
 import styles from '../editor/BaseEditor.module.scss';
 
 type StoryTextViewProps = {
@@ -39,6 +40,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 }) => {
   const [subview, setSubview] = useState<Subview>('editor');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
   const [hasSelection, setHasSelection] = useState(false);
@@ -218,6 +220,22 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     };
   }, [editor]);
 
+  // Keyboard listener for Cmd+F / Ctrl+F to toggle search panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchPanelOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Reset scroll flag when part changes, switching to editor subview, or loading completes
   useEffect(() => {
     if (subview === 'editor' || !isLoading) {
@@ -392,6 +410,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       projectId={projectId}
       storyId={storyId}
       preloadMetaKeys={['brief', 'outline']}
+      className={styles.editorWrapper}
     >
       <BubbleMenu
         editor={editor}
@@ -424,6 +443,13 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
             opacity: isScrolled ? 1 : 0,
           }}
         />
+
+        {searchPanelOpen && (
+          <SearchPanel
+            editor={editor}
+            onClose={() => setSearchPanelOpen(false)}
+          />
+        )}
 
         <ScrollArea
           viewportRef={scrollViewportRef}

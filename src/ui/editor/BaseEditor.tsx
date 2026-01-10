@@ -9,6 +9,7 @@ import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { TopNavigation } from '../common/TopNavigation';
 import styles from './BaseEditor.module.scss';
 import { BubbleMenu } from '@tiptap/react/menus';
+import { SearchPanel } from './SearchPanel';
 
 import { useEditorChat } from '../../hooks/useEditorChat';
 
@@ -29,6 +30,7 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   chatConfig,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
 
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
@@ -107,6 +109,22 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
     };
   }, [editor, schema]);
 
+  // Keyboard listener for Cmd+F / Ctrl+F to toggle search panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchPanelOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   if (!editor) return null;
 
   return (
@@ -138,6 +156,13 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
             opacity: isScrolled ? 1 : 0,
           }}
         />
+
+        {searchPanelOpen && (
+          <SearchPanel
+            editor={editor}
+            onClose={() => setSearchPanelOpen(false)}
+          />
+        )}
 
         <ScrollArea
           classNames={{

@@ -11,6 +11,10 @@
   --editor-gutter: min(110px, 6vw);
   --editor-width: min(680px, 40vw);
   --aside-offset: 12px;
+  --aside-width: calc(
+    100% - var(--aside-offset) -
+      (var(--editor-gutter) * 2 + var(--editor-width))
+      );
 }
 
 /* ✅ TipTap classes must be global */
@@ -47,6 +51,15 @@
   :global(.pm-persistent-selection) {
     background: rgba(255, 214, 130, 0.35);
     border-radius: 2px;
+  }
+
+  /* search results */
+  :global(.ProseMirror-search-match) {
+    outline: 1px solid var(--editor-search-highlight-border);
+  }
+  :global(.ProseMirror-active-search-match) {
+    background: var(--editor-search-highlight-active-bg);
+    //color: var(--editor-highlighted-text);
   }
 
   p.is-editor-empty:first-child::before {
@@ -293,7 +306,10 @@
     min-height: 0;
     display: flex;
   }
+}
 
+.editorWrapper {
+  position: relative;
 }
 
 /* ==============================
@@ -322,11 +338,7 @@
   top: 12px;
   bottom: 12px;
   right: var(--aside-offset);
-
-  width: calc(
-    100% - var(--aside-offset) -
-      (var(--editor-gutter) * 2 + var(--editor-width))
-  );
+  width: var(--aside-width);
 
   z-index: 20;
   display: flex;
