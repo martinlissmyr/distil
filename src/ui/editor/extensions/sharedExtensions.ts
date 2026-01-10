@@ -4,8 +4,7 @@ import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 import { Selection } from '@tiptap/extensions/selection';
-import { Extension } from '@tiptap/core'
-import type { Extension } from '@tiptap/core';
+import { Extension } from '@tiptap/core';
 import { search } from 'prosemirror-search'
 
 const Search = Extension.create({

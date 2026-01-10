@@ -1,6 +1,6 @@
 // src/hooks/useNavigation.ts
 import { create } from 'zustand';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import type { StorySectionId, RootSectionId } from '../models/sections';
 
 // -------------------------

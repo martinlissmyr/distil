@@ -86,7 +86,7 @@ export function EntityCard({
   if (isListMode) {
     return (
       <Box
-        onClick={(e) => {
+        onClick={() => {
           if (sorting) return;
           onSelect(id);
         }}
@@ -94,7 +94,7 @@ export function EntityCard({
       >
         <Flex align="center" justify="center" className={styles.listCardIcon}>
           {icon && (
-            <Icon type={icon} size={40} strokeWidth={1} style={{opacity: .3}}/>
+            <Icon type={icon as any} size={40} strokeWidth={1} style={{opacity: .3}}/>
           )}
           {!icon && number && (
             <>{number}</>
@@ -107,7 +107,7 @@ export function EntityCard({
             </Text>
           )}
           {text && (
-            <Text size="sm" lineClamp={sorting ? 2 : 30} overflow="ellipsis">
+            <Text size="sm" lineClamp={sorting ? 2 : 30} style={{ overflow: 'ellipsis' }}>
               {text}
             </Text>
           )}
@@ -137,7 +137,7 @@ export function EntityCard({
       <Card className={styles.entityGridCard}>
         <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
           <Box>
-            <Icon type={icon} size={60} strokeWidth={1} style={{opacity: .3}}/>
+            <Icon type={icon as any} size={60} strokeWidth={1} style={{opacity: .3}}/>
           </Box>
         </Stack>
         {actionButtons}

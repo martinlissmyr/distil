@@ -28,7 +28,7 @@ function SortableItem({
   id: string;
   children: React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
+  const { attributes, listeners, setNodeRef, transform } =
     useSortable({ id });
 
   const style: React.CSSProperties = {
@@ -116,27 +116,34 @@ export function EntityGrid<T>({
     <>
       {items.map((item, n) => {
         const id = getId(item);
-        const Wrapper = sorting ? SortableItem : StaticItem;
 
-        return (
-          <Wrapper key={id} {...(sorting ? { id } : {})}>
-            <EntityCard
-              id={id}
-              label={getLabel ? getLabel(item) : undefined}
-              onEdit={onEdit}
-              onSelect={onSelect}
-              icon={icon || undefined}
-              number={getOrderNumber ? getOrderNumber(item) : n}
-              mode={mode}
-              sorting={sorting}
-              text={getText ? getText(item) : undefined}
-              comment={getComment ? getComment(item) : undefined}
-              onCommentChange={
-                onCommentChange ? (newComment) => onCommentChange(id, newComment) : undefined
-              }
-              onDelete={onDelete}
-            />
-          </Wrapper>
+        const card = (
+          <EntityCard
+            id={id}
+            label={getLabel ? (getLabel(item) ?? '') : ''}
+            onEdit={onEdit}
+            onSelect={onSelect}
+            icon={icon || undefined}
+            number={getOrderNumber ? getOrderNumber(item) : n}
+            mode={mode}
+            sorting={sorting}
+            text={getText ? getText(item) : undefined}
+            comment={getComment ? getComment(item) : undefined}
+            onCommentChange={
+              onCommentChange ? (newComment) => onCommentChange(id, newComment) : undefined
+            }
+            onDelete={onDelete}
+          />
+        );
+
+        return sorting ? (
+          <SortableItem key={id} id={id}>
+            {card}
+          </SortableItem>
+        ) : (
+          <StaticItem key={id}>
+            {card}
+          </StaticItem>
         );
       })}
     </>

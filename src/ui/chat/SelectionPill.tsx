@@ -22,8 +22,8 @@ export const SelectionPill: React.FC<SelectionPillProps> = ({ onDismiss }) => {
         }}
       >
         <Flex gap="4px">
-          <Icon type="selection" size={14} flex={0}/>
-          <Text size="xs" fw={500} flex={1} overflow="ellipsis" lineClamp={1}>
+          <Icon type="selection" size={14} style={{ flex: 0 }}/>
+          <Text size="xs" fw={500} style={{ flex: 1, overflow: 'ellipsis' }} lineClamp={1}>
             Using selected text as context
           </Text>
         </Flex>

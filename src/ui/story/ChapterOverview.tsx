@@ -124,9 +124,10 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     {
       label: organise ? 'View' : 'Organise',
       onClick: () => setOrganise(!organise),
+      icon: 'parts' as const,
     },
     {
-      icon: 'add',
+      icon: 'add' as const,
       label: 'Add chapter',
       iconOnly: true,
       onClick: handleCreate,
@@ -166,6 +167,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
           onCreate={handleCreate}
           onReorderEntities={handleReorder}
           onCommentChange={handleCommentChange}
+          icon="part"
           createLabel="New Chapter"
           mode="list"
           sorting={organise}

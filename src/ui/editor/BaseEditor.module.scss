@@ -57,9 +57,9 @@
   :global(.ProseMirror-search-match) {
     outline: 1px solid var(--editor-search-highlight-border);
   }
+  
   :global(.ProseMirror-active-search-match) {
     background: var(--editor-search-highlight-active-bg);
-    //color: var(--editor-highlighted-text);
   }
 
   p.is-editor-empty:first-child::before {

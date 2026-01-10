@@ -67,7 +67,7 @@ const NavItem: React.FC<NavItemProps> = ({
       leftSection={
         icon ? (
           <Icon
-            type={icon}
+            type={icon as any}
             size={20}
             style={{ opacity: 0.2 }}
           />

@@ -410,7 +410,6 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       projectId={projectId}
       storyId={storyId}
       preloadMetaKeys={['brief', 'outline']}
-      className={styles.editorWrapper}
     >
       <BubbleMenu
         editor={editor}
@@ -434,6 +433,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
         </Box>
         <Box py={20} px={30} className={styles.bottomNavigation}>
           <TopNavigation
+            title=""
             buttons={chapterNavButtons}
           />
         </Box>
