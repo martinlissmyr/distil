@@ -3,7 +3,7 @@ import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from '../types/language';
 import type { UiSchemaSetting } from '../types/ui';
 import type { EntityType } from '../models/entities/entityIndex';
-import type { StoryMetadata, PartIndexEntry, PartDoc } from '../models/story';
+import type { StoryMetadata } from '../models/story';
 
 export type Project = {
   id: string;

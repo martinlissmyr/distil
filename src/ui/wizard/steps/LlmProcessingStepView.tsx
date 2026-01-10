@@ -56,7 +56,7 @@ export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ st
   return (
     <Stack gap="md">
       {error ? (
-        <Alert icon={<Icon type="error" size={16} />} title="Error" color="red">
+        <Alert icon={<Icon type="validationError" size={16} />} title="Error" color="red">
           <Text size="sm">{error}</Text>
         </Alert>
       ) : isProcessing ? (

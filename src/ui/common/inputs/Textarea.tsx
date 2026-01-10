@@ -133,7 +133,7 @@ export const Textarea: React.FC<TextareaProps> = ({
               variant="filled"
               aria-label={actionButtonText}
               onClick={() => onActionButtonClick(value)}
-              rightSection={<Icon type={actionButtonIcon} size={12}/>}
+              rightSection={<Icon type={actionButtonIcon as any} size={12}/>}
             >
               {actionButtonText}
             </Button>
