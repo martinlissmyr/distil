@@ -34,6 +34,7 @@ import {
   Rows3,
   Bookmark,
   Trash2,
+  Search,
 } from 'lucide-react';
 
 export type IconType =
@@ -76,7 +77,8 @@ export type IconType =
   | 'h3'
   | 'bulletList'
   | 'orderedList'
-  | 'horizontalRule';
+  | 'horizontalRule'
+  | 'search';
 
 export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
 	const iconProps = {
@@ -194,6 +196,8 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
       return <ListOrdered {...iconProps}/>
     case 'horizontalRule':
       return <Minus {...iconProps}/>
+    case 'search':
+      return <Search {...iconProps}/>
 	}
 	console.log(type)
 	return null;
