@@ -15,6 +15,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ editor, onClose }) => 
   const [searchValue, setSearchValue] = useState('');
   const [selectionFrom, setSelectionFrom] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevSearchValueRef = useRef('');
 
   // Auto-focus and select text on mount
   useEffect(() => {
@@ -66,6 +67,46 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ editor, onClose }) => 
         editor.view.dispatch(tr);
       }
     }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchValue, editor]);
+
+  // Auto-highlight first result when new search results appear
+  useEffect(() => {
+    if (!editor || !searchValue.trim()) return;
+
+    // Check if the search query has actually changed
+    const searchQueryChanged = searchValue !== prevSearchValueRef.current;
+    prevSearchValueRef.current = searchValue;
+
+    // Only auto-navigate if the search query changed (not just navigation)
+    if (!searchQueryChanged) return;
+
+    // Wait slightly longer than the search debounce (100ms) to ensure results are ready
+    const timeoutId = setTimeout(() => {
+      const total = getTotalMatches();
+      if (total > 0) {
+        // Auto-navigate to first match when search query changes
+        findNext(editor.state, editor.view.dispatch);
+        // Scroll to the first match
+        requestAnimationFrame(() => {
+          const { from } = editor.state.selection;
+          const coords = editor.view.coordsAtPos(from);
+
+          const editorElement = editor.view.dom;
+          const scrollContainer = editorElement.closest('.mantine-ScrollArea-viewport');
+
+          if (scrollContainer && coords) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const relativeTop = coords.top - containerRect.top;
+
+            if (relativeTop < 100 || relativeTop > containerRect.height - 100) {
+              scrollContainer.scrollTop += relativeTop - containerRect.height / 2;
+            }
+          }
+        });
+      }
+    }, 150);
 
     return () => clearTimeout(timeoutId);
   }, [searchValue, editor]);
