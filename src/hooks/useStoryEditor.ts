@@ -33,7 +33,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   useEffect(() => {
     if (!currentPartDoc) return;
 
-    console.log('[EDITOR] currentPartDoc changed, updating editor');
+    //console.log('[EDITOR] currentPartDoc changed, updating editor');
     // Update local editor state when part doc changes in store
     // Use setCurrentDoc directly to avoid triggering loadStory's dirty reset
     setCurrentDoc(currentPartDoc);
