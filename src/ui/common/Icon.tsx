@@ -35,6 +35,7 @@ import {
   Bookmark,
   Trash2,
   Search,
+  BookOpenText,
 } from 'lucide-react';
 
 export type IconType =
@@ -78,6 +79,7 @@ export type IconType =
   | 'bulletList'
   | 'orderedList'
   | 'horizontalRule'
+  | 'readingMode'
   | 'search';
 
 export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number, strokeWidth?: number, style?: React.CSSProperties}) => {
@@ -87,6 +89,9 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
     ...props
 	}
 	switch (type) {
+		case 'readingMode': {
+			return <BookOpenText {...iconProps}/>
+		}
 		case 'up': {
 			return <ChevronUp {...iconProps}/>
 		}

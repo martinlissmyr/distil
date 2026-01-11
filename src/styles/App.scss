@@ -33,6 +33,17 @@ body {
   background-color: var(--bg-editor) !important;
 }
 
+/* Global vars */
+:root {
+  --editor-gutter: min(110px, 6vw);
+  --editor-width: min(680px, 40vw);
+  --aside-offset: 12px;
+  --aside-width: calc(
+    100% - var(--aside-offset) -
+      (var(--editor-gutter) * 2 + var(--editor-width))
+      );
+}
+
 /* ============================================================================
    Token-first, mode-second structure:
 

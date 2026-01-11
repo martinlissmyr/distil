@@ -7,14 +7,6 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-editor);
-
-  --editor-gutter: min(110px, 6vw);
-  --editor-width: min(680px, 40vw);
-  --aside-offset: 12px;
-  --aside-width: calc(
-    100% - var(--aside-offset) -
-      (var(--editor-gutter) * 2 + var(--editor-width))
-      );
 }
 
 /* ✅ TipTap classes must be global */
