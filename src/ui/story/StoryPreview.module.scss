@@ -1,0 +1,164 @@
+.part {
+  // Chapter starts on a "new page" feeling
+  padding-top: clamp(48px, 6vh, 96px);
+  margin-top: clamp(48px, 6vh, 96px);
+  position: relative;
+
+  // A classic book-style section break between parts
+  & + .part {
+    &:before {
+      content: "✦";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      line-height: 1;
+      opacity: 0.75;
+      padding: 0 12px;
+    }
+  }
+}
+
+.content {
+  // A "book page" measure: ~60–75 characters per line is the sweet spot
+  max-width: 72ch;
+  padding: 0 clamp(16px, 4vw, 40px) 56px;
+  margin: 0 auto;
+
+  color: var(--editor-text-color);
+  font-family: 'Source Serif', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 400;
+
+  // Slightly more “print” feel: gentler tracking and better rendering
+  letter-spacing: 0.002em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  // Hyphenation + better line breaking
+  hyphens: auto;
+  overflow-wrap: break-word;
+
+  // Book pages are usually justified, but it can look bad without hyphenation.
+  // If you don’t like justification, change to: text-align: left;
+  text-align: justify;
+  text-justify: inter-word;
+
+  // “Widows and orphans” help (not perfect support, but harmless)
+  p, li {
+    widows: 2;
+    orphans: 2;
+  }
+
+  // --- Paragraphs: book-style indentation ---
+  // Instead of big vertical gaps, indent first line and keep paragraphs closer.
+  p {
+    margin: 0;
+    text-indent: 1.5em;
+  }
+
+  // Don’t indent the first paragraph after headings / breaks
+  h1 + p,
+  h2 + p,
+  hr + p,
+  .partTitle + p {
+    text-indent: 0;
+  }
+
+  // If you want some air between paragraphs *sometimes*:
+  // p + p { margin-top: 0.2em; } // subtle only
+
+  // --- Titles / headings: more “book” than “UI” ---
+  h1.partTitle {
+    text-align: center;
+    margin: 0 0 48px;
+    font-style: normal; // italics can feel like a design choice; books often use small caps instead
+    font-weight: 600;
+    font-size: clamp(34px, 4vw, 52px);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+
+    // If your font supports it, a very bookish look:
+    // font-variant-caps: small-caps;
+  }
+
+  h1 {
+    margin: 56px 0 16px;
+    text-align: center; // common in novels for section headings
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+  }
+
+  h2 {
+    margin: 40px 0 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+
+  h1:first-child,
+  h2:first-child {
+    margin-top: 0;
+  }
+
+  // Inline emphasis
+  em { font-style: italic; }
+  strong { font-weight: 600; }
+
+  // Lists: tighter, more “texty”
+  ul,
+  ol {
+    margin: 0.75em 0 0.75em;
+    padding-left: 1.25em;
+
+    li {
+      margin: 0.35em 0;
+      p { text-indent: 0; } // lists should not carry paragraph indent
+    }
+  }
+
+  // If you keep your custom numbered-list styling, it’s fine, but it reads “designed”.
+  // For a book feel, default list markers are often better.
+
+  hr {
+    border: none;
+    margin: 1.5em 0;
+    text-align: center;
+
+    // Classic section break
+    &:before {
+      content: "* * *";
+      letter-spacing: 0.35em;
+      opacity: 0.7;
+    }
+
+    & + h1,
+    & + h2 {
+      margin-top: 0;
+    }
+  }
+
+  a {
+    // In book-like reading, links should be discreet
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.18em;
+    opacity: 0.9;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  pre, code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.95em;
+  }
+}

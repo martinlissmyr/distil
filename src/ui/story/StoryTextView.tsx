@@ -18,6 +18,7 @@ import { useAppStore } from '../../state/useAppStore';
 import { useNavigation } from '../../hooks/useNavigation';
 import { getNextPart, getPreviousPart } from '../../models/story';
 import { PartPreview } from './PartPreview';
+import { StoryPreview } from './StoryPreview';
 import { SearchPanel } from '../editor/SearchPanel';
 import styles from '../editor/BaseEditor.module.scss';
 
@@ -29,7 +30,7 @@ type StoryTextViewProps = {
   title: string;
 };
 
-type Subview = 'editor' | 'chapters';
+type Subview = 'editor' | 'chapters' | 'storyPreview';
 
 export const StoryTextView: React.FC<StoryTextViewProps> = ({
   projectId,
@@ -318,8 +319,12 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     }
   };
 
-  const handleOpenOverview = () => {
+  const handleOpenChaptersOverview = () => {
     setSubview('chapters');
+  };
+
+  const handleOpenStoryPreview = () => {
+    setSubview('storyPreview');
   };
 
   const handleCreatePart = async () => {
@@ -362,11 +367,28 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     onNextPart: handleNextPart,
     canGoPrevious: true,
     canGoNext: true,
-    onOpenOverview: handleOpenOverview,
+    onOpenOverview: handleOpenChaptersOverview,
   });
 
   // Build menu items for the story menu
   const menuItems: TopNavigationMenuItem[] = [];
+  if (partsEnabled) {
+    menuItems.push({
+      label: 'Add chapter',
+      onClick: handleCreatePart,
+      icon: 'add',
+    });
+    menuItems.push({
+      label: 'Chapters Overview',
+      onClick: handleOpenChaptersOverview,
+      icon: 'parts',
+    });
+  }
+  menuItems.push({
+    label: 'Reading Mode',
+    onClick: handleOpenStoryPreview,
+    icon: 'readingMode',
+  });
   if (!partsEnabled) {
     menuItems.push({
       label: 'Enable Chapters',
@@ -374,17 +396,28 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       icon: 'parts',
     });
   }
-  if (partsEnabled) {
-    menuItems.push({
-      label: 'Add chapter',
-      onClick: handleCreatePart,
-      icon: 'add',
-    });
-  }
+
   // Future: Add more menu items here (story settings, export, etc.)
 
   // Don't render editor until part data is synced
   if (!editor || isLoading) return null;
+
+  // Show story preview subview
+  if (subview === 'storyPreview') {
+    return (
+      <StorySectionShell
+        projectId={projectId}
+        storyId={storyId}
+      >
+        <StoryPreview
+          projectId={projectId}
+          storyId={storyId}
+          currentStoryTitle={title}
+          onNavigateToEditor={() => setSubview('editor')}
+        />
+      </StorySectionShell>
+    );
+  }
 
   // Show chapters overview subview
   if (subview === 'chapters') {
@@ -392,7 +425,6 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       <StorySectionShell
         projectId={projectId}
         storyId={storyId}
-        preloadMetaKeys={['brief', 'outline']}
       >
         <ChapterOverview
           projectId={projectId}
