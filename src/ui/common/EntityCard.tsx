@@ -92,12 +92,12 @@ export function EntityCard({
         }}
         className={styles.entityListCardWrapper}
       >
-        <Flex align="center" justify="center" className={styles.listCardIcon}>
+        <Flex className={styles.listCardIcon}>
           {icon && (
             <Icon type={icon as any} size={40} strokeWidth={1} style={{opacity: .3}}/>
           )}
           {!icon && number && (
-            <>{number}</>
+            <Box>{number}</Box>
           )}
         </Flex>
         <Stack gap={4} style={{ flex: 1 }} className={styles.listCardContent}>
@@ -107,7 +107,7 @@ export function EntityCard({
             </Text>
           )}
           {text && (
-            <Text size="sm" lineClamp={sorting ? 2 : 30} style={{ overflow: 'ellipsis' }}>
+            <Text size="md" lineClamp={sorting ? 2 : 30} style={{ overflow: 'ellipsis' }}>
               {text}
             </Text>
           )}
