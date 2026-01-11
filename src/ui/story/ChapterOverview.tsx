@@ -5,7 +5,7 @@ import { useAppStore } from '../../state/useAppStore';
 import { EntityGrid } from '../common/EntityGrid';
 import { TopNavigation } from '../common/TopNavigation';
 import { projectionService } from '../../services/ProjectionGenerationService';
-import styles from './EntityIndexView.module.scss';
+import navigationStyles from './StoryNavigation.module.scss';
 
 type ChapterOverviewProps = {
   projectId: string;
@@ -146,8 +146,8 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   }, []); // Only run on mount
 
   return (
-    <Box className={styles.root}>
-      <Box py={20} px={30}>
+    <Box>
+      <Box className={navigationStyles.topNavigation}>
         <TopNavigation
           title={`${currentStoryTitle} – Chapters`}
           onBack={handleBack}
@@ -155,7 +155,10 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
           buttonsLayout='separate'
         />
       </Box>
-      <Box p="xl">
+      <Box
+        className={navigationStyles.topOverlay}
+      />
+      <Box p="xl" pt={80}>
         <EntityGrid<ChapterGridItem>
           items={gridItems}
           getId={(item) => item.id}
