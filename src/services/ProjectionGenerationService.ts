@@ -133,6 +133,7 @@ class ProjectionGenerationService {
 
     // Check if document has content
     if (!hasContent(doc)) {
+      console.log("[Projection Service] Part has no content, skipping");
       return;
     }
 

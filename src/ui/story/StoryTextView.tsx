@@ -75,7 +75,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     hasLoadedRef.current = true;
 
     if (!currentStoryMetadata || currentStoryMetadata.id !== storyId) {
-      console.log('[STORYVIEW] Metadata not loaded for story', storyId, ', calling loadStoryForView');
+      //console.log('[STORYVIEW] Metadata not loaded for story', storyId, ', calling loadStoryForView');
       setIsLoading(true);
       void useAppStore.getState().loadStoryForView(projectId, storyId).finally(() => {
         setIsLoading(false);
@@ -83,7 +83,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     } else if (currentPartId && !currentPartDoc) {
       // Metadata already loaded, but ensure part doc is loaded for current part
       // This prevents showing stale content when navigating back to a story
-      console.log('[STORYVIEW] Metadata already loaded, ensuring part doc loaded for:', currentPartId);
+      //console.log('[STORYVIEW] Metadata already loaded, ensuring part doc loaded for:', currentPartId);
       setIsLoading(true);
       void useAppStore.getState().loadCurrentPartDoc(projectId, storyId, currentPartId).finally(() => {
         setIsLoading(false);
@@ -130,7 +130,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   useEffect(() => {
     if (!currentPartId) return;
 
-    console.log('[STORYVIEW] currentPartId changed to:', currentPartId);
+    //console.log('[STORYVIEW] currentPartId changed to:', currentPartId);
     // Sync to navigation store for persistence
     setNavCurrentPartId(storyId, currentPartId);
 

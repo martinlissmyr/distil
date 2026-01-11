@@ -144,7 +144,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
         // Use loadStoryForView to load metadata and part document
         // This ensures proper state updates and no race conditions
         const savedPartId = saved.currentPartIdMap[saved.storyId];
-        console.log('[INIT] Calling loadStoryForView with restorePartId:', savedPartId);
+        //console.log('[INIT] Calling loadStoryForView with restorePartId:', savedPartId);
 
         await useAppStore.getState().loadStoryForView(
           saved.projectId!,
@@ -163,7 +163,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           return;
         }
 
-        console.log('[INIT] loadStoryForView completed, loaded part:', actualPartId);
+        //console.log('[INIT] loadStoryForView completed, loaded part:', actualPartId);
 
         // If we loaded a different part than what was saved, update the navigation state
         if (actualPartId && actualPartId !== savedPartId) {
@@ -182,7 +182,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           title: metadata.title,
           doc: partDoc ?? { type: 'doc', content: [] },
         });
-        console.log('[INIT] Called loadStory with doc for part:', actualPartId);
+        //console.log('[INIT] Called loadStory with doc for part:', actualPartId);
 
         // hydrate outline/brief if present on disk
       } finally {

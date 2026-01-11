@@ -427,7 +427,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   setCurrentPartId(storyId, partId) {
-    console.log('[STORE] setCurrentPartId called for story', storyId, 'with:', partId);
+    //console.log('[STORE] setCurrentPartId called for story', storyId, 'with:', partId);
     const currentMap = get().currentPartIdMap;
     if (partId === null) {
       // Remove entry if partId is null
@@ -442,10 +442,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   async loadCurrentPartDoc(projectId, storyId, partId) {
-    console.log('[STORE] loadCurrentPartDoc called for part:', partId);
+    //console.log('[STORE] loadCurrentPartDoc called for part:', partId);
     const response = await client.loadPartDoc(projectId, storyId, partId);
     if (response.ok) {
-      console.log('[STORE] Loaded part doc, setting currentPartDoc for part:', partId);
+      //console.log('[STORE] Loaded part doc, setting currentPartDoc for part:', partId);
       set({ currentPartDoc: response.data.doc });
     } else {
       console.error('[useAppStore] loadCurrentPartDoc failed:', response.error);
@@ -455,7 +455,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   async loadStoryForView(projectId, storyId, options) {
-    console.log('[STORE] loadStoryForView called for story:', storyId, 'options:', options);
+    //console.log('[STORE] loadStoryForView called for story:', storyId, 'options:', options);
 
     // 1. Load metadata
     const response = await client.loadStoryMetadata(projectId, storyId);
@@ -475,7 +475,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const partExists = metadata.parts.some(p => p.id === options.restorePartId);
         if (partExists) {
           targetPartId = options.restorePartId;
-          console.log('[STORE] loadStoryForView: Using restorePartId:', targetPartId);
+          //console.log('[STORE] loadStoryForView: Using restorePartId:', targetPartId);
         } else {
           console.warn('[STORE] loadStoryForView: restorePartId not found in metadata, falling back');
         }
@@ -488,7 +488,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           const partExists = metadata.parts.some(p => p.id === storePartId);
           if (partExists) {
             targetPartId = storePartId;
-            console.log('[STORE] loadStoryForView: Using store currentPartId:', targetPartId);
+            //console.log('[STORE] loadStoryForView: Using store currentPartId:', targetPartId);
           }
         }
       }
@@ -496,7 +496,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       // Priority 3: First part (fallback)
       if (!targetPartId) {
         targetPartId = metadata.parts[0].id;
-        console.log('[STORE] loadStoryForView: Using first part as fallback:', targetPartId);
+        //console.log('[STORE] loadStoryForView: Using first part as fallback:', targetPartId);
       }
     }
 
@@ -520,7 +520,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({ currentPartIdMap: restMap });
     }
 
-    console.log('[STORE] loadStoryForView completed for story:', storyId, 'part:', targetPartId);
+    //console.log('[STORE] loadStoryForView completed for story:', storyId, 'part:', targetPartId);
   },
 
   async enableParts(projectId, storyId) {
