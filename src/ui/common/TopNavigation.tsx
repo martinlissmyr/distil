@@ -162,7 +162,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
         {/* Menu button */}
         {menuItems.length > 0 && (
-          <Menu position="bottom-end" withinPortal classNames={{ dropdown: classes.menu }}>
+          <Menu position="bottom-end" withinPortal className={ classes.menu }>
             <Menu.Target>
               <ActionIcon
                 aria-label="Options"
