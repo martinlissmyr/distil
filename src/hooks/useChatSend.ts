@@ -54,6 +54,7 @@ export function useChatSend({
         id: `m-${Date.now()}-user`,
         role: 'user',
         content: displayMessage?.trim() || rawUserPrompt,
+        actualPrompt: displayMessage ? rawUserPrompt : undefined, // preserve detailed prompt
       };
 
       addMessage(userMessage);
@@ -66,7 +67,7 @@ export function useChatSend({
           .filter((m) => !m.ephemeral)
           .map((m) => ({
             role: m.role as 'user' | 'assistant',
-            content: m.content,
+            content: m.actualPrompt ?? m.content, // use actualPrompt if available
           }));
 
         const turns = history.slice(-MAX_TURNS);
