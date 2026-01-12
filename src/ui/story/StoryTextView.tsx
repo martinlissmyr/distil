@@ -379,6 +379,9 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       icon: 'add',
     });
     menuItems.push({
+      type: 'divider',
+    });
+    menuItems.push({
       label: 'Chapters Overview',
       onClick: handleOpenChaptersOverview,
       icon: 'parts',
@@ -390,6 +393,9 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     icon: 'readingMode',
   });
   if (!partsEnabled) {
+    menuItems.push({
+      type: 'divider',
+    });
     menuItems.push({
       label: 'Enable Chapters',
       onClick: handleEnableParts,
