@@ -58,6 +58,20 @@ export type PartDoc = {
   updatedAt: string
 }
 
+// Chat thread (conversation history for a specific document/context)
+export type ChatThread = {
+  threadId: string
+  messages: Array<{
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    actualPrompt?: string
+    // Note: ephemeral and suggestions are NOT persisted
+  }>
+  createdAt: string
+  lastUpdated: string
+}
+
 const getRootDir = () => {
   const home =
     process.env.HOME || process.env.USERPROFILE || app.getPath('home')
@@ -552,6 +566,72 @@ export async function saveRootMetaDoc(
 
   // For unknown keys, you could either no-op or throw.
   // For now, let's just no-op.
+}
+
+// ---- Entity Indices (now inside story folder) ----
+
+// ---- Chat Threads ----
+
+function getChatThreadFile(threadId: string): string {
+  // Parse threadId to determine scope and construct file path
+  // Format: "root:docKind" or "project:projectId:docKind" or "story:projectId:storyId:docKind"
+  const parts = threadId.split(':')
+
+  if (parts[0] === 'root') {
+    // Root scope: ~/Distil/chats/manifest-chat.json
+    const docKind = parts[1]
+    return path.join(getRootDir(), 'chats', `${docKind}-chat.json`)
+  }
+
+  if (parts[0] === 'project') {
+    // Project scope: ~/Distil/projects/{projectId}/chats/{docKind}-chat.json
+    const projectId = parts[1]
+    const docKind = parts[2]
+    return path.join(getProjectDir(projectId), 'chats', `${docKind}-chat.json`)
+  }
+
+  // Story scope: ~/Distil/projects/{projectId}/stories/{storyId}/{storyId}-{docKind}-chat.json
+  const projectId = parts[1]
+  const storyId = parts[2]
+  const docKind = parts[3]
+  return path.join(getStoryDir(projectId, storyId), `${storyId}-${docKind}-chat.json`)
+}
+
+export async function loadChatThread(threadId: string): Promise<ChatThread | null> {
+  const file = getChatThreadFile(threadId)
+
+  try {
+    const raw = await fs.readFile(file, 'utf-8')
+    return JSON.parse(raw) as ChatThread
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      // Chat thread doesn't exist yet (expected for new threads)
+      return null
+    }
+    console.error('[loadChatThread] Failed to load chat thread:', err)
+    throw new Error('Failed to load chat thread')
+  }
+}
+
+export async function saveChatThread(thread: ChatThread): Promise<void> {
+  const queueKey = `chat:${thread.threadId}`
+
+  return writeQueue.enqueue(queueKey, async () => {
+    const file = getChatThreadFile(thread.threadId)
+    const dir = path.dirname(file)
+
+    // Ensure directory exists
+    await fs.mkdir(dir, { recursive: true })
+
+    // Limit to last 100 messages
+    const limitedThread: ChatThread = {
+      ...thread,
+      messages: thread.messages.slice(-100),
+      lastUpdated: new Date().toISOString(),
+    }
+
+    await writeJsonAtomic(file, limitedThread)
+  })
 }
 
 // ---- Entity Indices (now inside story folder) ----

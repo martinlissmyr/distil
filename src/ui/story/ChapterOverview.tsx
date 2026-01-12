@@ -48,7 +48,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   }, [currentStoryMetadata?.parts]);
 
   const getProjectionText = (part: PartIndexEntry) => {
-    if (part.wordCount < MIN_WORDS_FOR_PROJECTION_GENERATION) {
+    if ((part.wordCount ?? 0) < MIN_WORDS_FOR_PROJECTION_GENERATION) {
       return "Write a bit more, and I can summarize this.";
     }
     if (!part.projection) {

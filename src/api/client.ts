@@ -4,6 +4,7 @@ import type { WritingLanguage } from '../types/language';
 import type { UiSchemaSetting } from '../types/ui';
 import type { EntityType } from '../models/entities/entityIndex';
 import type { StoryMetadata } from '../models/story';
+import type { ChatThread } from '../../electron/fs/fs';
 
 export type Project = {
   id: string;
@@ -154,5 +155,13 @@ export const client = {
   },
   saveEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: any) {
     return window.distil.saveEntityDoc(projectId, storyId, entityType, entityId, doc);
+  },
+
+  // -------- Chat thread persistence --------
+  loadChatThread(threadId: string) {
+    return window.distil.loadChatThread(threadId);
+  },
+  saveChatThread(thread: ChatThread) {
+    return window.distil.saveChatThread(thread);
   },
 };

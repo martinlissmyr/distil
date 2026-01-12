@@ -75,6 +75,10 @@ contextBridge.exposeInMainWorld('distil', {
     ipcRenderer.invoke('entity:load', projectId, storyId, entityType, entityId),
   saveEntityDoc: (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: any) =>
     ipcRenderer.invoke('entity:save', projectId, storyId, entityType, entityId, doc),
+
+  // -------- chat threads ----------
+  loadChatThread: (threadId: string) => ipcRenderer.invoke('chat:load', threadId),
+  saveChatThread: (thread: any) => ipcRenderer.invoke('chat:save', thread),
 })
 
 contextBridge.exposeInMainWorld('chat', {

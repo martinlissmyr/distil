@@ -12,6 +12,7 @@ import { registerMetaDocHandlers } from './handlers/metaDocs';
 import { registerEntityHandlers } from './handlers/entities';
 import { registerThemeHandlers, setupThemeChangeListener } from './handlers/theme';
 import { registerChatHandlers } from './chat';
+import { registerChatThreadHandlers } from './handlers/chat';
 import { registerDevModeHandlers } from './handlers/devMode';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,6 +95,7 @@ function registerAllHandlers(): void {
   registerEntityHandlers();
   registerThemeHandlers();
   registerChatHandlers();
+  registerChatThreadHandlers();
   registerDevModeHandlers();
 }
 
