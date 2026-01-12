@@ -32,7 +32,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   // Typing animation for assistant messages
   useEffect(() => {
-    if (isUser) {
+    if (isUser || message.skipAnimation) {
+      // User messages or restored messages: show immediately
       setDisplayedContent(message.content);
       setIsTypingComplete(true);
       return;
@@ -60,7 +61,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }, typingSpeed);
 
     return () => clearInterval(interval);
-  }, [message.id, message.content, isUser]);
+  }, [message.id, message.content, isUser, message.skipAnimation]);
 
   // Staggered animation for action buttons (based on *remaining* suggestions)
   useEffect(() => {
