@@ -5,6 +5,7 @@ import { app } from 'electron'
 import type { JSONContent } from '@tiptap/react'
 import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
+import { calculateWordCount } from '../utils/wordCount'
 
 export type ProjectMeta = {
   id: string
@@ -676,16 +677,17 @@ export async function savePartDoc(
     await writeJsonAtomic(file, partDoc)
   })
 
-  // Update the part's updatedAt in story metadata (separate queue key)
+  // Update the part's updatedAt and wordCount in story metadata (separate queue key)
   const metadataQueueKey = `story:${projectId}:${storyId}`
   await writeQueue.enqueue(metadataQueueKey, async () => {
     // Load current story metadata
     const metadata = await loadStoryMetadata(projectId, storyId)
 
-    // Find the part in the index and update its timestamp
+    // Find the part in the index and update its timestamp and word count
     const partIndex = metadata.parts.findIndex(p => p.id === partId)
     if (partIndex !== -1) {
       metadata.parts[partIndex].updatedAt = now
+      metadata.parts[partIndex].wordCount = calculateWordCount(doc)
     }
 
     // Save updated metadata

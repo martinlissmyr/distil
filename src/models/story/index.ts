@@ -81,28 +81,19 @@ export function isProjectionStale(part: PartIndexEntry): boolean {
 }
 
 /**
- * Helper: Calculate word count from TipTap document
+ * Helper: Check if a projection should be generated for a part
+ * Checks both word count threshold and staleness
  */
-export function calculateWordCount(doc: JSONContent): number {
-  let text = ''
-
-  function extractText(node: JSONContent): void {
-    if (node.type === 'text' && node.text) {
-      text += node.text + ' '
-    }
-
-    if (node.content) {
-      for (const child of node.content) {
-        extractText(child)
-      }
-    }
+export const MIN_WORDS_FOR_PROJECTION_GENERATION = 50;
+export function shouldGenerateProjection(part: PartIndexEntry): boolean {
+  // Must have enough words
+  const wordCount = part.wordCount ?? 0
+  if (wordCount < MIN_WORDS_FOR_PROJECTION_GENERATION) {
+    return false
   }
 
-  extractText(doc)
-
-  // Split by whitespace and filter out empty strings
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0)
-  return words.length
+  // Must be stale (no projection OR doc updated after projection)
+  return isProjectionStale(part)
 }
 
 /**
