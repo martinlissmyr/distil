@@ -142,13 +142,20 @@ const App: React.FC = () => {
       }
       return client.updateStory(selectedProjectId, id, data);
     },
-    delete: (_id) => {
+    delete: async (storyId) => {
       if (!selectedProjectId) {
-        return Promise.reject(new Error('No project selected'));
+        return { ok: false, error: 'No project selected' };
       }
-      // Note: deleteStory is not yet implemented in the client API
-      // Stories are currently not deleted from disk, only removed from UI state
-      return Promise.reject(new Error('Story deletion not implemented'));
+      const response = await client.deleteStory(selectedProjectId, storyId);
+      if (!response.ok) {
+        return response; // Return error response
+      }
+      // Refresh the stories list after deletion
+      const listResponse = await client.listStories(selectedProjectId);
+      if (listResponse.ok) {
+        storiesCRUD.setItems(listResponse.data);
+      }
+      return { ok: true };
     },
     reorder: (ids) => {
       if (!selectedProjectId) {
