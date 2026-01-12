@@ -71,7 +71,7 @@ export const sectionConfigs = {
     uiMode: 'prose',
     scope: 'story',
     docKind: 'prose',
-    label: 'Text',
+    label: 'Writing',
     order: 1,
     component: 'StoryTextView',
     isImplemented: true,

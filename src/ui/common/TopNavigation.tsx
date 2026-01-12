@@ -1,5 +1,5 @@
 // src/ui/common/TopNavigation.tsx
-import React from 'react';
+import React, { Fragment } from 'react';
 import { ActionIcon, Box, Group, Text, Button, Menu, Tooltip, Flex } from '@mantine/core';
 import { Icon } from './Icon';
 import type { IconType } from './Icon';
@@ -14,6 +14,7 @@ export type TopNavigationButton = {
 };
 
 export type TopNavigationMenuItem = {
+  type?: 'item' | 'divider';
   label: string;
   onClick: () => void;
   icon?: IconType;
@@ -179,15 +180,22 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               },
             }}>
               {menuItems.map((item, index) => (
-                <Menu.Item style={{
-                  borderRadius: 4,
-                }}
-                  key={index}
-                  leftSection={item.icon ? <Icon type={item.icon} size={16} /> : undefined}
-                  onClick={item.onClick}
-                >
-                  {item.label}
-                </Menu.Item>
+                <Fragment key={index}>
+                  {(!item.type || item.type === 'item') && (
+                    <Menu.Item style={{
+                      borderRadius: 4,
+                    }}
+                      
+                      leftSection={item.icon ? <Icon type={item.icon} size={16} /> : undefined}
+                      onClick={item.onClick}
+                    >
+                      {item.label}
+                    </Menu.Item>
+                  )}
+                  {item.type === 'divider' && (
+                    <Menu.Divider/>
+                  )}
+                </Fragment>
               ))}
             </Menu.Dropdown>
           </Menu>
