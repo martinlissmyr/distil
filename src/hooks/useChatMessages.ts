@@ -11,6 +11,7 @@ import type { MetaDocKey } from '../types/metaDoc';
 import { getContextRulesFor, type DocKindId } from '../models/docs';
 import { computeDocState } from '../models/docs/docState';
 import { client } from '../api/client';
+import type { ChatThread } from '../../electron/fs/fs';
 
 export type ChatMessage = {
   id: string;
@@ -23,6 +24,18 @@ export type ChatMessage = {
   ephemeral?: boolean;
 
   suggestions?: LocalizedSuggestionAction[];
+
+  /**
+   * Actual prompt sent to API (for user messages from suggestions)
+   * When present, this is sent to LLM instead of `content`
+   * Used to preserve the full context when rehydrating chat history
+   */
+  actualPrompt?: string;
+
+  /**
+   * Skip typing animation (for restored messages from disk)
+   */
+  skipAnimation?: boolean;
 };
 
 interface UseChatMessagesOptions {
@@ -62,8 +75,11 @@ export function useChatMessages({
   storyId,
 }: UseChatMessagesOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const hasInitialisedRef = useRef(false);
   const previousMarkdownLength = useRef(0);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const metaDocs = useAppStore((s) => s.metaDocs);
   const writingLanguage = useAppStore((s) => s.writingLanguage);
@@ -77,11 +93,47 @@ export function useChatMessages({
   // Subscribe to per-doc revision; bumping this should re-seed hint
   const docRevision = useAppStore((s) => s.docRevision?.[docId] ?? 0);
 
-  // Reset completely when switching thread/doc
+  // Load chat history when switching thread/doc
   useEffect(() => {
-    setMessages([]);
-    hasInitialisedRef.current = false;
-    previousMarkdownLength.current = 0;
+    let cancelled = false;
+
+    (async () => {
+      // Load persisted chat history
+      const response = await client.loadChatThread(threadId);
+
+      if (cancelled) return;
+
+      if (response.ok && response.data) {
+        // Restore messages (filter out ephemeral, they'll be regenerated)
+        const restoredMessages = response.data.messages.map(m => ({
+          ...m,
+          // Ephemeral messages are not persisted, so all restored messages are non-ephemeral
+          ephemeral: false,
+          suggestions: undefined, // Suggestions are not persisted
+          skipAnimation: true, // Don't animate restored messages
+        }));
+        setMessages(restoredMessages);
+        setHasLoadedHistory(true);
+        setIsInitializing(true); // Reset for new thread
+      } else {
+        // No history found or error - start fresh
+        setMessages([]);
+        setHasLoadedHistory(true);
+        setIsInitializing(true); // Reset for new thread
+      }
+
+      hasInitialisedRef.current = false;
+      previousMarkdownLength.current = 0;
+    })().catch(err => {
+      console.error('[useChatMessages] Failed to load chat history:', err);
+      setMessages([]);
+      setHasLoadedHistory(true);
+      setIsInitializing(true); // Reset for new thread
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [threadId]);
 
   // If docRevision bumps (e.g. wizard inserted content), allow reseed for same thread
@@ -109,7 +161,7 @@ export function useChatMessages({
 
   // Seed initial assistant hint (visible, but ephemeral => excluded from LLM history)
   useEffect(() => {
-    if (!isTextLoaded || hasInitialisedRef.current) return;
+    if (!isTextLoaded || !hasLoadedHistory || hasInitialisedRef.current) return;
 
     let cancelled = false;
 
@@ -154,7 +206,9 @@ export function useChatMessages({
       if (cancelled) return;
 
       if (hint) {
-        setMessages([
+        // Append hint to end of existing messages (after loaded history)
+        setMessages(prev => [
+          ...prev,
           {
             id: `hint:${threadId}`,
             role: 'assistant',
@@ -163,11 +217,16 @@ export function useChatMessages({
             ephemeral: true,
           },
         ]);
+        hasInitialisedRef.current = true;
+        setIsInitializing(false); // Mark initialization complete
+      } else {
+        // No hint to seed, initialization is complete
+        hasInitialisedRef.current = true;
+        setIsInitializing(false);
       }
-
-      hasInitialisedRef.current = true;
     })().catch((err) => {
       console.error('[useChatMessages] Failed to seed initial hint:', err);
+      setIsInitializing(false); // Mark initialization complete even on error
     });
 
     return () => {
@@ -183,10 +242,56 @@ export function useChatMessages({
     storyId,
     writingLanguage,
     docRevision, // important: re-run when wizard bumps revision
+    hasLoadedHistory,
   ]);
+
+  // Debounced save: persist non-ephemeral messages 1 second after changes
+  useEffect(() => {
+    // Only save if we have history loaded and messages exist
+    if (!hasLoadedHistory || messages.length === 0) return;
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout
+    saveTimeoutRef.current = setTimeout(() => {
+      // Filter out ephemeral messages and limit to 100
+      const persistableMessages = messages
+        .filter(m => !m.ephemeral)
+        .slice(-100)
+        .map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          actualPrompt: m.actualPrompt,
+          // Don't persist ephemeral or suggestions
+        }));
+
+      if (persistableMessages.length > 0) {
+        const thread: ChatThread = {
+          threadId,
+          messages: persistableMessages,
+          createdAt: new Date().toISOString(), // Will be preserved if thread already exists
+          lastUpdated: new Date().toISOString(),
+        };
+
+        client.saveChatThread(thread).catch(err => {
+          console.error('[useChatMessages] Failed to save chat thread:', err);
+        });
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [messages, threadId, hasLoadedHistory]);
 
   const addMessage = (message: ChatMessage) => setMessages((prev) => [...prev, message]);
   const addMessages = (newMessages: ChatMessage[]) => setMessages((prev) => [...prev, ...newMessages]);
 
-  return { messages, addMessage, addMessages };
+  return { messages, addMessage, addMessages, isInitializing };
 }

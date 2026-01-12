@@ -136,7 +136,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
 
   const threadId = getThreadId(doc);
 
-  const { messages, addMessage } = useChatMessages({
+  const { messages, addMessage, isInitializing } = useChatMessages({
     threadId,
     kind,
     fullTextMarkdown,
@@ -164,33 +164,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   });
 
   // Auto-scroll behavior
-  const { viewportRef, contentRef, spacerRef, spacerHeight } = useChatScroll(messages);
-
-  // Measure scrollbar width on mount + resize (kept, per your request to skip #5)
-  useLayoutEffect(() => {
-    const updateScrollbarOffset = () => {
-      if (!scrollContainerRef.current) return;
-      const node = scrollContainerRef.current;
-      const scrollbarWidth = node.offsetWidth - node.clientWidth;
-      setScrollbarOffset(scrollbarWidth);
-    };
-
-    updateScrollbarOffset();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollbarOffset();
-    });
-
-    if (scrollContainerRef.current) {
-      resizeObserver.observe(scrollContainerRef.current);
-    }
-    window.addEventListener('resize', updateScrollbarOffset);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateScrollbarOffset);
-    };
-  }, []);
+  const { viewportRef, contentRef, spacerRef, spacerHeight } = useChatScroll(messages, isInitializing);
 
   const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Always notify parent if it wants to observe actions
@@ -266,7 +240,6 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
           viewportRef={viewportRef}
           type="hover"
           scrollbarSize={10}
-          offsetScrollbars
           styles={{
             thumb: {
               zIndex: 20, // over topOverlay

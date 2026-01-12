@@ -12,6 +12,21 @@ type IpcResponse<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
+/**
+ * Chat thread persistence type
+ */
+type ChatThread = {
+  threadId: string;
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    actualPrompt?: string;
+  }>;
+  createdAt: string;
+  lastUpdated: string;
+};
+
 declare global {
   interface Window {
     distil: {
@@ -142,6 +157,10 @@ declare global {
         entityId: string,
         doc: any
       ) => Promise<IpcResponse<undefined>>;
+
+      // Chat thread persistence
+      loadChatThread: (threadId: string) => Promise<IpcResponse<ChatThread | null>>;
+      saveChatThread: (thread: ChatThread) => Promise<IpcResponse<undefined>>;
     };
 
     chat: {
