@@ -5,7 +5,9 @@ import { useAppStore } from '../../state/useAppStore';
 import { EntityGrid } from '../common/EntityGrid';
 import { TopNavigation } from '../common/TopNavigation';
 import { projectionService } from '../../services/ProjectionGenerationService';
+import type { PartIndexEntry } from '../../models/story';
 import navigationStyles from './StoryNavigation.module.scss';
+import {MIN_WORDS_FOR_PROJECTION_GENERATION, isProjectionStale} from '../../models/story';
 
 type ChapterOverviewProps = {
   projectId: string;
@@ -45,13 +47,26 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     return currentStoryMetadata?.parts || [];
   }, [currentStoryMetadata?.parts]);
 
+  const getProjectionText = (part: PartIndexEntry) => {
+    if (part.wordCount < MIN_WORDS_FOR_PROJECTION_GENERATION) {
+      return "Write a bit more, and I can summarize this.";
+    }
+    if (!part.projection) {
+      return "I'm working on a summary.";
+    }
+    if (isProjectionStale(part)) {
+      return "I'm updating the summary to reflect your latest changes.";
+    }
+    return part.projection?.summary;
+  }
+
   // Transform parts to grid items
   const gridItems: ChapterGridItem[] = useMemo(() => {
     return parts.map((part) => ({
       id: part.id,
       name: `Chapter ${part.order + 1}`,
       order: part.order,
-      text: part.projection?.summary,
+      text: getProjectionText(part),
       comment: part.comment || '',
     }));
   }, [parts]);

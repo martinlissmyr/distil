@@ -2,7 +2,7 @@
 import { useAppStore } from '../state/useAppStore';
 import { client } from '../api/client';
 import { proseJsonToMarkdown } from '../helpers/markdownUtils';
-import { isProjectionStale, hasContent } from '../models/story';
+import { shouldGenerateProjection } from '../models/story';
 import {
   generateProjectionSummary,
   loadPreviousProjection,
@@ -66,13 +66,13 @@ class ProjectionGenerationService {
       return;
     }
 
-    // Only regenerate if projection is stale
-    if (!isProjectionStale(part)) {
-      console.log(`[ProjectionService] Projection for part ${partId} is up-to-date, skipping`);
+    // Check if projection should be generated (word count + staleness)
+    if (!shouldGenerateProjection(part)) {
+      console.log(`[ProjectionService] Skipping projection for part ${partId} (insufficient content or up-to-date)`);
       return;
     }
 
-    console.log(`[ProjectionService] Projection for part ${partId} is stale, regenerating`);
+    console.log(`[ProjectionService] Generating projection for part ${partId}`);
     await this.generateProjection(projectId, storyId, partId);
   }
 
@@ -92,7 +92,7 @@ class ProjectionGenerationService {
     for (const part of currentStoryMetadata.parts) {
       if (part.id === currentPartId) continue; // Skip current part
 
-      if (isProjectionStale(part)) {
+      if (shouldGenerateProjection(part)) {
         // Generate immediately in background (no queue, no idle wait)
         void this.generateProjection(projectId, storyId, part.id);
       }
@@ -130,12 +130,6 @@ class ProjectionGenerationService {
 
     const partDoc = response.data;
     const doc = partDoc.doc;
-
-    // Check if document has content
-    if (!hasContent(doc)) {
-      console.log("[Projection Service] Part has no content, skipping");
-      return;
-    }
 
     // Convert to markdown
     const markdown = proseJsonToMarkdown(doc);
