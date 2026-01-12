@@ -4,7 +4,8 @@ import type { ChatMessage } from './useChatMessages';
 
 /**
  * Hook for managing auto-scroll behavior in chat
- * Scrolls user message or ephemeral assistant message (hint) to top with space below for response
+ * Focuses on target message (user or hint) by scrolling it to top with space below
+ * Does not recalculate during typing animation for stability
  */
 export function useChatScroll(messages: ChatMessage[], isInitializing: boolean = false) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -12,6 +13,7 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
   const spacerRef = useRef<HTMLDivElement | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [spacerHeight, setSpacerHeight] = useState(0);
+  const lastFocusedIndexRef = useRef<number>(-1);
 
   // Measure viewport height
   useEffect(() => {
@@ -30,19 +32,19 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Calculate spacer height - recalculate when content changes size
-  const calculateSpacer = useCallback(() => {
+  // Calculate and focus on target message ONCE when messages/initialization changes
+  const focusTargetMessage = useCallback(() => {
     const vp = viewportRef.current;
     const content = contentRef.current;
     const spacer = spacerRef.current;
 
     if (!vp || !content || messages.length === 0 || viewportHeight === 0 || isInitializing) {
       setSpacerHeight(0);
+      lastFocusedIndexRef.current = -1;
       return;
     }
 
     // Find the last user message OR last ephemeral assistant message (hint)
-    // This gives the message we want to scroll into view with space below
     const lastUserMessageIndex = messages.findLastIndex((m: ChatMessage) => m.role === 'user');
     const lastHintIndex = messages.findLastIndex((m: ChatMessage) => m.role === 'assistant' && m.ephemeral);
 
@@ -51,8 +53,16 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
 
     if (targetMessageIndex === -1) {
       setSpacerHeight(0);
+      lastFocusedIndexRef.current = -1;
       return;
     }
+
+    // Only recalculate if target changed
+    if (targetMessageIndex === lastFocusedIndexRef.current) {
+      return;
+    }
+
+    lastFocusedIndexRef.current = targetMessageIndex;
 
     const messageElements = vp.querySelectorAll('[data-message-bubble]');
     const targetElement = messageElements[targetMessageIndex] as HTMLElement;
@@ -65,7 +75,7 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     const desiredOffset = 140;
     const clientHeight = vp.clientHeight;
 
-    // Get the bottom of the target message (user or hint)
+    // Get the bottom of the target message
     const targetMessageBottom = targetElement.offsetTop + targetElement.offsetHeight;
 
     // Calculate content below target message (excluding the spacer itself)
@@ -80,47 +90,22 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     const newSpacerHeight = Math.max(0, spaceNeeded - contentBelowTargetMessage);
 
     setSpacerHeight(newSpacerHeight);
-  }, [messages, viewportHeight, isInitializing]);
 
-  // Recalculate when messages change
-  useEffect(() => {
+    // Scroll to bottom after spacer is applied
     requestAnimationFrame(() => {
       setTimeout(() => {
-        calculateSpacer();
+        vp.scrollTo({
+          top: vp.scrollHeight - vp.clientHeight,
+          behavior: 'smooth',
+        });
       }, 100);
     });
-  }, [messages, calculateSpacer]);
+  }, [messages, viewportHeight, isInitializing]);
 
-  // Watch for content size changes (typing animation)
+  // Focus when messages or initialization state changes
   useEffect(() => {
-    const content = contentRef.current;
-    if (!content) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      calculateSpacer();
-    });
-
-    resizeObserver.observe(content);
-
-    return () => resizeObserver.disconnect();
-  }, [calculateSpacer]);
-
-  // Scroll to bottom when messages change (after last message is rendered)
-  useEffect(() => {
-    const vp = viewportRef.current;
-    if (!vp || messages.length === 0 || isInitializing) {
-      return;
-    }
-
-    // Wait for DOM to update
-    requestAnimationFrame(() => {
-      // Scroll to the absolute bottom
-      vp.scrollTo({
-        top: vp.scrollHeight - vp.clientHeight,
-        behavior: 'smooth',
-      });
-    });
-  }, [messages, isInitializing, spacerHeight]); 
+    focusTargetMessage();
+  }, [focusTargetMessage]);
 
   return { viewportRef, contentRef, spacerRef, spacerHeight };
 }
