@@ -1,0 +1,8 @@
+- [ ] Saving full prose doc as PDF from preview (possibly using https://react-pdf.org/)
+- [ ] Possibility to chat with a character. Possibly by @-mentioning a character in a chat
+- [ ] Toggle between notes and chat for a prose part
+- [ ] Todos
+- [ ] Context Docs on Project level? How would inheritance or overrides work?
+- [ ] Photos, uploaded or generated, on entities
+- [ ] Covers, uploaded or generated, on projects and stories
+- [ ] 
