@@ -1,3 +1,4 @@
+// src/ui/story/StoryPreview.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
 import { useAppStore } from '../../state/useAppStore';
