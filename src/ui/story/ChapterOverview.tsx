@@ -187,6 +187,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
           createLabel="New Chapter"
           mode="list"
           sorting={organise}
+          icon="chapter"
         />
       </Box>
     </Box>

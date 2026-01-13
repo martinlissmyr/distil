@@ -1,5 +1,5 @@
 // src/ui/chat/ChatAside.tsx
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
@@ -120,7 +120,6 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   const kind = doc.docKind;
 
   const [input, setInput] = useState('');
-  const [scrollbarOffset, setScrollbarOffset] = useState(0);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
   const [isScrolledBottom, setIsScrolledBottom] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -283,7 +282,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
             position: 'absolute',
             bottom: 0,
             left: 0,
-            right: scrollbarOffset,
+            right: 0,
             height: 60,
             pointerEvents: 'none',
             zIndex: 10,

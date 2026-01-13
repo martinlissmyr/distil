@@ -13,12 +13,16 @@ export type TopNavigationButton = {
   enabled?: boolean;
 };
 
-export type TopNavigationMenuItem = {
-  type?: 'item' | 'divider';
-  label: string;
-  onClick: () => void;
-  icon?: IconType;
-};
+export type TopNavigationMenuItem =
+  | {
+      type?: 'item';
+      label: string;
+      onClick: () => void;
+      icon?: IconType;
+    }
+  | {
+      type: 'divider';
+    };
 
 type TopNavigationProps = {
   title: string;
@@ -163,7 +167,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
         {/* Menu button */}
         {menuItems.length > 0 && (
-          <Menu position="bottom-end" withinPortal className={ classes.menu }>
+          <Menu position="bottom-end" withinPortal classNames={{ dropdown: classes.menu }}>
             <Menu.Target>
               <ActionIcon
                 aria-label="Options"

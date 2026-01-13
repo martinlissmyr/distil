@@ -155,7 +155,7 @@ const App: React.FC = () => {
       if (listResponse.ok) {
         storiesCRUD.setItems(listResponse.data);
       }
-      return { ok: true };
+      return { ok: true, data: undefined };
     },
     reorder: (ids) => {
       if (!selectedProjectId) {
