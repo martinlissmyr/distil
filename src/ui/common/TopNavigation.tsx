@@ -174,6 +174,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 variant="light"
                 size="lg"
                 radius="xl"
+                className={classes.menuButton}
               >
                 <Icon type="more" size={20} />
               </ActionIcon>
