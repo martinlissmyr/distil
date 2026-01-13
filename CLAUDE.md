@@ -87,6 +87,24 @@ Follow these project-specific conventions:
 - Specific validation or interaction patterns are repeated
 - You need to enforce consistent styling that differs from Mantine defaults
 
+### Type Error Resolution
+
+When encountering TypeScript type errors:
+
+**DON'T add things just to satisfy types** - If a type requires a property that seems unused or unnecessary (like an `icon` prop that isn't rendered), this often indicates the type should be modified, not the usage.
+
+**DO ask before choosing a fix approach:**
+- "Should I make this property optional in the type definition?"
+- "Should I add this property to the component (and render it)?"
+- "Is this type constraint correct for this use case?"
+
+**Examples of what NOT to do:**
+- Adding an `icon` prop that gets passed but never rendered just to satisfy `EntityGridProps`
+- Providing dummy values for required fields that aren't actually used
+- Working around type constraints instead of fixing the underlying type design
+
+**When in doubt**, propose the architectural fix (making properties optional, using discriminated unions, etc.) rather than adding unused code.
+
 ## Development Philosophy
 
 Optimize for these priorities in order:
