@@ -73,7 +73,7 @@ export const StoryPreview = ({
             const Element = renderToReactElement({
               extensions,
               content: { type: 'doc', content },
-            });
+            }) as React.ReactElement;
 
             return { partId: part.id, partIndex: index, Element } satisfies PartDoc;
           })
