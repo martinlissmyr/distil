@@ -58,7 +58,7 @@ type EntityGridProps<T> = {
   onCreate: () => void;
   onReorderEntities: (ids: string[]) => void;
 
-  icon: string;
+  icon?: string;
 
   title?: string;
   createLabel?: string;
