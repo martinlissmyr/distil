@@ -239,10 +239,23 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 **Projects** (`src/ui/projects/`)
 - Grid view of all projects with drag-to-reorder support (@dnd-kit)
 
+**Editors** (`src/ui/editor/`)
+- `WritingEnvironment`: Core editor layout component used by all editing views
+  - Owns complete editor lifecycle (creates editor, handles sync, autosave)
+  - Integrates TipTap editor, ChatAside, search, markdown extraction
+  - Takes `docKind`, `content`, `onUpdate`, `onSave` - fully declarative API
+  - Supports custom content injection via `renderEditorContent` prop
+  - Used by both MetaTextEditor and StoryTextView
+- `MetaTextEditor`: High-level wrapper for meta documents (manifest, brief, outline, world)
+  - Loads from Zustand store, passes to WritingEnvironment
+  - Simple API: just `scope` + `metaKey`
+- `SearchPanel`: Find/replace panel (Cmd+F / Ctrl+F)
+- `EditorToolbar`: Formatting toolbar (headings, lists, etc.)
+
 **Stories** (`src/ui/stories/`)
 - Grid view of stories within a project
 - `StoryTextView`: Main prose editor with **three subview modes**:
-  - **Editor mode (default)**: TipTap prose editor + chat aside
+  - **Editor mode (default)**: Uses WritingEnvironment for prose editing + chat aside
   - **Chapters overview mode**: chapter list/grid with AI summaries + organization tools
   - **Story preview mode (reading mode)**: clean, non-editable reading view rendering all parts
 
@@ -283,11 +296,32 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 
 ## Key Patterns
 
+**Editor Architecture**
+- All text editing uses `WritingEnvironment` component
+- Three-layer architecture:
+  1. **Core hooks** (`src/hooks/`): Reusable editor capabilities
+     - `useMarkdownExtraction`: Full text + selection markdown
+     - `useEditorSearch`: Search panel state + keyboard shortcuts
+     - `useEditorSync`: Syncs TipTap editor with external state
+     - `useEditorChat`: Wizard and navigation integration
+  2. **WritingEnvironment** (`src/ui/editor/`): Complete editor UI
+     - Creates TipTap editor from `docKind` config
+     - Handles sync via `onUpdate` callback
+     - Handles autosave via `onSave` callback (configurable delay)
+     - Integrates search, markdown extraction, chat aside
+     - Provides layout (top nav, bottom nav, scroll area, chat)
+  3. **Document-specific wrappers**: MetaTextEditor, StoryTextView
+     - Load document from storage
+     - Provide update/save handlers
+     - Manage document-specific features (parts, subviews, etc.)
+
 **Autosave**
-- All editors (except entities) have debounced autosave (800-1000ms)
-- Uses `useEffect` hooks that watch dirty state + content
-- **ProseEditor**: Main story prose autosaved from App.tsx when dirty
-- **MetaTextEditor**: Outline/brief/manifest editors manage their own autosave independently
+- All editors have debounced autosave (configurable via `autosaveDelay` prop)
+- **WritingEnvironment** handles autosave internally via `useEffect`
+- Default delays:
+  - Meta documents: 800ms
+  - Prose documents: 1000ms
+- Autosave triggers `onSave` callback provided by parent component
 - Each metaDoc saves only its own content (~1-10KB) rather than entire story file
 
 **IPC Communication**
