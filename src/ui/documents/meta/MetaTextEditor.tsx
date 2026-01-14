@@ -1,10 +1,10 @@
-// src/ui/editor/MetaTextEditor.tsx
+// src/ui/documents/meta/MetaTextEditor.tsx
 import { useEffect, useMemo, useCallback } from 'react';
-import { WritingEnvironment } from './WritingEnvironment';
-import type { ChatConfig } from '../../types/editor';
+import { WritingEnvironment } from '../../editor/WritingEnvironment';
+import type { ChatConfig } from '../../../types/editor';
 
-import { useAppStore, metaId } from '../../state/useAppStore';
-import type { MetaScope, MetaDocKey } from '../../types/metaDoc';
+import { useAppStore, metaId } from '../../../state/useAppStore';
+import type { MetaScope, MetaDocKey } from '../../../types/metaDoc';
 
 type MetaTextEditorProps = {
   scope: MetaScope;          // where this metaDoc lives (root/project/story)

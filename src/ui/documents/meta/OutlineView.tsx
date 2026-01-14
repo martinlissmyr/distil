@@ -1,16 +1,16 @@
-// src/ui/stories/StoryOutlineView.tsx
+// src/ui/documents/meta/OutlineView.tsx
 import React from 'react';
-import { MetaTextEditor } from '../editor/MetaTextEditor';
-import { useEditorChat } from '../../hooks/useEditorChat';
-import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
+import { MetaTextEditor } from './MetaTextEditor';
+import { useEditorChat } from '../../../hooks/useEditorChat';
+import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
 
-type StoryOutlineViewProps = {
+type OutlineViewProps = {
   projectId: string;
   storyId: string;
   title: string;
 };
 
-export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
+export const OutlineView: React.FC<OutlineViewProps> = ({
   projectId,
   storyId,
   title,

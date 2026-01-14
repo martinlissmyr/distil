@@ -1,17 +1,17 @@
-// src/ui/stories/StoryBriefView.tsx
+// src/ui/documents/meta/BriefView.tsx
 import React from 'react';
-import { MetaTextEditor } from '../editor/MetaTextEditor';
-import { useEditorChat } from '../../hooks/useEditorChat';
-import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
-import type { MetaScope } from '../../types/metaDoc';
+import { MetaTextEditor } from './MetaTextEditor';
+import { useEditorChat } from '../../../hooks/useEditorChat';
+import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
+import type { MetaScope } from '../../../types/metaDoc';
 
-type StoryBriefViewProps = {
+type BriefViewProps = {
   projectId: string;
   storyId: string;
   title: string;
 };
 
-export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
+export const BriefView: React.FC<BriefViewProps> = ({
   projectId,
   storyId,
   title,

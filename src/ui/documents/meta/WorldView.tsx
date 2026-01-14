@@ -1,16 +1,16 @@
-// src/ui/stories/StoryWorldView.tsx
+// src/ui/documents/meta/WorldView.tsx
 import React from 'react';
-import { MetaTextEditor } from '../editor/MetaTextEditor';
-import { useEditorChat } from '../../hooks/useEditorChat';
-import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
+import { MetaTextEditor } from './MetaTextEditor';
+import { useEditorChat } from '../../../hooks/useEditorChat';
+import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
 
-type StoryWorldViewProps = {
+type WorldViewProps = {
   projectId: string;
   storyId: string;
   title: string;
 };
 
-export const StoryWorldView: React.FC<StoryWorldViewProps> = ({
+export const WorldView: React.FC<WorldViewProps> = ({
   projectId,
   storyId,
   title,

@@ -1,7 +1,7 @@
-// src/ui/manifest/ManifestView.tsx
+// src/ui/documents/meta/ManifestView.tsx
 import React from 'react';
 import { Box } from '@mantine/core';
-import { MetaTextEditor } from '../editor/MetaTextEditor';
+import { MetaTextEditor } from './MetaTextEditor';
 
 export const ManifestView: React.FC = () => {
   return (
