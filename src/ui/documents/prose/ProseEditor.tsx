@@ -1,14 +1,14 @@
 // src/ui/story/StoryTextView.tsx
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Box } from '@mantine/core';
-import { WritingEnvironment } from '../editor/WritingEnvironment';
-import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
-import { TopNavigation, type TopNavigationMenuItem } from '../common/TopNavigation';
+import { WritingEnvironment } from '../../editor/WritingEnvironment';
+import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
+import { TopNavigation, type TopNavigationMenuItem } from '../../common/TopNavigation';
 import { useChapterNavigationButtons } from './ChapterNavigation';
 import { ChapterOverview } from './ChapterOverview';
-import { useAppStore } from '../../state/useAppStore';
-import { useNavigation } from '../../hooks/useNavigation';
-import { getNextPart, getPreviousPart } from '../../models/story';
+import { useAppStore } from '../../../state/useAppStore';
+import { useNavigation } from '../../../hooks/useNavigation';
+import { getNextPart, getPreviousPart } from '../../../models/story';
 import { PartPreview } from './PartPreview';
 import { StoryPreview } from './StoryPreview';
 
@@ -22,7 +22,7 @@ type StoryTextViewProps = {
 
 type Subview = 'editor' | 'chapters' | 'storyPreview';
 
-export const StoryTextView: React.FC<StoryTextViewProps> = ({
+export const ProseEditor: React.FC<StoryTextViewProps> = ({
   projectId,
   storyId,
   doc,

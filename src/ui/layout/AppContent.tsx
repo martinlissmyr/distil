@@ -1,15 +1,15 @@
 // src/ui/layout/AppContent.tsx
 import React from 'react';
 import { Box } from '@mantine/core';
-import { ProjectsView } from '../projects/ProjectsView';
+import { ProjectsView } from '../views/ProjectsView';
 import { ManifestView } from '../documents/meta/ManifestView';
 import { PlaygroundView } from '../playground/PlaygroundView';
-import { StoriesView } from '../stories/StoriesView';
-import { StoryTextView } from '../story/StoryTextView';
+import { StoriesView } from '../views/StoriesView';
+import { ProseEditor } from '../documents/prose/ProseEditor';
 import { OutlineView } from '../documents/meta/OutlineView';
 import { WorldView } from '../documents/meta/WorldView';
 import { BriefView } from '../documents/meta/BriefView';
-import { EntityIndexView } from '../story/EntityIndexView';
+import { EntityIndexView } from '../documents/entity/EntityIndexView';
 import type { Project, StoryMeta } from '../../api/client';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
 import { getSectionConfig, isSectionImplemented, type SectionId } from '../../models/sections';
@@ -121,7 +121,7 @@ export const AppContent: React.FC<AppContentProps> = ({
     switch (sectionConfig.component) {
       case 'StoryTextView':
         return (
-          <StoryTextView
+          <ProseEditor
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             doc={currentDoc}

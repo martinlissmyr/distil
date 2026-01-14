@@ -1,22 +1,22 @@
 // src/ui/story/EntityEditView.tsx
 import { useState, useEffect, useMemo, useCallback, useRef, type RefObject } from 'react';
 import { Box, Stack, ScrollArea } from '@mantine/core';
-import type { DocumentTypeDef, FieldDef } from '../../models/entities/schemas/types';
-import { TopNavigation } from '../common/TopNavigation';
-import { Textarea } from '../common/inputs/Textarea';
-import { TextInput } from '../common/inputs/TextInput';
-import { Select } from '../common/inputs/Select';
+import type { DocumentTypeDef, FieldDef } from '../../../models/entities/schemas/types';
+import { TopNavigation } from '../../common/TopNavigation';
+import { Textarea } from '../../common/inputs/Textarea';
+import { TextInput } from '../../common/inputs/TextInput';
+import { Select } from '../../common/inputs/Select';
 import styles from './EntityIndexView.module.scss';
-import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../common/SettingsGroup';
-import { useLeaveGuardStore } from '../../hooks/useNavigation';
-import { ChatAside } from '../chat/ChatAside';
-import { useEditorChat } from '../../hooks/useEditorChat';
-import { entityToMarkdown } from '../../helpers/entityMarkdownUtils';
-import { buildEntityProjection } from '../../helpers/entityProjectionUtils';
-import type { DocRefWithKind } from '../../types/docRef';
-import { getContextDocs } from '../../chat/contextSelector';
-import { useAppStore } from '../../state/useAppStore';
-import { getZodDefault, getRequiredFields } from '../../helpers/zodHelpers';
+import { SettingsGroup, SettingsGroupLabel, type SettingItem } from '../../common/SettingsGroup';
+import { useLeaveGuardStore } from '../../../hooks/useNavigation';
+import { ChatAside } from '../../chat/ChatAside';
+import { useEditorChat } from '../../../hooks/useEditorChat';
+import { entityToMarkdown } from '../../../helpers/entityMarkdownUtils';
+import { buildEntityProjection } from '../../../helpers/entityProjectionUtils';
+import type { DocRefWithKind } from '../../../types/docRef';
+import { getContextDocs } from '../../../chat/contextSelector';
+import { useAppStore } from '../../../state/useAppStore';
+import { getZodDefault, getRequiredFields } from '../../../helpers/zodHelpers';
 
 type EntityEditViewProps<T extends Record<string, any>> = {
   projectId: string;

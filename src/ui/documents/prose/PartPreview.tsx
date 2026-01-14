@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from '@mantine/core';
-import { Icon } from '../common/Icon';
+import { Icon } from '../../common/Icon';
 import classes from './PartPreview.module.scss';
 
 type PartPreviewProps = {

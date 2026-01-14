@@ -1,13 +1,13 @@
 // src/ui/story/ChapterOverview.tsx
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box } from '@mantine/core';
-import { useAppStore } from '../../state/useAppStore';
-import { EntityGrid } from '../common/EntityGrid';
-import { TopNavigation } from '../common/TopNavigation';
-import { projectionService } from '../../services/ProjectionGenerationService';
-import type { PartIndexEntry } from '../../models/story';
+import { useAppStore } from '../../../state/useAppStore';
+import { EntityGrid } from '../../common/EntityGrid';
+import { TopNavigation } from '../../common/TopNavigation';
+import { projectionService } from '../../../services/ProjectionGenerationService';
+import type { PartIndexEntry } from '../../../models/story';
 import navigationStyles from './StoryNavigation.module.scss';
-import {MIN_WORDS_FOR_PROJECTION_GENERATION, isProjectionStale} from '../../models/story';
+import {MIN_WORDS_FOR_PROJECTION_GENERATION, isProjectionStale} from '../../../models/story';
 
 type ChapterOverviewProps = {
   projectId: string;

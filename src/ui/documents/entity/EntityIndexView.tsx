@@ -1,19 +1,19 @@
 // src/ui/story/EntityIndexView.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Text, Stack } from '@mantine/core';
-import { getDocKind } from '../../models/docs';
-import type { DocKindId } from '../../models/docs';
-import type { EntityIndex, EntityIndexEntry } from '../../models/entities/entityIndex';
-import type { CharacterDoc } from '../../models/entities/schemas/character';
-import type { LocationDoc } from '../../models/entities/schemas/location';
+import { getDocKind } from '../../../models/docs';
+import type { DocKindId } from '../../../models/docs';
+import type { EntityIndex, EntityIndexEntry } from '../../../models/entities/entityIndex';
+import type { CharacterDoc } from '../../../models/entities/schemas/character';
+import type { LocationDoc } from '../../../models/entities/schemas/location';
 import { EntityEditView } from './EntityEditView';
-import { characterType } from '../../models/entities/schemas/character';
-import { locationType } from '../../models/entities/schemas/location';
-import { client } from '../../api/client';
+import { characterType } from '../../../models/entities/schemas/character';
+import { locationType } from '../../../models/entities/schemas/location';
+import { client } from '../../../api/client';
 import styles from './EntityIndexView.module.scss';
-import { EntityGrid } from '../common/EntityGrid';
-import { TopNavigation } from '../common/TopNavigation';
-import { buildEntityProjectionMarkdown, loadProjectionTemplate, getPrimaryTitleValue } from '../../helpers/entityProjectionUtils';
+import { EntityGrid } from '../../common/EntityGrid';
+import { TopNavigation } from '../../common/TopNavigation';
+import { buildEntityProjectionMarkdown, loadProjectionTemplate, getPrimaryTitleValue } from '../../../helpers/entityProjectionUtils';
 
 type EntityIndexViewProps = {
   projectId: string;
