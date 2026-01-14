@@ -5,7 +5,7 @@ import { Copy, Check } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { proseJsonToMarkdown } from '../../helpers/markdownUtils';
 import { generateProjectionSummary } from '../../services/projectionUtils';
-import { createExtensionsFromConfig } from '../editor/editorConfigFactory';
+import { createExtensionsFromConfig } from '../editor/primitives/editorConfigFactory';
 import { proseEditorConfig } from '../../models/docs/editorConfig';
 
 type TabValue = 'system' | 'assistant' | 'user' | 'summary';

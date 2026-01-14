@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { TextInput, ActionIcon, Group, Paper, Text } from '@mantine/core';
 import { Editor } from '@tiptap/react';
 import { SearchQuery, setSearchState, findNext, findPrev } from 'prosemirror-search';
-import { Icon } from '../common/Icon';
+import { Icon } from '../../common/Icon';
 import styles from './SearchPanel.module.scss';
 
 export type SearchPanelProps = {

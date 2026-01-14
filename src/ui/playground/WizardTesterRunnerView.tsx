@@ -19,9 +19,9 @@ import { getWizardConfig } from '../../wizards/registry';
 import type { WizardConfig } from '../../wizards/types';
 import type { EditorKind } from '../../types/chat';
 
-import { createExtensionsFromConfig } from '../editor/editorConfigFactory';
+import { createExtensionsFromConfig } from '../editor/primitives/editorConfigFactory';
 import { metaEditorConfig } from '../../models/docs/editorConfig';
-import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
+import { defaultEmptyDoc } from '../editor/primitives/defaultEmptyDoc';
 
 import { findTestableLlmSteps, type TestableLlmStep } from '../../wizards/testUtils';
 import { IsolatedLlmStepTester } from './IsolatedLlmStepTester';
