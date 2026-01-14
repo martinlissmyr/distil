@@ -1,17 +1,18 @@
 // src/ui/editor/BaseEditor.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { ChatAside } from '../chat/ChatAside';
 import type { ChatConfig } from '../../types/editor';
-import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { TopNavigation } from '../common/TopNavigation';
 import styles from './BaseEditor.module.scss';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { SearchPanel } from './SearchPanel';
 
 import { useEditorChat } from '../../hooks/useEditorChat';
+import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
+import { useEditorSearch } from '../../hooks/useEditorSearch';
 
 export type BaseEditorProps = {
   editor: Editor | null;
@@ -30,14 +31,6 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   chatConfig,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
-
-  const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
-  const [selectionMarkdown, setSelectionMarkdown] = useState('');
-  const [hasSelection, setHasSelection] = useState(false);
-
-  // Track if user has ever made a selection (menu stays open once triggered)
-  const hadSelectionRef = useRef(false);
 
   // Determine schema based on editor kind
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
@@ -45,85 +38,11 @@ export const BaseEditor: React.FC<BaseEditorProps> = ({
   // Wizard integration via reusable hook
   const { handleOpenWizard } = useEditorChat({ chatConfig, editor: editor ?? undefined });
 
-  // Extract full text markdown when editor content changes
-  useEffect(() => {
-    if (!editor) return;
+  // Extract markdown from editor content and selection
+  const { fullTextMarkdown, selectionMarkdown, hasSelection } = useMarkdownExtraction(editor, schema);
 
-    const updateMarkdown = () => {
-      try {
-        const json = editor.getJSON();
-        const markdown = jsonToMarkdown(json, schema);
-        setFullTextMarkdown(markdown);
-      } catch (error) {
-        console.error('Failed to extract markdown:', error);
-        setFullTextMarkdown('');
-      }
-    };
-
-    updateMarkdown();
-
-    const handleUpdate = () => updateMarkdown();
-    editor.on('update', handleUpdate);
-
-    return () => {
-      editor.off('update', handleUpdate);
-    };
-  }, [editor, schema]);
-
-  // Track selection changes
-  useEffect(() => {
-    if (!editor) return;
-
-    const updateSelection = () => {
-      const { from, to } = editor.state.selection;
-      const hasActiveSelection = from !== to;
-      setHasSelection(hasActiveSelection);
-
-      // Update ref for bubble menu - once set, stays true forever
-      if (hasActiveSelection) {
-        hadSelectionRef.current = true;
-      }
-
-      if (hasActiveSelection) {
-        try {
-          const slice = editor.state.doc.slice(from, to);
-          const selectedContent = slice.content.toJSON();
-          const markdown = jsonToMarkdown({ type: 'doc', content: selectedContent }, schema);
-          setSelectionMarkdown(markdown);
-        } catch (error) {
-          console.error('Failed to extract selection markdown:', error);
-          setSelectionMarkdown('');
-        }
-      } else {
-        setSelectionMarkdown('');
-      }
-    };
-
-    updateSelection();
-
-    const handleSelectionUpdate = () => updateSelection();
-    editor.on('selectionUpdate', handleSelectionUpdate);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-    };
-  }, [editor, schema]);
-
-  // Keyboard listener for Cmd+F / Ctrl+F to toggle search panel
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        setSearchPanelOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+  // Search panel management
+  const { searchPanelOpen, setSearchPanelOpen } = useEditorSearch();
 
   if (!editor) return null;
 
