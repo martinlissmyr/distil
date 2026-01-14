@@ -1,8 +1,8 @@
 // src/ui/stories/StoryBriefView.tsx
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
-import { StorySectionShell } from './StorySectionShell';
 import { useEditorChat } from '../../hooks/useEditorChat';
+import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
 import type { MetaScope } from '../../types/metaDoc';
 
 type StoryBriefViewProps = {
@@ -29,25 +29,23 @@ export const StoryBriefView: React.FC<StoryBriefViewProps> = ({
     projectId,
     storyId,
   };
+
+  // Preload context docs
+  usePreloadMetaDocs(scope, ['brief']);
+
   return (
-    <StorySectionShell
-      projectId={projectId}
-      storyId={storyId}
-      preloadMetaKeys={['brief']}
-    >
-      <MetaTextEditor
-        scope={scope}
-        metaKey="brief"
-        title={title}
-        placeholder="Capture the core idea of this story…"
-        withChat
-        chatConfig={{
-          kind: 'brief',
-          storyId,
-          projectId,
-          onNavigate: handleNavigate,
-        }}
-      />
-    </StorySectionShell>
+    <MetaTextEditor
+      scope={scope}
+      metaKey="brief"
+      title={title}
+      placeholder="Capture the core idea of this story…"
+      withChat
+      chatConfig={{
+        kind: 'brief',
+        storyId,
+        projectId,
+        onNavigate: handleNavigate,
+      }}
+    />
   );
 };

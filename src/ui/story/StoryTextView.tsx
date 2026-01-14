@@ -1,8 +1,8 @@
 // src/ui/story/StoryTextView.tsx
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Box } from '@mantine/core';
-import { StorySectionShell } from './StorySectionShell';
 import { WritingEnvironment } from '../editor/WritingEnvironment';
+import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
 import { TopNavigation, type TopNavigationMenuItem } from '../common/TopNavigation';
 import { useChapterNavigationButtons } from './ChapterNavigation';
 import { ChapterOverview } from './ChapterOverview';
@@ -298,50 +298,41 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   // Future: Add more menu items here (story settings, export, etc.)
 
+  // Preload context docs
+  usePreloadMetaDocs(
+    { scope: 'story', projectId, storyId },
+    ['brief', 'outline']
+  );
+
   // Don't render editor until part data is synced
   if (isLoading) return null;
 
   // Show story preview subview
   if (subview === 'storyPreview') {
     return (
-      <StorySectionShell
+      <StoryPreview
         projectId={projectId}
         storyId={storyId}
-      >
-        <StoryPreview
-          projectId={projectId}
-          storyId={storyId}
-          currentStoryTitle={title}
-          onNavigateToEditor={() => setSubview('editor')}
-        />
-      </StorySectionShell>
+        currentStoryTitle={title}
+        onNavigateToEditor={() => setSubview('editor')}
+      />
     );
   }
 
   // Show chapters overview subview
   if (subview === 'chapters') {
     return (
-      <StorySectionShell
+      <ChapterOverview
         projectId={projectId}
         storyId={storyId}
-      >
-        <ChapterOverview
-          projectId={projectId}
-          storyId={storyId}
-          currentStoryTitle={title}
-          onNavigateToEditor={() => setSubview('editor')}
-        />
-      </StorySectionShell>
+        currentStoryTitle={title}
+        onNavigateToEditor={() => setSubview('editor')}
+      />
     );
   }
 
   // Show main editor subview
   return (
-    <StorySectionShell
-      projectId={projectId}
-      storyId={storyId}
-      preloadMetaKeys={['brief', 'outline']}
-    >
       <WritingEnvironment
         docKind="prose"
         content={doc}
@@ -388,6 +379,5 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
           </>
         )}
       />
-    </StorySectionShell>
   );
 };
