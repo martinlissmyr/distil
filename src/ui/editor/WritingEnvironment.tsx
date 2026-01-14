@@ -14,7 +14,7 @@ import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
 import { useEditorSearch } from '../../hooks/useEditorSearch';
 import { useEditorSync } from '../../hooks/useEditorSync';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
-import { getDocKind, isRichTextDoc } from '../../models/docs';
+import { getDocKind, isRichTextDoc, isMultiPartTextDoc } from '../../models/docs';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
 import styles from './WritingEnvironment.module.scss';
 
@@ -94,10 +94,10 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   // Get editor config from doc model
   const docKindConfig = getDocKind(docKind);
 
-  // Type guard: only rich text docs have editorConfig
-  if (!isRichTextDoc(docKindConfig)) {
+  // Type guard: only rich text and multi-part text docs have editorConfig
+  if (!isRichTextDoc(docKindConfig) && !isMultiPartTextDoc(docKindConfig)) {
     throw new Error(
-      `WritingEnvironment called with non-rich-text doc kind: "${docKind}". ` +
+      `WritingEnvironment called with non-editable doc kind: "${docKind}". ` +
       `Entity index docs should use custom entity management UI.`
     );
   }
