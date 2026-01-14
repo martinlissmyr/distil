@@ -1,4 +1,4 @@
-// src/ui/projects/ProjectEditModal.tsx
+// src/ui/modals/ProjectEditModal.tsx
 import React from 'react';
 import {
   Modal,
