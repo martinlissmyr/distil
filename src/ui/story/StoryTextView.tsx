@@ -1,26 +1,16 @@
 // src/ui/story/StoryTextView.tsx
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { Box, ScrollArea } from '@mantine/core';
-import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import { Box } from '@mantine/core';
 import { StorySectionShell } from './StorySectionShell';
-import { useEditorChat } from '../../hooks/useEditorChat';
-import { useEditorSync } from '../../hooks/useEditorSync';
-import { ChatAside } from '../chat/ChatAside';
+import { WritingEnvironment } from '../editor/WritingEnvironment';
 import { TopNavigation, type TopNavigationMenuItem } from '../common/TopNavigation';
 import { useChapterNavigationButtons } from './ChapterNavigation';
 import { ChapterOverview } from './ChapterOverview';
-import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
-import { createExtensionsFromConfig, createToolbarFromConfig } from '../editor/editorConfigFactory';
-import { getDocKind } from '../../models/docs';
-import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { useAppStore } from '../../state/useAppStore';
 import { useNavigation } from '../../hooks/useNavigation';
 import { getNextPart, getPreviousPart } from '../../models/story';
 import { PartPreview } from './PartPreview';
 import { StoryPreview } from './StoryPreview';
-import { SearchPanel } from '../editor/SearchPanel';
-import styles from '../editor/BaseEditor.module.scss';
 
 type StoryTextViewProps = {
   projectId: string;
@@ -40,14 +30,6 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   title,
 }) => {
   const [subview, setSubview] = useState<Subview>('editor');
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
-  const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
-  const [selectionMarkdown, setSelectionMarkdown] = useState('');
-  const [hasSelection, setHasSelection] = useState(false);
-
-  // Track if user has ever made a selection (menu stays open once triggered)
-  const hadSelectionRef = useRef(false);
 
   // Refs for part preview scroll anchoring
   const scrollViewportRef = useRef<HTMLDivElement>(null);
@@ -115,18 +97,6 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   const showPreviousPreview = partsEnabled && previousPart?.projection?.summary;
   const showNextPreview = partsEnabled && nextPart?.projection?.summary;
 
-  // Get editor config from doc model
-  const docKind = getDocKind('prose');
-  const editorConfig = { ...(docKind as any).editorConfig };
-  editorConfig.placeholder = "Start writing your story...";
-
-  const editor = useEditor({
-    extensions: createExtensionsFromConfig(editorConfig),
-    content: doc ?? defaultEmptyDoc,
-  });
-
-  useEditorSync(editor, doc, onChange);
-
   // Load part document when currentPartId changes and sync to navigation store
   useEffect(() => {
     if (!currentPartId) return;
@@ -142,7 +112,15 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   // The editor content flows correctly via the `doc` prop from parent.
   // Syncing store → parent would create circular data flow and overwrite correct content with stale data.
 
-  const toolbar = createToolbarFromConfig(editorConfig, editor);
+  // Update and save handlers - memoized to prevent unnecessary re-renders
+  const handleUpdate = useCallback((nextDoc: any) => {
+    onChange(nextDoc);
+  }, [onChange]);
+
+  const handleSave = useCallback(() => {
+    // Story documents are saved via the onChange handler
+    // The autosave mechanism will trigger this periodically
+  }, []);
 
   // Chat configuration
   const chatConfig = {
@@ -151,91 +129,6 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
     storyTitle: title,
     projectId,
   };
-
-  const { handleNavigate, handleOpenWizard } = useEditorChat({
-    chatConfig,
-    editor: editor ?? undefined,
-  });
-
-  // Extract full text markdown when editor content changes
-  useEffect(() => {
-    if (!editor) return;
-
-    const updateMarkdown = () => {
-      try {
-        const json = editor.getJSON();
-        const markdown = jsonToMarkdown(json, 'prose');
-        setFullTextMarkdown(markdown);
-      } catch (error) {
-        console.error('Failed to extract markdown:', error);
-        setFullTextMarkdown('');
-      }
-    };
-
-    updateMarkdown();
-
-    const handleUpdate = () => updateMarkdown();
-    editor.on('update', handleUpdate);
-
-    return () => {
-      editor.off('update', handleUpdate);
-    };
-  }, [editor]);
-
-  // Track selection changes
-  useEffect(() => {
-    if (!editor) return;
-
-    const updateSelection = () => {
-      const { from, to } = editor.state.selection;
-      const hasActiveSelection = from !== to;
-      setHasSelection(hasActiveSelection);
-
-      // Update ref for bubble menu - once set, stays true forever
-      if (hasActiveSelection) {
-        hadSelectionRef.current = true;
-      }
-
-      if (hasActiveSelection) {
-        try {
-          const slice = editor.state.doc.slice(from, to);
-          const selectedContent = slice.content.toJSON();
-          const markdown = jsonToMarkdown({ type: 'doc', content: selectedContent }, 'prose');
-          setSelectionMarkdown(markdown);
-        } catch (error) {
-          console.error('Failed to extract selection markdown:', error);
-          setSelectionMarkdown('');
-        }
-      } else {
-        setSelectionMarkdown('');
-      }
-    };
-
-    updateSelection();
-
-    const handleSelectionUpdate = () => updateSelection();
-    editor.on('selectionUpdate', handleSelectionUpdate);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-    };
-  }, [editor]);
-
-  // Keyboard listener for Cmd+F / Ctrl+F to toggle search panel
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        setSearchPanelOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   // Reset scroll flag when part changes, switching to editor subview, or loading completes
   useEffect(() => {
@@ -246,7 +139,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
 
   // Scroll anchor effect: hide previous chapter preview on mount
   useLayoutEffect(() => {
-    if (!showPreviousPreview || hasScrolledRef.current || !editor || isLoading) return;
+    if (!showPreviousPreview || hasScrolledRef.current || isLoading) return;
 
     const viewport = scrollViewportRef.current;
     const preview = previousPreviewRef.current;
@@ -263,7 +156,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       viewport.scrollTop = previewHeight;
       hasScrolledRef.current = true;
     });
-  }, [showPreviousPreview, currentPartId, subview, editor, isLoading]);
+  }, [showPreviousPreview, currentPartId, subview, isLoading]);
 
   // Monitor scroll position and re-apply anchor if it gets reset
   useEffect(() => {
@@ -406,7 +299,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
   // Future: Add more menu items here (story settings, export, etc.)
 
   // Don't render editor until part data is synced
-  if (!editor || isLoading) return null;
+  if (isLoading) return null;
 
   // Show story preview subview
   if (subview === 'storyPreview') {
@@ -449,61 +342,30 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
       storyId={storyId}
       preloadMetaKeys={['brief', 'outline']}
     >
-      <BubbleMenu
-        editor={editor}
-        updateDelay={250}
-        options={{
-          placement: 'top',
-          offset: 8,
-          flip: true,
-        }}
-        className={styles.toolbarBubble}
-        data-ui="bubble-menu"
-      >
-        {toolbar}
-      </BubbleMenu>
-      <Box className={styles.root}>
-        <Box py={20} px={30} className={styles.topNavigation}>
+      <WritingEnvironment
+        docKind="prose"
+        content={doc}
+        onUpdate={handleUpdate}
+        onSave={handleSave}
+        autosaveDelay={1000}
+        title={partsEnabled ? partTitle : title}
+        placeholder="Start writing your story..."
+        chatConfig={chatConfig}
+        navigation={
           <TopNavigation
             title={partsEnabled ? partTitle : title}
             menuItems={menuItems}
           />
-        </Box>
-        <Box py={20} px={30} className={styles.bottomNavigation}>
+        }
+        bottomNavigation={
           <TopNavigation
             title=""
             buttons={chapterNavButtons}
           />
-        </Box>
-        <Box
-          className={styles.topOverlay}
-          style={{
-            opacity: isScrolled ? 1 : 0,
-          }}
-        />
-
-        {searchPanelOpen && (
-          <SearchPanel
-            editor={editor}
-            onClose={() => setSearchPanelOpen(false)}
-          />
-        )}
-
-        <ScrollArea
-          viewportRef={scrollViewportRef}
-          className={styles.scrollAreaWrapper}
-          type="hover"
-          scrollbarSize={10}
-          styles={{
-            thumb: {
-              zIndex: 20, // Above topOverlay
-            }
-          }}
-          onScrollPositionChange={({ y }) => {
-            setIsScrolled(y > 0);
-          }}
-        >
-          <Box className={styles.editor}>
+        }
+        scrollViewportRef={scrollViewportRef}
+        renderEditorContent={(editorContent) => (
+          <>
             {showPreviousPreview && (
               <Box ref={previousPreviewRef}>
                 <PartPreview
@@ -514,7 +376,7 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
               </Box>
             )}
 
-            <EditorContent editor={editor} />
+            {editorContent}
 
             {showNextPreview && (
               <PartPreview
@@ -523,23 +385,9 @@ export const StoryTextView: React.FC<StoryTextViewProps> = ({
                 onClick={handleClickNextPreview}
               />
             )}
-          </Box>
-        </ScrollArea>
-
-        <Box className={styles.chatAside}>
-          <ChatAside
-            {...chatConfig}
-            fullTextMarkdown={fullTextMarkdown || ''}
-            selectionMarkdown={selectionMarkdown}
-            hasSelection={hasSelection}
-            title={title}
-            isTextLoaded={fullTextMarkdown !== null}
-            editor={editor}
-            onNavigate={handleNavigate}
-            onOpenWizard={handleOpenWizard}
-          />
-        </Box>
-      </Box>
+          </>
+        )}
+      />
     </StorySectionShell>
   );
 };

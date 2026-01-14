@@ -51,6 +51,12 @@ export type WritingEnvironmentProps = {
 
   /** Whether to show chat aside (default: true) */
   withChat?: boolean;
+
+  /** Optional: Custom render function for editor content (for part previews, etc) */
+  renderEditorContent?: (editor: React.ReactNode) => React.ReactNode;
+
+  /** Optional: Ref for scroll viewport (for scroll anchoring in StoryTextView) */
+  scrollViewportRef?: React.RefObject<HTMLDivElement>;
 };
 
 /**
@@ -80,6 +86,8 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   navigation,
   bottomNavigation,
   withChat = true,
+  renderEditorContent,
+  scrollViewportRef,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -178,6 +186,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
 
         {/* Scrollable editor area */}
         <ScrollArea
+          viewportRef={scrollViewportRef}
           classNames={{
             root: styles.scrollAreaWrapper
           }}
@@ -193,7 +202,11 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
           }}
         >
           <Box className={styles.editor}>
-            <EditorContent editor={editor} />
+            {renderEditorContent ? (
+              renderEditorContent(<EditorContent editor={editor} />)
+            ) : (
+              <EditorContent editor={editor} />
+            )}
           </Box>
         </ScrollArea>
 
