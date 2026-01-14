@@ -21,8 +21,8 @@ export type EditorChatHookProps = {
 };
 
 /**
- * Hook to handle wizard opening from chat suggestions.
- * Extracted from BaseEditor to make it reusable in EntityEditView.
+ * Hook to handle wizard opening and navigation from chat suggestions.
+ * Used by WritingEnvironment and EntityEditView.
  */
 export function useEditorChat(props: EditorChatHookProps) {
   const { chatConfig, editor } = props;
