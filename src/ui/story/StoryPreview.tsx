@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
 import { useAppStore } from '../../state/useAppStore';
 import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
-import { createExtensionsFromConfig } from '../editor/editorConfigFactory';
+import { createExtensionsFromConfig } from '../editor/primitives/editorConfigFactory';
 import { getDocKind } from '../../models/docs';
 import { client } from '../../api/client';
 import { TopNavigation } from '../common/TopNavigation';

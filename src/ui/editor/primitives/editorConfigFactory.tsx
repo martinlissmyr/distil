@@ -13,11 +13,11 @@ import type { Editor } from '@tiptap/react';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { Icon } from '../common/Icon';
-import { createBaseExtensions } from './extensions/sharedExtensions';
+import { Icon } from '../../common/Icon';
+import { createBaseExtensions } from '../extensions/sharedExtensions';
 import { EditorToolbar } from './EditorToolbar';
-import type { EditorConfig, ToolbarItem } from '../../models/docs/editorConfig';
-import { getToolbarItemLabel } from '../../models/docs/editorConfig';
+import type { EditorConfig, ToolbarItem } from '../../../models/docs/editorConfig';
+import { getToolbarItemLabel } from '../../../models/docs/editorConfig';
 
 /**
  * Create TipTap extensions array from EditorConfig

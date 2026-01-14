@@ -8,14 +8,14 @@ import { ChatAside } from '../chat/ChatAside';
 import type { ChatConfig } from '../../types/editor';
 import type { DocKindId } from '../../models/docs';
 import { TopNavigation } from '../common/TopNavigation';
-import { SearchPanel } from './SearchPanel';
+import { SearchPanel } from './primitives/SearchPanel';
 import { useEditorChat } from '../../hooks/useEditorChat';
 import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
 import { useEditorSearch } from '../../hooks/useEditorSearch';
 import { useEditorSync } from '../../hooks/useEditorSync';
-import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
+import { createExtensionsFromConfig, createToolbarFromConfig } from './primitives/editorConfigFactory';
 import { getDocKind, isRichTextDoc, isMultiPartTextDoc } from '../../models/docs';
-import { defaultEmptyDoc } from './defaultEmptyDoc';
+import { defaultEmptyDoc } from './primitives/defaultEmptyDoc';
 import styles from './WritingEnvironment.module.scss';
 
 export type WritingEnvironmentProps = {

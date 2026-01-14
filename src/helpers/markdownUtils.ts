@@ -2,7 +2,7 @@
 import { Editor } from '@tiptap/core';
 import type { JSONContent } from '@tiptap/core';
 
-import { createExtensionsFromConfig } from '../ui/editor/editorConfigFactory';
+import { createExtensionsFromConfig } from '../ui/editor/primitives/editorConfigFactory';
 import { proseEditorConfig, metaEditorConfig } from '../models/docs/editorConfig';
 
 // Singleton editor instances, reused across calls
