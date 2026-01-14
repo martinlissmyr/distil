@@ -136,7 +136,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
 
   // Wizard integration via reusable hook
-  const { handleOpenWizard } = useEditorChat({ chatConfig, editor: editor ?? undefined });
+  const { handleNavigate, handleOpenWizard } = useEditorChat({ chatConfig, editor: editor ?? undefined });
 
   // Extract markdown from editor content and selection
   const { fullTextMarkdown, selectionMarkdown, hasSelection } = useMarkdownExtraction(editor, schema);
@@ -228,6 +228,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
               title={title}
               isTextLoaded={fullTextMarkdown !== null}
               editor={editor}
+              onNavigate={handleNavigate}
               onOpenWizard={handleOpenWizard}
             />
           </Box>
