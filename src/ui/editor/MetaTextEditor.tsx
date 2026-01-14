@@ -1,7 +1,7 @@
 // src/ui/editor/MetaTextEditor.tsx
 import { useEffect, useMemo } from 'react';
 import { useEditor } from '@tiptap/react';
-import { BaseEditor } from './BaseEditor';
+import { WritingEnvironment } from './WritingEnvironment';
 import { useEditorSync } from '../../hooks/useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
@@ -91,10 +91,9 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
   const toolbar = createToolbarFromConfig(editorConfig, editor);
 
   return (
-    <BaseEditor
+    <WritingEnvironment
       editor={editor}
       title={title}
-      showTitle={true}
       toolbar={toolbar}
       withChat={withChat}
       chatConfig={chatConfig}
