@@ -4,7 +4,7 @@ import { Box, ScrollArea } from '@mantine/core';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { ChatAside } from '../chat/ChatAside';
-import type { ChatConfig } from './ProseEditor';
+import type { ChatConfig } from '../../types/editor';
 import { jsonToMarkdown } from '../../helpers/markdownUtils';
 import { TopNavigation } from '../common/TopNavigation';
 import styles from './BaseEditor.module.scss';

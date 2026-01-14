@@ -2,8 +2,8 @@
 import { Editor } from '@tiptap/core';
 import type { JSONContent } from '@tiptap/core';
 
-import { metaExtensions } from '../ui/editor/extensions/metaExtensions';
-import { proseExtensions } from '../ui/editor/extensions/proseExtensions';
+import { createExtensionsFromConfig } from '../ui/editor/editorConfigFactory';
+import { proseEditorConfig, metaEditorConfig } from '../models/docs/editorConfig';
 
 // Singleton editor instances, reused across calls
 // We maintain separate instances for meta and prose to match their different schemas
@@ -13,7 +13,7 @@ let proseMarkdownEditor: Editor | null = null;
 function getMetaMarkdownEditor(): Editor {
   if (!metaMarkdownEditor) {
     metaMarkdownEditor = new Editor({
-      extensions: metaExtensions({ placeholder: '' }),
+      extensions: createExtensionsFromConfig(metaEditorConfig),
       content: { type: 'doc', content: [] },
       contentType: 'json',
     });
@@ -24,7 +24,7 @@ function getMetaMarkdownEditor(): Editor {
 function getProseMarkdownEditor(): Editor {
   if (!proseMarkdownEditor) {
     proseMarkdownEditor = new Editor({
-      extensions: proseExtensions({ placeholder: '' }),
+      extensions: createExtensionsFromConfig(proseEditorConfig),
       content: { type: 'doc', content: [] },
       contentType: 'json',
     });
