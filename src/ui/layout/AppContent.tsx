@@ -2,13 +2,13 @@
 import React from 'react';
 import { Box } from '@mantine/core';
 import { ProjectsView } from '../projects/ProjectsView';
-import { ManifestView } from '../manifest/ManifestView';
+import { ManifestView } from '../documents/meta/ManifestView';
 import { PlaygroundView } from '../playground/PlaygroundView';
 import { StoriesView } from '../stories/StoriesView';
 import { StoryTextView } from '../story/StoryTextView';
-import { StoryOutlineView } from '../story/StoryOutlineView';
-import { StoryWorldView } from '../story/StoryWorldView';
-import { StoryBriefView } from '../story/StoryBriefView';
+import { OutlineView } from '../documents/meta/OutlineView';
+import { WorldView } from '../documents/meta/WorldView';
+import { BriefView } from '../documents/meta/BriefView';
 import { EntityIndexView } from '../story/EntityIndexView';
 import type { Project, StoryMeta } from '../../api/client';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
@@ -132,7 +132,7 @@ export const AppContent: React.FC<AppContentProps> = ({
 
       case 'StoryOutlineView':
         return (
-          <StoryOutlineView
+          <OutlineView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             title={`${currentTitle} – Outline`}
@@ -141,7 +141,7 @@ export const AppContent: React.FC<AppContentProps> = ({
 
       case 'StoryWorldView':
         return (
-          <StoryWorldView
+          <WorldView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             title={`${currentTitle} – World`}
@@ -150,7 +150,7 @@ export const AppContent: React.FC<AppContentProps> = ({
 
       case 'StoryBriefView':
         return (
-          <StoryBriefView
+          <BriefView
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             title={`${currentTitle} – Brief`}
