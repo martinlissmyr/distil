@@ -181,9 +181,9 @@ This keeps ARCHITECTURE.md useful as a reference for understanding the current s
 Practical workflow requirements:
 
 - When creating plans, create concrete TODOs and keep them updated
-- All TODO lists, reports, analyses must go in `/todos/` directory
+- All TODO lists, plans, reports, analyses must go in `/work/` directory
 - Use naming format: `description.md`
-- Never put reports or TODOs in root or source directories
+- Never put reports, plans, or TODOs in root or source directories
 
 ## Common Commands
 
