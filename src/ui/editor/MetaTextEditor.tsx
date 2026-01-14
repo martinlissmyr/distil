@@ -6,7 +6,7 @@ import { useEditorSync } from '../../hooks/useEditorSync';
 import { defaultEmptyDoc } from './defaultEmptyDoc';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
 import { getDocKind, isRichTextDoc } from '../../models/docs';
-import type { ChatConfig } from './ProseEditor';
+import type { ChatConfig } from '../../types/editor';
 
 import { useAppStore, metaId } from '../../state/useAppStore';
 import type { MetaScope, MetaDocKey } from '../../types/metaDoc';

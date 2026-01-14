@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAppStore } from '../state/useAppStore';
 import type { WizardContext } from '../wizards/types';
-import type { ChatConfig } from '../ui/editor/ProseEditor';
+import type { ChatConfig } from '../types/editor';
 import { useNavigation } from './useNavigation';
 import type { RefObject } from 'react';
 

@@ -19,7 +19,8 @@ import { getWizardConfig } from '../../wizards/registry';
 import type { WizardConfig } from '../../wizards/types';
 import type { EditorKind } from '../../types/chat';
 
-import { metaExtensions } from '../editor/extensions/metaExtensions';
+import { createExtensionsFromConfig } from '../editor/editorConfigFactory';
+import { metaEditorConfig } from '../../models/docs/editorConfig';
 import { defaultEmptyDoc } from '../editor/defaultEmptyDoc';
 
 import { findTestableLlmSteps, type TestableLlmStep } from '../../wizards/testUtils';
@@ -46,7 +47,10 @@ export const WizardTesterRunnerView: React.FC<{ wizardId: WizardId }> = ({ wizar
 
   // TipTap editor instance (local to runner)
   const editor = useEditor({
-    extensions: metaExtensions({ placeholder: 'Wizard output will appear here...' }),
+    extensions: createExtensionsFromConfig({
+      ...metaEditorConfig,
+      placeholder: 'Wizard output will appear here...'
+    }),
     content: defaultEmptyDoc,
   });
 
