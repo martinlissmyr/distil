@@ -1,8 +1,8 @@
 // src/ui/stories/StoryOutlineView.tsx
 import React from 'react';
 import { MetaTextEditor } from '../editor/MetaTextEditor';
-import { StorySectionShell } from './StorySectionShell';
 import { useEditorChat } from '../../hooks/useEditorChat';
+import { usePreloadMetaDocs } from '../../hooks/usePreloadMetaDocs';
 
 type StoryOutlineViewProps = {
   projectId: string;
@@ -23,25 +23,25 @@ export const StoryOutlineView: React.FC<StoryOutlineViewProps> = ({
     },
   });
 
+  // Preload context docs
+  usePreloadMetaDocs(
+    { scope: 'story', projectId, storyId },
+    ['outline', 'brief']
+  );
+
   return (
-    <StorySectionShell
-      projectId={projectId}
-      storyId={storyId}
-      preloadMetaKeys={['outline', 'brief']}
-    >
-      <MetaTextEditor
-        scope={{ scope: 'story', projectId, storyId }}
-        metaKey="outline"
-        title={title}
-        placeholder="Sketch the structure of your story…"
-        withChat
-        chatConfig={{
-          kind: 'outline',
-          storyId,
-          projectId,
-          onNavigate: handleNavigate,
-        }}
-      />
-    </StorySectionShell>
+    <MetaTextEditor
+      scope={{ scope: 'story', projectId, storyId }}
+      metaKey="outline"
+      title={title}
+      placeholder="Sketch the structure of your story…"
+      withChat
+      chatConfig={{
+        kind: 'outline',
+        storyId,
+        projectId,
+        onNavigate: handleNavigate,
+      }}
+    />
   );
 };

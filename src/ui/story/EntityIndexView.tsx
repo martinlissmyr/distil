@@ -1,7 +1,6 @@
 // src/ui/story/EntityIndexView.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Text, Stack } from '@mantine/core';
-import { StorySectionShell } from './StorySectionShell';
 import { getDocKind } from '../../models/docs';
 import type { DocKindId } from '../../models/docs';
 import type { EntityIndex, EntityIndexEntry } from '../../models/entities/entityIndex';
@@ -212,11 +211,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   const entityViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
 
   return (
-    <StorySectionShell
-      projectId={projectId}
-      storyId={storyId}
-      preloadMetaKeys={[]}
-    >
+    <>
       {mode === 'list' && (
         <Box className={styles.root}>
           <Box py={20} px={30}>
@@ -269,7 +264,7 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       {mode === 'edit' && loadingDoc && (
         <Box p="xl">Loading...</Box>
       )}
-    </StorySectionShell>
+    </>
   );
 };
 
