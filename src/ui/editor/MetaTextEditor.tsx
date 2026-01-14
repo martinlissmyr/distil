@@ -1,11 +1,6 @@
 // src/ui/editor/MetaTextEditor.tsx
-import { useEffect, useMemo } from 'react';
-import { useEditor } from '@tiptap/react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { WritingEnvironment } from './WritingEnvironment';
-import { useEditorSync } from '../../hooks/useEditorSync';
-import { defaultEmptyDoc } from './defaultEmptyDoc';
-import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
-import { getDocKind, isRichTextDoc } from '../../models/docs';
 import type { ChatConfig } from '../../types/editor';
 
 import { useAppStore, metaId } from '../../state/useAppStore';
@@ -20,11 +15,22 @@ type MetaTextEditorProps = {
   chatConfig?: ChatConfig;
 };
 
+/**
+ * MetaTextEditor - High-level abstraction for editing meta documents
+ *
+ * Handles:
+ * - Loading meta doc from Zustand store
+ * - Syncing changes to store via WritingEnvironment
+ * - Autosave with 800ms debounce
+ * - Simple API: just pass scope + metaKey
+ *
+ * Uses WritingEnvironment internally for all editor functionality.
+ */
 export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
   scope,
   metaKey,
   title,
-  placeholder = 'Start typing…',
+  placeholder,
   withChat = true,
   chatConfig,
 }) => {
@@ -49,52 +55,25 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
     void ensureMetaDocsLoaded(scope, [metaKey]);
   }, [scope, metaKey, ensureMetaDocsLoaded]);
 
-  // Get editor config from doc model based on metaKey
-  const docKind = getDocKind(metaKey);
-  const editorConfig = useMemo(() => {
-    // Type guard: only rich text docs have editorConfig
-    if (!isRichTextDoc(docKind)) {
-      throw new Error(
-        `MetaTextEditor called with non-rich-text doc kind: "${metaKey}". ` +
-        `Entity index docs should use custom entity management UI.`
-      );
-    }
-    const config = { ...docKind.editorConfig };
-    // Override placeholder if provided as prop
-    if (placeholder !== undefined) {
-      config.placeholder = placeholder;
-    }
-    return config;
-  }, [docKind, placeholder, metaKey]);
-
-  const editor = useEditor({
-    extensions: createExtensionsFromConfig(editorConfig),
-    content: metaDoc?.json ?? defaultEmptyDoc,
-  });
-
-  // Keep external store in sync when user types
-  useEditorSync(editor, metaDoc?.json ?? defaultEmptyDoc, (nextDoc) => {
+  // Update handler - memoized to prevent unnecessary re-renders
+  const handleUpdate = useCallback((nextDoc: any) => {
     updateMetaDoc(scope, metaKey, nextDoc);
-  });
+  }, [scope, metaKey, updateMetaDoc]);
 
-  // Autosave when metaDoc content changes
-  useEffect(() => {
-    if (!metaDoc?.json) return;
-
-    const timeout = setTimeout(() => {
-      void saveMetaDoc(scope, metaKey);
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, [metaDoc?.json, scope, metaKey, saveMetaDoc]);
-
-  const toolbar = createToolbarFromConfig(editorConfig, editor);
+  // Save handler - memoized to prevent unnecessary re-renders
+  const handleSave = useCallback(() => {
+    void saveMetaDoc(scope, metaKey);
+  }, [scope, metaKey, saveMetaDoc]);
 
   return (
     <WritingEnvironment
-      editor={editor}
+      docKind={metaKey}
+      content={metaDoc?.json}
+      onUpdate={handleUpdate}
+      onSave={handleSave}
+      autosaveDelay={800}
       title={title}
-      toolbar={toolbar}
+      placeholder={placeholder}
       withChat={withChat}
       chatConfig={chatConfig}
     />
