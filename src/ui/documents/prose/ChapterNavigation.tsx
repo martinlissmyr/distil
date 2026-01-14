@@ -1,5 +1,5 @@
 // src/ui/story/ChapterNavigation.tsx
-import type { TopNavigationButton } from '../common/TopNavigation';
+import type { TopNavigationButton } from '../../common/TopNavigation';
 
 export type ChapterNavigationConfig = {
   /** Whether multi-part mode is enabled */
