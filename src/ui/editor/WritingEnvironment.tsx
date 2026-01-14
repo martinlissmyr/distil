@@ -1,27 +1,44 @@
 // src/ui/editor/WritingEnvironment.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
-import { EditorContent } from '@tiptap/react';
-import type { Editor } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import type { JSONContent } from '@tiptap/core';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { ChatAside } from '../chat/ChatAside';
 import type { ChatConfig } from '../../types/editor';
+import type { DocKindId } from '../../models/docs';
 import { TopNavigation } from '../common/TopNavigation';
 import { SearchPanel } from './SearchPanel';
 import { useEditorChat } from '../../hooks/useEditorChat';
 import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
 import { useEditorSearch } from '../../hooks/useEditorSearch';
+import { useEditorSync } from '../../hooks/useEditorSync';
+import { createExtensionsFromConfig, createToolbarFromConfig } from './editorConfigFactory';
+import { getDocKind, isRichTextDoc } from '../../models/docs';
+import { defaultEmptyDoc } from './defaultEmptyDoc';
 import styles from './WritingEnvironment.module.scss';
 
 export type WritingEnvironmentProps = {
-  /** TipTap editor instance */
-  editor: Editor | null;
+  /** Document kind (determines editor configuration) */
+  docKind: DocKindId;
+
+  /** Current document content (TipTap JSON) */
+  content: JSONContent | undefined;
+
+  /** Called when content changes (for sync to store) */
+  onUpdate: (json: JSONContent) => void;
+
+  /** Called to save document (triggered by autosave) */
+  onSave: () => void;
+
+  /** Autosave delay in milliseconds (default: 800) */
+  autosaveDelay?: number;
 
   /** Title displayed in top navigation */
   title: string;
 
-  /** Toolbar content shown in bubble menu */
-  toolbar?: React.ReactNode;
+  /** Placeholder text when editor is empty (overrides config default) */
+  placeholder?: string;
 
   /** Chat configuration */
   chatConfig?: ChatConfig;
@@ -39,27 +56,73 @@ export type WritingEnvironmentProps = {
 /**
  * WritingEnvironment - Complete writing interface with editor + chat
  *
- * Provides:
- * - TipTap editor with bubble menu
- * - Search panel (Cmd+F / Ctrl+F)
- * - Markdown extraction (full text + selection)
- * - ChatAside integration
- * - Top navigation
- * - Optional bottom navigation
+ * Owns the full editor lifecycle:
+ * - Creates TipTap editor with configuration from docKind
+ * - Syncs editor changes to parent via onUpdate
+ * - Autosaves via onSave with configurable delay
+ * - Manages search panel (Cmd+F / Ctrl+F)
+ * - Extracts markdown (full text + selection)
+ * - Integrates ChatAside
+ * - Provides top navigation and optional bottom navigation
  *
  * This is the core layout component for all editing views.
  * MetaTextEditor and StoryTextView build on top of this.
  */
 export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
-  editor,
+  docKind,
+  content,
+  onUpdate,
+  onSave,
+  autosaveDelay = 800,
   title,
-  toolbar,
+  placeholder,
   chatConfig,
   navigation,
   bottomNavigation,
   withChat = true,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Get editor config from doc model
+  const docKindConfig = getDocKind(docKind);
+
+  // Type guard: only rich text docs have editorConfig
+  if (!isRichTextDoc(docKindConfig)) {
+    throw new Error(
+      `WritingEnvironment called with non-rich-text doc kind: "${docKind}". ` +
+      `Entity index docs should use custom entity management UI.`
+    );
+  }
+
+  const editorConfig = { ...docKindConfig.editorConfig };
+
+  // Override placeholder if provided as prop
+  if (placeholder !== undefined) {
+    editorConfig.placeholder = placeholder;
+  }
+
+  // Create TipTap editor instance
+  const editor = useEditor({
+    extensions: createExtensionsFromConfig(editorConfig),
+    content: content ?? defaultEmptyDoc,
+  });
+
+  // Sync editor changes to parent
+  useEditorSync(editor, content ?? defaultEmptyDoc, onUpdate);
+
+  // Autosave when content changes
+  useEffect(() => {
+    if (!content) return;
+
+    const timeout = setTimeout(() => {
+      onSave();
+    }, autosaveDelay);
+
+    return () => clearTimeout(timeout);
+  }, [content, onSave, autosaveDelay]);
+
+  // Create toolbar from config
+  const toolbar = createToolbarFromConfig(editorConfig, editor);
 
   // Determine schema based on editor kind
   const schema = chatConfig?.kind === 'prose' ? 'prose' : 'meta';
