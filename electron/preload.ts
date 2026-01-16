@@ -113,5 +113,4 @@ contextBridge.exposeInMainWorld('settings', {
 
 contextBridge.exposeInMainWorld('devMode', {
   isDevMode: () => ipcRenderer.invoke('devMode:isDevMode'),
-  openDevTools: () => ipcRenderer.invoke('devMode:openDevTools'),
 })

@@ -37,7 +37,6 @@ type SidebarProps = {
 
   /** Opens the API key / settings modal */
   onOpenSettings: () => void;
-  onOpenDevTools: () => void;
 };
 
 const SidebarCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -247,7 +246,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectRootSection,
 
   onOpenSettings,
-  onOpenDevTools,
 }) => {
   const [isDevMode, setIsDevMode] = useState(false);
 
@@ -311,15 +309,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <Icon type="settings" size={20} />
         </Button>
-        {isDevMode && (
-          <Button
-            variant="subtle"
-            onClick={onOpenDevTools}
-            p="xs"
-          >
-            <Icon type="console" size={20} />
-          </Button>
-        )}
       </Group>
     </Box>
   );
