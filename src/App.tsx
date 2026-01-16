@@ -340,7 +340,6 @@ const App: React.FC = () => {
       rootSection={rootSection}
       onSelectRootSection={projectHandlers.handleSelectRootSection}
       onOpenSettings={() => setSettingsModalOpen(true)}
-      onOpenDevTools={() => client.openDevTools()}
     />
   );
 

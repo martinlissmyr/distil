@@ -200,7 +200,6 @@ declare global {
 
     devMode: {
       isDevMode: () => Promise<IpcResponse<boolean>>;
-      openDevTools: () => Promise<IpcResponse<undefined>>;
     };
   }
 }

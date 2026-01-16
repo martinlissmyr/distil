@@ -137,9 +137,6 @@ export const client = {
   isDevMode() {
     return window.devMode.isDevMode();
   },
-  openDevTools() {
-    return window.devMode.openDevTools();
-  },
 
   // -------- Entity Indices --------
   loadEntityIndex(projectId: string, storyId: string, entityType: EntityType) {
