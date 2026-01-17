@@ -1,5 +1,5 @@
 // electron/main.ts
-import { app, BrowserWindow, nativeTheme } from 'electron';
+import { app, BrowserWindow, nativeTheme, Menu } from 'electron';
 import { autoUpdater } from "electron-updater";
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -40,6 +40,35 @@ function setupAutoUpdates() {
   autoUpdater.on("error", (err) => console.log("[updates] error", err));
   autoUpdater.on("update-downloaded", () => console.log("[updates] downloaded"));
 }
+
+const isMac = process.platform === 'darwin';
+const isDevMode = !!VITE_DEV_SERVER_URL;
+
+const menuTemplate = [
+  ...(isMac
+    ? [{
+        label: app.name,
+        submenu: [
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' }
+        ]
+      }]
+    : []),
+  { role: 'editMenu' },
+  ...(isDevMode
+    ? [{
+        label: 'Developer',
+        submenu: [
+          { role: 'toggleDevTools' },
+        ]
+      }]
+    : []),
+];
+const menu = Menu.buildFromTemplate(menuTemplate);
+Menu.setApplicationMenu(menu);
 
 function createWindow() {
   win = new BrowserWindow({
