@@ -28,4 +28,73 @@ export default defineConfig({
           : {},
     }),
   ],
+  build: {
+    // Suppress camelCase CSS property warnings from Mantine's CSS-in-JS
+    cssMinify: 'lightningcss',
+
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Vendor chunk for node_modules
+          if (id.includes('node_modules')) {
+            // Mantine UI library chunk
+            if (id.includes('@mantine/')) {
+              return 'mantine';
+            }
+
+            // TipTap editor chunk
+            if (id.includes('@tiptap/')) {
+              return 'editor';
+            }
+
+            // React ecosystem (separate from other vendors for caching)
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+
+            // Zustand state management
+            if (id.includes('zustand')) {
+              return 'state';
+            }
+
+            // Zod validation library
+            if (id.includes('zod')) {
+              return 'validation';
+            }
+
+            // Remaining vendor dependencies
+            return 'vendor';
+          }
+
+          // Separate chunks for heavy application modules
+          if (id.includes('src/models/story')) {
+            return 'models-story';
+          }
+
+          if (id.includes('src/models/entities')) {
+            return 'models-entities';
+          }
+
+          if (id.includes('src/api/client')) {
+            return 'api-client';
+          }
+
+          if (id.includes('src/helpers/entityProjectionUtils')) {
+            return 'entity-utils';
+          }
+        },
+      },
+    },
+
+    // Increase chunk size warning limit for Electron app (bundle size less critical than web)
+    chunkSizeWarningLimit: 1000,
+  },
+
+  esbuild: {
+    // Suppress CSS warnings during minification
+    legalComments: 'none',
+    logOverride: {
+      'css-syntax-error': 'silent',
+    },
+  },
 });
