@@ -15,6 +15,8 @@ import { registerChatHandlers } from './chat';
 import { registerChatThreadHandlers } from './handlers/chat';
 import { registerDevModeHandlers } from './handlers/devMode';
 
+import { appMenu } from './appMenu';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, '..');
 
@@ -40,35 +42,6 @@ function setupAutoUpdates() {
   autoUpdater.on("error", (err) => console.log("[updates] error", err));
   autoUpdater.on("update-downloaded", () => console.log("[updates] downloaded"));
 }
-
-const isMac = process.platform === 'darwin';
-const isDevMode = !!VITE_DEV_SERVER_URL;
-
-const menuTemplate = [
-  ...(isMac
-    ? [{
-        label: app.name,
-        submenu: [
-          { role: 'hide' },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit' }
-        ]
-      }]
-    : []),
-  { role: 'editMenu' },
-  ...(isDevMode
-    ? [{
-        label: 'Developer',
-        submenu: [
-          { role: 'toggleDevTools' },
-        ]
-      }]
-    : []),
-];
-const menu = Menu.buildFromTemplate(menuTemplate);
-Menu.setApplicationMenu(menu);
 
 function createWindow() {
   win = new BrowserWindow({
@@ -133,6 +106,8 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   setupAutoUpdates();
+
+  Menu.setApplicationMenu(appMenu);
 
   if (app.isPackaged) {
     autoUpdater.autoInstallOnAppQuit = true;
