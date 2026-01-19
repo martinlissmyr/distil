@@ -16,6 +16,12 @@
   color: var(--editor-text-color);
   min-height: 120vh;
 
+  font-family: 'Source Serif', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: -0.003em;
+
   & > * {
     margin-top: 0;
     margin-left: var(--editor-gutter);
@@ -202,6 +208,7 @@
    Toolbar pill
    ============================== */
 .toolbarBubble {
+  fontFamily: system-ui;
   background: var(--editor-overlay);
   padding: 10px;
   border-radius: 56px;
@@ -286,12 +293,6 @@
 
   display: flex;
   flex-direction: column;
-
-  font-family: 'Source Serif', Georgia, serif;
-  font-size: 18px;
-  line-height: 1.55;
-  font-weight: 400;
-  letter-spacing: -0.003em;
 
   > div {
     flex: 1 1 auto;
