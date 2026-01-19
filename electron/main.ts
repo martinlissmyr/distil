@@ -56,6 +56,7 @@ function createWindow() {
     backgroundColor: '#00000000',
     vibrancy: 'under-window',
     visualEffectState: 'active',
+    spellcheck: true,
     autoHideMenuBar: true,
     frame: false,
     webPreferences: {
@@ -72,6 +73,37 @@ function createWindow() {
       new Date().toLocaleString()
     );
   });
+
+  win.webContents.on('context-menu', (_event, params) => {
+    const contextMenuTemplate = [];
+
+    // Spellcheck suggestions (only when right-clicking a misspelled word)
+    if (params.misspelledWord) {
+      if (params.dictionarySuggestions?.length) {
+        for (const suggestion of params.dictionarySuggestions.slice(0, 6)) {
+          contextMenuTemplate.push({
+            label: suggestion,
+            click: () => win.webContents.replaceMisspelling(suggestion),
+          })
+        }
+      } else {
+        contextMenuTemplate.push({
+          label: 'No suggestions',
+        })
+      }
+      contextMenuTemplate.push({ type: 'separator' })
+    }
+
+    contextMenuTemplate.push({ role: 'editMenu' });
+    const contextMenu = new Menu.buildFromTemplate(contextMenuTemplate);
+
+    // Whether the context is editable.
+    if (params.isEditable) {
+      contextMenu.popup({
+        frame: params.frame
+      })
+    }
+  })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);

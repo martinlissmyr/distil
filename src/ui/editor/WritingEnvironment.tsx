@@ -113,6 +113,13 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   const editor = useEditor({
     extensions: createExtensionsFromConfig(editorConfig),
     content: content ?? defaultEmptyDoc,
+    editorProps: {
+      attributes: {
+        // ensure browser spellcheck is enabled
+        spellcheck: 'true',
+        lang: 'sv',
+      },
+    },
   });
 
   // Sync editor changes to parent
