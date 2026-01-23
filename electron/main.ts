@@ -1,5 +1,5 @@
 // electron/main.ts
-import { app, BrowserWindow, nativeTheme, Menu } from 'electron';
+import { app, BrowserWindow, nativeTheme, Menu, MenuItemConstructorOptions } from 'electron';
 import { autoUpdater } from "electron-updater";
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -56,7 +56,6 @@ function createWindow() {
     backgroundColor: '#00000000',
     vibrancy: 'under-window',
     visualEffectState: 'active',
-    spellcheck: true,
     autoHideMenuBar: true,
     frame: false,
     webPreferences: {
@@ -75,7 +74,7 @@ function createWindow() {
   });
 
   win.webContents.on('context-menu', (_event, params) => {
-    const contextMenuTemplate = [];
+    const contextMenuTemplate: MenuItemConstructorOptions[] = [];
 
     // Spellcheck suggestions (only when right-clicking a misspelled word)
     if (params.misspelledWord) {
@@ -83,7 +82,7 @@ function createWindow() {
         for (const suggestion of params.dictionarySuggestions.slice(0, 6)) {
           contextMenuTemplate.push({
             label: suggestion,
-            click: () => win.webContents.replaceMisspelling(suggestion),
+            click: () => win?.webContents.replaceMisspelling(suggestion),
           })
         }
       } else {
@@ -95,12 +94,12 @@ function createWindow() {
     }
 
     contextMenuTemplate.push({ role: 'editMenu' });
-    const contextMenu = new Menu.buildFromTemplate(contextMenuTemplate);
+    const contextMenu = Menu.buildFromTemplate(contextMenuTemplate);
 
     // Whether the context is editable.
     if (params.isEditable) {
       contextMenu.popup({
-        frame: params.frame
+        frame: params.frame ?? undefined
       })
     }
   })
