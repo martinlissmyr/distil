@@ -14,6 +14,11 @@
   "build": {
     "appId": "com.martinlissmyr.distil",
     "productName": "Distil",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
@@ -22,7 +27,10 @@
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "notarize": {
+        "teamId": "J76YXS3HMK"
+      }
     },
     "publish": [
       {
@@ -30,8 +38,7 @@
         "owner": "martinlissmyr",
         "repo": "distil"
       }
-    ],
-    "afterSign": "scripts/notarize.cjs"
+    ]
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
