@@ -29,9 +29,6 @@ export default defineConfig({
     }),
   ],
   build: {
-    // Suppress camelCase CSS property warnings from Mantine's CSS-in-JS
-    cssMinify: 'lightningcss',
-
     rollupOptions: {
       output: {
         manualChunks: (id) => {

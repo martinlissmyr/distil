@@ -28,7 +28,10 @@ dist-electron/
 # -------------------------------------------------
 out/
 release/
-build/
+# Note: build/ contains entitlements and should be committed
+# If you have other build artifacts to ignore, be specific:
+# build/*.dmg
+# build/*.zip
 *.asar
 
 # Electron crash logs
