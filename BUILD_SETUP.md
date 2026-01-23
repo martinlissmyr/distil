@@ -20,12 +20,12 @@ Complete guide for setting up code signing, notarization, and automatic updates 
 Your Distil app uses:
 - **electron-builder** for packaging macOS apps (DMG + ZIP)
 - **electron-updater** for automatic update checks and downloads
-- **@electron/notarize** for Apple notarization
+- **electron-builder's built-in notarization** (via `notarize: true` in package.json)
 - **GitHub Releases** as the update server
 
 The update flow:
 1. GitHub Actions builds and signs the app
-2. Notarizes it with Apple
+2. electron-builder automatically notarizes it with Apple (no custom scripts needed)
 3. Publishes DMG + ZIP to GitHub Releases with `latest.yml` metadata
 4. electron-updater checks `latest.yml` for new versions
 5. Downloads and installs updates automatically
@@ -96,28 +96,54 @@ The Team ID is in parentheses: `(ABCD123456)`
 
 Or check: https://developer.apple.com/account → Membership Details
 
-### Step 3: Create App-Specific Password (Alternative to API Key)
+### Step 3: Create App-Specific Password
 
-**Option A: App-Specific Password** (Simpler for individuals)
+This password is used for electron-builder's built-in notarization in both local development and CI builds.
 
 1. Go to https://appleid.apple.com/account/manage
 2. Sign in with your Apple ID
 3. Under **Security** → **App-Specific Passwords** → Click **Generate Password**
 4. Label it "Distil Notarization"
-5. **Save the password** - you won't see it again
+5. **Save the password** - you won't see it again (format: `xxxx-xxxx-xxxx-xxxx`)
 
-**Option B: App Store Connect API Key** (Better for teams/CI)
+**Why App-Specific Password?**
+- Simple setup for both local and CI environments
+- No additional file management (.p8 files)
+- Works seamlessly with electron-builder's built-in notarization
+- Sufficient for individual developer and automated builds
 
-1. Go to https://appstoreconnect.apple.com/access/api
-2. Click **+** to generate a new key
-3. Name: "Distil Notarization"
-4. Access: **Developer** role (minimum required)
-5. Click **Generate**
-6. **Download the .p8 file** immediately (can't re-download)
-7. Note the **Key ID** (e.g., `ABC123DEF4`)
-8. Note the **Issuer ID** (e.g., `11223344-5566-7788-99aa-bbccddeeff00`)
+### Step 4: Understanding electron-builder's Built-in Notarization
 
-**Recommended:** Use API Key for GitHub Actions, App-Specific Password for local builds.
+Distil uses electron-builder's **built-in notarization** feature, which is simpler and more maintainable than custom afterSign scripts.
+
+**How it works:**
+- Set `"notarize": true` in `package.json` under the `"mac"` configuration
+- electron-builder automatically detects and uses these environment variables:
+  - `APPLE_ID` - Your Apple ID email
+  - `APPLE_APP_SPECIFIC_PASSWORD` - App-specific password
+  - `APPLE_TEAM_ID` - Your Team ID
+- No custom scripts (`notarize.cjs`, `afterSign` hooks) are needed
+- Notarization happens automatically during the build process
+
+**Current configuration in package.json:**
+```json
+"mac": {
+  "notarize": true,
+  "category": "public.app-category.productivity",
+  "target": ["dmg", "zip"],
+  "hardenedRuntime": true,
+  "gatekeeperAssess": false,
+  "entitlements": "build/entitlements.mac.plist",
+  "entitlementsInherit": "build/entitlements.mac.plist"
+}
+```
+
+**Benefits of this approach:**
+- ✅ Simpler configuration - just set `notarize: true`
+- ✅ No custom scripts to maintain
+- ✅ Automatic environment variable detection
+- ✅ Works identically in local and CI environments
+- ✅ Recommended by electron-builder documentation
 
 ---
 
@@ -144,12 +170,9 @@ Add these secrets:
 | Secret Name | Value | Purpose |
 |-------------|-------|---------|
 | `GH_TOKEN` | Your GitHub Personal Access Token | Publish releases |
-| `APPLE_ID` | Your Apple ID email | Notarization (if using app-specific password) |
-| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password | Notarization (alternative to API key) |
-| `APPLE_TEAM_ID` | Your Team ID (e.g., `ABCD123456`) | Notarization |
-| `APPLE_API_KEY` | Content of .p8 file (base64) | Notarization (if using API key) |
-| `APPLE_API_KEY_ID` | Key ID from App Store Connect | Notarization (if using API key) |
-| `APPLE_API_ISSUER` | Issuer ID from App Store Connect | Notarization (if using API key) |
+| `APPLE_ID` | Your Apple ID email | Notarization authentication |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password | Notarization authentication |
+| `APPLE_TEAM_ID` | Your Team ID (e.g., `ABCD123456`) | Notarization team identification |
 | `CSC_LINK` | Base64-encoded .p12 certificate | Code signing in CI |
 | `CSC_KEY_PASSWORD` | Password for .p12 file | Code signing in CI |
 
@@ -171,14 +194,6 @@ base64 -i /path/to/certificate.p12 | pbcopy
 
 **Security Note:** The .p12 password you set becomes `CSC_KEY_PASSWORD`.
 
-#### Preparing APPLE_API_KEY (Optional, if using API key)
-
-```bash
-# Convert .p8 file to base64
-base64 -i /path/to/AuthKey_ABC123DEF4.p8 | pbcopy
-# Paste as APPLE_API_KEY secret
-```
-
 ### Step 3: Enable GitHub Releases
 
 Ensure your repository has **Releases** enabled:
@@ -198,15 +213,10 @@ Create `.env.local` in your project root (this file is gitignored):
 CSC_NAME=Your Name (TEAM_ID)
 # ⚠️ Do NOT include "Developer ID Application:" prefix
 
-# Notarization - Option A: App-Specific Password
+# Notarization (App-Specific Password)
 APPLE_ID=your-email@example.com
 APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
 APPLE_TEAM_ID=ABCD123456
-
-# Notarization - Option B: API Key (Alternative to above)
-# APPLE_API_KEY=/Users/you/.keys/AuthKey_ABC123.p8
-# APPLE_API_KEY_ID=ABC123DEF4
-# APPLE_API_ISSUER=11223344-5566-7788-99aa-bbccddeeff00
 
 # Publishing (only needed for manual publishes)
 GH_TOKEN=ghp_yourGitHubTokenHere
@@ -328,14 +338,9 @@ jobs:
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # Option A: App-Specific Password
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Option B: API Key (comment out above, use these instead)
-          # APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          # APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          # APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: npm run publish
 
       - name: Upload artifacts
@@ -347,8 +352,6 @@ jobs:
             dist/*.zip
             dist/latest-mac.yml
 ```
-
-**Note:** If using API Key for notarization, you'll need to modify `scripts/notarize.cjs` to handle base64-encoded keys. See Alternative Approaches below.
 
 ---
 
@@ -449,8 +452,9 @@ export CSC_NAME="Your Name (TEAM_ID)"
 
 **Fix:**
 - Verify `.env.local` exists and has correct values
-- Ensure `scripts/notarize.cjs` loads from `.env.local` (it does via `dotenv`)
-- Check variable names match exactly
+- electron-builder automatically reads these variables from your environment
+- Check variable names match exactly: `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`
+- Ensure your shell session has loaded `.env.local` (or set variables in shell profile)
 
 ### Issue: "Certificate not found"
 
@@ -467,12 +471,13 @@ export CSC_NAME="Your Name (TEAM_ID)"
 
 ### Issue: "Invalid credentials" during notarization
 
-**Cause:** Wrong Apple ID, password, or API key.
+**Cause:** Wrong Apple ID, app-specific password, or Team ID.
 
 **Fix:**
-- **App-Specific Password:** Verify at https://appleid.apple.com/account/manage
-- **API Key:** Verify Key ID and Issuer ID at https://appstoreconnect.apple.com/access/api
+- Verify app-specific password at https://appleid.apple.com/account/manage
+- Generate a new app-specific password if needed
 - Ensure Team ID matches your Developer account
+- Check that APPLE_ID matches the Apple ID associated with your Developer account
 
 ### Issue: GitHub Actions fails with "Certificate identity not found"
 
@@ -512,22 +517,25 @@ npm run build
 
 ---
 
-## Alternative Approaches
+## Alternative Approaches (Advanced)
 
-### Using API Key Path Instead of Base64
+### Using App Store Connect API Key (Not Recommended)
 
-If you prefer storing the .p8 file on disk (local builds):
+While it's possible to use App Store Connect API Keys for notarization, this project uses App-Specific Passwords with electron-builder's built-in notarization for simplicity. API Keys would require:
+- Managing .p8 files (additional complexity)
+- Base64 encoding for CI environments
+- Additional environment variables (Key ID, Issuer ID)
+- Custom `afterSign` hook with `@electron/notarize` library
 
-**.env.local:**
-```bash
-APPLE_API_KEY=/Users/you/.keys/AuthKey_ABC123.p8
-APPLE_API_KEY_ID=ABC123DEF4
-APPLE_API_ISSUER=11223344-5566-7788-99aa-bbccddeeff00
-```
+**If you need API Key authentication:**
+electron-builder supports API Key authentication through these environment variables:
+- `APPLE_API_KEY` - Base64-encoded .p8 key file
+- `APPLE_API_KEY_ID` - Key ID from App Store Connect
+- `APPLE_API_ISSUER` - Issuer ID from App Store Connect
 
-No changes needed in `scripts/notarize.cjs` - it already supports file paths.
+Set these instead of `APPLE_ID` and `APPLE_APP_SPECIFIC_PASSWORD`.
 
-### Using Notarytool Profile (Keychain-based)
+### Using Notarytool Profile (Local Development Only)
 
 **Most secure for local development:**
 
@@ -539,14 +547,12 @@ xcrun notarytool store-credentials "DISTIL_NOTARY_PROFILE" \
   --password "xxxx-xxxx-xxxx-xxxx"
 ```
 
-**Update `scripts/notarize.cjs`:**
-```javascript
-await notarize({
-  appBundleId: packager.appInfo.id,
-  appPath: `${appOutDir}/${appName}.app`,
-  keychainProfile: "DISTIL_NOTARY_PROFILE"
-});
+Then set environment variable:
+```bash
+export APPLE_KEYCHAIN_PROFILE="DISTIL_NOTARY_PROFILE"
 ```
+
+electron-builder will use the Keychain profile instead of explicit credentials.
 
 **Pros:** Credentials never in files or environment variables.
 **Cons:** Doesn't work in GitHub Actions (no persistent Keychain).
@@ -558,13 +564,14 @@ await notarize({
 - [ ] Apple Developer Program membership active
 - [ ] Developer ID Application certificate installed
 - [ ] Team ID identified
-- [ ] App-Specific Password OR API Key created
+- [ ] App-Specific Password created
 - [ ] GitHub Personal Access Token created
-- [ ] GitHub repository secrets configured (7-8 secrets)
-- [ ] `.env.local` file created with credentials
+- [ ] GitHub repository secrets configured (6 secrets: GH_TOKEN, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, CSC_LINK, CSC_KEY_PASSWORD)
+- [ ] `.env.local` file created with App-Specific Password credentials
 - [ ] `CSC_NAME` environment variable corrected (no prefix)
 - [ ] `build/entitlements.mac.plist` created
 - [ ] `.github/workflows/build.yml` created
+- [ ] **`notarize: true` is set in package.json under mac configuration** (enables built-in notarization)
 - [ ] Local build tested successfully
 - [ ] GitHub Actions workflow tested
 - [ ] Auto-update tested with real release
