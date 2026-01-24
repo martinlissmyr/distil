@@ -51,6 +51,11 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
           rm certificate.p12
 
+      - name: Build TypeScript and Vite
+        run: |
+          npx tsc
+          npx vite build
+
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
