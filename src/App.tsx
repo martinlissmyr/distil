@@ -235,6 +235,12 @@ const App: React.FC = () => {
   const [wizardModalOpen, setWizardModalOpen] = useState(false);
   const activeWizard = useAppStore((s) => s.activeWizard);
 
+  // Export Modal
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportStatus, setExportStatus] = useState<'loading' | 'converting' | 'saving' | 'complete' | 'error'>('loading');
+  const [exportFormat, setExportFormat] = useState<'docx' | 'pdf'>('docx');
+  const [exportError, setExportError] = useState<string>();
+
   // Leave guard modal
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [leaveModalProps, setLeaveModalProps] = useState<{
@@ -250,6 +256,55 @@ const App: React.FC = () => {
   useEffect(() => {
     setWizardModalOpen(!!activeWizard);
   }, [activeWizard]);
+
+  // Update menu context when navigation changes
+  useEffect(() => {
+    const isStoryContext = appSection === 'story';
+    window.menu.updateContext({
+      isStoryContext,
+      projectId: selectedProjectId || undefined,
+      storyId: selectedStoryId || undefined,
+    });
+  }, [appSection, selectedProjectId, selectedStoryId]);
+
+  // Handle export from menu
+  useEffect(() => {
+    const handleExport = async (format: 'docx' | 'pdf') => {
+      if (!selectedProjectId || !selectedStoryId) {
+        console.error('[Export] No project or story selected');
+        return;
+      }
+
+      setExportFormat(format);
+      setExportModalOpen(true);
+      setExportStatus('loading');
+      setExportError(undefined);
+
+      const { exportStory } = await import('./export/exportOrchestrator');
+
+      await exportStory(selectedProjectId, selectedStoryId, format, (progress) => {
+        setExportStatus(progress.status);
+        if (progress.errorMessage) {
+          setExportError(progress.errorMessage);
+        }
+
+        // Auto-close on complete after brief delay
+        if (progress.status === 'complete') {
+          setTimeout(() => {
+            setExportModalOpen(false);
+          }, 1500);
+        }
+      });
+    };
+
+    // Register the handler
+    const cleanup = window.menu.onExport(handleExport);
+
+    // Cleanup function to remove the listener
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [selectedProjectId, selectedStoryId]);
 
   const handleCloseWizardModal = () => {
     const { closeWizard } = useAppStore.getState();
@@ -411,6 +466,12 @@ const App: React.FC = () => {
         leaveGuardCancelLabel={leaveModalProps.cancelLabel}
         onLeaveGuardConfirm={leaveModalProps.onConfirm}
         onLeaveGuardCancel={leaveModalProps.onCancel}
+
+        exportModalOpen={exportModalOpen}
+        onCloseExportModal={() => setExportModalOpen(false)}
+        exportStatus={exportStatus}
+        exportFormat={exportFormat}
+        exportError={exportError}
       />
     </>
   );
