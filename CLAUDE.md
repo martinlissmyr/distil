@@ -20,10 +20,14 @@ You are a **balanced implementation and advisory partner**:
 
 ## References
 
-- **ARCHITECTURE.md** - Technical documentation, system design, data models
-- **IDEAS.md** - Feature proposals, improvements, and development roadmap
+- **DOCS/ARCHITECTURE.md** - Technical documentation, system design, data models
+- **DOCS/EXPORT.md** - Technical docs for the export feature
+- **DOCS/BUILD_SETUP.md** and **DOCS/BUILD_WORKFLOW.md** - Documentation of the build process
 
 Consult these files when making architectural decisions or proposing enhancements.
+
+Also consider:
+- **IDEAS.md** - Feature proposals, improvements, and development roadmap
 
 ## Architectural Rules
 
