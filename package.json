@@ -5,10 +5,13 @@
   "description": "A local-first writing tool for novelists built on the Layered Contextual Relevance Framework",
   "author": "Martin Lissmyr <martin@lissmyr.com>",
   "type": "module",
+  "engines": {
+    "node": ">=25.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "dist": "electron-builder",
     "publish": "electron-builder --mac --publish always"
@@ -70,19 +73,22 @@
   },
   "devDependencies": {
     "@electron/notarize": "^3.1.1",
+    "@eslint/js": "^9.39.2",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
-    "@typescript-eslint/eslint-plugin": "^7.1.1",
-    "@typescript-eslint/parser": "^7.1.1",
+    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/parser": "^8.53.1",
     "@vitejs/plugin-react": "^4.2.1",
     "dotenv": "^17.2.3",
     "electron": "40.0.0-beta.2",
-    "electron-builder": "^24.13.3",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "electron-builder": "^26.5.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "globals": "^17.1.0",
     "sass": "^1.94.2",
     "typescript": "^5.2.2",
+    "typescript-eslint": "^8.53.1",
     "vite": "^7.2.4",
     "vite-plugin-electron": "^0.28.6",
     "vite-plugin-electron-renderer": "^0.14.5"
