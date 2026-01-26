@@ -2,7 +2,7 @@
 
 ## Overview
 
-Distil's export system allows users to export stories to various formats (currently DOCX, with PDF planned). The export process runs entirely in the Electron main process for optimal performance and to leverage Node.js capabilities not available in the browser.
+Distil's export system allows users to export stories to various formats (currently DOCX and PDF). The export process runs entirely in the Electron main process for optimal performance and to leverage Node.js capabilities not available in the browser.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ Distil's export system allows users to export stories to various formats (curren
 **Main Process (Electron)**:
 - Merges story parts
 - Shows native save dialog
-- Generates DOCX file
+- Generates DOCX or PDF file
 - Writes to filesystem
 
 This architecture was chosen because:
@@ -335,53 +335,53 @@ const customDocxSerializer = new DocxSerializer(
 
 ## Adding New Export Formats
 
-To add a new export format (e.g., PDF):
+To add a new export format (e.g., EPUB):
 
 1. **Add IPC handler** in `electron/handlers/export.ts`:
 ```typescript
-async function exportStoryToPdf(projectId: string, storyId: string) {
+async function exportStoryToEpub(projectId: string, storyId: string) {
   const mergedStory = await mergeStoryParts(projectId, storyId);
-  const filePath = await showSaveDialog(mergedStory.title, 'pdf');
+  const filePath = await showSaveDialog(mergedStory.title, 'epub');
   if (!filePath) return { success: false, cancelled: true };
 
-  // Generate PDF (e.g., using webContents.printToPDF)
-  const buffer = await generatePdf(mergedStory);
+  // Generate EPUB using appropriate library
+  const buffer = await generateEpub(mergedStory);
   await fs.writeFile(filePath, buffer);
 
   return { success: true, filePath };
 }
 
-safeHandle('export:exportToPdf', async (projectId, storyId) => {
+safeHandle('export:exportToEpub', async (projectId, storyId) => {
   validateProjectId(projectId);
   validateStoryId(storyId);
-  return await exportStoryToPdf(projectId, storyId);
+  return await exportStoryToEpub(projectId, storyId);
 });
 ```
 
 2. **Add to client** in `src/api/client.ts`:
 ```typescript
-exportToPdf(projectId: string, storyId: string) {
-  return window.distil.exportToPdf(projectId, storyId);
+exportToEpub(projectId: string, storyId: string) {
+  return window.distil.exportToEpub(projectId, storyId);
 }
 ```
 
 3. **Add to menu** in `electron/appMenu.ts`:
 ```typescript
 {
-  label: 'Export as PDF...',
+  label: 'Export as EPUB...',
   enabled: context.isStoryContext,
-  accelerator: 'CmdOrCtrl+Shift+P',
+  accelerator: 'CmdOrCtrl+Shift+B',
   click: () => {
-    windows[0].webContents.send('menu:export', 'pdf');
+    windows[0].webContents.send('menu:export', 'epub');
   },
 }
 ```
 
 4. **Update orchestrator** in `src/export/exportOrchestrator.ts`:
 ```typescript
-if (format === 'pdf') {
+if (format === 'epub') {
   onProgress({ status: 'loading' });
-  const response = await client.exportToPdf(projectId, storyId);
+  const response = await client.exportToEpub(projectId, storyId);
   // ... handle response
 }
 ```
@@ -420,12 +420,145 @@ paragraph(state, node) {
 - Test different spacing values in Word, Pages, and LibreOffice
 - Consider making spacing configurable (future export options feature)
 
+## PDF Export Flow
+
+```
+User triggers export (menu)
+  ↓
+App.tsx handles menu:export event
+  ↓
+exportOrchestrator.exportStory()
+  ↓
+IPC: export:exportToPdf(projectId, storyId)
+  ↓
+MAIN PROCESS:
+  ├─ mergeStoryParts() - Load and merge all parts
+  ├─ showSaveDialog() - Native file picker
+  ├─ exportToPdf() - Generate PDF
+  │   ├─ createHiddenWindow() - BrowserWindow with no display
+  │   ├─ loadStyles() - Read pdfStyles.css from dist
+  │   ├─ convertToHtml() - JSONContent to HTML
+  │   ├─ loadHTML() - Inject content into window
+  │   └─ printToPDF() - Chromium PDF engine
+  └─ fs.writeFile() - Save to disk
+  ↓
+Return success/cancelled/error
+  ↓
+Update progress modal
+```
+
+## PDF Export Architecture
+
+PDF export uses Electron's `BrowserWindow.webContents.printToPDF()` API, which leverages Chromium's built-in PDF rendering engine. This approach provides:
+
+1. **Consistent styling**: Uses the same CSS as StoryPreview, ensuring WYSIWYG
+2. **No external dependencies**: No need for PDF libraries like pdfmake or puppeteer
+3. **High quality output**: Chromium's PDF engine handles typography, layout, and pagination
+4. **Native performance**: Runs in Electron's main process
+
+### How It Works
+
+1. **Create Hidden BrowserWindow**: A non-displayed window is created for rendering
+2. **Load CSS**: PDF-specific styles are compiled from `pdfStyles.scss` (which imports StoryPreview styles)
+3. **Convert Content**: TipTap JSONContent is converted to semantic HTML
+4. **Inject HTML**: The styled HTML is loaded into the hidden window
+5. **Render to PDF**: `printToPDF()` captures the rendered page as PDF
+6. **Save File**: PDF buffer is written to the user-selected path
+7. **Cleanup**: Hidden window is destroyed
+
+### PDF Styles
+
+PDF styles are defined in `src/export/pdfStyles.scss`:
+
+```scss
+// Import base styles from StoryPreview
+@import '../ui/story/StoryPreview/StoryPreview.module.scss';
+
+// PDF-specific overrides
+@page {
+  size: A4;
+  margin: 2.5cm;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12pt;
+  line-height: 1.6;
+  color: #000;
+  background: #fff;
+}
+
+// Additional print-specific styles...
+```
+
+The SCSS is compiled to CSS during build and loaded from `dist/pdfStyles.css` at export time.
+
+### JSONContent to HTML Conversion
+
+The `convertToHtml` function in `electron/export/pdfExporter.ts` converts TipTap's JSONContent format to semantic HTML:
+
+```typescript
+function convertToHtml(content: JSONContent): string {
+  if (!content.content) return '';
+
+  return content.content.map((node) => {
+    switch (node.type) {
+      case 'heading':
+        const level = node.attrs?.level || 2;
+        return `<h${level}>${renderInlineContent(node.content)}</h${level}>`;
+
+      case 'paragraph':
+        return `<p>${renderInlineContent(node.content)}</p>`;
+
+      case 'bulletList':
+        return `<ul>${renderListItems(node.content)}</ul>`;
+
+      case 'orderedList':
+        return `<ol>${renderListItems(node.content)}</ol>`;
+
+      case 'codeBlock':
+        return `<pre><code>${escapeHtml(extractText(node.content))}</code></pre>`;
+
+      case 'horizontalRule':
+        return '<hr />';
+
+      default:
+        return '';
+    }
+  }).join('\n');
+}
+```
+
+Inline content (text, marks) is rendered with:
+- **Bold**: `<strong>`
+- **Italic**: `<em>`
+- **Code**: `<code>`
+- **Strike**: `<s>`
+- **Hard breaks**: `<br />`
+
+### Page Settings
+
+PDF output is configured via `printToPDF()` options:
+
+```typescript
+const pdf = await win.webContents.printToPDF({
+  pageSize: 'A4',
+  marginsType: 1, // Default margins
+  printBackground: false,
+  landscape: false,
+  preferCSSPageSize: true, // Respect @page rules in CSS
+});
+```
+
+The `preferCSSPageSize: true` option allows the CSS `@page` rule to control page dimensions and margins.
+
 ## File Structure
 
 ```
 electron/
 ├── export/
-│   └── docxExporter.ts        # DOCX generation logic
+│   ├── docxExporter.ts        # DOCX generation logic
+│   └── pdfExporter.ts         # PDF generation logic (BrowserWindow + printToPDF)
 ├── handlers/
 │   └── export.ts               # IPC handlers for export (includes story merging)
 ├── appMenu.ts                  # Dynamic menu with export options
@@ -435,11 +568,15 @@ src/
 ├── models/
 │   └── export.ts               # Export type definitions
 ├── export/
-│   └── exportOrchestrator.ts   # Export flow orchestration
+│   ├── exportOrchestrator.ts   # Export flow orchestration
+│   └── pdfStyles.scss          # PDF-specific styles (imports StoryPreview styles)
 ├── ui/
 │   ├── editor/
 │   │   └── primitives/
 │   │       └── editorConfigFactory.tsx  # getProseExtensions()
+│   ├── story/
+│   │   └── StoryPreview/
+│   │       └── StoryPreview.module.scss  # Base styles reused by PDF export
 │   └── modals/
 │       └── ExportProgressModal.tsx  # Progress UI
 ├── api/
