@@ -44,11 +44,9 @@ export async function exportToPdf(
     await hiddenWindow.loadURL(dataUrl);
 
     // Wait for rendering to complete
-    console.log('[PDF Export] Rendering HTML...');
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Generate PDF
-    console.log('[PDF Export] Generating PDF...');
     const pdfBuffer = await hiddenWindow.webContents.printToPDF({
       pageSize: 'A4',
       margins: {
@@ -62,9 +60,7 @@ export async function exportToPdf(
     });
 
     // Save to disk
-    console.log('[PDF Export] Saving to disk...');
     await fs.writeFile(outputPath, pdfBuffer);
-    console.log('[PDF Export] Export complete');
 
   } catch (error) {
     console.error('[PDF Export] Error:', error);

@@ -133,56 +133,34 @@ export function registerExportHandlers(): void {
    * Merges parts, shows save dialog, generates PDF, and saves to disk
    */
   safeHandle('export:exportToPdf', async (projectId: string, storyId: string) => {
-    console.log('[PDF-HANDLER] Handler called with:', { projectId, storyId });
-
     // Validate inputs
     if (!projectId || !storyId) {
-      console.log('[PDF-HANDLER] Validation failed - missing projectId or storyId');
       return { success: false, error: 'Missing projectId or storyId' };
     }
 
     try {
-      console.log('[PDF-HANDLER] Starting PDF export for story:', storyId);
+      console.log('[PDF Export] Starting PDF export for story:', storyId);
 
       // Merge story parts (reuse existing function)
-      console.log('[PDF-HANDLER] About to call mergeStoryParts...');
       const merged = await mergeStoryParts(projectId, storyId);
-      console.log('[PDF-HANDLER] mergeStoryParts completed. Parts:', merged.parts.length);
-      console.log('[PDF-HANDLER] Merged story title:', merged.title);
 
       // Show save dialog (reuse existing function)
-      console.log('[PDF-HANDLER] About to show save dialog...');
       const savePath = await showSaveDialog(merged.title, 'pdf');
-      console.log('[PDF-HANDLER] Save dialog returned. savePath exists:', !!savePath);
-      console.log('[PDF-HANDLER] Save path value:', savePath);
 
       if (!savePath) {
-        console.log('[PDF-HANDLER] Export cancelled by user');
-        const cancelResponse = { success: true, cancelled: true };
-        console.log('[PDF-HANDLER] Returning cancel response:', cancelResponse);
-        return cancelResponse;
+        return { success: true, cancelled: true };
       }
 
       // Export to PDF
-      console.log('[PDF-HANDLER] About to call exportToPdf with path:', savePath);
       await exportToPdf(merged, savePath);
-      console.log('[PDF-HANDLER] exportToPdf completed successfully');
 
-      const successResponse = { success: true, filePath: savePath };
-      console.log('[PDF-HANDLER] Returning success response:', successResponse);
-      return successResponse;
+      return { success: true, filePath: savePath };
     } catch (error) {
-      console.error('[PDF-HANDLER] PDF export error caught:', error);
-      console.error('[PDF-HANDLER] Error type:', error instanceof Error ? 'Error' : typeof error);
-      console.error('[PDF-HANDLER] Error message:', error instanceof Error ? error.message : String(error));
-      console.error('[PDF-HANDLER] Error stack:', error instanceof Error ? error.stack : 'no stack');
-
-      const errorResponse = {
+      console.error('[PDF Export] Error:', error);
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error during PDF export',
       };
-      console.log('[PDF-HANDLER] Returning error response:', errorResponse);
-      return errorResponse;
     }
   });
 
