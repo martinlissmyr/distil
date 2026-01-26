@@ -1,10 +1,9 @@
 // src/ui/story/StoryPreview.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
-import { useAppStore } from '../../../state/useAppStore';
 import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
-import { mergeStoryParts, getProseExtensions, getPartTitle } from '../../../export/storyMerger';
-import type { MergedPart } from '../../../export/storyMerger';
+import { client } from '../../../api/client';
+import { getProseExtensions } from '../../editor/primitives/editorConfigFactory';
 import { TopNavigation } from '../../common/TopNavigation';
 import navigationStyles from './StoryNavigation.module.scss';
 import previewStyles from './StoryPreview.module.scss';
@@ -43,7 +42,12 @@ export const StoryPreview = ({
       setIsLoading(true);
 
       try {
-        const merged = await mergeStoryParts(projectId, storyId);
+        const response = await client.getMergedStory(projectId, storyId);
+        if (!response.ok) {
+          console.error('[StoryPreview] Failed to load merged story:', response.error);
+          return;
+        }
+        const merged = response.data;
 
         if (cancelled) return;
 

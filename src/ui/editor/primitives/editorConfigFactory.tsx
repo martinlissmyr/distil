@@ -18,6 +18,7 @@ import { createBaseExtensions } from '../extensions/sharedExtensions';
 import { EditorToolbar } from './EditorToolbar';
 import type { EditorConfig, ToolbarItem } from '../../../models/docs/editorConfig';
 import { getToolbarItemLabel } from '../../../models/docs/editorConfig';
+import { getDocKind } from '../../../models/docs';
 
 /**
  * Create TipTap extensions array from EditorConfig
@@ -123,4 +124,14 @@ export function createToolbarFromConfig(
   }));
 
   return <EditorToolbar items={toolbarItems} />;
+}
+
+/**
+ * Get TipTap extensions for prose documents
+ * Used to ensure consistent rendering across preview and export
+ */
+export function getProseExtensions() {
+  const docKind = getDocKind('prose');
+  const editorConfig = (docKind as any).editorConfig;
+  return createExtensionsFromConfig(editorConfig);
 }

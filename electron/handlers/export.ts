@@ -5,25 +5,7 @@ import { validateProjectId, validateStoryId } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
 import { loadStoryMetadata, loadPartDoc } from '../fs/fs';
 import { exportToDocx } from '../export/docxExporter';
-
-/**
- * Merged part structure matching src/export/storyMerger.ts
- */
-interface MergedPart {
-  partId: string;
-  partIndex: number;
-  partTitle: string;
-  content: any; // JSONContent
-}
-
-/**
- * Merged story structure matching src/export/storyMerger.ts
- */
-interface MergedStory {
-  title: string;
-  parts: MergedPart[];
-  metadata: any; // StoryMetadata
-}
+import type { MergedPart, MergedStory } from '../../src/models/export';
 
 /**
  * Get chapter title for a part (matches storyMerger.ts logic)
@@ -58,12 +40,13 @@ async function mergeStoryParts(
         const partDoc = await loadPartDoc(projectId, storyId, part.id);
         const content = partDoc.doc.content ?? [];
 
-        return {
+        const mergedPart: MergedPart = {
           partId: part.id,
           partIndex: index,
           partTitle: getPartTitle(index, sortedParts.length),
           content: { type: 'doc', content },
-        } satisfies MergedPart;
+        };
+        return mergedPart;
       } catch (error) {
         console.error(`[EXPORT] Failed to load part ${part.id}:`, error);
         return null;

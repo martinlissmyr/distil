@@ -6,6 +6,7 @@ import { getSchema } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
+import { manuscriptStylesConfig } from './docxStyles';
 
 interface MergedPart {
   partId: string;
@@ -23,16 +24,65 @@ interface MergedStory {
 /**
  * Custom DOCX serializer that maps TipTap node names to prosemirror-docx handlers
  * TipTap uses camelCase naming while prosemirror-docx uses snake_case
+ *
+ * Implements manuscript paragraph styling:
+ * - Applies BodyText style to regular paragraphs with first-line indent
+ * - Applies BodyTextFirst style (no indent) to first paragraph after any heading
+ * - Maps heading levels (h1→Heading1, h2→Heading2, h3→Heading3)
  */
 const customDocxSerializer = new DocxSerializer(
   {
     ...defaultNodes,
     // Map TipTap camelCase node names to prosemirror-docx snake_case handlers
-    paragraph(state, node) {
-      console.log('[Serializer] Rendering paragraph');
+
+    /**
+     * Heading node handler
+     * Maps heading levels to manuscript styles: h1→Heading1, h2→Heading2, h3→Heading3
+     * Sets lastNodeWasHeading flag so next paragraph gets BodyTextFirst style
+     */
+    heading(state, node) {
+      const level = node.attrs.level;
+      const styleId = `Heading${level}`;
+
+      console.log(`[Serializer] Rendering heading level ${level} with style ${styleId}`);
+
+      // Render the heading content
       state.renderInline(node);
-      state.closeBlock(node);
+      state.closeBlock(node, { style: styleId });
+
+      // Track that we just rendered a heading
+      // The next paragraph should use BodyTextFirst (no indent)
+      (state as any).lastNodeWasHeading = true;
     },
+
+    /**
+     * Paragraph node handler
+     * Applies BodyText or BodyTextFirst style based on context:
+     * - BodyTextFirst: First paragraph after a heading (no first-line indent)
+     * - BodyText: All other paragraphs (with first-line indent)
+     */
+    paragraph(state, node) {
+      // Check if paragraph is empty (no text content)
+      const isEmpty = node.textContent.trim().length === 0;
+
+      // Determine which style to use based on context
+      // If the last node was a heading, use BodyTextFirst (no indent)
+      // Otherwise use BodyText (with first-line indent)
+      const styleId = (state as any).lastNodeWasHeading ? 'BodyTextFirst' : 'BodyText';
+
+      console.log(`[Serializer] Rendering paragraph with style ${styleId}${isEmpty ? ' (empty)' : ''}`);
+
+      // Render paragraph content and close with appropriate style
+      state.renderInline(node);
+      state.closeBlock(node, { style: styleId });
+
+      // Only reset the heading flag if this paragraph has content
+      // Empty paragraphs (used as separators between parts) shouldn't consume the BodyTextFirst styling
+      if (!isEmpty) {
+        (state as any).lastNodeWasHeading = false;
+      }
+    },
+
     hardBreak(state) {
       state.addRunOptions({ break: 1 });
     },
@@ -187,13 +237,15 @@ export async function exportToDocx(story: MergedStory): Promise<Buffer> {
         // If state.sections is an empty array, buildDoc won't fall back to state.children
         // So we need to return a sections array with our content
         return {
+          // Apply manuscript styles (BodyText, BodyTextFirst, Heading1, Heading2, Heading3)
+          styles: manuscriptStylesConfig,
           numbering: {
             config: state.numbering,
           },
           sections: [
             {
               properties: {},
-              children: state.children,
+              children: state.children || [],
             },
           ],
         };
@@ -202,13 +254,6 @@ export async function exportToDocx(story: MergedStory): Promise<Buffer> {
 
     console.log('[DOCX Export] Serialization complete');
     console.log('[DOCX Export] Document object keys:', Object.keys(wordDocument));
-    console.log('[DOCX Export] Document sections:', Array.isArray(wordDocument.sections) ? wordDocument.sections.length : 'not an array');
-
-    // Try to access the actual sections data
-    if (Array.isArray(wordDocument.sections)) {
-      console.log('[DOCX Export] Section 0 keys:', Object.keys(wordDocument.sections[0] || {}));
-      console.log('[DOCX Export] Section 0 children length:', wordDocument.sections[0]?.children?.length);
-    }
 
     // Use Packer.toBuffer() in Node.js (works here, unlike browser)
     const buffer = await Packer.toBuffer(wordDocument);

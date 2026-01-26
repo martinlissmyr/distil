@@ -16,7 +16,7 @@ import { registerChatThreadHandlers } from './handlers/chat';
 import { registerDevModeHandlers } from './handlers/devMode';
 import { registerExportHandlers } from './handlers/export';
 
-import { createAppMenu, updateMenuContext, registerMenuHandlers } from './appMenu';
+import { createAppMenu, registerMenuHandlers } from './appMenu';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, '..');
