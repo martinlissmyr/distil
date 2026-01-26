@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:pdf-styles && tsc && vite build && electron-builder",
-    "build:pdf-styles": "sass electron/export/pdfStyles.scss electron/export/pdfStyles.css",
+    "build:pdf-styles": "sass electron/export/pdfStyles.scss electron/export/pdfStyles.css && mkdir -p dist-electron && cp electron/export/pdfStyles.css dist-electron/",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "dist": "electron-builder",
