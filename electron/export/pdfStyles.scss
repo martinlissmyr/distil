@@ -1,0 +1,60 @@
+/**
+ * PDF Export Styles
+ *
+ * This file imports the StoryPreview styles as the base and adds
+ * print-specific adaptations for PDF generation.
+ *
+ * Single source of truth: src/ui/documents/prose/StoryPreview.module.scss
+ * This file only contains print-specific overrides.
+ */
+
+// Import base StoryPreview styles
+@use '../../src/ui/documents/prose/StoryPreview.module.scss' as *;
+
+// Print-specific styles and adaptations
+@media print {
+  // Page setup
+  @page {
+    size: A4;
+    margin: 2.5cm 3cm;
+  }
+
+  // Part container - page breaks
+  .part {
+    page-break-before: always;
+
+    &:first-child {
+      page-break-before: avoid;
+    }
+  }
+
+  // Content area adaptations
+  .content {
+    // Override responsive values with fixed ones for print
+    padding: 0 0 56px;
+    max-width: none; // Use full page width
+
+    // Prevent awkward breaks
+    h1, h2, h3 {
+      page-break-after: avoid;
+    }
+
+    p {
+      page-break-inside: avoid;
+    }
+
+    // Lists
+    ul, ol {
+      page-break-inside: avoid;
+    }
+
+    li {
+      page-break-inside: avoid;
+    }
+  }
+}
+
+// Non-print styles - resolve CSS variables for standalone HTML
+:root {
+  --editor-text-color: #000;
+}

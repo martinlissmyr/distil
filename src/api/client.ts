@@ -161,4 +161,21 @@ export const client = {
   saveChatThread(thread: ChatThread) {
     return window.distil.saveChatThread(thread);
   },
+
+  // -------- Export --------
+  exportToDocx(projectId: string, storyId: string) {
+    return window.distil.exportToDocx(projectId, storyId);
+  },
+  exportToPdf(projectId: string, storyId: string) {
+    return window.distil.exportToPdf(projectId, storyId);
+  },
+  getMergedStory(projectId: string, storyId: string) {
+    return window.distil.getMergedStory(projectId, storyId);
+  },
+  showSaveDialog(storyTitle: string, format: 'docx' | 'pdf') {
+    return window.distil.showSaveDialog(storyTitle, format);
+  },
+  saveFile(filePath: string, buffer: Uint8Array) {
+    return window.distil.saveFile(filePath, buffer);
+  },
 };

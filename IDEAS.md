@@ -1,5 +1,3 @@
-- [ ] Spell checking in editor (via https://ollama.com/jobautomation/OpenEuroLLM-Swedish?)
-- [ ] Saving full prose doc as PDF from preview (possibly using https://react-pdf.org/)
 - [ ] Possibility to chat with a character. Possibly by @-mentioning a character in a chat
 - [ ] Toggle between notes and chat for a prose part
 - [ ] Todos
@@ -7,3 +5,7 @@
 - [ ] Photos, uploaded or generated, on entities
 - [ ] Covers, uploaded or generated, on projects and stories
 - [ ] Inline Comments (https://github.com/sereneinserenade/tiptap-comment-extension ?)
+- [ ] Export Format Options (Page size, margins, font size, ???) (Export Templates??)
+- [x] Saving full prose doc as PDF
+- [x] Spell checking in editor
+- [x] Saving full prose doc as DOCX 
