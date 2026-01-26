@@ -175,7 +175,7 @@ function createProseMirrorSchema(): Schema {
 
 ## Story Merging
 
-Multi-part stories are merged using shared logic in `src/export/storyMerger.ts`:
+Multi-part stories are merged in `electron/handlers/export.ts`:
 
 ```typescript
 export async function mergeStoryParts(
@@ -425,18 +425,21 @@ paragraph(state, node) {
 ```
 electron/
 ├── export/
-│   ├── docxExporter.ts        # DOCX generation logic
-│   └── storyMerger.ts          # (Could move here from src/)
+│   └── docxExporter.ts        # DOCX generation logic
 ├── handlers/
-│   └── export.ts               # IPC handlers for export
+│   └── export.ts               # IPC handlers for export (includes story merging)
 ├── appMenu.ts                  # Dynamic menu with export options
 └── preload.ts                  # IPC method exposure
 
 src/
+├── models/
+│   └── export.ts               # Export type definitions
 ├── export/
-│   ├── storyMerger.ts          # Shared story merging logic
 │   └── exportOrchestrator.ts   # Export flow orchestration
 ├── ui/
+│   ├── editor/
+│   │   └── primitives/
+│   │       └── editorConfigFactory.tsx  # getProseExtensions()
 │   └── modals/
 │       └── ExportProgressModal.tsx  # Progress UI
 ├── api/

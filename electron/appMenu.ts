@@ -10,16 +10,10 @@ export interface MenuContext {
   storyId?: string;
 }
 
-let currentContext: MenuContext = {
-  isStoryContext: false,
-};
-
 /**
  * Create the application menu based on current context
  */
 export function createAppMenu(context: MenuContext) {
-  currentContext = context;
-
   const template: MenuItemConstructorOptions[] = [];
 
   // macOS app menu
@@ -41,7 +35,7 @@ export function createAppMenu(context: MenuContext) {
     label: 'File',
     submenu: [
       {
-        label: 'Export',
+        label: 'Export story',
         submenu: [
           {
             label: 'Export as DOCX...',
