@@ -5,6 +5,7 @@ import { validateProjectId, validateStoryId } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
 import { loadStoryMetadata, loadPartDoc } from '../fs/fs';
 import { exportToDocx } from '../export/docxExporter';
+import { exportToPdf } from '../export/pdfExporter';
 import type { MergedPart, MergedStory } from '../../src/models/export';
 
 /**
@@ -125,6 +126,45 @@ export function registerExportHandlers(): void {
     validateProjectId(projectId);
     validateStoryId(storyId);
     return await exportStoryToDocx(projectId, storyId);
+  });
+
+  /**
+   * IPC Handler: Export story to PDF
+   * Merges parts, shows save dialog, generates PDF, and saves to disk
+   */
+  safeHandle('export:exportToPdf', async (projectId: string, storyId: string) => {
+    // Validate inputs
+    if (!projectId || !storyId) {
+      return { ok: false, error: 'Missing projectId or storyId' };
+    }
+
+    try {
+      console.log('[IPC] Starting PDF export for story:', storyId);
+
+      // Merge story parts (reuse existing function)
+      const merged = await mergeStoryParts(projectId, storyId);
+      console.log('[IPC] Merged', merged.parts.length, 'parts');
+
+      // Show save dialog (reuse existing function)
+      const savePath = await showSaveDialog(merged.title, 'pdf');
+      if (!savePath) {
+        console.log('[IPC] Export cancelled by user');
+        return { ok: true, cancelled: true };
+      }
+
+      // Export to PDF
+      console.log('[IPC] Exporting to PDF:', savePath);
+      await exportToPdf(merged, savePath);
+
+      console.log('[IPC] PDF export complete');
+      return { ok: true, filePath: savePath };
+    } catch (error) {
+      console.error('[IPC] PDF export error:', error);
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown error during PDF export',
+      };
+    }
   });
 
   /**
