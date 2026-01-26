@@ -83,6 +83,8 @@ contextBridge.exposeInMainWorld('distil', {
   // -------- export ----------
   exportToDocx: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('export:exportToDocx', projectId, storyId),
+  exportToPdf: (projectId: string, storyId: string) =>
+    ipcRenderer.invoke('export:exportToPdf', projectId, storyId),
   getMergedStory: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('export:getMergedStory', projectId, storyId),
   showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') =>

@@ -166,6 +166,9 @@ export const client = {
   exportToDocx(projectId: string, storyId: string) {
     return window.distil.exportToDocx(projectId, storyId);
   },
+  exportToPdf(projectId: string, storyId: string) {
+    return window.distil.exportToPdf(projectId, storyId);
+  },
   getMergedStory(projectId: string, storyId: string) {
     return window.distil.getMergedStory(projectId, storyId);
   },

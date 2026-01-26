@@ -20,38 +20,35 @@ export async function exportStory(
   onProgress: (progress: ExportProgress) => void
 ): Promise<void> {
   try {
-    if (format === 'docx') {
-      // Show loading state
-      onProgress({ status: 'loading' });
-      console.log('[Export] Starting DOCX export...');
+    // Show loading state
+    onProgress({ status: 'loading' });
+    console.log(`[Export] Starting ${format.toUpperCase()} export...`);
 
-      // All the work happens in main process: merge, show dialog, convert, save
-      const response = await client.exportToDocx(projectId, storyId);
+    // All the work happens in main process: merge, show dialog, convert, save
+    const response = format === 'docx'
+      ? await client.exportToDocx(projectId, storyId)
+      : await client.exportToPdf(projectId, storyId);
 
-      if (!response.ok) {
-        throw new Error(response.error);
-      }
-
-      const result = response.data;
-
-      // User cancelled the save dialog
-      if (result.cancelled) {
-        console.log('[Export] User cancelled export');
-        throw new Error('Export cancelled');
-      }
-
-      // Success
-      console.log('[Export] Export complete! File saved to:', result.filePath);
-      onProgress({ status: 'complete' });
-
-      // Auto-close after showing success briefly
-      setTimeout(() => {
-        onProgress({ status: 'complete' });
-      }, 1500);
-    } else {
-      // PDF export will be implemented later
-      throw new Error('PDF export not yet implemented');
+    if (!response.ok) {
+      throw new Error(response.error);
     }
+
+    const result = response.data;
+
+    // User cancelled the save dialog
+    if (result.cancelled) {
+      console.log('[Export] User cancelled export');
+      throw new Error('Export cancelled');
+    }
+
+    // Success
+    console.log('[Export] Export complete! File saved to:', result.filePath);
+    onProgress({ status: 'complete' });
+
+    // Auto-close after showing success briefly
+    setTimeout(() => {
+      onProgress({ status: 'complete' });
+    }, 1500)
   } catch (error) {
     console.error('[Export] Export failed:', error);
     const errorMessage =

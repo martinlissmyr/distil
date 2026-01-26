@@ -166,6 +166,9 @@ declare global {
       exportToDocx: (projectId: string, storyId: string) => Promise<
         IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
       >;
+      exportToPdf: (projectId: string, storyId: string) => Promise<
+        IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
+      >;
       getMergedStory: (projectId: string, storyId: string) => Promise<
         IpcResponse<{
           title: string;

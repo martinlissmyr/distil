@@ -104,4 +104,5 @@ pnpm-debug.log*
 *.temp
 *.cache
 .cache/
-vite.cache/
+electron/export/pdfStyles.css
+electron/export/pdfStyles.css.map
