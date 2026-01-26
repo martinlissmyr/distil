@@ -8,8 +8,13 @@
 import { BrowserWindow } from 'electron';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import type { MergedStory } from '../../src/models/export';
 import type { JSONContent } from '@tiptap/react';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Export merged story to PDF file
