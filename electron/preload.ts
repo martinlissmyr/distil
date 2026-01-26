@@ -79,6 +79,18 @@ contextBridge.exposeInMainWorld('distil', {
   // -------- chat threads ----------
   loadChatThread: (threadId: string) => ipcRenderer.invoke('chat:load', threadId),
   saveChatThread: (thread: any) => ipcRenderer.invoke('chat:save', thread),
+
+  // -------- export ----------
+  exportToDocx: (projectId: string, storyId: string) =>
+    ipcRenderer.invoke('export:exportToDocx', projectId, storyId),
+  exportToPdf: (projectId: string, storyId: string) =>
+    ipcRenderer.invoke('export:exportToPdf', projectId, storyId),
+  getMergedStory: (projectId: string, storyId: string) =>
+    ipcRenderer.invoke('export:getMergedStory', projectId, storyId),
+  showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') =>
+    ipcRenderer.invoke('export:showSaveDialog', storyTitle, format),
+  saveFile: (filePath: string, buffer: Uint8Array) =>
+    ipcRenderer.invoke('export:saveFile', filePath, Buffer.from(buffer)),
 })
 
 contextBridge.exposeInMainWorld('chat', {
@@ -113,4 +125,18 @@ contextBridge.exposeInMainWorld('settings', {
 
 contextBridge.exposeInMainWorld('devMode', {
   isDevMode: () => ipcRenderer.invoke('devMode:isDevMode'),
+})
+
+contextBridge.exposeInMainWorld('menu', {
+  updateContext: (context: { isStoryContext: boolean; projectId?: string; storyId?: string }) =>
+    ipcRenderer.send('menu:updateContext', context),
+  onExport: (callback: (format: 'docx' | 'pdf') => void) => {
+    const handler = (_event: any, format: 'docx' | 'pdf') => callback(format);
+    ipcRenderer.on('menu:export', handler);
+
+    // Return cleanup function
+    return () => {
+      ipcRenderer.removeListener('menu:export', handler);
+    };
+  },
 })

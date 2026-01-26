@@ -14,8 +14,9 @@ import { registerThemeHandlers, setupThemeChangeListener } from './handlers/them
 import { registerChatHandlers } from './chat';
 import { registerChatThreadHandlers } from './handlers/chat';
 import { registerDevModeHandlers } from './handlers/devMode';
+import { registerExportHandlers } from './handlers/export';
 
-import { appMenu } from './appMenu';
+import { createAppMenu, registerMenuHandlers } from './appMenu';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, '..');
@@ -129,6 +130,8 @@ function registerAllHandlers(): void {
   registerChatHandlers();
   registerChatThreadHandlers();
   registerDevModeHandlers();
+  registerExportHandlers();
+  registerMenuHandlers();
 }
 
 app.on('activate', () => {
@@ -138,7 +141,9 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   setupAutoUpdates();
 
-  Menu.setApplicationMenu(appMenu);
+  // Create initial menu
+  const menu = createAppMenu({ isStoryContext: false });
+  Menu.setApplicationMenu(menu);
 
   if (app.isPackaged) {
     autoUpdater.autoInstallOnAppQuit = true;

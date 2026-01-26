@@ -161,6 +161,30 @@ declare global {
       // Chat thread persistence
       loadChatThread: (threadId: string) => Promise<IpcResponse<ChatThread | null>>;
       saveChatThread: (thread: ChatThread) => Promise<IpcResponse<undefined>>;
+
+      // Export
+      exportToDocx: (projectId: string, storyId: string) => Promise<
+        IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
+      >;
+      exportToPdf: (projectId: string, storyId: string) => Promise<
+        IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
+      >;
+      getMergedStory: (projectId: string, storyId: string) => Promise<
+        IpcResponse<{
+          title: string;
+          parts: Array<{
+            partId: string;
+            partIndex: number;
+            partTitle: string;
+            content: any;
+          }>;
+          metadata: any;
+        }>
+      >;
+      showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') => Promise<
+        IpcResponse<string | null>
+      >;
+      saveFile: (filePath: string, buffer: Uint8Array) => Promise<IpcResponse<{ success: boolean }>>;
     };
 
     chat: {
@@ -200,6 +224,15 @@ declare global {
 
     devMode: {
       isDevMode: () => Promise<IpcResponse<boolean>>;
+    };
+
+    menu: {
+      updateContext: (context: {
+        isStoryContext: boolean;
+        projectId?: string;
+        storyId?: string;
+      }) => void;
+      onExport: (callback: (format: 'docx' | 'pdf') => void) => (() => void) | undefined;
     };
   }
 }

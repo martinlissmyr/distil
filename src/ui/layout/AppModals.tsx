@@ -5,6 +5,8 @@ import { EntityCreateModal } from '../modals/EntityCreateModal';
 import { SettingsModal } from '../settings/SettingsModal';
 import { WizardModal } from '../wizard/WizardModal';
 import { ConfirmLeaveModal } from '../modals/ConfirmLeaveModal';
+import { ExportProgressModal } from '../modals/ExportProgressModal';
+import type { ExportStatus } from '../modals/ExportProgressModal';
 
 export interface AppModalsProps {
   // Project modal (edit)
@@ -45,6 +47,13 @@ export interface AppModalsProps {
   leaveGuardCancelLabel?: string;
   onLeaveGuardConfirm: () => void;
   onLeaveGuardCancel: () => void;
+
+  // Export modal
+  exportModalOpen: boolean;
+  onCloseExportModal: () => void;
+  exportStatus: ExportStatus;
+  exportFormat: 'docx' | 'pdf';
+  exportError?: string;
 }
 
 export const AppModals: React.FC<AppModalsProps> = ({
@@ -79,6 +88,12 @@ export const AppModals: React.FC<AppModalsProps> = ({
   leaveGuardCancelLabel,
   onLeaveGuardConfirm,
   onLeaveGuardCancel,
+
+  exportModalOpen,
+  onCloseExportModal,
+  exportStatus,
+  exportFormat,
+  exportError,
 }) => {
   return (
     <>
@@ -145,6 +160,15 @@ export const AppModals: React.FC<AppModalsProps> = ({
         message={leaveGuardMessage}
         confirmLabel={leaveGuardConfirmLabel}
         cancelLabel={leaveGuardCancelLabel}
+      />
+
+      {/* Export progress modal */}
+      <ExportProgressModal
+        opened={exportModalOpen}
+        onClose={onCloseExportModal}
+        status={exportStatus}
+        format={exportFormat}
+        errorMessage={exportError}
       />
     </>
   );
