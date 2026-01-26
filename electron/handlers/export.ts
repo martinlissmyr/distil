@@ -135,7 +135,7 @@ export function registerExportHandlers(): void {
   safeHandle('export:exportToPdf', async (projectId: string, storyId: string) => {
     // Validate inputs
     if (!projectId || !storyId) {
-      return { ok: false, error: 'Missing projectId or storyId' };
+      return { success: false, error: 'Missing projectId or storyId' };
     }
 
     try {
@@ -149,7 +149,7 @@ export function registerExportHandlers(): void {
       const savePath = await showSaveDialog(merged.title, 'pdf');
       if (!savePath) {
         console.log('[IPC] Export cancelled by user');
-        return { ok: true, cancelled: true };
+        return { success: true, cancelled: true };
       }
 
       // Export to PDF
@@ -157,11 +157,11 @@ export function registerExportHandlers(): void {
       await exportToPdf(merged, savePath);
 
       console.log('[IPC] PDF export complete');
-      return { ok: true, filePath: savePath };
+      return { success: true, filePath: savePath };
     } catch (error) {
       console.error('[IPC] PDF export error:', error);
       return {
-        ok: false,
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error during PDF export',
       };
     }
