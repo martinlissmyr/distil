@@ -71,15 +71,27 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Service name: "Distil", account: "openai_api_key"
 - IMPORTANT: keytar is marked as external in vite.config.ts and must not be imported in preload or renderer
 
-**File System** (`electron/fs/fs.ts`)
-- All data stored in `~/Distil` directory
-- Structure: `~/Distil/projects/{projectId}/stories/{storyId}.json`
-- MetaDocs stored separately: `~/Distil/projects/{projectId}/stories/{storyId}-{key}.json`
-- Root-level manifest: `~/Distil/manifest.json`
-
-**Chat thread persistence (storage)**
-- Chat threads stored as JSON per thread:
-  - `~/Distil/chat-threads/{threadId}.json`
+**Bundle Architecture**
+- **Bundle-based storage**: Projects and author data stored as portable filesystem bundles
+- **Author bundle**: `~/Distil/author.distilauthor/`
+  - `manifest.json` (author philosophy, voice, writing style)
+  - `settings.json` (language preferences, UI schema version)
+  - `chats/` (root-level chat threads like `manifest-chat.json`)
+- **Project bundles**: `~/Distil/{ProjectName}.distilproject/`
+  - `project.json` (project metadata including unique ID)
+  - `stories/{storyId}/` (story content, parts, entities, chat threads)
+    - `story.json` (story metadata and content)
+    - `{storyId}-{key}.json` (MetaDocs: outline, brief, world, etc.)
+    - `parts/part-{id}.json` (chapter/part documents for multi-part stories)
+    - `{storyId}-characters.json`, `{storyId}-locations.json` (entity indices)
+    - `chats/{threadId}.json` (story-scoped chat threads)
+- **Project registry**: `~/Library/Application Support/Distil/project-registry.json`
+  - Tracks all projects: IDs, names, bundle paths, order, lastOpened timestamps
+  - Enables copy/move detection: copied bundles get new IDs, moved bundles update paths
+  - Survives bundle relocations (paths are not fixed)
+- **Development mode**: Uses `~/Distil-Dev/` instead of `~/Distil/` for isolated testing
+- **Bundle portability**: Bundles can be moved, renamed, or copied anywhere; registry auto-updates on launch
+- **macOS integration**: `.distilproject` bundles registered for file associations and Recent Documents
 
 **Write Queue**
 - Serializes writes to the same resource to prevent race conditions
@@ -203,7 +215,9 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
     - `root:{docKind}`
     - `project:{projectId}:{docKind}`
     - `story:{projectId}:{storyId}:{docKind}`
-  - Storage location: `~/Distil/chat-threads/{threadId}.json`
+  - Storage location:
+    - Root-level chats: `~/Distil/author.distilauthor/chats/{threadId}.json`
+    - Story-level chats: `~/Distil/{ProjectName}.distilproject/stories/{storyId}/chats/{threadId}.json`
   - **Message handling**
     - Regular messages: persisted to disk
     - Ephemeral messages: displayed but excluded from LLM history and storage (e.g., initial hints)
@@ -377,6 +391,10 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Only used in main process for secure API key storage
 
 ### Data Persistence
-- No database; all data in JSON files under `~/Distil`
+- No database; all data stored in JSON files within bundle directories
+- **Bundle-based architecture**: Projects stored as `.distilproject` bundles, author data in `.distilauthor` bundle
+- **Project registry** (`~/Library/Application Support/Distil/project-registry.json`) maintains project index with paths, order, and metadata
 - Projects and stories maintain `order` field for user-defined sorting
-- Reordering operations update all affected files atomically
+- Reordering operations update registry and affected files atomically
+- **Copy vs Move detection**: Bundle ID comparison detects when bundles are copied (new ID assigned) vs moved (path updated)
+- Bundle portability enables backup, sharing, and reorganization without data loss
