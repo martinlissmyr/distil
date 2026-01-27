@@ -6,6 +6,7 @@ import type { JSONContent } from '@tiptap/react'
 import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
 import { calculateWordCount } from '../utils/wordCount'
+import { readAuthorManifest, writeAuthorManifest, getAuthorChatFile } from './authorBundle'
 
 export type ProjectMeta = {
   id: string
@@ -445,13 +446,10 @@ export async function saveStoryMetaDoc(
 // ---- Manifest ----
 
 export async function loadManifest(): Promise<ManifestData> {
-  const { readAuthorManifest } = await import('./authorBundle')
   return await readAuthorManifest()
 }
 
 export async function saveManifest(payload: { doc: JSONContent }): Promise<void> {
-  const { writeAuthorManifest } = await import('./authorBundle')
-
   // Use write queue to serialize manifest saves
   const queueKey = 'manifest:root'
 
@@ -501,7 +499,6 @@ async function getChatThreadFile(threadId: string): Promise<string> {
 
   if (parts[0] === 'root') {
     // Root scope: ~/Distil/author.distilauthor/chats/manifest-chat.json
-    const { getAuthorChatFile } = await import('./authorBundle')
     const docKind = parts[1]
     return getAuthorChatFile(`${docKind}-chat`)
   }
