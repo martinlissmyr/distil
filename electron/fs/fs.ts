@@ -84,7 +84,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v)
 }
 
-async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
+export async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
   const dir = path.dirname(file)
   await fs.mkdir(dir, { recursive: true })
 
@@ -107,6 +107,11 @@ async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
       throw e
     }
   }
+}
+
+export async function readJson<T = unknown>(file: string): Promise<T> {
+  const content = await fs.readFile(file, 'utf-8')
+  return JSON.parse(content) as T
 }
 
 function assertUpdatesObject(

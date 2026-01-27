@@ -27,6 +27,19 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "fileAssociations": [
+        {
+          "ext": "distilproject",
+          "name": "Distil Project",
+          "role": "Editor",
+          "icon": "build/distil-icon.icns"
+        },
+        {
+          "ext": "distilauthor",
+          "name": "Distil Author Workspace",
+          "role": "None"
+        }
+      ],
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
