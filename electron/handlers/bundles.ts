@@ -153,9 +153,25 @@ export async function syncRegistryWithDistilFolder(): Promise<void> {
               bundlePath: bundlePath
             })
           } else {
-            // MOVE: Old path gone - update path
-            console.log(`[bundles] Updated bundle path: ${bundlePath}`)
-            await updateBundlePath(project.id, bundlePath)
+            // MOVE: Old path gone - check if it was renamed
+            const newBundleName = path.basename(bundlePath, '.distilproject')
+            const oldBundleName = path.basename(existing.bundlePath, '.distilproject')
+
+            if (newBundleName !== oldBundleName) {
+              // Bundle was renamed in Finder - update project name to match
+              console.log(`[bundles] Detected bundle rename: ${oldBundleName} → ${newBundleName}`)
+              project.name = newBundleName
+              await writeJsonAtomic(projectFile, project)
+            } else {
+              console.log(`[bundles] Updated bundle path: ${bundlePath}`)
+            }
+
+            // Update registry with new path and potentially new name
+            await addOrUpdateProject({
+              ...existing,
+              name: project.name,
+              bundlePath: bundlePath
+            })
           }
         }
       } catch (err) {
