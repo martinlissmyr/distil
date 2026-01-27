@@ -79,7 +79,6 @@ export async function createProjectBundle(name: string): Promise<ProjectRegistry
   // Create bundle directory structure
   await fs.mkdir(bundlePath, { recursive: true })
   await fs.mkdir(path.join(bundlePath, 'stories'), { recursive: true })
-  await fs.mkdir(path.join(bundlePath, 'chats'), { recursive: true })
 
   // Create project.json
   const projectMeta = {
