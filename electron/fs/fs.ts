@@ -7,6 +7,7 @@ import { writeQueue } from './writeQueue'
 import { calculateWordCount } from '../utils/wordCount'
 import { readAuthorManifest, writeAuthorManifest, getAuthorChatFile } from './authorBundle'
 import { readRegistry } from './registry'
+import { saveWithRecovery } from './saveWithRecovery'
 
 export type ProjectMeta = {
   id: string
@@ -319,16 +320,21 @@ export async function saveStoryMetadata(
   storyId: string,
   metadata: StoryMetadata
 ): Promise<void> {
-  const queueKey = `story:${projectId}:${storyId}`
+  return saveWithRecovery(
+    async () => {
+      const queueKey = `story:${projectId}:${storyId}`
 
-  return writeQueue.enqueue(queueKey, async () => {
-    const file = await getStoryMetadataFile(projectId, storyId)
-    const updated: StoryMetadata = {
-      ...metadata,
-      updatedAt: new Date().toISOString(),
-    }
-    await writeJsonAtomic(file, updated)
-  })
+      return writeQueue.enqueue(queueKey, async () => {
+        const file = await getStoryMetadataFile(projectId, storyId)
+        const updated: StoryMetadata = {
+          ...metadata,
+          updatedAt: new Date().toISOString(),
+        }
+        await writeJsonAtomic(file, updated)
+      })
+    },
+    'saveStoryMetadata'
+  )
 }
 
 export async function updateStory(
@@ -423,13 +429,18 @@ export async function saveStoryMetaDoc(
   key: string,
   doc: JSONContent
 ): Promise<void> {
-  // Each metaDoc has its own queue key to allow independent writes
-  const queueKey = `metaDoc:${projectId}:${storyId}:${key}`
+  return saveWithRecovery(
+    async () => {
+      // Each metaDoc has its own queue key to allow independent writes
+      const queueKey = `metaDoc:${projectId}:${storyId}:${key}`
 
-  return writeQueue.enqueue(queueKey, async () => {
-    const file = await getStoryMetaDocFile(projectId, storyId, key)
-    await writeJsonAtomic(file, doc)
-  })
+      return writeQueue.enqueue(queueKey, async () => {
+        const file = await getStoryMetaDocFile(projectId, storyId, key)
+        await writeJsonAtomic(file, doc)
+      })
+    },
+    'saveStoryMetaDoc'
+  )
 }
 
 // ---- Manifest ----
@@ -523,24 +534,29 @@ export async function loadChatThread(threadId: string): Promise<ChatThread | nul
 }
 
 export async function saveChatThread(thread: ChatThread): Promise<void> {
-  const queueKey = `chat:${thread.threadId}`
+  return saveWithRecovery(
+    async () => {
+      const queueKey = `chat:${thread.threadId}`
 
-  return writeQueue.enqueue(queueKey, async () => {
-    const file = await getChatThreadFile(thread.threadId)
-    const dir = path.dirname(file)
+      return writeQueue.enqueue(queueKey, async () => {
+        const file = await getChatThreadFile(thread.threadId)
+        const dir = path.dirname(file)
 
-    // Ensure directory exists
-    await fs.mkdir(dir, { recursive: true })
+        // Ensure directory exists
+        await fs.mkdir(dir, { recursive: true })
 
-    // Limit to last 100 messages
-    const limitedThread: ChatThread = {
-      ...thread,
-      messages: thread.messages.slice(-100),
-      lastUpdated: new Date().toISOString(),
-    }
+        // Limit to last 100 messages
+        const limitedThread: ChatThread = {
+          ...thread,
+          messages: thread.messages.slice(-100),
+          lastUpdated: new Date().toISOString(),
+        }
 
-    await writeJsonAtomic(file, limitedThread)
-  })
+        await writeJsonAtomic(file, limitedThread)
+      })
+    },
+    'saveChatThread'
+  )
 }
 
 // ---- Entity Indices (now inside story folder) ----
@@ -575,13 +591,18 @@ export async function saveEntityIndex(
   entityType: 'character' | 'location',
   index: any
 ): Promise<void> {
-  // Use write queue to prevent race conditions
-  const queueKey = `entityIndex:${projectId}:${storyId}:${entityType}`
+  return saveWithRecovery(
+    async () => {
+      // Use write queue to prevent race conditions
+      const queueKey = `entityIndex:${projectId}:${storyId}:${entityType}`
 
-  return writeQueue.enqueue(queueKey, async () => {
-    const file = await getEntityIndexFile(projectId, storyId, entityType)
-    await writeJsonAtomic(file, index)
-  })
+      return writeQueue.enqueue(queueKey, async () => {
+        const file = await getEntityIndexFile(projectId, storyId, entityType)
+        await writeJsonAtomic(file, index)
+      })
+    },
+    'saveEntityIndex'
+  )
 }
 
 // ---- Entity Documents (now inside story/entities folder) ----
@@ -620,17 +641,22 @@ export async function saveEntityDoc(
   entityId: string,
   doc: any
 ): Promise<void> {
-  // Use write queue to prevent race conditions
-  const queueKey = `entityDoc:${projectId}:${storyId}:${entityType}:${entityId}`
+  return saveWithRecovery(
+    async () => {
+      // Use write queue to prevent race conditions
+      const queueKey = `entityDoc:${projectId}:${storyId}:${entityType}:${entityId}`
 
-  return writeQueue.enqueue(queueKey, async () => {
-    const file = await getEntityDocFile(projectId, storyId, entityType, entityId)
+      return writeQueue.enqueue(queueKey, async () => {
+        const file = await getEntityDocFile(projectId, storyId, entityType, entityId)
 
-    // Ensure directory exists
-    await fs.mkdir(path.dirname(file), { recursive: true })
+        // Ensure directory exists
+        await fs.mkdir(path.dirname(file), { recursive: true })
 
-    await writeJsonAtomic(file, doc)
-  })
+        await writeJsonAtomic(file, doc)
+      })
+    },
+    'saveEntityDoc'
+  )
 }
 
 // ---- Parts (multi-part document support) ----
@@ -651,42 +677,47 @@ export async function savePartDoc(
   partId: string,
   doc: JSONContent
 ): Promise<void> {
-  // Save the timestamp once to keep it consistent across both operations
-  const now = new Date().toISOString()
+  return saveWithRecovery(
+    async () => {
+      // Save the timestamp once to keep it consistent across both operations
+      const now = new Date().toISOString()
 
-  // Save part document first (with its own queue key)
-  const partQueueKey = `part:${projectId}:${storyId}:${partId}`
-  await writeQueue.enqueue(partQueueKey, async () => {
-    const file = await getPartFile(projectId, storyId, partId)
-    const partDoc: PartDoc = {
-      id: partId,
-      doc,
-      updatedAt: now,
-    }
-    await writeJsonAtomic(file, partDoc)
-  })
+      // Save part document first (with its own queue key)
+      const partQueueKey = `part:${projectId}:${storyId}:${partId}`
+      await writeQueue.enqueue(partQueueKey, async () => {
+        const file = await getPartFile(projectId, storyId, partId)
+        const partDoc: PartDoc = {
+          id: partId,
+          doc,
+          updatedAt: now,
+        }
+        await writeJsonAtomic(file, partDoc)
+      })
 
-  // Update the part's updatedAt and wordCount in story metadata (separate queue key)
-  const metadataQueueKey = `story:${projectId}:${storyId}`
-  await writeQueue.enqueue(metadataQueueKey, async () => {
-    // Load current story metadata
-    const metadata = await loadStoryMetadata(projectId, storyId)
+      // Update the part's updatedAt and wordCount in story metadata (separate queue key)
+      const metadataQueueKey = `story:${projectId}:${storyId}`
+      await writeQueue.enqueue(metadataQueueKey, async () => {
+        // Load current story metadata
+        const metadata = await loadStoryMetadata(projectId, storyId)
 
-    // Find the part in the index and update its timestamp and word count
-    const partIndex = metadata.parts.findIndex(p => p.id === partId)
-    if (partIndex !== -1) {
-      metadata.parts[partIndex].updatedAt = now
-      metadata.parts[partIndex].wordCount = calculateWordCount(doc)
-    }
+        // Find the part in the index and update its timestamp and word count
+        const partIndex = metadata.parts.findIndex(p => p.id === partId)
+        if (partIndex !== -1) {
+          metadata.parts[partIndex].updatedAt = now
+          metadata.parts[partIndex].wordCount = calculateWordCount(doc)
+        }
 
-    // Save updated metadata
-    const file = await getStoryMetadataFile(projectId, storyId)
-    const updated: StoryMetadata = {
-      ...metadata,
-      updatedAt: now,
-    }
-    await writeJsonAtomic(file, updated)
-  })
+        // Save updated metadata
+        const file = await getStoryMetadataFile(projectId, storyId)
+        const updated: StoryMetadata = {
+          ...metadata,
+          updatedAt: now,
+        }
+        await writeJsonAtomic(file, updated)
+      })
+    },
+    'savePartDoc'
+  )
 }
 
 export async function createPart(
