@@ -7,6 +7,7 @@ import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
 import { calculateWordCount } from '../utils/wordCount'
 import { readAuthorManifest, writeAuthorManifest, getAuthorChatFile } from './authorBundle'
+import { readRegistry } from './registry'
 
 export type ProjectMeta = {
   id: string
@@ -127,7 +128,6 @@ function assertUpdatesObject(
 const getManifestFile = () => path.join(getRootDir(), 'manifest.json')
 const getProjectsDir = () => path.join(getRootDir(), 'projects')
 const getProjectDir = async (projectId: string): Promise<string> => {
-  const { readRegistry } = await import('./registry')
   const registry = await readRegistry()
   const entry = registry.projects.find(p => p.id === projectId)
 
