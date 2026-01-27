@@ -15,6 +15,7 @@ import { registerChatHandlers } from './chat';
 import { registerChatThreadHandlers } from './handlers/chat';
 import { registerDevModeHandlers } from './handlers/devMode';
 import { registerExportHandlers } from './handlers/export';
+import { openProjectBundle, syncRegistryWithDistilFolder } from './handlers/bundles';
 
 import { createAppMenu, registerMenuHandlers } from './appMenu';
 
@@ -138,6 +139,25 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
+// Handle opening .distilproject files
+app.on('open-file', async (event, filePath) => {
+  event.preventDefault();
+
+  if (filePath.endsWith('.distilproject')) {
+    console.log('[bundles] Opening project bundle:', filePath);
+    try {
+      const projectId = await openProjectBundle(filePath);
+      // TODO: Navigate to project in UI
+      console.log('[bundles] Opened project:', projectId);
+
+      // Add to macOS Recent Documents
+      app.addRecentDocument(filePath);
+    } catch (err) {
+      console.error('[bundles] Error opening bundle:', err);
+    }
+  }
+});
+
 // Configure About Panel
 app.setAboutPanelOptions({
   applicationName: 'Distil',
@@ -170,4 +190,9 @@ app.whenReady().then(() => {
 
   // Set up theme change listener after window is created
   setupThemeChangeListener();
+
+  // Sync registry with bundles in ~/Distil/ (background, non-blocking)
+  syncRegistryWithDistilFolder().catch(err => {
+    console.error('[bundles] Startup sync failed:', err);
+  });
 });
