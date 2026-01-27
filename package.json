@@ -34,9 +34,7 @@
         "dmg",
         "zip"
       ],
-      "notarize": {
-        "teamId": "J76YXS3HMK"
-      }
+      "notarize": true
     },
     "publish": [
       {
