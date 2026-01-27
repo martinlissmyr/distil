@@ -54,16 +54,17 @@ export async function openProjectBundle(bundlePath: string): Promise<string> {
     if (oldPathExists) {
       // COPY: Both paths exist - regenerate ID for the copy
       const newId = generateProjectId()
-      const copyName = `${project.name} copy`
+      // Use bundle filename (without extension) as the project name
+      const bundleFileName = path.basename(bundlePath, '.distilproject')
       project.id = newId
-      project.name = copyName
+      project.name = bundleFileName
       await writeJsonAtomic(projectFile, project)
       console.log(`[bundles] Detected copied bundle, generated new ID: ${newId}`)
 
       // Add to registry
       await addOrUpdateProject({
         id: newId,
-        name: copyName,
+        name: bundleFileName,
         bundlePath: bundlePath,
         lastOpened: new Date().toISOString()
       })
@@ -140,14 +141,15 @@ export async function syncRegistryWithDistilFolder(): Promise<void> {
           if (oldPathExists) {
             // COPY: Both paths exist - regenerate ID for this bundle
             const newId = generateProjectId()
-            const copyName = `${project.name} copy`
+            // Use bundle filename (without extension) as the project name
+            const bundleFileName = path.basename(bundlePath, '.distilproject')
             console.log(`[bundles] Detected copied bundle, regenerating ID: ${bundlePath}`)
             project.id = newId
-            project.name = copyName
+            project.name = bundleFileName
             await writeJsonAtomic(projectFile, project)
             await addOrUpdateProject({
               id: newId,
-              name: copyName,
+              name: bundleFileName,
               bundlePath: bundlePath
             })
           } else {
