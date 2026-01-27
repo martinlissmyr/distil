@@ -10,6 +10,7 @@ export type ProjectRegistryEntry = {
   bundlePath: string
   lastOpened?: string
   favorite?: boolean
+  order?: number
 }
 
 export type ProjectRegistry = {
