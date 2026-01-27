@@ -8,4 +8,4 @@
 - [ ] Export Format Options (Page size, margins, font size, ???) (Export Templates??)
 - [x] Saving full prose doc as PDF
 - [x] Spell checking in editor
-- [x] Saving full prose doc as DOCX 
+- [x] Saving full prose doc as DOCX

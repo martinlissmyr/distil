@@ -21,6 +21,7 @@ export function createAppMenu(context: MenuContext) {
     template.push({
       label: app.name,
       submenu: [
+        { role: 'about' as const },
         { role: 'hide' as const },
         { role: 'hideOthers' as const },
         { role: 'unhide' as const },
