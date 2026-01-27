@@ -132,9 +132,25 @@ export async function syncRegistryWithDistilFolder(): Promise<void> {
             bundlePath: bundlePath
           })
         } else if (existing.bundlePath !== bundlePath) {
-          // Bundle moved within ~/Distil/ - update path
-          console.log(`[bundles] Updated bundle path: ${bundlePath}`)
-          await updateBundlePath(project.id, bundlePath)
+          // ID exists but path is different - check if it's a copy or move
+          const oldPathExists = await fs.access(existing.bundlePath).then(() => true).catch(() => false)
+
+          if (oldPathExists) {
+            // COPY: Both paths exist - regenerate ID for this bundle
+            const newId = generateProjectId()
+            console.log(`[bundles] Detected copied bundle, regenerating ID: ${bundlePath}`)
+            project.id = newId
+            await writeJsonAtomic(projectFile, project)
+            await addOrUpdateProject({
+              id: newId,
+              name: project.name,
+              bundlePath: bundlePath
+            })
+          } else {
+            // MOVE: Old path gone - update path
+            console.log(`[bundles] Updated bundle path: ${bundlePath}`)
+            await updateBundlePath(project.id, bundlePath)
+          }
         }
       } catch (err) {
         console.error(`[bundles] Error reading bundle ${bundlePath}:`, err)
