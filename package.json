@@ -15,7 +15,8 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "dist": "electron-builder",
-    "publish": "electron-builder --mac --publish always"
+    "publish": "electron-builder --mac --publish always",
+    "serve-site": "npx serve site"
   },
   "build": {
     "appId": "com.martinlissmyr.distil",

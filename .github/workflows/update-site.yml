@@ -1,0 +1,60 @@
+name: Update Site on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Extract release information
+        id: release_info
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_ASSETS: ${{ toJSON(github.event.release.assets) }}
+        run: |
+          # Extract version (remove 'v' prefix if present)
+          VERSION="${RELEASE_TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Find macOS DMG download URL
+          DOWNLOAD_URL=$(echo "$RELEASE_ASSETS" | jq -r '.[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -n 1)
+
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "Error: No DMG asset found in release"
+            exit 1
+          fi
+
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+
+      - name: Update site/index.html
+        run: |
+          # Replace {{VERSION}} with actual version
+          sed -i "s|{{VERSION}}|${{ steps.release_info.outputs.version }}|g" site/index.html
+
+          # Replace {{DOWNLOAD_URL}} with actual download URL
+          sed -i "s|{{DOWNLOAD_URL}}|${{ steps.release_info.outputs.download_url }}|g" site/index.html
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if there are changes to commit
+          if git diff --quiet site/index.html; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add site/index.html
+          git commit -m "Update site with release ${{ steps.release_info.outputs.version }}"
+          git push
