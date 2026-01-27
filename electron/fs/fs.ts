@@ -6,6 +6,8 @@ import type { JSONContent } from '@tiptap/react'
 import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
 import { calculateWordCount } from '../utils/wordCount'
+import { readAuthorManifest, writeAuthorManifest, getAuthorChatFile } from './authorBundle'
+import { readRegistry } from './registry'
 
 export type ProjectMeta = {
   id: string
@@ -84,7 +86,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v)
 }
 
-async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
+export async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
   const dir = path.dirname(file)
   await fs.mkdir(dir, { recursive: true })
 
@@ -109,6 +111,11 @@ async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
   }
 }
 
+export async function readJson<T = unknown>(file: string): Promise<T> {
+  const content = await fs.readFile(file, 'utf-8')
+  return JSON.parse(content) as T
+}
+
 function assertUpdatesObject(
   updates: unknown,
   label: string
@@ -120,142 +127,91 @@ function assertUpdatesObject(
 
 const getManifestFile = () => path.join(getRootDir(), 'manifest.json')
 const getProjectsDir = () => path.join(getRootDir(), 'projects')
-const getProjectDir = (projectId: string) =>
-  path.join(getProjectsDir(), sanitizeId(projectId))
-const getProjectFile = (projectId: string) =>
-  path.join(getProjectDir(projectId), 'project.json')
-const getStoriesDir = (projectId: string) =>
-  path.join(getProjectDir(projectId), 'stories')
+const getProjectDir = async (projectId: string): Promise<string> => {
+  const registry = await readRegistry()
+  const entry = registry.projects.find(p => p.id === projectId)
+
+  if (!entry) {
+    throw new Error(`Project ${projectId} not found in registry`)
+  }
+
+  return entry.bundlePath
+}
+const getProjectFile = async (projectId: string) =>
+  path.join(await getProjectDir(projectId), 'project.json')
+const getStoriesDir = async (projectId: string) =>
+  path.join(await getProjectDir(projectId), 'stories')
 
 // Story folder structure (multi-part documents)
-const getStoryDir = (projectId: string, storyId: string) =>
-  path.join(getStoriesDir(projectId), sanitizeId(storyId))
-const getStoryMetadataFile = (projectId: string, storyId: string) =>
-  path.join(getStoryDir(projectId, storyId), 'story.json')
-const getPartsDir = (projectId: string, storyId: string) =>
-  path.join(getStoryDir(projectId, storyId), 'parts')
-const getPartFile = (projectId: string, storyId: string, partId: string) =>
-  path.join(getPartsDir(projectId, storyId), `${sanitizeId(partId)}.json`)
-const getStoryMetaDocFile = (projectId: string, storyId: string, key: string) =>
-  path.join(getStoryDir(projectId, storyId), `${key}.json`)
-const getEntitiesDir = (projectId: string, storyId: string) =>
-  path.join(getStoryDir(projectId, storyId), 'entities')
+const getStoryDir = async (projectId: string, storyId: string) =>
+  path.join(await getStoriesDir(projectId), sanitizeId(storyId))
+const getStoryMetadataFile = async (projectId: string, storyId: string) =>
+  path.join(await getStoryDir(projectId, storyId), 'story.json')
+const getPartsDir = async (projectId: string, storyId: string) =>
+  path.join(await getStoryDir(projectId, storyId), 'parts')
+const getPartFile = async (projectId: string, storyId: string, partId: string) =>
+  path.join(await getPartsDir(projectId, storyId), `${sanitizeId(partId)}.json`)
+const getStoryMetaDocFile = async (projectId: string, storyId: string, key: string) =>
+  path.join(await getStoryDir(projectId, storyId), `${key}.json`)
+const getEntitiesDir = async (projectId: string, storyId: string) =>
+  path.join(await getStoryDir(projectId, storyId), 'entities')
 
 // ---- Projects ----
 
 export async function listProjects(): Promise<ProjectMeta[]> {
-  const dir = getProjectsDir()
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true })
-    const projects: ProjectMeta[] = []
+  const { listProjectsFromRegistry } = await import('../handlers/projectBundles')
+  const entries = await listProjectsFromRegistry()
 
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue
-      const pid = entry.name
-      const file = getProjectFile(pid)
-
-      try {
-        const raw = await fs.readFile(file, 'utf-8')
-        const data = JSON.parse(raw) as ProjectMeta
-        projects.push(data)
-      } catch (err: unknown) {
-        // Skip broken/corrupted project files but log the issue
-        console.warn(
-          `[listProjects] Skipping broken project ${pid}:`,
-          err instanceof Error ? err.message : 'Unknown error'
-        )
-      }
-    }
-
-    projects.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    return projects
-  } catch (err: unknown) {
-    // Directory doesn't exist yet - expected on first run
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      return []
-    }
-    // Unexpected error - log and throw
-    console.error('[listProjects] Failed to read projects directory:', err)
-    throw new Error('Failed to list projects')
-  }
+  // Convert registry entries to ProjectMeta format expected by UI
+  return entries.map(entry => ({
+    id: entry.id,
+    name: entry.name,
+    createdAt: '', // Registry doesn't store createdAt, but UI might not need it for listing
+    order: entry.order ?? 0
+  }))
 }
 
 export async function createProject(name: string): Promise<ProjectMeta> {
-  const dir = getProjectsDir()
-  await fs.mkdir(dir, { recursive: true })
+  const { createProjectBundle } = await import('../handlers/projectBundles')
+  const entry = await createProjectBundle(name)
 
-  const existing = await listProjects()
-  const maxOrder =
-    existing.length > 0 ? Math.max(...existing.map((p) => p.order ?? 0)) : 0
-
-  const id = `project-${Date.now()}`
-  const pdir = getProjectDir(id)
-  await fs.mkdir(pdir, { recursive: true })
-  await fs.mkdir(getStoriesDir(id), { recursive: true })
-
-  const project: ProjectMeta = {
-    id,
-    name,
+  return {
+    id: entry.id,
+    name: entry.name,
     createdAt: new Date().toISOString(),
-    order: maxOrder + 1,
+    order: entry.order ?? 0
   }
-
-  // Serialize + atomic write
-  await writeQueue.enqueue(`project:${id}`, async () => {
-    await writeJsonAtomic(getProjectFile(id), project)
-  })
-
-  return project
 }
 
 export async function updateProject(
   projectId: string,
   updates: Partial<Pick<ProjectMeta, 'name'>>
 ): Promise<ProjectMeta> {
-  const queueKey = `project:${projectId}`
+  const { updateProjectBundle } = await import('../handlers/projectBundles')
+  const entry = await updateProjectBundle(projectId, updates)
 
-  return writeQueue.enqueue(queueKey, async () => {
-    assertUpdatesObject(updates, 'updateProject(updates)')
-
-    const file = getProjectFile(projectId)
-    const raw = await fs.readFile(file, 'utf-8')
-    const existing = JSON.parse(raw) as ProjectMeta
-
-    const updated: ProjectMeta = { ...existing, ...(updates as any) }
-
-    await writeJsonAtomic(file, updated)
-    return updated
-  })
+  return {
+    id: entry.id,
+    name: entry.name,
+    createdAt: '', // Not stored in registry
+    order: entry.order ?? 0
+  }
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
-  const dir = getProjectDir(projectId)
-  await fs.rm(dir, { recursive: true, force: true })
+  const { deleteProjectBundle } = await import('../handlers/projectBundles')
+  await deleteProjectBundle(projectId)
 }
 
 export async function reorderProjects(idsInOrder: string[]): Promise<void> {
-  // Reorder is global across all projects -> single queue key
-  const queueKey = `projects:reorder`
-
-  return writeQueue.enqueue(queueKey, async () => {
-    const projects = await listProjects()
-    const byId = new Map(projects.map((p) => [p.id, p]))
-
-    let index = 0
-    for (const id of idsInOrder) {
-      const p = byId.get(id)
-      if (!p) continue
-      p.order = index++
-
-      await writeJsonAtomic(getProjectFile(id), p)
-    }
-  })
+  const { reorderProjectBundles } = await import('../handlers/projectBundles')
+  await reorderProjectBundles(idsInOrder)
 }
 
 // ---- Stories ----
 
 export async function listStories(projectId: string): Promise<StoryMeta[]> {
-  const dir = getStoriesDir(projectId)
+  const dir = await getStoriesDir(projectId)
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true })
     const stories: StoryMeta[] = []
@@ -265,7 +221,7 @@ export async function listStories(projectId: string): Promise<StoryMeta[]> {
       if (!entry.isDirectory()) continue
 
       const storyId = entry.name
-      const metadataFile = getStoryMetadataFile(projectId, storyId)
+      const metadataFile = await getStoryMetadataFile(projectId, storyId)
       try {
         const raw = await fs.readFile(metadataFile, 'utf-8')
         const json = JSON.parse(raw) as StoryMetadata
@@ -309,7 +265,7 @@ export async function createStory(
   const now = new Date().toISOString()
 
   // NEW: Create story folder structure
-  const partsDir = getPartsDir(projectId, id)
+  const partsDir = await getPartsDir(projectId, id)
   await fs.mkdir(partsDir, { recursive: true })
 
   // Create first part with empty document
@@ -346,8 +302,8 @@ export async function createStory(
 
   // Serialize + atomic write
   await writeQueue.enqueue(`story:${projectId}:${id}`, async () => {
-    await writeJsonAtomic(getStoryMetadataFile(projectId, id), metadata)
-    await writeJsonAtomic(getPartFile(projectId, id, partId), firstPart)
+    await writeJsonAtomic(await getStoryMetadataFile(projectId, id), metadata)
+    await writeJsonAtomic(await getPartFile(projectId, id, partId), firstPart)
   })
 
   return {
@@ -363,7 +319,7 @@ export async function loadStoryMetadata(
   projectId: string,
   storyId: string
 ): Promise<StoryMetadata> {
-  const file = getStoryMetadataFile(projectId, storyId)
+  const file = await getStoryMetadataFile(projectId, storyId)
   const raw = await fs.readFile(file, 'utf-8')
   return JSON.parse(raw) as StoryMetadata
 }
@@ -377,7 +333,7 @@ export async function saveStoryMetadata(
   const queueKey = `story:${projectId}:${storyId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getStoryMetadataFile(projectId, storyId)
+    const file = await getStoryMetadataFile(projectId, storyId)
     const updated: StoryMetadata = {
       ...metadata,
       updatedAt: new Date().toISOString(),
@@ -396,7 +352,7 @@ export async function updateStory(
   return writeQueue.enqueue(queueKey, async () => {
     assertUpdatesObject(updates, 'updateStory(updates)')
 
-    const file = getStoryMetadataFile(projectId, storyId)
+    const file = await getStoryMetadataFile(projectId, storyId)
     const raw = await fs.readFile(file, 'utf-8')
     const existing = JSON.parse(raw) as StoryMetadata
 
@@ -421,7 +377,7 @@ export async function deleteStory(
   projectId: string,
   storyId: string
 ): Promise<void> {
-  const storyDir = getStoryDir(projectId, storyId)
+  const storyDir = await getStoryDir(projectId, storyId)
   await fs.rm(storyDir, { recursive: true, force: true })
 }
 
@@ -441,7 +397,7 @@ export async function reorderStories(
       if (!s) continue
       s.order = index++
 
-      const file = getStoryMetadataFile(projectId, id)
+      const file = await getStoryMetadataFile(projectId, id)
       const raw = await fs.readFile(file, 'utf-8')
       const json = JSON.parse(raw) as StoryMetadata
       json.order = s.order
@@ -460,7 +416,7 @@ export async function loadStoryMetaDoc(
   key: string
 ): Promise<JSONContent | null> {
   try {
-    const file = getStoryMetaDocFile(projectId, storyId, key)
+    const file = await getStoryMetaDocFile(projectId, storyId, key)
     const raw = await fs.readFile(file, 'utf-8')
     return JSON.parse(raw) as JSONContent
   } catch (err: unknown) {
@@ -482,7 +438,7 @@ export async function saveStoryMetaDoc(
   const queueKey = `metaDoc:${projectId}:${storyId}:${key}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getStoryMetaDocFile(projectId, storyId, key)
+    const file = await getStoryMetaDocFile(projectId, storyId, key)
     await writeJsonAtomic(file, doc)
   })
 }
@@ -490,41 +446,7 @@ export async function saveStoryMetaDoc(
 // ---- Manifest ----
 
 export async function loadManifest(): Promise<ManifestData> {
-  const file = getManifestFile()
-
-  try {
-    const raw = await fs.readFile(file, 'utf-8')
-    const json = JSON.parse(raw) as ManifestData
-
-    return {
-      doc: json.doc,
-      updatedAt: json.updatedAt ?? new Date().toISOString(),
-    }
-  } catch (err: unknown) {
-    // File doesn't exist yet - create empty manifest (expected on first run)
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      console.log('[loadManifest] Creating initial manifest file')
-      const empty: ManifestData = {
-        doc: {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: '' }],
-            },
-          ],
-        },
-        updatedAt: new Date().toISOString(),
-      }
-
-      await fs.mkdir(getRootDir(), { recursive: true })
-      await writeJsonAtomic(file, empty)
-      return empty
-    }
-    // Unexpected error - log and throw
-    console.error('[loadManifest] Failed to load manifest:', err)
-    throw new Error('Failed to load manifest')
-  }
+  return await readAuthorManifest()
 }
 
 export async function saveManifest(payload: { doc: JSONContent }): Promise<void> {
@@ -532,14 +454,12 @@ export async function saveManifest(payload: { doc: JSONContent }): Promise<void>
   const queueKey = 'manifest:root'
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getManifestFile()
-
     const manifest: ManifestData = {
       doc: payload.doc,
       updatedAt: new Date().toISOString(),
     }
 
-    await writeJsonAtomic(file, manifest)
+    await writeAuthorManifest(manifest)
   })
 }
 
@@ -572,33 +492,33 @@ export async function saveRootMetaDoc(
 
 // ---- Chat Threads ----
 
-function getChatThreadFile(threadId: string): string {
+async function getChatThreadFile(threadId: string): Promise<string> {
   // Parse threadId to determine scope and construct file path
   // Format: "root:docKind" or "project:projectId:docKind" or "story:projectId:storyId:docKind"
   const parts = threadId.split(':')
 
   if (parts[0] === 'root') {
-    // Root scope: ~/Distil/chats/manifest-chat.json
+    // Root scope: ~/Distil/author.distilauthor/chats/manifest-chat.json
     const docKind = parts[1]
-    return path.join(getRootDir(), 'chats', `${docKind}-chat.json`)
+    return getAuthorChatFile(`${docKind}-chat`)
   }
 
   if (parts[0] === 'project') {
     // Project scope: ~/Distil/projects/{projectId}/chats/{docKind}-chat.json
     const projectId = parts[1]
     const docKind = parts[2]
-    return path.join(getProjectDir(projectId), 'chats', `${docKind}-chat.json`)
+    return path.join(await getProjectDir(projectId), 'chats', `${docKind}-chat.json`)
   }
 
   // Story scope: ~/Distil/projects/{projectId}/stories/{storyId}/{storyId}-{docKind}-chat.json
   const projectId = parts[1]
   const storyId = parts[2]
   const docKind = parts[3]
-  return path.join(getStoryDir(projectId, storyId), `${storyId}-${docKind}-chat.json`)
+  return path.join(await getStoryDir(projectId, storyId), `${storyId}-${docKind}-chat.json`)
 }
 
 export async function loadChatThread(threadId: string): Promise<ChatThread | null> {
-  const file = getChatThreadFile(threadId)
+  const file = await getChatThreadFile(threadId)
 
   try {
     const raw = await fs.readFile(file, 'utf-8')
@@ -617,7 +537,7 @@ export async function saveChatThread(thread: ChatThread): Promise<void> {
   const queueKey = `chat:${thread.threadId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getChatThreadFile(thread.threadId)
+    const file = await getChatThreadFile(thread.threadId)
     const dir = path.dirname(file)
 
     // Ensure directory exists
@@ -636,18 +556,18 @@ export async function saveChatThread(thread: ChatThread): Promise<void> {
 
 // ---- Entity Indices (now inside story folder) ----
 
-const getEntityIndexFile = (
+const getEntityIndexFile = async (
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location'
-) => path.join(getStoryDir(projectId, storyId), `${entityType}s.json`)
+) => path.join(await getStoryDir(projectId, storyId), `${entityType}s.json`)
 
 export async function loadEntityIndex(
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location'
 ): Promise<any | null> {
-  const file = getEntityIndexFile(projectId, storyId, entityType)
+  const file = await getEntityIndexFile(projectId, storyId, entityType)
   try {
     const raw = await fs.readFile(file, 'utf-8')
     return JSON.parse(raw)
@@ -670,7 +590,7 @@ export async function saveEntityIndex(
   const queueKey = `entityIndex:${projectId}:${storyId}:${entityType}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getEntityIndexFile(projectId, storyId, entityType)
+    const file = await getEntityIndexFile(projectId, storyId, entityType)
     await writeJsonAtomic(file, index)
   })
 }
@@ -678,12 +598,12 @@ export async function saveEntityIndex(
 // ---- Entity Documents (now inside story/entities folder) ----
 
 // Entity document storage path (inside story folder)
-const getEntityDocFile = (
+const getEntityDocFile = async (
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location',
   entityId: string
-) => path.join(getEntitiesDir(projectId, storyId), `${entityType}s`, `${sanitizeId(entityId)}.json`)
+) => path.join(await getEntitiesDir(projectId, storyId), `${entityType}s`, `${sanitizeId(entityId)}.json`)
 
 export async function loadEntityDoc(
   projectId: string,
@@ -691,7 +611,7 @@ export async function loadEntityDoc(
   entityType: 'character' | 'location',
   entityId: string
 ): Promise<any | null> {
-  const file = getEntityDocFile(projectId, storyId, entityType, entityId)
+  const file = await getEntityDocFile(projectId, storyId, entityType, entityId)
   try {
     const raw = await fs.readFile(file, 'utf-8')
     return JSON.parse(raw)
@@ -715,7 +635,7 @@ export async function saveEntityDoc(
   const queueKey = `entityDoc:${projectId}:${storyId}:${entityType}:${entityId}`
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getEntityDocFile(projectId, storyId, entityType, entityId)
+    const file = await getEntityDocFile(projectId, storyId, entityType, entityId)
 
     // Ensure directory exists
     await fs.mkdir(path.dirname(file), { recursive: true })
@@ -731,7 +651,7 @@ export async function loadPartDoc(
   storyId: string,
   partId: string
 ): Promise<PartDoc> {
-  const file = getPartFile(projectId, storyId, partId)
+  const file = await getPartFile(projectId, storyId, partId)
   const raw = await fs.readFile(file, 'utf-8')
   return JSON.parse(raw) as PartDoc
 }
@@ -748,7 +668,7 @@ export async function savePartDoc(
   // Save part document first (with its own queue key)
   const partQueueKey = `part:${projectId}:${storyId}:${partId}`
   await writeQueue.enqueue(partQueueKey, async () => {
-    const file = getPartFile(projectId, storyId, partId)
+    const file = await getPartFile(projectId, storyId, partId)
     const partDoc: PartDoc = {
       id: partId,
       doc,
@@ -771,7 +691,7 @@ export async function savePartDoc(
     }
 
     // Save updated metadata
-    const file = getStoryMetadataFile(projectId, storyId)
+    const file = await getStoryMetadataFile(projectId, storyId)
     const updated: StoryMetadata = {
       ...metadata,
       updatedAt: now,
@@ -807,7 +727,7 @@ export async function createPart(
 
   return writeQueue.enqueue(queueKey, async () => {
     // Write part document to disk (directly, to avoid nested queue lock)
-    const partFile = getPartFile(projectId, storyId, partId)
+    const partFile = await getPartFile(projectId, storyId, partId)
     const partDoc: PartDoc = {
       id: partId,
       doc: emptyDoc,
@@ -822,7 +742,7 @@ export async function createPart(
     metadata.parts.push(indexEntry)
 
     // Save updated metadata directly (already in write queue)
-    const file = getStoryMetadataFile(projectId, storyId)
+    const file = await getStoryMetadataFile(projectId, storyId)
     const updated: StoryMetadata = {
       ...metadata,
       updatedAt: new Date().toISOString(),
@@ -843,7 +763,7 @@ export async function deletePart(
 
   return writeQueue.enqueue(queueKey, async () => {
     // Delete part document file
-    const file = getPartFile(projectId, storyId, partId)
+    const file = await getPartFile(projectId, storyId, partId)
     await fs.rm(file, { force: true })
 
     // Load current story metadata
@@ -856,7 +776,7 @@ export async function deletePart(
     console.log('[deletePart] After filter, parts.length:', metadata.parts.length)
 
     // Save updated metadata directly (already in write queue)
-    const metadataFile = getStoryMetadataFile(projectId, storyId)
+    const metadataFile = await getStoryMetadataFile(projectId, storyId)
     const updated: StoryMetadata = {
       ...metadata,
       updatedAt: new Date().toISOString(),
@@ -898,7 +818,7 @@ export async function reorderParts(
     }
 
     // Save updated metadata with reordered parts
-    const file = getStoryMetadataFile(projectId, storyId)
+    const file = await getStoryMetadataFile(projectId, storyId)
     const updated: StoryMetadata = {
       ...metadata,
       parts: reorderedParts,
