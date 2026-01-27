@@ -25,7 +25,7 @@ export type ChatThread = {
 }
 
 export type AppSettingsFile = {
-  writingLanguage?: string
+  language?: string
   uiSchema?: string
 }
 
@@ -112,7 +112,7 @@ export async function ensureAuthorBundle(): Promise<void> {
       await fs.access(settingsFile)
     } catch {
       const defaultSettings: AppSettingsFile = {
-        writingLanguage: 'sv',
+        language: 'sv',
         uiSchema: 'traditional'
       }
       await writeJsonAtomic(settingsFile, defaultSettings)

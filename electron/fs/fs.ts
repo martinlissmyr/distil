@@ -495,56 +495,23 @@ export async function saveStoryMetaDoc(
 // ---- Manifest ----
 
 export async function loadManifest(): Promise<ManifestData> {
-  const file = getManifestFile()
-
-  try {
-    const raw = await fs.readFile(file, 'utf-8')
-    const json = JSON.parse(raw) as ManifestData
-
-    return {
-      doc: json.doc,
-      updatedAt: json.updatedAt ?? new Date().toISOString(),
-    }
-  } catch (err: unknown) {
-    // File doesn't exist yet - create empty manifest (expected on first run)
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      console.log('[loadManifest] Creating initial manifest file')
-      const empty: ManifestData = {
-        doc: {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: '' }],
-            },
-          ],
-        },
-        updatedAt: new Date().toISOString(),
-      }
-
-      await fs.mkdir(getRootDir(), { recursive: true })
-      await writeJsonAtomic(file, empty)
-      return empty
-    }
-    // Unexpected error - log and throw
-    console.error('[loadManifest] Failed to load manifest:', err)
-    throw new Error('Failed to load manifest')
-  }
+  const { readAuthorManifest } = await import('./authorBundle')
+  return await readAuthorManifest()
 }
 
 export async function saveManifest(payload: { doc: JSONContent }): Promise<void> {
+  const { writeAuthorManifest } = await import('./authorBundle')
+
   // Use write queue to serialize manifest saves
   const queueKey = 'manifest:root'
 
   return writeQueue.enqueue(queueKey, async () => {
-    const file = getManifestFile()
-
     const manifest: ManifestData = {
       doc: payload.doc,
       updatedAt: new Date().toISOString(),
     }
 
-    await writeJsonAtomic(file, manifest)
+    await writeAuthorManifest(manifest)
   })
 }
 
