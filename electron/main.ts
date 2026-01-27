@@ -138,6 +138,16 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
+// Configure About Panel
+app.setAboutPanelOptions({
+  applicationName: 'Distil',
+  applicationVersion: app.getVersion(),
+  version: app.getVersion(),
+  copyright: '© 2025 Martin Lissmyr',
+  credits: 'A local-first writing tool built on the Layered Contextual Relevance Framework',
+  iconPath: path.join(__dirname, '../build/icon.png')
+});
+
 app.whenReady().then(() => {
   setupAutoUpdates();
 
