@@ -119,8 +119,21 @@ export async function updateProjectBundle(
     throw new Error(`Project ${projectId} not found in registry`)
   }
 
+  let newBundlePath = entry.bundlePath
+
+  // If name is being changed, rename the bundle directory
+  if (updates.name !== undefined && updates.name !== entry.name) {
+    const distilRoot = getDistilRoot()
+    const newBundleName = await generateBundleName(updates.name)
+    newBundlePath = path.join(distilRoot, `${newBundleName}.distilproject`)
+
+    // Rename the bundle directory
+    await fs.rename(entry.bundlePath, newBundlePath)
+    console.log(`[projectBundles] Renamed bundle from ${entry.bundlePath} to ${newBundlePath}`)
+  }
+
   // Update project.json in bundle
-  const projectFile = path.join(entry.bundlePath, 'project.json')
+  const projectFile = path.join(newBundlePath, 'project.json')
   const projectMeta = await readJson<any>(projectFile)
 
   if (updates.name !== undefined) {
@@ -129,10 +142,11 @@ export async function updateProjectBundle(
 
   await writeJsonAtomic(projectFile, projectMeta)
 
-  // Update registry
+  // Update registry with new name and path
   const updatedEntry: ProjectRegistryEntry = {
     ...entry,
-    name: updates.name ?? entry.name
+    name: updates.name ?? entry.name,
+    bundlePath: newBundlePath
   }
 
   await addOrUpdateProject(updatedEntry)
