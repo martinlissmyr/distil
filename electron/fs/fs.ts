@@ -73,9 +73,9 @@ export type ChatThread = {
 }
 
 const getRootDir = () => {
-  const home =
-    process.env.HOME || process.env.USERPROFILE || app.getPath('home')
-  return path.join(home, 'Distil')
+  const home = process.env.HOME || process.env.USERPROFILE || app.getPath('home')
+  const dirName = app.isPackaged ? 'Distil' : 'Distil-Dev'
+  return path.join(home, dirName)
 }
 
 // ---- Safe/atomic JSON helpers ----

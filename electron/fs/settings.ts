@@ -10,7 +10,8 @@ export type AppSettingsFile = {
 
 const getRootDir = () => {
   const home = process.env.HOME || process.env.USERPROFILE || app.getPath('home');
-  return path.join(home, 'Distil');
+  const dirName = app.isPackaged ? 'Distil' : 'Distil-Dev';
+  return path.join(home, dirName);
 };
 
 const getSettingsFile = () => path.join(getRootDir(), 'settings.json');
