@@ -1,7 +1,6 @@
 // electron/fs/fs.ts
 import path from 'path'
 import fs from 'fs/promises'
-import { app } from 'electron'
 import type { JSONContent } from '@tiptap/react'
 import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
@@ -74,12 +73,6 @@ export type ChatThread = {
   lastUpdated: string
 }
 
-const getRootDir = () => {
-  const home = process.env.HOME || process.env.USERPROFILE || app.getPath('home')
-  const dirName = app.isPackaged ? 'Distil' : 'Distil-Dev'
-  return path.join(home, dirName)
-}
-
 // ---- Safe/atomic JSON helpers ----
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -125,8 +118,6 @@ function assertUpdatesObject(
   }
 }
 
-const getManifestFile = () => path.join(getRootDir(), 'manifest.json')
-const getProjectsDir = () => path.join(getRootDir(), 'projects')
 const getProjectDir = async (projectId: string): Promise<string> => {
   const registry = await readRegistry()
   const entry = registry.projects.find(p => p.id === projectId)
@@ -137,8 +128,6 @@ const getProjectDir = async (projectId: string): Promise<string> => {
 
   return entry.bundlePath
 }
-const getProjectFile = async (projectId: string) =>
-  path.join(await getProjectDir(projectId), 'project.json')
 const getStoriesDir = async (projectId: string) =>
   path.join(await getProjectDir(projectId), 'stories')
 

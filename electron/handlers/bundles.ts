@@ -5,11 +5,9 @@ import fs from 'fs/promises'
 import { readJson, writeJsonAtomic } from '../fs/fs'
 import {
   readRegistry,
-  updateRegistry,
   addOrUpdateProject,
   updateBundlePath,
-  removeProject,
-  type ProjectRegistryEntry
+  removeProject
 } from '../fs/registry'
 
 // Generate unique project ID
