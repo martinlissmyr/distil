@@ -500,9 +500,10 @@ async function getChatThreadFile(threadId: string): Promise<string> {
   const parts = threadId.split(':')
 
   if (parts[0] === 'root') {
-    // Root scope: ~/Distil/chats/manifest-chat.json
+    // Root scope: ~/Distil/author.distilauthor/chats/manifest-chat.json
+    const { getAuthorChatFile } = await import('./authorBundle')
     const docKind = parts[1]
-    return path.join(getRootDir(), 'chats', `${docKind}-chat.json`)
+    return getAuthorChatFile(`${docKind}-chat`)
   }
 
   if (parts[0] === 'project') {
