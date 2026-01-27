@@ -200,4 +200,9 @@ npm run preview      # Preview production build
 
 Build process: `tsc && vite build && electron-builder`
 
+## Git Commits
+
+- Never add "Co-Authored-By: Claude" to commit messages
+- The user will handle authorship disclosure separately
+
 
