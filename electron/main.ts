@@ -34,15 +34,49 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 let win: BrowserWindow | null;
 
 function setupAutoUpdates() {
-  // Good default UX while you’re still in a small beta group
+  // Good default UX while you're still in a small beta group
   autoUpdater.autoDownload = true;
 
-  // Optional: log
-  autoUpdater.on("checking-for-update", () => console.log("[updates] checking"));
-  autoUpdater.on("update-available", () => console.log("[updates] available"));
-  autoUpdater.on("update-not-available", () => console.log("[updates] none"));
-  autoUpdater.on("error", (err) => console.log("[updates] error", err));
-  autoUpdater.on("update-downloaded", () => console.log("[updates] downloaded"));
+  autoUpdater.on("checking-for-update", () => {
+    console.log("[updates] checking for updates...");
+    console.log("[updates] current version:", app.getVersion());
+  });
+
+  autoUpdater.on("update-available", (info) => {
+    console.log("[updates] update available");
+    console.log("[updates] available version:", info.version);
+    console.log("[updates] release date:", info.releaseDate);
+    console.log("[updates] update info:", JSON.stringify(info, null, 2));
+  });
+
+  autoUpdater.on("update-not-available", (info) => {
+    console.log("[updates] no update available");
+    console.log("[updates] current version is latest:", info.version);
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    console.log("[updates] download progress:", Math.round(progress.percent) + "%");
+    console.log("[updates] downloaded:", progress.transferred, "of", progress.total, "bytes");
+    console.log("[updates] speed:", Math.round(progress.bytesPerSecond / 1024), "KB/s");
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    console.log("[updates] downloaded", info.version, info.releaseDate);
+    console.log("[updates] files", info.files);
+    console.log("[updates] will install on quit (via autoInstallOnAppQuit)");
+  });
+
+  autoUpdater.on("before-quit-for-update", () => {
+    console.log("[updates] app is quitting to install update...");
+    console.log("[updates] installation will begin now");
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("[updates] error occurred:");
+    console.error("[updates] error message:", err.message);
+    console.error("[updates] error stack:", err.stack);
+    console.error("[updates] full error:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+  });
 }
 
 function createWindow() {
