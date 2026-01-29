@@ -66,11 +66,6 @@ function setupAutoUpdates() {
     console.log("[updates] will install on quit (via autoInstallOnAppQuit)");
   });
 
-  autoUpdater.on("before-quit-for-update", () => {
-    console.log("[updates] app is quitting to install update...");
-    console.log("[updates] installation will begin now");
-  });
-
   autoUpdater.on("error", (err) => {
     console.error("[updates] error occurred:");
     console.error("[updates] error message:", err.message);
