@@ -233,6 +233,7 @@ declare global {
         storyId?: string;
       }) => void;
       onExport: (callback: (format: 'docx' | 'pdf') => void) => (() => void) | undefined;
+      onNavigateToProject: (callback: (projectId: string) => void) => (() => void) | undefined;
     };
   }
 }

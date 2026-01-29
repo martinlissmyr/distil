@@ -1,5 +1,5 @@
 // electron/main.ts
-import { app, BrowserWindow, nativeTheme, Menu, MenuItemConstructorOptions } from 'electron';
+import { app, BrowserWindow, nativeTheme, Menu, MenuItemConstructorOptions, screen } from 'electron';
 import { autoUpdater } from "electron-updater";
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -46,9 +46,26 @@ function setupAutoUpdates() {
 }
 
 function createWindow() {
+  // Get primary display dimensions and calculate appropriate window size
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workArea;
+
+  // Desired window size
+  const desiredWidth = 1600;
+  const desiredHeight = 1000;
+
+  // Leave margin so window isn't exactly screen-sized
+  const margin = 100;
+  const maxWidth = screenWidth - margin;
+  const maxHeight = screenHeight - margin;
+
+  // Calculate actual window dimensions constrained to available space
+  const actualWidth = Math.min(desiredWidth, maxWidth);
+  const actualHeight = Math.min(desiredHeight, maxHeight);
+
   win = new BrowserWindow({
-    width: 1600,
-    height: 1000,
+    width: actualWidth,
+    height: actualHeight,
     titleBarStyle: 'hiddenInset',
     titleBarOverlay: {
       color: '#00000000',
@@ -147,7 +164,13 @@ app.on('open-file', async (event, filePath) => {
     console.log('[bundles] Opening project bundle:', filePath);
     try {
       const projectId = await openProjectBundle(filePath);
-      // TODO: Navigate to project in UI
+
+      // Navigate to project in UI
+      const windows = BrowserWindow.getAllWindows();
+      if (windows.length > 0) {
+        windows[0].webContents.send('navigation:openProject', projectId);
+      }
+
       console.log('[bundles] Opened project:', projectId);
 
       // Add to macOS Recent Documents

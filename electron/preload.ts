@@ -139,4 +139,13 @@ contextBridge.exposeInMainWorld('menu', {
       ipcRenderer.removeListener('menu:export', handler);
     };
   },
+  onNavigateToProject: (callback: (projectId: string) => void) => {
+    const handler = (_event: any, projectId: string) => callback(projectId);
+    ipcRenderer.on('navigation:openProject', handler);
+
+    // Return cleanup function
+    return () => {
+      ipcRenderer.removeListener('navigation:openProject', handler);
+    };
+  },
 })

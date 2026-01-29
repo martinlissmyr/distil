@@ -354,6 +354,18 @@ const App: React.FC = () => {
     setStories: storiesCRUD.setItems,
   });
 
+  // Listen for project navigation from main process (e.g., when opening .distilproject files)
+  useEffect(() => {
+    const handleNavigateToProject = async (projectId: string) => {
+      await projectHandlers.handleSelectProject(projectId);
+    };
+
+    const cleanup = window.menu.onNavigateToProject(handleNavigateToProject);
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [projectHandlers.handleSelectProject]);
+
   // ---- Story handlers ----
   const storyHandlers = useStoryHandlers({
     goToProject,

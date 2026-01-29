@@ -16,7 +16,7 @@
     "preview": "vite preview",
     "dist": "electron-builder",
     "publish": "electron-builder --mac --publish always",
-    "serve-site": "npx serve site"
+    "serve-site": "npx serve docs"
   },
   "build": {
     "appId": "com.martinlissmyr.distil",
@@ -40,6 +40,46 @@
           "role": "None"
         }
       ],
+      "protocols": [
+        {
+          "name": "Distil Project",
+          "schemes": [
+            "distilproject"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeConformsTo": [
+              "com.apple.package",
+              "public.composite-content",
+              "public.data"
+            ],
+            "UTTypeDescription": "Distil Project",
+            "UTTypeIdentifier": "com.martinlissmyr.distil.project",
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "distilproject"
+              ]
+            }
+          },
+          {
+            "UTTypeConformsTo": [
+              "com.apple.package",
+              "public.composite-content",
+              "public.data"
+            ],
+            "UTTypeDescription": "Distil Author Workspace",
+            "UTTypeIdentifier": "com.martinlissmyr.distil.author",
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "distilauthor"
+              ]
+            }
+          }
+        ]
+      },
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",

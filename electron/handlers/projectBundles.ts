@@ -11,7 +11,7 @@ import {
 } from '../fs/registry'
 
 // Get the root Distil directory where project bundles live
-function getDistilRoot(): string {
+export function getDistilRoot(): string {
   const home = process.env.HOME || process.env.USERPROFILE || app.getPath('home')
   const dirName = app.isPackaged ? 'Distil' : 'Distil-Dev'
   return path.join(home, dirName)

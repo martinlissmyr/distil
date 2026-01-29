@@ -149,11 +149,19 @@ const getEntitiesDir = async (projectId: string, storyId: string) =>
 // ---- Projects ----
 
 export async function listProjects(): Promise<ProjectMeta[]> {
-  const { listProjectsFromRegistry } = await import('../handlers/projectBundles')
+  const { listProjectsFromRegistry, getDistilRoot } = await import('../handlers/projectBundles')
   const entries = await listProjectsFromRegistry()
 
+  // Get the active directory path
+  const activeDirectory = getDistilRoot()
+
+  // Filter to only include projects in the active directory
+  const filteredEntries = entries.filter(entry =>
+    entry.bundlePath.startsWith(activeDirectory)
+  )
+
   // Convert registry entries to ProjectMeta format expected by UI
-  return entries.map(entry => ({
+  return filteredEntries.map(entry => ({
     id: entry.id,
     name: entry.name,
     createdAt: '', // Registry doesn't store createdAt, but UI might not need it for listing
