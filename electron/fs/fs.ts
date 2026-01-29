@@ -157,7 +157,7 @@ export async function listProjects(): Promise<ProjectMeta[]> {
 
   // Filter to only include projects in the active directory
   const filteredEntries = entries.filter(entry =>
-    entry.bundlePath.startsWith(activeDirectory)
+    entry.bundlePath.startsWith(activeDirectory + path.sep)
   )
 
   // Convert registry entries to ProjectMeta format expected by UI
