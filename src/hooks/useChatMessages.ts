@@ -210,7 +210,7 @@ export function useChatMessages({
         setMessages(prev => [
           ...prev,
           {
-            id: `hint:${threadId}`,
+            id: `hint:${threadId}:${Date.now()}`,
             role: 'assistant',
             content: hint.introMessage,
             suggestions: hint.actions,

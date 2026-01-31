@@ -2,6 +2,12 @@
 import type { DocumentTypeDef } from '../models/entities/schemas/types';
 import { interpolate } from './interpolate';
 
+// Load all projection templates at build time
+const templateLoaders = import.meta.glob(
+  '../models/entities/projectionTemplates/*.md',
+  { query: '?raw', import: 'default' }
+);
+
 /**
  * Entity Projection System
  *
@@ -191,26 +197,15 @@ export async function loadProjectionTemplate(entityType: string): Promise<string
     return templateCache.get(entityType)!;
   }
 
-  // Load from file
-  const templatePath = `/src/models/entities/projectionTemplates/${entityType}.md`;
+  // Load from file using Vite's import.meta.glob
+  const path = `../models/entities/projectionTemplates/${entityType}.md`;
+  const loader = templateLoaders[path];
 
-  try {
-    const response = await fetch(templatePath);
-    if (!response.ok) {
-      throw new Error(`Failed to load template for ${entityType}: ${response.statusText}`);
-    }
-
-    const template = await response.text();
-
-    // Cache for future use
-    templateCache.set(entityType, template);
-
-    return template;
-  } catch (error) {
-    throw new Error(
-      `Failed to load projection template for entity type "${entityType}": ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+  if (!loader) {
+    throw new Error(`No projection template found for entity type "${entityType}"`);
   }
+
+  const template = (await loader()) as string;
+  templateCache.set(entityType, template);
+  return template;
 }
