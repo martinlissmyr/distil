@@ -18,7 +18,7 @@ export const InformationStepView: React.FC<InformationStepViewProps> = ({ step }
       {step.illustration && (
         <Box my={40} style={{ display: 'flex', justifyContent: 'center' }}>
           <Image
-            src={`/src/assets/illustrations/${step.illustration}.svg`}
+            src={`/illustrations/${step.illustration}.svg`}
             h={300}
             w="auto"
             fit="contain"
