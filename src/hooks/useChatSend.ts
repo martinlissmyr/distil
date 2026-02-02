@@ -5,7 +5,7 @@ import type { EditorKind, QuestionScope } from '../types/chat';
 import type { ChatMessage } from './useChatMessages';
 import { useAppStore } from '../state/useAppStore';
 
-const MAX_TURNS = 4;
+const MAX_TURNS = 6;
 
 interface UseChatSendOptions {
   kind: EditorKind;
@@ -102,7 +102,7 @@ export function useChatSend({
           const rawError: string = response.error;
           let friendly = 'Something went wrong talking to the model.';
 
-          if (rawError.includes('No OpenAI API key configured')) {
+          if (rawError.includes('API key')) {
             friendly =
               'No OpenAI API key is configured. Add one under Settings → API key to use the assistant.';
           }
