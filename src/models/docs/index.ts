@@ -35,6 +35,90 @@ export type DocScopeLevel = 'root' | 'project' | 'story';
 export type DocRole = 'meta' | 'primary';
 
 // ---------------------------------------------------------------------------
+// Interface definitions (must come before docKinds)
+// ---------------------------------------------------------------------------
+
+// Forward declare MetaDocKey to break circular references in additionalContexts
+type MetaDocKeyBase = 'manifest' | 'brief' | 'outline' | 'world' | 'characters' | 'locations';
+
+/**
+ * Rich text documents store TipTap JSONContent and use standard editors.
+ */
+export interface RichTextDocConfig {
+  storageType: 'richText';
+  id: string;
+  scope: DocScopeLevel;
+  role: DocRole;
+  title: string;
+  shortDescription: string;
+  contextTag?: string;
+  contextLayer: ContextLayer;
+  isContextDoc: boolean;
+  editorConfig: EditorConfig;
+  contextCriteria?: string;
+  contextIncludes?: string[];
+  contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKeyBase[];
+    intelligentlySelect?: MetaDocKeyBase[];
+  };
+}
+
+/**
+ * Entity index documents store entity metadata and use custom UI.
+ * No editorConfig - entity indices use custom entity management interfaces.
+ */
+export interface EntityIndexDocConfig {
+  storageType: 'entityIndex';
+  id: string;
+  entityType: EntityType;
+  scope: DocScopeLevel;
+  role: DocRole;
+  title: string;
+  shortDescription: string;
+  contextTag?: string;
+  contextLayer: ContextLayer;
+  isContextDoc: boolean;
+  contextCriteria?: string;
+  contextIncludes?: string[];
+  contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKeyBase[];
+    intelligentlySelect?: MetaDocKeyBase[];
+  };
+  // NO editorConfig - entity indices use custom UI
+}
+
+/**
+ * Multi-part text documents store prose as multiple parts/chapters.
+ * Each part is a separate TipTap document stored independently.
+ */
+export interface MultiPartTextDocConfig {
+  storageType: 'multiPartText';
+  id: string;
+  scope: DocScopeLevel;
+  role: DocRole;
+  title: string;
+  shortDescription: string;
+  contextLayer: ContextLayer;
+  isContextDoc: boolean;
+  editorConfig: EditorConfig;
+  contextCriteria?: string;
+  contextIncludes?: string[];
+  contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKeyBase[];
+    intelligentlySelect?: MetaDocKeyBase[];
+  };
+}
+
+/**
+ * Discriminated union of all document configurations.
+ * Use type guards (isRichTextDoc, isEntityIndexDoc, isMultiPartTextDoc) to narrow types.
+ */
+export type DocKindConfig = RichTextDocConfig | EntityIndexDocConfig | MultiPartTextDocConfig;
+
+// ---------------------------------------------------------------------------
 // Core doc kinds
 // ---------------------------------------------------------------------------
 
@@ -180,85 +264,8 @@ export const docKinds = {
   } satisfies EntityIndexDocConfig,
 } as const;
 
-type DocKindConfigMap = typeof docKinds;
-export type DocKindId = keyof DocKindConfigMap;
-
-/**
- * Rich text documents store TipTap JSONContent and use standard editors.
- */
-export interface RichTextDocConfig {
-  storageType: 'richText';
-  id: string;
-  scope: DocScopeLevel;
-  role: DocRole;
-  title: string;
-  shortDescription: string;
-  contextTag?: string;
-  contextLayer: ContextLayer;
-  isContextDoc: boolean;
-  editorConfig: EditorConfig;
-  contextCriteria?: string;
-  contextIncludes?: string[];
-  contextUsageHint?: string;
-  additionalContexts?: {
-    alwaysInclude?: MetaDocKey[];
-    intelligentlySelect?: MetaDocKey[];
-  };
-}
-
-/**
- * Entity index documents store entity metadata and use custom UI.
- * No editorConfig - entity indices use custom entity management interfaces.
- */
-export interface EntityIndexDocConfig {
-  storageType: 'entityIndex';
-  id: string;
-  entityType: EntityType;
-  scope: DocScopeLevel;
-  role: DocRole;
-  title: string;
-  shortDescription: string;
-  contextTag?: string;
-  contextLayer: ContextLayer;
-  isContextDoc: boolean;
-  contextCriteria?: string;
-  contextIncludes?: string[];
-  contextUsageHint?: string;
-  additionalContexts?: {
-    alwaysInclude?: MetaDocKey[];
-    intelligentlySelect?: MetaDocKey[];
-  };
-  // NO editorConfig - entity indices use custom UI
-}
-
-/**
- * Multi-part text documents store prose as multiple parts/chapters.
- * Each part is a separate TipTap document stored independently.
- */
-export interface MultiPartTextDocConfig {
-  storageType: 'multiPartText';
-  id: string;
-  scope: DocScopeLevel;
-  role: DocRole;
-  title: string;
-  shortDescription: string;
-  contextLayer: ContextLayer;
-  isContextDoc: boolean;
-  editorConfig: EditorConfig;
-  contextCriteria?: string;
-  contextIncludes?: string[];
-  contextUsageHint?: string;
-  additionalContexts?: {
-    alwaysInclude?: MetaDocKey[];
-    intelligentlySelect?: MetaDocKey[];
-  };
-}
-
-/**
- * Discriminated union of all document configurations.
- * Use type guards (isRichTextDoc, isEntityIndexDoc, isMultiPartTextDoc) to narrow types.
- */
-export type DocKindConfig = RichTextDocConfig | EntityIndexDocConfig | MultiPartTextDocConfig;
+// Now derive the actual types from the const object
+export type DocKindId = keyof typeof docKinds;
 
 // ---------------------------------------------------------------------------
 // Type guards
@@ -302,10 +309,11 @@ export const storyDocKindIds: StoryDocKindId[] = (Object.keys(docKinds) as DocKi
   
 /**
  * All kinds that are "meta docs" (everything except the actual story text).
+ * We derive this from the runtime docKinds object to ensure type safety.
  */
-export type MetaDocKey = {
-  [K in DocKindId]: DocKindConfigMap[K]['role'] extends 'meta' ? K : never;
-}[DocKindId];
+export type MetaDocKey = Extract<DocKindId, {
+  [K in DocKindId]: (typeof docKinds)[K]['role'] extends 'meta' ? K : never;
+}[DocKindId]>;
 
 export const metaDocKindIds: MetaDocKey[] = (Object.keys(docKinds) as DocKindId[])
   .filter((k) => docKinds[k].role === 'meta') as MetaDocKey[];
@@ -482,15 +490,16 @@ export function getContextRulesFor(target: DocKindId): ContextRules {
 
   // Merge any additionalContexts from the target document configuration
   if ('additionalContexts' in targetCfg && targetCfg.additionalContexts) {
-    if (targetCfg.additionalContexts.alwaysInclude) {
-      for (const key of targetCfg.additionalContexts.alwaysInclude) {
+    const additional = targetCfg.additionalContexts;
+    if ('alwaysInclude' in additional && Array.isArray(additional.alwaysInclude)) {
+      for (const key of additional.alwaysInclude) {
         if (!alwaysInclude.includes(key)) {
           alwaysInclude.push(key);
         }
       }
     }
-    if (targetCfg.additionalContexts.intelligentlySelect) {
-      for (const key of targetCfg.additionalContexts.intelligentlySelect) {
+    if ('intelligentlySelect' in additional && Array.isArray(additional.intelligentlySelect)) {
+      for (const key of additional.intelligentlySelect) {
         if (!intelligentlySelect.includes(key)) {
           intelligentlySelect.push(key);
         }
