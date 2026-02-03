@@ -97,6 +97,9 @@ export const docKinds = {
     ],
     contextUsageHint:
       'context involving story events—past or future—is necessary.',
+    additionalContexts: {
+      intelligentlySelect: ['world', 'characters', 'locations'],
+    },
   } satisfies RichTextDocConfig,
   world: {
     storageType: 'richText',
@@ -197,6 +200,10 @@ export interface RichTextDocConfig {
   contextCriteria?: string;
   contextIncludes?: string[];
   contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKey[];
+    intelligentlySelect?: MetaDocKey[];
+  };
 }
 
 /**
@@ -217,6 +224,10 @@ export interface EntityIndexDocConfig {
   contextCriteria?: string;
   contextIncludes?: string[];
   contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKey[];
+    intelligentlySelect?: MetaDocKey[];
+  };
   // NO editorConfig - entity indices use custom UI
 }
 
@@ -237,6 +248,10 @@ export interface MultiPartTextDocConfig {
   contextCriteria?: string;
   contextIncludes?: string[];
   contextUsageHint?: string;
+  additionalContexts?: {
+    alwaysInclude?: MetaDocKey[];
+    intelligentlySelect?: MetaDocKey[];
+  };
 }
 
 /**
@@ -425,7 +440,7 @@ export type ContextRules = {
  *     → root-scope meta docs go into alwaysInclude.
  *     → story-scope meta docs go into intelligentlySelect.
  *
- * This reproduces your original CONTEXT_RULES:
+ * This reproduces the CONTEXT_RULES:
  *   prose   → always: [manifest], intelligent: [brief, outline, world]
  *   brief   → always: [manifest]
  *   outline → always: [manifest, brief]
@@ -461,6 +476,24 @@ export function getContextRulesFor(target: DocKindId): ContextRules {
         alwaysInclude.push(kind as MetaDocKey);
       } else {
         intelligentlySelect.push(kind as MetaDocKey);
+      }
+    }
+  }
+
+  // Merge any additionalContexts from the target document configuration
+  if ('additionalContexts' in targetCfg && targetCfg.additionalContexts) {
+    if (targetCfg.additionalContexts.alwaysInclude) {
+      for (const key of targetCfg.additionalContexts.alwaysInclude) {
+        if (!alwaysInclude.includes(key)) {
+          alwaysInclude.push(key);
+        }
+      }
+    }
+    if (targetCfg.additionalContexts.intelligentlySelect) {
+      for (const key of targetCfg.additionalContexts.intelligentlySelect) {
+        if (!intelligentlySelect.includes(key)) {
+          intelligentlySelect.push(key);
+        }
       }
     }
   }

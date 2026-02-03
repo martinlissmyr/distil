@@ -5,6 +5,7 @@ import type { DocumentTypeDef } from '../../entities/schemas/types';
 import proseSystemTriggersMd from './proseTriggers.md?raw';
 import charactersSystemTriggersMd from './charactersTriggers.md?raw';
 import locationsSystemTriggersMd from './locationsTriggers.md?raw';
+import outlineSystemTriggersMd from './outlineTriggers.md?raw';
 
 import { characterType } from '../../entities/schemas/character';
 import { locationType } from '../../entities/schemas/location';
@@ -28,6 +29,7 @@ function buildEntityTriggers(
 
 const systemTriggersByDocKind: Partial<Record<DocKindId, string>> = {
   prose: proseSystemTriggersMd,
+  outline: outlineSystemTriggersMd,
   characters: buildEntityTriggers(characterType, charactersSystemTriggersMd),
   locations: buildEntityTriggers(locationType, locationsSystemTriggersMd),
 };
