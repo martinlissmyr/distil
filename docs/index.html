@@ -1,3 +1,4 @@
+<!-- /docs/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,8 +10,23 @@
   <link rel="icon" type="image/png" href="img/icon.png">
 </head>
 <body>
+  <!-- SVG Definitions for wavy separators and clipping -->
+  <svg width="0" height="0" style="position: absolute;" aria-hidden="true">
+    <defs>
+      <!-- Wavy top overlay (wavy at top, flat at bottom) -->
+      <symbol id="wave-top-mask" viewBox="0 0 1200 80" preserveAspectRatio="none">
+        <path d="M0,80 L0,40 Q300,10 600,40 T1200,40 L1200,80 Z" fill="currentColor"/>
+      </symbol>
+
+      <!-- Wavy clipPath for images (more subtle wave) -->
+      <clipPath id="wave-clip" clipPathUnits="objectBoundingBox">
+        <path d="M0,0 L1,0 L1,0.92 Q0.75,0.97 0.5,0.92 T0,0.92 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+
   <header class="site-header">
-    <h1 class="site-logo">distil</h1>
+    <h1 class="site-logo">distil <span>– from thought to prose</span></h1>
     <div class="buttons">
       <a href="#features">Features</a>
       <a href="#download" class="button">Download</a>
@@ -19,68 +35,75 @@
   <div class="top-overlay"></div>
 
   <main class="container">
-    <div class="description">
-      <p class="tagline">
-        Distil – a writing environment for turning thought into prose
-      </p>
-    </div>
 
     <section class="screenshot">
       <div class="screenshot-placeholder">
         <img src="img/screenshot.png" alt="Distil application screenshot" />
       </div>
-      <img src="img/icon.png" class="icon">
     </section>
 
     <section class="features" id="features">
-      <div class="feature-grid">
-        <div class="feature">
-          <img src="img/thought.svg">
-          <div>
-            <h3>From thought to prose</h3>
-            <p>
-              Distil is a beautiful and simple prose editor with AI Assistance built in. But it's so much more than that. It doesn't write for you (that is your job) – but it helps you <span>shape complex, half-formed ideas into clear, intentional storytelling.</span>
-              Distil gently assists you in applying process, structure and consistency where it matters, and stays out of the way where it doesn’t —
-              it helps you go from uncertainty to finished prose, step by step.
-            </p>
-          </div>
-        </div>
-        <div class="feature">
-          <img src="img/human.svg">
-          <div>
-            <h3>Your voice comes first</h3>
-            <p>
-              <span>You begin by defining your voice, creative values, and intentions in an Author Manifest</span>.
-              After that everything will be guided by your manifest — not by generic defaults.
-            </p>
-            <p>
-              As you develop a story brief, an outline and a world description for your project, the AI assistant works within the boundaries you set. It understands what matters to you, what you're trying to create and helps you stay true to it.
-            </p>
-            <p>
-              Distil does not generate ideas on your behalf or decide what should be written.
-              But it helps you clarify, develop, and test your own thinking.
-            </p>
-          </div>
-        </div>
-        <div class="feature">
-          <img src="img/characters.svg">
-          <div>
-            <h3>Write with confidence</h3>
-            <p>
-              Keep track of characters, places, and world details as your work grows.
-              <span>Distil helps you notice inconsistencies, forgotten details, and unintended shifts</span>.
-            </p>
-            <p>
-              Distil even offers structured guides for difficult creative moments —
-              from clarifying your author voice to exploring characters or planning a story.
-            </p>
-            <p>
-              These guided steps help you think more clearly, without taking decisions away from you.
-              You always choose what stays, what changes, and what gets written.
-            </p>
+      <!-- Feature Section 1 -->
+      <div class="feature-section" style="margin-top: -125px;">
+        <img src="img/icon.png" class="icon">
+        <svg class="wave-a" aria-hidden="true" style="color: var(--bg-odd); background: transparent;">  <use href="#wave-top-mask"/>
+        </svg>
+
+        <div class="feature-content">
+          <div class="feature">
+            <div class="feature-intro">
+              <p>Imagine having a creative writing partner assisting you from thought to prose. Whether you're drafting a new scene, expanding a moment, or exploring character choices, <span>Distil is there to help you</span> maintain narrative flow, emotional resonance, and pacing as your story unfolds.</p>
+              <a href="#download" class="download-button">Download Distil for macOS</a>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Feature Section 2 -->
+      <div class="feature-section">
+        <svg class="wave-a" aria-hidden="true" style="color: var(--bg); background: var(--bg-odd);">    <use href="#wave-top-mask"/>
+        </svg>
+        <div class="feature-content">
+          <div class="feature">
+            <div class="heading">
+              <h2>Your&nbsp;voice comes first</h2>
+            </div>
+            <svg class="curly-brace" viewBox="-2 0 22 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M 12 0 Q 3 0, 3 8 L 3 42 Q 3 47, -2 50 Q 3 53, 3 58 L 3 92 Q 3 100, 12 100" fill="none" stroke="currentColor" stroke-width="0.5"/>
+            </svg>
+            <div class="text">
+              <p>You define your creative vision in the <span>Author Manifest</span>—Distil's foundational document. This is where you articulate genre, tone, themes, narrative priorities, and stylistic preferences.</p>
+              <p>The AI reads and respects these instructions in every interaction. When you ask for scene development, character dialogue, or story continuity checks, the AI works <span>within the boundaries you've set</span>—never straying from your intent.</p>
+              <p>Your creative direction isn't a suggestion to the AI—it's a contract. The Author Manifest ensures <span>your voice remains the guiding force</span>, with the AI operating only as an assistant to your vision.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Section 3 -->
+      <div class="feature-section">
+        <svg class="wave-b" aria-hidden="true" style="color: var(--bg); background: var(--bg-odd);">
+          <use href="#wave-top-mask"/>
+        </svg>
+        <div class="feature-content">
+          <div class="feature">
+            <div class="heading">
+              <h2>Write with confidence</h2>
+            </div>
+            <svg class="curly-brace" viewBox="-2 0 22 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M 12 0 Q 3 0, 3 8 L 3 42 Q 3 47, -2 50 Q 3 53, 3 58 L 3 92 Q 3 100, 12 100" fill="none" stroke="currentColor" stroke-width="0.5"/>
+            </svg>
+            <div class="text">
+              <p>Long-form fiction demands that characters, places, and world details remain consistent across hundreds of pages. Distil <span>tracks entities and context</span> throughout your story, enabling the AI to reference continuity when helping you write.</p>
+              <p>When you ask for a scene involving a specific character or location, the AI draws from established details—personality traits, past events, setting descriptions—to <span>maintain internal consistency</span>.</p>
+              <p>You can also create structured guides, outlines, or world-building documents that further inform the AI's responses. The system is designed to keep your narrative coherent, so you can focus on storytelling rather than tracking details manually.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <svg class="wave-a" aria-hidden="true" style="color: var(--bg); background: var(--bg-odd);">
+        <use href="#wave-top-mask"/>
+      </svg>
     </section>
 
     <section class="download" id="download">

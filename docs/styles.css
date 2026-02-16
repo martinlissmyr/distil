@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
 
 /* Reset and Base Styles */
@@ -9,7 +9,7 @@
 }
 
 body {
-  --serif-font: "Crimson Text", serif;
+  --serif-font: "Source Serif 4", serif;
   --sans-font: "Barlow", sans-serif;
   --bg: rgba(30, 24, 20, 1);
   --bg-transparent: rgba(30, 24, 20, 0);
@@ -26,7 +26,7 @@ body {
 
 /* Main Content */
 main {
-  padding: 60px 20px;
+  padding: 60px 0px;
 }
 
 /* Header */
@@ -63,7 +63,7 @@ main {
   position: fixed;
   inset: 0 auto auto 0;
   height: 100px;
-  z-index: 15;
+  z-index: 25;
   pointer-events: none;
 
   /* Base fade */
@@ -105,23 +105,14 @@ main {
   letter-spacing: -1px;
 }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 20px;
+.site-logo span {
+  color: rgba(255, 235, 80, .8);
 }
 
 .description {
   text-align: center;
-}
-
-.tagline {
-  font-family: var(--sans-font);
-  font-weight: 100;
-  margin-top: 80px;
-  font-size: 3rem;
-  line-height: 1.1;
-  text-wrap: balance;
+  max-width: 800px;
+  margin: 0 auto 60px auto;
 }
 
 .icon {
@@ -131,9 +122,11 @@ main {
   border: 1px solid rgba(255, 255, 255, .1);
   border-radius: 20%;
   margin: 0 auto;
-  z-index: 10;
-  position: relative;
-  margin-top: -80px;
+  z-index: 20;
+  position: absolute;
+  margin-left: -50px;
+  left: 50%;
+  top: 0px;
 }
 
 .screenshot {
@@ -146,62 +139,197 @@ main {
   display: block;
 }
 
-/* Features Section */
+/* ============================================
+   Features Section with Wavy Separators
+   ============================================ */
+
+/* CSS Variables for alternating backgrounds */
+:root {
+  --bg-odd: #261F19;
+  --bg-even: var(--bg);
+  --wave-height: 80px;
+  --feature-spacing: 60px;
+}
+
+/* Features container */
 .features {
   margin-top: 0px;
 }
 
-.feature-grid {
-  display: flex;
-  flex-direction: column;
-  margin-top: 0px;
+/* Feature section wrapper with alternating backgrounds */
+.feature-section {
+  position: relative;
+  padding: 0;
+  margin: 0;
 }
 
+/* Alternating background colors */
+.feature-section:nth-child(odd) .feature-content {
+  background-color: var(--bg-odd);
+}
+
+.feature-section:nth-child(even) .feature-content {
+  background-color: var(--bg-even);
+}
+
+/* Wave separators */
+.wave-a,
+.wave-b {
+  display: block;
+  width: 100%;
+  height: var(--wave-height);
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  color: inherit;
+  z-index: 10;
+}
+
+/* Bottom wave separator - inherits section color, flipped */
+.wave-b {
+  transform: scaleY(-1);
+}
+
+/* Content wrapper inside each section */
+.feature-content {
+  padding: var(--feature-spacing) 0;
+}
+
+/* Individual feature layout */
 .feature {
+  max-width: 900px;
+  margin: 0 auto;
   display: flex;
   flex-direction: row;
-  gap: 50px;
-  margin-top: 120px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 20px;
+  align-items: stretch;
+  padding: 0 20px;
+  transition: transform 0.3s ease;
 }
 
-.feature:nth-child(odd) {
+/* Reverse layout for even sections */
+.feature-section:nth-child(even) .feature {
   flex-direction: row-reverse;
 }
 
-.feature:hover {
-  transform: translateY(-4px);
+.feature .feature-intro {
+  font-family: var(--serif-font);
+  font-size: 32px;
+  font-weight: 150;
+  line-height: 1.45;
+  text-wrap: balance;
+  text-align: center;
 }
 
-.feature img {
-  width: 40%;
-  filter: invert(100%);
-  opacity: .6;
-  display: block;
+.feature .feature-intro .download-button {
+  margin-top: 50px;
+}
+
+.feature .heading {
+  flex: 1;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  margin-right: 20px;
+}
+.feature .heading h2 {
+  font-family: var(--serif-font);
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+  text-align: right;
+}
+.feature-section:nth-child(even) .feature h2 {
+  text-align: left;
+  margin-right: 0px;
+  left: 20px;
+}
+.feature .text {
+  flex-grow: 1;
+  flex-shrink: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+.feature .text p {
+  text-indent: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: left;
+  line-height: 1.6;
+  font-size: 18px;
+  font-weight: 350;
+  margin-bottom: 0;
+}
+.feature-section:nth-child(even) .feature p {
+  text-align: right;
+}
+.feature .text p span,
+.feature .feature-intro span {
+  background: rgba(255, 235, 80, 0.45);
+  color: #111;
+  padding: 1px 2px;
+  border-radius: 1px;
+}
+
+/* Curly brace separator */
+.feature .curly-brace {
+  flex-shrink: 0;
+  width: 40px;
+  min-height: 100%;
+  color: rgba(255, 255, 255, 0.3);
+  align-self: stretch;
+}
+
+/* Flip curly brace horizontally for even sections */
+.feature-section:nth-child(even) .feature .curly-brace {
+  transform: scaleX(-1);
+}
+
+/* Hover effect with reduced motion support */
+@media (prefers-reduced-motion: no-preference) {
+  .feature:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Feature images with wavy clip */
+.screenshot {
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.feature h3 {
-  font-size: 2rem;
-  font-weight: 400;
-  line-height: 1.2;
-  margin-bottom: 12px;
+.feature-screenshot {
+  width: 40%;
+  display: block;
+  filter: invert(100%);
+  opacity: 0.6;
+  clip-path: url(#wave-clip);
+  object-fit: cover;
+  aspect-ratio: 4 / 3;
 }
 
-.feature p {
-  text-indent: 20px;
-  color: rgba(255, 255, 255, .4);
-}
 
-.feature p:first-child {
-  margin-top: 20px;
-}
+/* Responsive design for tablets and mobile */
+@media (max-width: 768px) {
+  :root {
+    --feature-spacing: 30px;
+    --wave-height: 50px;
+  }
 
-.feature p span {
-  background-color: rgba(255, 235, 80, 0.45);
-  color: rgba(34, 28, 24, 1);
-  padding-left: 2px;
-  padding-right: 2px;
+  .feature {
+    flex-direction: column !important;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .feature-screenshot {
+    width: 100%;
+    max-width: 400px;
+  }
 }
 
 /* Download Section */
@@ -217,7 +345,7 @@ main {
 
 .download h2 {
   font-size: 2.2rem;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .version {
@@ -235,7 +363,7 @@ main {
   border-radius: 48px;
   text-decoration: none;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -265,14 +393,6 @@ footer p {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .tagline {
-    font-size: 2rem;
-  }
-
-  .description {
-    font-size: 1rem;
-  }
-
   .feature {
     flex-direction: column;
   }
@@ -281,7 +401,34 @@ footer p {
     flex-direction: column;
   }
 
+  .feature .feature-intro {
+    padding-top: 60px;
+    font-size: 22px;
+  }
+
+  .feature .curly-brace {
+    display: none;
+  }
+
+  .feature .text p {
+    font-size: 17px;
+    text-align: left !important;
+  }
+  .feature .heading h2 {
+    font-size: 32px;
+    text-align: center !important;
+  }
+
   .download {
     padding: 40px 20px;
+    margin: 40px 20px 0 20px;
+  }
+
+  .download h2 {
+    font-size: 32px;
+  }
+
+  .site-logo span {
+    display: none;
   }
 }
