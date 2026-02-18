@@ -57,7 +57,7 @@
   height: 60px;
   z-index: 15;
   pointer-events: none;
-  transition: opacity 120ms ease-out;
+  //transition: opacity 120ms ease-out;
   top: 0;
   left: 0;
   right: 0px;
@@ -66,7 +66,7 @@
   background: linear-gradient(
     to bottom,
     var(--bg-editor-aside),
-    var(--bg-editor-transparent)
+    var(--bg-editor-aside-transparent)
   );
 
   &::before {

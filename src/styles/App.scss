@@ -190,6 +190,12 @@ $ui-tokens: (
     default: (light: rgba(239, 239, 239, 1), dark: rgba(45, 45, 45, 1)),
     prose:    (light: rgba(247, 238, 232, 1), dark: rgba(34, 28, 24, 0.94)),
     meta:   (light: #E0E2EA, dark: rgba(18, 28, 43, 1))
+  ),
+
+  bg-editor-aside-transparent: (
+    default: (light: rgba(239, 239, 239, 0), dark: rgba(45, 45, 45, 0)),
+    prose:    (light: rgba(247, 238, 232, 0), dark: rgba(34, 28, 24, 0)),
+    meta:   (light: rgba(224, 226, 234, 0), dark: rgba(18, 28, 43, 0))
   )
 );
 

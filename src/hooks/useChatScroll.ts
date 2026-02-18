@@ -1,5 +1,5 @@
 // src/hooks/useChatScroll.ts
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import type { ChatMessage } from './useChatMessages';
 
 /**
@@ -13,6 +13,7 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
   const spacerRef = useRef<HTMLDivElement | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [spacerHeight, setSpacerHeight] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const lastFocusedIndexRef = useRef<number>(-1);
 
   // Measure viewport height
@@ -38,9 +39,18 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     const content = contentRef.current;
     const spacer = spacerRef.current;
 
-    if (!vp || !content || messages.length === 0 || viewportHeight === 0 || isInitializing) {
+    if (!vp || !content || viewportHeight === 0 || isInitializing) {
+      // Not ready yet - viewport not measured or still initializing
       setSpacerHeight(0);
       lastFocusedIndexRef.current = -1;
+      return;
+    }
+
+    if (messages.length === 0) {
+      // No messages, show empty state immediately
+      setSpacerHeight(0);
+      lastFocusedIndexRef.current = -1;
+      setIsReady(true);
       return;
     }
 
@@ -54,6 +64,7 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     if (targetMessageIndex === -1) {
       setSpacerHeight(0);
       lastFocusedIndexRef.current = -1;
+      setIsReady(true); // No target message, show content immediately
       return;
     }
 
@@ -69,10 +80,11 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
 
     if (!targetElement) {
       setSpacerHeight(0);
+      setIsReady(true); // Target element not found, show content immediately
       return;
     }
 
-    const desiredOffset = 140;
+    const desiredOffset = 180;
     const clientHeight = vp.clientHeight;
 
     // Get the bottom of the target message
@@ -96,16 +108,17 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
       setTimeout(() => {
         vp.scrollTo({
           top: vp.scrollHeight - vp.clientHeight,
-          behavior: 'smooth',
+          behavior: 'auto',
         });
+        setIsReady(true); // Scroll complete, show content
       }, 100);
     });
   }, [messages, viewportHeight, isInitializing]);
 
   // Focus when messages or initialization state changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     focusTargetMessage();
   }, [focusTargetMessage]);
 
-  return { viewportRef, contentRef, spacerRef, spacerHeight };
+  return { viewportRef, contentRef, spacerRef, spacerHeight, isReady };
 }

@@ -53,9 +53,19 @@ function safeText(md: string | null | undefined): string {
 }
 
 function computeSelfState(isTextLoaded: boolean, fullTextMarkdown: string | null): DocState {
-  if (!isTextLoaded) return 'missing';
+  // Return 'missing' when:
+  // 1. Not loaded yet (waiting for data)
+  // 2. Loaded flag is true but text not propagated yet (null/undefined)
+  if (!isTextLoaded || fullTextMarkdown === null || fullTextMarkdown === undefined) {
+    return 'missing';
+  }
+
+  // At this point, fullTextMarkdown is a string (even if empty)
   const text = safeText(fullTextMarkdown);
+  // Return 'empty' when loaded AND text is propagated but has no content
   if (!text.trim()) return 'empty';
+
+  // Return 'hasContent' when loaded and has content
   return 'hasContent';
 }
 
@@ -218,10 +228,14 @@ export function useChatMessages({
           },
         ]);
         hasInitialisedRef.current = true;
+        // Update previousMarkdownLength to prevent guard effect from incorrectly triggering on first edit
+        previousMarkdownLength.current = safeText(fullTextMarkdown).trim().length;
         setIsInitializing(false); // Mark initialization complete
       } else {
         // No hint to seed, initialization is complete
         hasInitialisedRef.current = true;
+        // Update previousMarkdownLength to prevent guard effect from incorrectly triggering on first edit
+        previousMarkdownLength.current = safeText(fullTextMarkdown).trim().length;
         setIsInitializing(false);
       }
     })().catch((err) => {
@@ -236,7 +250,6 @@ export function useChatMessages({
     threadId,
     kind,
     isTextLoaded,
-    fullTextMarkdown,
     metaDocs,
     projectId,
     storyId,

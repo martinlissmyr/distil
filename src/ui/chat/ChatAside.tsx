@@ -163,7 +163,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   });
 
   // Auto-scroll behavior
-  const { viewportRef, contentRef, spacerRef, spacerHeight } = useChatScroll(messages, isInitializing);
+  const { viewportRef, contentRef, spacerRef, spacerHeight, isReady } = useChatScroll(messages, isInitializing);
 
   const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Always notify parent if it wants to observe actions
@@ -226,11 +226,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
       {/* Messages container with overlays */}
       <Box style={{ flex: 1, minHeight: 0, position: 'relative' }}>
         {/* Top overlay */}
-        <Box className={styles.topOverlay}
-          style={{
-            opacity: isScrolledTop ? 1 : 0,
-          }}
-        />
+        <Box className={styles.topOverlay} />
 
         {/* Messages */}
         <ScrollArea
@@ -242,6 +238,10 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
           styles={{
             thumb: {
               zIndex: 20, // over topOverlay
+            },
+            viewport: {
+              opacity: isReady ? 1 : 0,
+              transition: 'opacity 150ms ease-in',
             }
           }}
           onScrollPositionChange={(position) => {
@@ -256,7 +256,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
             setIsScrolledBottom(scrollTop + clientHeight < scrollHeight - 5);
           }}
         >
-          <Stack gap="xl" p="md" ref={contentRef}>
+          <Stack gap="xl" p="md" pt={180} ref={contentRef}>
             {messages.map((m) => (
               <Box key={m.id} data-message-bubble>
                 <MessageBubble message={m} onSuggestionClick={handleSuggestionClick} />
