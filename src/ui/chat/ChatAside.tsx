@@ -120,7 +120,6 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   const kind = doc.docKind;
 
   const [input, setInput] = useState('');
-  const [isScrolledTop, setIsScrolledTop] = useState(false);
   const [isScrolledBottom, setIsScrolledBottom] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -252,7 +251,6 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
             const scrollHeight = viewport.scrollHeight;
             const clientHeight = viewport.clientHeight;
 
-            setIsScrolledTop(scrollTop > 0);
             setIsScrolledBottom(scrollTop + clientHeight < scrollHeight - 5);
           }}
         >
