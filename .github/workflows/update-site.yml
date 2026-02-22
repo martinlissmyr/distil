@@ -2,6 +2,11 @@ name: Update GitHub Pages Site
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v1.2.3)"
+        required: true
+        type: string
   release:
     types: [published]
 
@@ -20,17 +25,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
+      - name: Determine tag and version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+
+          VERSION="${TAG#v}"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build site with release info
+        shell: bash
         run: |
           mkdir -p _site
           cp docs/index.html _site/index.html
           cp docs/styles.css _site/styles.css
-          sed -i "s/{{VERSION}}/${{ steps.version.outputs.VERSION }}/g" _site/index.html
-          sed -i "s|{{DOWNLOAD_URL}}|https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/Distil-${{ steps.version.outputs.VERSION }}-arm64.dmg|g" _site/index.html
+
+          sed -i "s|{{VERSION}}|${{ steps.version.outputs.VERSION }}|g" _site/index.html
+          sed -i "s|{{DOWNLOAD_URL}}|https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG }}/Distil-${{ steps.version.outputs.VERSION }}-arm64.dmg|g" _site/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -38,6 +55,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-
-
