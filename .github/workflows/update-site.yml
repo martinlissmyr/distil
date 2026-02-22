@@ -1,6 +1,7 @@
 name: Update GitHub Pages Site
 
 on:
+  workflow_dispatch
   release:
     types: [published]
 
@@ -37,4 +38,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
