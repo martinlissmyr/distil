@@ -45,6 +45,11 @@ jobs:
           mkdir -p _site
           cp docs/index.html _site/index.html
           cp docs/styles.css _site/styles.css
+          # Copy images recursively if they exist
+          if [ -d docs/images ]; then
+            mkdir -p _site/images
+            cp -R docs/images/. _site/images/
+          fi
 
           sed -i "s|{{VERSION}}|${{ steps.version.outputs.VERSION }}|g" _site/index.html
           sed -i "s|{{DOWNLOAD_URL}}|https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG }}/Distil-${{ steps.version.outputs.VERSION }}-arm64.dmg|g" _site/index.html
@@ -55,3 +60,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
