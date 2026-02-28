@@ -2,7 +2,7 @@
   "name": "Distil",
   "private": true,
   "version": "0.3.12",
-  "description": "A local-first writing tool for novelists built on the Layered Contextual Relevance Framework",
+  "description": "A writing environment for turning thought into prose",
   "author": "Martin Lissmyr <martin@lissmyr.com>",
   "type": "module",
   "engines": {
