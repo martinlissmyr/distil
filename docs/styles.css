@@ -1,7 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
 
-/* Reset and Base Styles */
+/* ============================================
+   Root Variables
+   ============================================ */
+
+:root {
+  --serif-font: "Source Serif 4", serif;
+  --heading-font: "Instrument Serif", serif;
+  --sans-font: "Source Sans 3", sans-serif;
+  --wave-height: 50px;
+  --feature-spacing: 40px;
+  --bg: rgba(30, 24, 20, 1);
+  --bg-alt: #261F19;
+  --bg-transparent: rgba(30, 24, 20, 0);
+  --color-orange: #c46f28;
+  --color-orange--darker: #8C4F18;
+}
+
+/* ============================================
+   Reset and Base Styles
+   ============================================ */
+
 * {
   margin: 0;
   padding: 0;
@@ -9,11 +28,6 @@
 }
 
 body {
-  --serif-font: "Source Serif 4", serif;
-  --sans-font: "Barlow", sans-serif;
-  --bg: rgba(30, 24, 20, 1);
-  --bg-transparent: rgba(30, 24, 20, 0);
-
   font-family: var(--serif-font);
   font-weight: 400;
   font-style: normal;
@@ -24,49 +38,70 @@ body {
   padding-top: 120px;
 }
 
-/* Main Content */
 main {
   padding: 60px 0px;
 }
 
-/* Header */
-.site-header {
+/* ============================================
+   Header (BEM: .header)
+   ============================================ */
+
+.header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   padding: 20px 30px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;
   z-index: 30;
+  font-family: var(--sans-font);
+  font-size: 16px;
 }
 
-.site-header .buttons a {
+.header__logo {
+  font-size: 38px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+  font-family: var(--serif-font);
+}
+
+.header__nav {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.header__link {
   color: #efefef;
   text-decoration: none;
   padding: 6px 30px;
-}
-
-.site-header .buttons a:hover {
-  color: #a66124;
-}
-
-.site-header .buttons .button {
-  border: 1px solid rgba(255, 255, 255, .05);
+  background: var(--bg);
+  border: 1px solid var(--bg);
   border-radius: 20px;
+  display: block;
+}
+
+.header__link:hover {
+  border: 1px solid var(--color-orange);
+  background-color: var(--color-orange);
+}
+
+.header__link--primary {
+  border-color: var(--color-orange--darker);
+  background-color: var(--color-orange--darker);
 }
 
 .top-overlay {
   width: 100%;
   position: fixed;
   inset: 0 auto auto 0;
-  height: 100px;
+  height: 220px;
   z-index: 25;
   pointer-events: none;
-
-  /* Base fade */
   background: linear-gradient(
     to bottom,
     var(--bg),
@@ -75,7 +110,6 @@ main {
 }
 
 .top-overlay:before {
-  /* Blur layer */
   content: '';
   position: absolute;
   inset: 0;
@@ -85,12 +119,10 @@ main {
 }
 
 .top-overlay:after {
-  /* Luminance damping layer */
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-
   background: linear-gradient(
     to bottom,
     var(--bg),
@@ -98,83 +130,46 @@ main {
   );
 }
 
-.site-logo {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -1px;
-}
+/* ============================================
+   Hero (BEM: .hero)
+   ============================================ */
 
-.site-logo span {
-  color: rgba(255, 235, 80, .8);
-}
-
-.description {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto 60px auto;
-}
-
-.icon {
-  display: block;
-  width: 100px;
-  height: 100px;
-  border: 1px solid rgba(255, 255, 255, .1);
-  border-radius: 20%;
-  margin: 0 auto;
-  z-index: 20;
-  position: absolute;
-  margin-left: -50px;
-  left: 50%;
-  top: 0px;
-}
-
-.screenshot {
+.hero {
   margin-top: 120px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.screenshot-placeholder img {
+.hero__image img {
   width: 100%;
   height: auto;
   display: block;
 }
 
 /* ============================================
-   Features Section with Wavy Separators
+   Feature Intro (BEM: .feature-intro)
    ============================================ */
 
-/* CSS Variables for alternating backgrounds */
-:root {
-  --bg-odd: #261F19;
-  --bg-even: var(--bg);
-  --wave-height: 80px;
-  --feature-spacing: 60px;
-}
-
-/* Features container */
-.features {
-  margin-top: 0px;
-}
-
-/* Feature section wrapper with alternating backgrounds */
-.feature-section {
+.feature-intro {
   position: relative;
   padding: 0;
   margin: 0;
+  margin-top: -80px;
+  text-align: center;
+  text-wrap: balance;
 }
 
-/* Alternating background colors */
-.feature-section:nth-child(odd) .feature-content {
-  background-color: var(--bg-odd);
+.feature-intro__wrapper {
+  background-color: var(--bg-alt);
 }
 
-.feature-section:nth-child(even) .feature-content {
-  background-color: var(--bg-even);
+.feature-intro__content {
+  padding: 60px 0 20px 0;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* Wave separators */
-.wave-a,
-.wave-b {
+.feature-intro__wave {
   display: block;
   width: 100%;
   height: var(--wave-height);
@@ -185,250 +180,329 @@ main {
   z-index: 10;
 }
 
-/* Bottom wave separator - inherits section color, flipped */
-.wave-b {
+.feature-intro__wave--top {
+  color: var(--bg-alt);
+  background: transparent;
+}
+
+.feature-intro__wave--bottom {
   transform: scaleY(-1);
+  color: var(--bg-alt);
+  background: var(--bg);
 }
 
-/* Content wrapper inside each section */
-.feature-content {
-  padding: var(--feature-spacing) 0;
-}
-
-/* Individual feature layout */
-.feature {
-  max-width: 900px;
+.feature-intro__icon {
+  display: block;
+  width: 80px;
+  height: 80px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 20%;
   margin: 0 auto;
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  align-items: stretch;
-  padding: 0 20px;
-  transition: transform 0.3s ease;
+  z-index: 20;
+  position: absolute;
+  margin-left: -50px;
+  left: 50%;
+  top: 0px;
 }
 
-/* Reverse layout for even sections */
-.feature-section:nth-child(even) .feature {
-  flex-direction: row-reverse;
+.feature-intro__heading {
+  font-family: var(--heading-font);
+  color: var(--color-orange);
+  font-size: 50px;
+  font-weight: normal;
+  line-height: 1;
+  margin: 0 20px;
 }
 
-.feature .feature-intro {
+.feature-intro__text {
+  margin-top: 24px;
   font-family: var(--serif-font);
-  font-size: 32px;
-  font-weight: 150;
-  line-height: 1.45;
-  text-wrap: balance;
-  text-align: center;
-}
-
-.feature .feature-intro .download-button {
-  margin-top: 50px;
-}
-
-.feature .heading {
-  flex: 1;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  margin-right: 20px;
-}
-.feature .heading h2 {
-  font-family: var(--serif-font);
-  font-size: 42px;
-  font-weight: 700;
-  line-height: 1.1;
-  text-wrap: balance;
-  text-align: right;
-}
-.feature-section:nth-child(even) .feature h2 {
-  text-align: left;
-  margin-right: 0px;
-  left: 20px;
-}
-.feature .text {
-  flex-grow: 1;
-  flex-shrink: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-}
-.feature .text p {
-  text-indent: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: left;
-  line-height: 1.6;
   font-size: 18px;
-  font-weight: 350;
-  margin-bottom: 0;
+  font-weight: 200;
+  line-height: 1.45;
+  padding-top: 8px;
+  margin: 20px 20px;
 }
-.feature-section:nth-child(even) .feature p {
-  text-align: right;
-}
-.feature .text p span,
-.feature .feature-intro span {
-  background: rgba(255, 235, 80, 0.45);
-  color: #111;
+
+.feature-intro__text span {
+  background: rgba(255, 235, 80, 0.1);
   padding: 1px 2px;
   border-radius: 1px;
 }
 
-/* Curly brace separator */
-.feature .curly-brace {
+.feature-intro__actions {
+  margin: 50px auto 0 auto;
+}
+
+.feature-intro__button {
+  display: inline-block;
+  background-color: #fff;
+  color: var(--color-orange);
+  padding: 16px 48px;
+  border-radius: 48px;
+  text-decoration: none;
+  font-family: var(--sans-font);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.feature-intro__button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+.feature-intro__button--primary {
+  background-color: var(--color-orange);
+  color: #fff;
+}
+
+.feature-intro__button--primary:hover {
+  background-color: var(--color-orange--darker);
+}
+
+/* ============================================
+   Feature List (BEM: .feature-list)
+   ============================================ */
+
+.feature-list {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  margin-top: 0px;
+}
+
+/* ============================================
+   Feature (BEM: .feature)
+   ============================================ */
+
+.feature {
+  max-width: 600px;
+  margin: var(--feature-spacing) auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  transition: transform 0.3s ease;
+}
+
+.feature__content {
+}
+
+.feature__icon {
+  color: var(--color-orange);
+  margin: 0 auto 20px auto;
+  width: 80px;
+  height: 80px;
+}
+
+.feature__heading {
+  flex: 1;
   flex-shrink: 0;
-  width: 40px;
-  min-height: 100%;
-  color: rgba(255, 255, 255, 0.3);
-  align-self: stretch;
+  font-family: var(--heading-font);
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.1;
+  text-wrap: balance;
+  text-align: center;
+  color: var(--color-orange);
 }
 
-/* Flip curly brace horizontally for even sections */
-.feature-section:nth-child(even) .feature .curly-brace {
-  transform: scaleX(-1);
+.feature__text {
+  flex-grow: 1;
+  flex-shrink: 1;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.6;
+  font-family: var(--serif-font);
+  font-size: 17px;
+  font-weight: 350;
+  margin: 8px 0 0 0;
 }
 
-/* Hover effect with reduced motion support */
+.feature__text span {
+  background: rgba(255, 235, 80, 0.1);
+  padding: 1px 2px;
+  border-radius: 1px;
+}
+
+/* ============================================
+   Download (BEM: .download)
+   ============================================ */
+
+.download__wrapper {
+  margin: 0px 20px;
+}
+
+.download {
+  margin: 80px auto 0 auto;
+  max-width: 500px;
+  text-align: center;
+  background-color: var(--color-orange);
+  padding: 40px 20px;
+  border-radius: 8px;
+}
+
+.download__heading {
+  font-family: var(--heading-font);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.download__version {
+  margin-top: 20px;
+  font-family: var(--sans-font);
+  font-size: 14px;
+  color: rgba(255, 255, 255, .4);
+}
+
+.download__button {
+  margin-top: 30px;
+  display: inline-block;
+  background-color: #fff;
+  color: var(--color-orange);
+  padding: 16px 48px;
+  border-radius: 48px;
+  text-decoration: none;
+  font-family: var(--sans-font);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.download__button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   Footer (BEM: .footer)
+   ============================================ */
+
+.footer {
+  font-family: var(--sans-font);
+  text-align: center;
+  padding: 30px 20px;
+  color: rgba(255, 255, 255, .4);
+}
+
+.footer__text {
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Hover Effects (Reduced Motion Support)
+   ============================================ */
+
 @media (prefers-reduced-motion: no-preference) {
   .feature:hover {
     transform: translateY(-4px);
   }
 }
 
-/* Feature images with wavy clip */
-.screenshot {
-  max-width: 800px;
-  margin: 0 auto;
-}
+/* ============================================
+   Larger Mobile Styles (min-width: 400px)
+   ============================================ */
 
-.feature-screenshot {
-  width: 40%;
-  display: block;
-  filter: invert(100%);
-  opacity: 0.6;
-  clip-path: url(#wave-clip);
-  object-fit: cover;
-  aspect-ratio: 4 / 3;
-}
-
-
-/* Responsive design for tablets and mobile */
-@media (max-width: 768px) {
-  :root {
-    --feature-spacing: 30px;
-    --wave-height: 50px;
+@media (min-width: 600px) {
+  body {
+    font-size: 19px;
   }
 
-  .feature {
-    flex-direction: column !important;
-    gap: 30px;
-    padding: 0 20px;
+  .feature-intro {
+    margin-top: -90px;
   }
 
-  .feature-screenshot {
-    width: 100%;
-    max-width: 400px;
-  }
-}
-
-/* Download Section */
-.download {
-  margin: 120px auto 0 auto;
-  max-width: 500px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, .05);
-  background-color: rgba(34, 28, 24, 1);
-  padding: 60px 40px;
-  border-radius: 8px;
-}
-
-.download h2 {
-  font-size: 2.2rem;
-  font-weight: 700;
-}
-
-.version {
-  font-family: var(--sans-font);
-  font-size: 1rem;
-  color: #777;
-}
-
-.download-button {
-  margin-top: 30px;
-  display: inline-block;
-  background-color: #a66124;
-  color: #fff;
-  padding: 16px 48px;
-  border-radius: 48px;
-  text-decoration: none;
-  font-size: 1.125rem;
-  font-weight: 700;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.download-button:hover {
-  background-color: #8C4F18;
-  transform: translateY(-2px);
-}
-
-.download-note {
-  font-family: var(--sans-font);
-  margin-top: 30px;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, .4);
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  padding: 30px 20px;
-  margin-top: 80px;
-  color: rgba(255, 255, 255, .4);
-}
-
-footer p {
-  font-size: 0.875rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .feature {
-    flex-direction: column;
+  .feature-intro__heading {
+    font-size: 56px;
   }
 
-  .feature:nth-child(odd) {
-    flex-direction: column;
+  .feature-intro__text {
+    font-size: 19px;
   }
 
-  .feature .feature-intro {
-    padding-top: 60px;
-    font-size: 22px;
+  .feature-intro__icon {
+    width: 90px;
+    height: 90px;
   }
 
-  .feature .curly-brace {
-    display: none;
-  }
-
-  .feature .text p {
-    font-size: 17px;
-    text-align: left !important;
-  }
-  .feature .heading h2 {
-    font-size: 32px;
-    text-align: center !important;
+  .feature__text {
+    font-size: 18px;
   }
 
   .download {
-    padding: 40px 20px;
-    margin: 40px 20px 0 20px;
+    padding: 40px 30px;
   }
 
-  .download h2 {
-    font-size: 32px;
+  .download__heading {
+    font-size: 36px;
+  }
+}
+
+/* ============================================
+   Tablet Styles (min-width: 768px)
+   ============================================ */
+
+@media (min-width: 768px) {
+  :root {
+    --wave-height: 80px;
+    --feature-spacing: 80px;
   }
 
-  .site-logo span {
-    display: none;
+  body {
+    padding-top: 120px;
+  }
+
+  .feature-intro {
+    margin-top: -125px;
+  }
+
+  .top-overlay {
+    height: 100px;
+  }
+
+  .header {
+    flex-direction: row;
+  }
+
+  .header__logo {
+    margin-bottom: 5px;
+  }
+
+  .header__logo span {
+    display: inline;
+  }
+
+  .feature-intro__content {
+    padding: 55px 0 20px 0;
+  }
+
+  .feature-intro__heading {
+    font-size: 72px;
+  }
+
+  .feature-intro__text {
+    font-size: 22px;
+    padding-top: 0;
+    margin-top: 20px;
+  }
+
+  .feature__heading {
+    font-size: 52px;
+    margin-bottom: 16px;
+  }
+
+  .feature__text {
+    font-size: 18px;
+  }
+
+  .download {
+    margin: 120px auto 0 auto;
+    padding: 40px 30px;
+  }
+
+  .download__heading {
+    font-size: 52px;
   }
 }
