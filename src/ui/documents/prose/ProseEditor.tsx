@@ -1,5 +1,5 @@
 // src/ui/story/StoryTextView.tsx
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { WritingEnvironment } from '../../editor/WritingEnvironment';
 import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
@@ -30,11 +30,6 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   title,
 }) => {
   const [subview, setSubview] = useState<Subview>('editor');
-
-  // Refs for part preview scroll anchoring
-  const scrollViewportRef = useRef<HTMLDivElement>(null);
-  const previousPreviewRef = useRef<HTMLDivElement>(null);
-  const hasScrolledRef = useRef(false);
 
   // Get parts state from app store
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
@@ -130,62 +125,13 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
     projectId,
   };
 
-  // Reset scroll flag when part changes, switching to editor subview, or loading completes
-  useEffect(() => {
-    if (subview === 'editor' || !isLoading) {
-      hasScrolledRef.current = false;
+  // Calculate position key for editor state persistence
+  const positionKey = useMemo(() => {
+    if (partsEnabled && currentPartId) {
+      return `${storyId}:prose:${currentPartId}`;
     }
-  }, [currentPartId, subview, isLoading]);
-
-  // Scroll anchor effect: hide previous chapter preview on mount
-  useLayoutEffect(() => {
-    if (!showPreviousPreview || hasScrolledRef.current || isLoading) return;
-
-    const viewport = scrollViewportRef.current;
-    const preview = previousPreviewRef.current;
-
-    if (!viewport || !preview) {
-      return;
-    }
-
-    // Measure preview height
-    const previewHeight = preview.getBoundingClientRect().height;
-
-    // Use requestAnimationFrame to ensure scroll happens after all layout operations
-    requestAnimationFrame(() => {
-      viewport.scrollTop = previewHeight;
-      hasScrolledRef.current = true;
-    });
-  }, [showPreviousPreview, currentPartId, subview, isLoading]);
-
-  // Monitor scroll position and re-apply anchor if it gets reset
-  useEffect(() => {
-    if (!showPreviousPreview || !scrollViewportRef.current || !previousPreviewRef.current) return;
-
-    const viewport = scrollViewportRef.current;
-    const preview = previousPreviewRef.current;
-
-    // Set up a check interval
-    const checkInterval = setInterval(() => {
-      // If scroll position is at top but we should be scrolled down, re-apply
-      if (viewport.scrollTop === 0 && hasScrolledRef.current) {
-        const previewHeight = preview.getBoundingClientRect().height;
-        if (previewHeight > 0) {
-          viewport.scrollTop = previewHeight;
-        }
-      }
-    }, 50); // Check every 50ms
-
-    // Clear interval after 2 seconds (enough time for all async operations)
-    const timeout = setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 2000);
-
-    return () => {
-      clearInterval(checkInterval);
-      clearTimeout(timeout);
-    };
-  }, [showPreviousPreview, currentPartId, subview, isLoading]);
+    return `${storyId}:prose`;
+  }, [storyId, partsEnabled, currentPartId]);
 
   // Chapter navigation handlers
   const handleEnableParts = async () => {
@@ -342,6 +288,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
         title={partsEnabled ? partTitle : title}
         placeholder="Start writing your story..."
         chatConfig={chatConfig}
+        positionKey={positionKey}
         navigation={
           <TopNavigation
             title={partsEnabled ? partTitle : title}
@@ -354,11 +301,10 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
             buttons={chapterNavButtons}
           />
         }
-        scrollViewportRef={scrollViewportRef}
         renderEditorContent={(editorContent) => (
           <>
             {showPreviousPreview && (
-              <Box ref={previousPreviewRef}>
+              <Box>
                 <PartPreview
                   summary={previousPart!.projection!.summary}
                   position="previous"

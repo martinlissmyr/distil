@@ -1,5 +1,5 @@
 // src/ui/editor/WritingEnvironment.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/core';
@@ -13,6 +13,7 @@ import { useEditorChat } from '../../hooks/useEditorChat';
 import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
 import { useEditorSearch } from '../../hooks/useEditorSearch';
 import { useEditorSync } from '../../hooks/useEditorSync';
+import { useNavigation } from '../../hooks/useNavigation';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './primitives/editorConfigFactory';
 import { getDocKind, isRichTextDoc, isMultiPartTextDoc } from '../../models/docs';
 import { defaultEmptyDoc } from './primitives/defaultEmptyDoc';
@@ -57,6 +58,9 @@ export type WritingEnvironmentProps = {
 
   /** Optional: Ref for scroll viewport (for scroll anchoring in StoryTextView) */
   scrollViewportRef?: React.RefObject<HTMLDivElement>;
+
+  /** Optional: Key for saving/restoring editor position */
+  positionKey?: string;
 };
 
 /**
@@ -88,8 +92,18 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   withChat = true,
   renderEditorContent,
   scrollViewportRef,
+  positionKey,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isRestoringPosition, setIsRestoringPosition] = useState(true);
+  const hasRestoredPositionRef = useRef(false);
+
+  // Create internal viewport ref, use external if provided
+  const internalViewportRef = useRef<HTMLDivElement>(null);
+  const viewportRef = scrollViewportRef || internalViewportRef;
+
+  // Navigation store actions
+  const { saveEditorPosition, getEditorPosition } = useNavigation();
 
   // Get editor config from doc model
   const docKindConfig = getDocKind(docKind);
@@ -135,6 +149,110 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
 
     return () => clearTimeout(timeout);
   }, [content, onSave, autosaveDelay]);
+
+  // Save editor position continuously while mounted
+  useEffect(() => {
+    if (!positionKey || !editor) return;
+
+    const savePosition = () => {
+      if (!viewportRef?.current || !editor) return;
+
+      saveEditorPosition(positionKey, {
+        scrollTop: viewportRef.current.scrollTop,
+        cursorFrom: editor.state.selection.from,
+        cursorTo: editor.state.selection.to,
+      });
+    };
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    // Wait a bit for viewport to be ready, then start saving periodically
+    const timeoutId = setTimeout(() => {
+      if (!viewportRef?.current) return;
+
+      // Save immediately
+      savePosition();
+
+      // Set up interval to save periodically (every 2 seconds)
+      intervalId = setInterval(savePosition, 2000);
+    }, 200);
+
+    // Cleanup: clear timeout/interval and save one final time
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+      savePosition();
+    };
+  }, [editor, positionKey, saveEditorPosition]);
+
+  // Restore editor position on mount
+  useLayoutEffect(() => {
+    if (!positionKey || !editor || !content) {
+      setIsRestoringPosition(false);
+      return;
+    }
+    if (hasRestoredPositionRef.current) {
+      setIsRestoringPosition(false);
+      return;
+    }
+
+    const savedPosition = getEditorPosition(positionKey);
+
+    // Use timing pattern from useChatScroll for glitch-free restoration
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        // Check if viewport is available now (after timeout)
+        if (!editor || !viewportRef?.current) {
+          setIsRestoringPosition(false);
+          return;
+        }
+
+        const viewport = viewportRef.current;
+
+        // Get editor element position (universal minimum scroll for all cases)
+        const editorElement = editor.view.dom;
+        const editorTop = editorElement.offsetTop;
+
+        // Restore scroll first
+        if (savedPosition) {
+          // Restore scroll, but ensure we're at least at editor top
+          const targetScroll = Math.max(savedPosition.scrollTop, editorTop);
+          viewport.scrollTop = targetScroll;
+        } else {
+          // No saved position - scroll to editor top (past any previews)
+          viewport.scrollTop = editorTop;
+        }
+
+        hasRestoredPositionRef.current = true;
+        setIsRestoringPosition(false);
+
+        // Restore cursor position after a slight delay to ensure useEditorSync has completed
+        // useEditorSync resets cursor to 0, so we need to restore after it runs
+        if (savedPosition) {
+          setTimeout(() => {
+            if (!editor) return;
+            const maxPos = editor.state.doc.content.size;
+            const validFrom = Math.min(savedPosition.cursorFrom, maxPos);
+            const validTo = Math.min(savedPosition.cursorTo, maxPos);
+
+            // If it's just a cursor (no selection), use focus with position
+            if (validFrom === validTo) {
+              editor.commands.focus(validFrom);
+            } else {
+              // For text selection, use chain
+              editor.chain().focus().setTextSelection({ from: validFrom, to: validTo }).run();
+            }
+          }, 50);
+        }
+      }, 100);
+    });
+  }, [editor, content, positionKey, getEditorPosition]);
+
+  // Reset restoration state when position key changes
+  useEffect(() => {
+    hasRestoredPositionRef.current = false;
+    setIsRestoringPosition(true);
+  }, [positionKey]);
 
   // Create toolbar from config
   const toolbar = createToolbarFromConfig(editorConfig, editor);
@@ -193,7 +311,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
 
         {/* Scrollable editor area */}
         <ScrollArea
-          viewportRef={scrollViewportRef}
+          viewportRef={viewportRef}
           classNames={{
             root: styles.scrollAreaWrapper
           }}
@@ -202,6 +320,10 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
           styles={{
             thumb: {
               zIndex: 20, // Above topOverlay
+            },
+            viewport: {
+              opacity: isRestoringPosition ? 0 : 1,
+              transition: 'opacity 150ms ease-in',
             }
           }}
           onScrollPositionChange={({ y }) => {

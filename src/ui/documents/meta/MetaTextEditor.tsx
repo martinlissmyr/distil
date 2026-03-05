@@ -65,6 +65,14 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
     void saveMetaDoc(scope, metaKey);
   }, [scope, metaKey, saveMetaDoc]);
 
+  // Calculate position key for scroll restoration
+  const positionKey = useMemo(() => {
+    if (scope.scope === 'story') {
+      return `${scope.storyId}:${metaKey}`;
+    }
+    return `${metaKey}:${metaKey}`; // root sections
+  }, [scope, metaKey]);
+
   return (
     <WritingEnvironment
       docKind={metaKey}
@@ -76,6 +84,7 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
       placeholder={placeholder}
       withChat={withChat}
       chatConfig={chatConfig}
+      positionKey={positionKey}
     />
   );
 };

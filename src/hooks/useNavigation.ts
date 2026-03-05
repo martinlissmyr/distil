@@ -66,6 +66,12 @@ export const useLeaveGuardStore = create<LeaveGuardStore>((set, get) => ({
 // navigation store
 // -------------------------
 
+type EditorPosition = {
+  scrollTop: number;
+  cursorFrom: number;
+  cursorTo: number;
+};
+
 export type StorySection = StorySectionId;
 export type RootSection = RootSectionId;
 export type AppSection = 'root' | 'project' | 'story';
@@ -77,6 +83,7 @@ export type NavState = {
   storyId: string | null;
   storySection: StorySection;
   currentPartIdMap: { [storyId: string]: string };
+  editorPositions: { [key: string]: EditorPosition };
 };
 
 type NavigationStore = NavState & {
@@ -88,6 +95,8 @@ type NavigationStore = NavState & {
   setSelectedStoryId: (id: string | null) => void;
   getCurrentPartId: (storyId: string) => string | undefined;
   setCurrentPartId: (storyId: string, partId: string | null) => void;
+  saveEditorPosition: (key: string, position: EditorPosition) => void;
+  getEditorPosition: (key: string) => EditorPosition | undefined;
   restoreState: (state: NavState) => void;
   finishInitialization: () => void;
 };
@@ -107,6 +116,7 @@ function getInitialNavState(): Omit<NavState, 'currentPartIdMap'> & { currentPar
         projectId: null,
         storyId: null,
         currentPartIdMap: {},
+        editorPositions: {},
       };
     }
     const parsed = JSON.parse(raw) as Partial<NavState>;
@@ -117,6 +127,7 @@ function getInitialNavState(): Omit<NavState, 'currentPartIdMap'> & { currentPar
       projectId: parsed.projectId ?? null,
       storyId: parsed.storyId ?? null,
       currentPartIdMap: parsed.currentPartIdMap ?? {},
+      editorPositions: parsed.editorPositions ?? {},
     };
   } catch {
     return {
@@ -126,6 +137,7 @@ function getInitialNavState(): Omit<NavState, 'currentPartIdMap'> & { currentPar
       projectId: null,
       storyId: null,
       currentPartIdMap: {},
+      editorPositions: {},
     };
   }
 }
@@ -153,6 +165,15 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
       set({ currentPartIdMap: { ...currentMap, [storyId]: partId } });
     }
   },
+  saveEditorPosition: (key, position) => {
+    set((state) => ({
+      editorPositions: {
+        ...(state.editorPositions || {}),
+        [key]: position
+      }
+    }));
+  },
+  getEditorPosition: (key) => get().editorPositions?.[key],
   restoreState: (state) =>
     set({
       appSection: state.appSection,
@@ -161,6 +182,7 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
       storyId: state.storyId,
       storySection: state.storySection,
       currentPartIdMap: state.currentPartIdMap,
+      editorPositions: state.editorPositions || {},
     }),
   finishInitialization: () => set({ isInitializing: false }),
 }));
@@ -178,6 +200,7 @@ function loadNavState(): NavState | null {
       storyId: parsed.storyId ?? null,
       storySection: parsed.storySection ?? 'prose',
       currentPartIdMap: parsed.currentPartIdMap ?? {},
+      editorPositions: parsed.editorPositions ?? {},
     };
   } catch {
     return null;
@@ -223,6 +246,8 @@ export function useNavigation() {
   const setSelectedStoryId = useNavigationStore((s) => s.setSelectedStoryId);
   const getCurrentPartId = useNavigationStore((s) => s.getCurrentPartId);
   const setCurrentPartId = useNavigationStore((s) => s.setCurrentPartId);
+  const saveEditorPosition = useNavigationStore((s) => s.saveEditorPosition);
+  const getEditorPosition = useNavigationStore((s) => s.getEditorPosition);
   const restoreStateToStore = useNavigationStore((s) => s.restoreState);
   const finishInitializationInStore = useNavigationStore((s) => s.finishInitialization);
 
@@ -230,6 +255,8 @@ export function useNavigation() {
   const requestNavigate = useLeaveGuardStore((s) => s.requestNavigate);
 
   const leaf = computeLeaf(appSection, rootSection, storySection);
+
+  const editorPositions = useNavigationStore((s) => s.editorPositions);
 
   useEffect(() => {
     if (isInitializing) return;
@@ -241,9 +268,10 @@ export function useNavigation() {
       storyId: selectedStoryId,
       storySection,
       currentPartIdMap,
+      editorPositions,
     };
     saveNavState(nav);
-  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection, currentPartIdMap, isInitializing]);
+  }, [appSection, rootSection, selectedProjectId, selectedStoryId, storySection, currentPartIdMap, editorPositions, isInitializing]);
 
   // Wrap ALL actions with requestNavigate
   const goToProjects = useCallback(() => {
@@ -336,6 +364,8 @@ export function useNavigation() {
     setStorySection: guardedSetStorySection,
     getCurrentPartId,
     setCurrentPartId,
+    saveEditorPosition,
+    getEditorPosition,
 
     loadSavedState: loadNavState,
     restoreState: restoreStateCallback,

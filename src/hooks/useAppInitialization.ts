@@ -71,6 +71,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             storyId: null,
             storySection: 'prose',
             currentPartIdMap: {},
+            editorPositions: {},
           });
           clearEditor();
           return;
@@ -85,6 +86,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             storyId: null,
             storySection: 'prose',
             currentPartIdMap: saved.currentPartIdMap ?? {},
+            editorPositions: saved.editorPositions ?? {},
           });
           clearEditor();
           return;
@@ -103,6 +105,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             storyId: null,
             storySection: 'prose',
             currentPartIdMap: saved.currentPartIdMap ?? {},
+            editorPositions: saved.editorPositions ?? {},
           });
           clearEditor();
           return;
@@ -126,6 +129,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             storyId: null,
             storySection: 'prose',
             currentPartIdMap: saved.currentPartIdMap ?? {},
+            editorPositions: saved.editorPositions ?? {},
           });
           clearEditor();
           return;
@@ -139,6 +143,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
           storyId: saved.storyId,
           storySection: saved.storySection ?? 'prose',
           currentPartIdMap: saved.currentPartIdMap ?? {},
+          editorPositions: saved.editorPositions ?? {},
         });
 
         // Use loadStoryForView to load metadata and part document
@@ -175,6 +180,7 @@ export function useAppInitialization(callbacks: InitializationCallbacks) {
             storyId: saved.storyId,
             storySection: saved.storySection ?? 'prose',
             currentPartIdMap: updatedMap,
+            editorPositions: saved.editorPositions ?? {},
           });
         }
 
