@@ -16,7 +16,7 @@
     "preview": "vite preview",
     "dist": "electron-builder",
     "publish": "electron-builder --mac --publish always",
-    "serve-site": "npx serve docs"
+    "serve-site": "node scripts/serve-site.mjs"
   },
   "build": {
     "appId": "com.martinlissmyr.distil",
