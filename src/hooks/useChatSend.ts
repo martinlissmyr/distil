@@ -31,6 +31,7 @@ interface UseChatSendOptions {
 
 interface UseChatSendResult {
   isSending: boolean;
+  isAwaitingResponse: boolean;
   handleSend: (promptOverride?: string, displayMessage?: string) => Promise<void>;
 }
 
@@ -51,6 +52,7 @@ export function useChatSend({
   storyId,
 }: UseChatSendOptions): UseChatSendResult {
   const [isSending, setIsSending] = useState(false);
+  const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
   const activeStreamRef = useRef<{ cancel: () => void } | null>(null);
   const frameRef = useRef<number | null>(null);
   const deltaBufferRef = useRef('');
@@ -84,6 +86,7 @@ export function useChatSend({
 
       addMessage(userMessage);
       setIsSending(true);
+      setIsAwaitingResponse(true);
 
       const assistantMessageId = `m-${Date.now()}-assistant`;
       let fullAssistantText = '';
@@ -100,6 +103,7 @@ export function useChatSend({
       };
 
       const queueDelta = (delta: string) => {
+        setIsAwaitingResponse(false);
         fullAssistantText += delta;
         deltaBufferRef.current += delta;
 
@@ -157,6 +161,7 @@ export function useChatSend({
             onDelta: queueDelta,
             onDone: (result) => {
               streamCompleted = true;
+              setIsAwaitingResponse(false);
 
               if (frameRef.current !== null) {
                 cancelAnimationFrame(frameRef.current);
@@ -176,6 +181,7 @@ export function useChatSend({
             },
             onError: (rawError) => {
               const friendly = toFriendlyModelError(rawError);
+              setIsAwaitingResponse(false);
 
               if (frameRef.current !== null) {
                 cancelAnimationFrame(frameRef.current);
@@ -195,6 +201,7 @@ export function useChatSend({
         });
       } catch (err) {
         console.error('Chat error', err);
+        setIsAwaitingResponse(false);
         const rawError = err instanceof Error ? err.message : String(err);
         const errorMessage = fullAssistantText || toFriendlyModelError(rawError);
 
@@ -219,6 +226,7 @@ export function useChatSend({
           frameRef.current = null;
         }
         setIsSending(false);
+        setIsAwaitingResponse(false);
       }
     },
     [
@@ -240,6 +248,7 @@ export function useChatSend({
 
   return {
     isSending,
+    isAwaitingResponse,
     handleSend,
   };
 }

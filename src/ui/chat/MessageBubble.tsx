@@ -117,7 +117,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             }}
           >
             <AssistantContent content={message.content} isStreaming={isStreaming} />
-            {isStreaming && <span className={classes.streamingCursor} aria-hidden="true" />}
           </Box>
 
           {canShowSuggestions && visibleSuggestions.length > 0 && (

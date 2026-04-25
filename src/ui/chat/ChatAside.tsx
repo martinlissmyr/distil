@@ -168,7 +168,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   });
 
   // Chat API handling
-  const { isSending, handleSend } = useChatSend({
+  const { isSending, isAwaitingResponse, handleSend } = useChatSend({
     kind,
     title,
     scope,
@@ -288,7 +288,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
                 <MessageBubble message={m} onSuggestionClick={handleSuggestionClick} />
               </Box>
             ))}
-            {isSending && <TypingIndicator />}
+            {isAwaitingResponse && <TypingIndicator />}
 
             {/* Spacer to allow scrolling user message to desired offset */}
             {spacerHeight > 0 && (
