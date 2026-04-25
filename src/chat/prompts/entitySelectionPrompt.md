@@ -12,7 +12,7 @@ You are an entity relevance classifier. Your task is to determine which specific
   - It could theoretically be mentioned but isn't necessary for the response
   - It's part of the broader story world but not needed for this specific request
 - Be conservative: only select {{entityType}}s that are clearly needed
-- Set reasoning_effort = minimal; proceed efficiently but ensure accurate classification
+- Reason briefly; proceed efficiently but ensure accurate classification
 - Output must be valid JSON only, no additional text
 
 # {{entityTypeLabel}} Projections

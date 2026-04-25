@@ -326,8 +326,7 @@ export async function determineContextNeedsWithLLMClassification(
           content: userPrompt,
         },
       ],
-      model: 'gpt-4o-mini',
-      temperature: 0,
+      profile: 'classifier',
       maxTokens: 50,
       responseFormat: 'json',
     });
@@ -545,8 +544,7 @@ export async function selectRelevantEntities(
           content: userPrompt,
         },
       ],
-      model: 'gpt-4o-mini',
-      temperature: 0,
+      profile: 'classifier',
       maxTokens: 100,
       responseFormat: 'json',
     });

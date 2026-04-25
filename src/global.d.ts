@@ -4,6 +4,7 @@ export {};
 import type { WritingLanguage } from './types/language';
 import type { UiSchema } from './types/ui';
 import type { EntityType } from './models/entityIndex';
+import type { ChatModelProfileId } from './types/ai';
 
 /**
  * Standardized IPC response types
@@ -190,6 +191,7 @@ declare global {
     chat: {
       send: (payload: {
         messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+        profile?: ChatModelProfileId;
         model?: string;
         temperature?: number;
         maxTokens?: number;

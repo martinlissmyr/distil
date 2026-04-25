@@ -22,7 +22,7 @@
   - "characters": true
   and choose depth per the depth rules.
 - For questions that are entirely generic and not linked to any story, set all context fields to false.
-- Before generating output, set reasoning_effort = minimal; proceed efficiently but ensure all relevant checks are performed.
+- Before generating output, reason briefly and proceed efficiently while ensuring all relevant checks are performed.
 - Upon generating your answer, ensure that your response contains only the specified JSON object format and validate strict adherence to the output schema. If the schema is not met, self-correct and regenerate.
 
 ## Entity Context Depth
