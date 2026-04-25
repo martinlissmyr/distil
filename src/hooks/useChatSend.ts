@@ -87,6 +87,7 @@ export function useChatSend({
 
         // Construct API payload
         const payload = {
+          profile: 'chat' as const,
           messages: [
             { role: 'system' as const, content: prompt.system },
             { role: 'assistant' as const, content: prompt.assistant },

@@ -196,6 +196,11 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Sidebar navigation generated dynamically from this model
 
 **AI Chat Integration** (`src/chat/`) - **Meta-Level Context Reasoning**
+- **Model profiles** (`electron/ai/modelProfiles.ts`): Centralized Electron-side model routing for distinct AI workloads
+  - `chat`: primary writing assistant conversations
+  - `classifier`: low-latency JSON classification for context and entity selection
+  - `projection`: chapter/part projection summaries for continuity
+  - Renderer code requests a profile via IPC rather than hardcoding provider model IDs
 - **buildChatPrompt.ts**: High-level orchestration that assembles system/assistant/user messages
   - Calls context selector to determine which LCRF layers are relevant
   - Builds from templates with interpolated content

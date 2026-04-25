@@ -23,6 +23,14 @@ import { loadFixtureEntityIndex } from '../fixtures/fixtureLoader';
 import { characterType } from '../models/entities/schemas/character';
 import { locationType } from '../models/entities/schemas/location';
 import { entityToMarkdown } from '../helpers/entityMarkdownUtils';
+import {
+  applyContextClassificationResult,
+  parseClassifierJson,
+  selectEntityIdsFromClassifierResult,
+  type EntityDepth,
+} from './contextClassifierContract';
+
+export type { EntityDepth } from './contextClassifierContract';
 
 
 // -------------------------------------------------------------
@@ -297,8 +305,6 @@ export function buildPrompt(ambiguousNeededContexts: MetaDocKey[]): string {
 // LLM-based refinement
 // -------------------------------------------------------------
 
-export type EntityDepth = 'projection' | 'full';
-
 export type LlmContextResult = {
   relevantContexts: MetaDocKey[];
   entityDepths: Map<MetaDocKey, EntityDepth>; // depth for each entity type
@@ -326,9 +332,7 @@ export async function determineContextNeedsWithLLMClassification(
           content: userPrompt,
         },
       ],
-      model: 'gpt-4o-mini',
-      temperature: 0,
-      maxTokens: 50,
+      profile: 'classifier',
       responseFormat: 'json',
     });
 
@@ -341,38 +345,23 @@ export async function determineContextNeedsWithLLMClassification(
       };
     }
 
-    const raw = response.data.output_text || '{}';
-    const result = JSON.parse(raw) as Record<string, any>;
+    const raw = response.data.output_text || '';
+    const result = parseClassifierJson(raw);
 
-    const entityDepths = new Map<MetaDocKey, EntityDepth>();
-
-    for (const key of ambiguousNeededContexts) {
-      const v = result[key];
-      if (v === true || v === 'true' || v === 1) {
-        relevantContexts.push(key);
-      }
+    if (!result) {
+      return {
+        relevantContexts: Array.from(new Set(relevantContexts)),
+        entityDepths: new Map(),
+        result: null,
+      };
     }
 
-    // Extract depth fields for entity types
-    for (const key of ambiguousNeededContexts) {
-      const docKind = getDocKind(key);
-      if (isEntityIndexDoc(docKind) && relevantContexts.includes(key)) {
-        const depthKey = `${key}Depth`;
-        const depthValue = result[depthKey];
-        if (depthValue === 'projection' || depthValue === 'full') {
-          entityDepths.set(key, depthValue);
-        } else {
-          // Default to 'projection' if depth not specified
-          entityDepths.set(key, 'projection');
-        }
-      }
-    }
-
-    return {
-      relevantContexts: Array.from(new Set(relevantContexts)),
-      entityDepths,
+    return applyContextClassificationResult({
+      relevantContexts,
+      ambiguousNeededContexts,
       result,
-    };
+      isEntityIndexContext: (key) => isEntityIndexDoc(getDocKind(key)),
+    });
   } catch (error) {
     console.error('LLM classification failed:', error);
     return {
@@ -545,9 +534,7 @@ export async function selectRelevantEntities(
           content: userPrompt,
         },
       ],
-      model: 'gpt-4o-mini',
-      temperature: 0,
-      maxTokens: 100,
+      profile: 'classifier',
       responseFormat: 'json',
     });
 
@@ -559,17 +546,20 @@ export async function selectRelevantEntities(
       };
     }
 
-    const raw = response.data.output_text || '{}';
-    const result = JSON.parse(raw) as Record<string, any>;
+    const raw = response.data.output_text || '';
+    const result = parseClassifierJson(raw);
 
-    // Extract selected entity IDs
-    const selectedEntityIds: string[] = [];
-    for (const id of projections.map(p => p.id)) {
-      const value = result[id];
-      if (value === true || value === 'true' || value === 1) {
-        selectedEntityIds.push(id);
-      }
+    if (!result) {
+      return {
+        selectedEntityIds: [],
+        result: null,
+      };
     }
+
+    const selectedEntityIds = selectEntityIdsFromClassifierResult(
+      projections.map((projection) => projection.id),
+      result
+    );
 
     return {
       selectedEntityIds,

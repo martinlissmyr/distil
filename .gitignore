@@ -21,6 +21,7 @@ yarn.lock
 dist/
 dist-ssr/
 dist-electron/
+.tmp-tests/
 *.local
 
 # -------------------------------------------------

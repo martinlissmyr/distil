@@ -96,6 +96,7 @@ contextBridge.exposeInMainWorld('distil', {
 contextBridge.exposeInMainWorld('chat', {
   send: async (payload: {
     messages: Array<{ role: string; content: string }>;
+    profile?: 'chat' | 'classifier' | 'projection';
     model?: string;
     temperature?: number;
     maxTokens?: number;

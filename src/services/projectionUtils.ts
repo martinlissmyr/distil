@@ -196,9 +196,7 @@ export async function generateProjectionSummary(
   try {
     const response = await window.chat.send({
       messages,
-      model: 'gpt-4o',
-      temperature: 0.5,
-      maxTokens: 600
+      profile: 'projection',
     });
 
     if (!response.ok) {
