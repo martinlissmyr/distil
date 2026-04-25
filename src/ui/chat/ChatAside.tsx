@@ -1,5 +1,5 @@
 // src/ui/chat/ChatAside.tsx
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
 
 import type { EditorKind } from '../../types/chat';
@@ -59,7 +59,9 @@ type ChatAsideProps = {
   editor?: any;
 };
 
-function resolveDocRef(props: ChatAsideProps): DocRefWithKind {
+function resolveDocRef(
+  props: Pick<ChatAsideProps, 'doc' | 'kind' | 'projectId' | 'storyId'>
+): DocRefWithKind {
   if (props.doc) return props.doc;
 
   const docKind = props.kind;
@@ -105,6 +107,10 @@ function resolveDocRef(props: ChatAsideProps): DocRefWithKind {
 
 export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   const {
+    doc: providedDoc,
+    kind: legacyKind,
+    projectId: legacyProjectId,
+    storyId: legacyStoryId,
     title,
     fullTextMarkdown,
     selectionMarkdown = '',
@@ -115,7 +121,20 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
     editor,
   } = props;
 
-  const doc = resolveDocRef(props);
+  const doc = useMemo(
+    () => resolveDocRef({
+      doc: providedDoc,
+      kind: legacyKind,
+      projectId: legacyProjectId,
+      storyId: legacyStoryId,
+    }),
+    [
+      providedDoc,
+      legacyKind,
+      legacyProjectId,
+      legacyStoryId,
+    ]
+  );
   const effectiveIsTextLoaded = props.isTextLoaded ?? fullTextMarkdown !== null;
   const kind = doc.docKind;
 
@@ -164,7 +183,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
   // Auto-scroll behavior
   const { viewportRef, contentRef, spacerRef, spacerHeight, isReady } = useChatScroll(messages, isInitializing);
 
-  const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
+  const handleSuggestionClick = useCallback((action: LocalizedSuggestionAction) => {
     // Always notify parent if it wants to observe actions
     onSuggestionAction?.(action);
 
@@ -194,7 +213,14 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
       onOpenWizard({ wizardId, doc, editor });
       return;
     }
-  };
+  }, [
+    doc,
+    editor,
+    handleSend,
+    onNavigate,
+    onOpenWizard,
+    onSuggestionAction,
+  ]);
 
   const handleSendClick = async () => {
     setInput('');

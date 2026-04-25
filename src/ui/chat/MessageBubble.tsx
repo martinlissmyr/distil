@@ -11,7 +11,15 @@ type MessageBubbleProps = {
   onSuggestionClick?: (action: LocalizedSuggestionAction) => void;
 };
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({
+const AssistantContent = React.memo(function AssistantContent({
+  content,
+}: {
+  content: string;
+}) {
+  return <MarkdownContent content={content} />;
+});
+
+export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   message,
   onSuggestionClick,
 }) => {
@@ -30,38 +38,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     return list.filter((a) => !hiddenSuggestionIds.has(a.id));
   }, [message.suggestions, hiddenSuggestionIds]);
 
-  // Typing animation for assistant messages
+  // Keep rendered message text stable so native text selection inside chat
+  // bubbles is not cleared by per-character DOM replacement.
   useEffect(() => {
-    if (isUser || message.skipAnimation) {
-      // User messages or restored messages: show immediately
-      setDisplayedContent(message.content);
-      setIsTypingComplete(true);
-      return;
-    }
-
-    setDisplayedContent('');
-    setIsTypingComplete(false);
+    setDisplayedContent(message.content);
+    setIsTypingComplete(true);
     setVisibleActions(0);
 
     // Reset hidden suggestions whenever this message changes
     setHiddenSuggestionIds(new Set());
-
-    const content = message.content;
-    const typingSpeed = 10; // ms per character
-    let currentIndex = 0;
-
-    const interval = setInterval(() => {
-      if (currentIndex < content.length) {
-        setDisplayedContent(content.slice(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        setIsTypingComplete(true);
-        clearInterval(interval);
-      }
-    }, typingSpeed);
-
-    return () => clearInterval(interval);
-  }, [message.id, message.content, isUser, message.skipAnimation]);
+  }, [message.id, message.content]);
 
   // Staggered animation for action buttons (based on *remaining* suggestions)
   useEffect(() => {
@@ -156,7 +142,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               maxWidth: '100%',
             }}
           >
-            <MarkdownContent content={displayedContent} />
+            <AssistantContent content={displayedContent} />
           </Box>
 
           {isTypingComplete && visibleSuggestions.length > 0 && (
@@ -190,4 +176,4 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}
     </Group>
   );
-};
+});
