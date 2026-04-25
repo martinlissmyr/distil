@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "rootDir": ".",
+    "outDir": ".tmp-tests"
+  },
+  "include": [
+    "src/chat/contextClassifierContract.ts",
+    "test/**/*.test.ts"
+  ]
+}
