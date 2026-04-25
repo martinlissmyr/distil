@@ -24,7 +24,7 @@ export const chatModelProfiles: Record<ChatModelProfileId, ChatModelProfile> = {
   classifier: {
     model: 'gpt-5.4-nano',
     fallbackModels: ['gpt-5-nano', 'gpt-4o-mini'],
-    maxCompletionTokens: 150,
+    maxCompletionTokens: 600,
     reasoningEffort: 'none',
   },
   projection: {

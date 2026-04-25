@@ -305,6 +305,21 @@ export type LlmContextResult = {
   result: Record<string, any> | null; // raw LLM JSON for testing
 };
 
+function parseClassifierJson(raw: string): Record<string, unknown> | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  } catch (error) {
+    console.error('LLM classification returned invalid JSON:', {
+      error,
+      raw: trimmed,
+    });
+    return null;
+  }
+}
+
 export async function determineContextNeedsWithLLMClassification(
   userPrompt: string,
   relevantContexts: MetaDocKey[],
@@ -327,7 +342,6 @@ export async function determineContextNeedsWithLLMClassification(
         },
       ],
       profile: 'classifier',
-      maxTokens: 50,
       responseFormat: 'json',
     });
 
@@ -340,8 +354,16 @@ export async function determineContextNeedsWithLLMClassification(
       };
     }
 
-    const raw = response.data.output_text || '{}';
-    const result = JSON.parse(raw) as Record<string, any>;
+    const raw = response.data.output_text || '';
+    const result = parseClassifierJson(raw);
+
+    if (!result) {
+      return {
+        relevantContexts: Array.from(new Set(relevantContexts)),
+        entityDepths: new Map(),
+        result: null,
+      };
+    }
 
     const entityDepths = new Map<MetaDocKey, EntityDepth>();
 
@@ -545,7 +567,6 @@ export async function selectRelevantEntities(
         },
       ],
       profile: 'classifier',
-      maxTokens: 100,
       responseFormat: 'json',
     });
 
@@ -557,8 +578,15 @@ export async function selectRelevantEntities(
       };
     }
 
-    const raw = response.data.output_text || '{}';
-    const result = JSON.parse(raw) as Record<string, any>;
+    const raw = response.data.output_text || '';
+    const result = parseClassifierJson(raw);
+
+    if (!result) {
+      return {
+        selectedEntityIds: [],
+        result: null,
+      };
+    }
 
     // Extract selected entity IDs
     const selectedEntityIds: string[] = [];
