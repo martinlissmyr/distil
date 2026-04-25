@@ -100,7 +100,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
   const handleRunWizard = async (wizardCmd: {
     wizardId: string;
-    targetInputRef?: RefObject<HTMLTextAreaElement>;
+    targetInputRef?: RefObject<HTMLTextAreaElement | null>;
     currentContent?: string;
   }) => {
     if (!doc) return;
@@ -179,7 +179,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
   // Create refs for all textarea fields upfront (must be at top level, not inside render functions)
   const textareaRefs = useMemo(() => {
-    const refs = new Map<string, RefObject<HTMLTextAreaElement>>();
+    const refs = new Map<string, RefObject<HTMLTextAreaElement | null>>();
     for (const field of schema.fields) {
       if (field.type === 'textarea') {
         refs.set(field.name, { current: null });

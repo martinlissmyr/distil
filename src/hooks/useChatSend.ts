@@ -1,11 +1,19 @@
 // src/hooks/useChatSend.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { buildPrompt } from '../chat/buildChatPrompt';
 import type { EditorKind, QuestionScope } from '../types/chat';
 import type { ChatMessage } from './useChatMessages';
 import { useAppStore } from '../state/useAppStore';
 
 const MAX_TURNS = 6;
+
+function toFriendlyModelError(rawError: string): string {
+  if (rawError.includes('API key')) {
+    return 'No OpenAI API key is configured. Add one under Settings → API key to use the assistant.';
+  }
+
+  return 'Something went wrong talking to the model.';
+}
 
 interface UseChatSendOptions {
   kind: EditorKind;
@@ -15,12 +23,15 @@ interface UseChatSendOptions {
   selectionMarkdown: string;
   messages: ChatMessage[];
   addMessage: (message: ChatMessage) => void;
+  updateMessage: (id: string, patch: Partial<ChatMessage>) => void;
+  appendToMessage: (id: string, delta: string) => void;
   projectId?: string;
   storyId?: string;
 }
 
 interface UseChatSendResult {
   isSending: boolean;
+  isAwaitingResponse: boolean;
   handleSend: (promptOverride?: string, displayMessage?: string) => Promise<void>;
 }
 
@@ -35,13 +46,28 @@ export function useChatSend({
   selectionMarkdown,
   messages,
   addMessage,
+  updateMessage,
+  appendToMessage,
   projectId,
   storyId,
 }: UseChatSendOptions): UseChatSendResult {
   const [isSending, setIsSending] = useState(false);
+  const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
+  const activeStreamRef = useRef<{ cancel: () => void } | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const deltaBufferRef = useRef('');
 
   // ✅ Read writing language from app store (single in-app source of truth)
   const writingLanguage = useAppStore((s) => s.writingLanguage);
+
+  useEffect(() => {
+    return () => {
+      activeStreamRef.current?.cancel();
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
 
   const handleSend = useCallback(
     async (promptOverride?: string, displayMessage?: string) => {
@@ -55,10 +81,36 @@ export function useChatSend({
         role: 'user',
         content: displayMessage?.trim() || rawUserPrompt,
         actualPrompt: displayMessage ? rawUserPrompt : undefined, // preserve detailed prompt
+        status: 'complete',
       };
 
       addMessage(userMessage);
       setIsSending(true);
+      setIsAwaitingResponse(true);
+
+      const assistantMessageId = `m-${Date.now()}-assistant`;
+      let fullAssistantText = '';
+      let streamCompleted = false;
+      let assistantMessageAdded = false;
+
+      const flushDeltas = () => {
+        frameRef.current = null;
+        const delta = deltaBufferRef.current;
+        if (!delta) return;
+
+        deltaBufferRef.current = '';
+        appendToMessage(assistantMessageId, delta);
+      };
+
+      const queueDelta = (delta: string) => {
+        setIsAwaitingResponse(false);
+        fullAssistantText += delta;
+        deltaBufferRef.current += delta;
+
+        if (frameRef.current !== null) return;
+
+        frameRef.current = requestAnimationFrame(flushDeltas);
+      };
 
       try {
         // Build message history (last MAX_TURNS turns, excluding ephemeral messages)
@@ -96,48 +148,93 @@ export function useChatSend({
           ],
         };
 
-        // Call chat API
-        const response = await window.chat.send(payload);
-
-        if (!response.ok) {
-          const rawError: string = response.error;
-          let friendly = 'Something went wrong talking to the model.';
-
-          if (rawError.includes('API key')) {
-            friendly =
-              'No OpenAI API key is configured. Add one under Settings → API key to use the assistant.';
-          }
-
-          addMessage({
-            id: `m-${Date.now()}-assistant-error`,
-            role: 'assistant',
-            content: friendly,
-            ephemeral: true,
-          });
-          return;
-        }
-
         addMessage({
-          id: `m-${Date.now()}-assistant`,
+          id: assistantMessageId,
           role: 'assistant',
-          content:
-            response.data.output_text || 'Sorry, I could not generate a response.',
+          content: '',
+          status: 'streaming',
+        });
+        assistantMessageAdded = true;
+
+        await new Promise<void>((resolve) => {
+          activeStreamRef.current = window.chat.stream(payload, {
+            onDelta: queueDelta,
+            onDone: (result) => {
+              streamCompleted = true;
+              setIsAwaitingResponse(false);
+
+              if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+              }
+
+              deltaBufferRef.current = '';
+              updateMessage(assistantMessageId, {
+                content:
+                  result.output_text ||
+                  fullAssistantText ||
+                  'Sorry, I could not generate a response.',
+                status: 'complete',
+              });
+              activeStreamRef.current = null;
+              resolve();
+            },
+            onError: (rawError) => {
+              const friendly = toFriendlyModelError(rawError);
+              setIsAwaitingResponse(false);
+
+              if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+              }
+
+              deltaBufferRef.current = '';
+              updateMessage(assistantMessageId, {
+                content: fullAssistantText || friendly,
+                status: 'error',
+                ephemeral: !fullAssistantText,
+              });
+              activeStreamRef.current = null;
+              resolve();
+            },
+          });
         });
       } catch (err) {
         console.error('Chat error', err);
-        addMessage({
-          id: `m-${Date.now()}-error`,
-          role: 'assistant',
-          content: 'Something went wrong talking to the model.',
-        });
+        setIsAwaitingResponse(false);
+        const rawError = err instanceof Error ? err.message : String(err);
+        const errorMessage = fullAssistantText || toFriendlyModelError(rawError);
+
+        if (assistantMessageAdded) {
+          updateMessage(assistantMessageId, {
+            content: errorMessage,
+            status: 'error',
+            ephemeral: !fullAssistantText,
+          });
+        } else {
+          addMessage({
+            id: assistantMessageId,
+            role: 'assistant',
+            content: errorMessage,
+            status: 'error',
+            ephemeral: true,
+          });
+        }
       } finally {
+        if (!streamCompleted && frameRef.current !== null) {
+          cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
         setIsSending(false);
+        setIsAwaitingResponse(false);
       }
     },
     [
       isSending,
       messages,
       addMessage,
+      updateMessage,
+      appendToMessage,
       kind,
       title,
       scope,
@@ -151,6 +248,7 @@ export function useChatSend({
 
   return {
     isSending,
+    isAwaitingResponse,
     handleSend,
   };
 }

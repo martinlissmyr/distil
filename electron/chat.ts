@@ -1,5 +1,6 @@
 // electron/chat.ts
 import OpenAI from 'openai';
+import { ipcMain } from 'electron';
 import { loadApiKey } from './secureStore';
 import { safeHandle } from './utils/ipcHandler';
 import {
@@ -56,7 +57,7 @@ async function getOpenAIClient(): Promise<OpenAI> {
 }
 
 /**
- * Payload for chat:send IPC call
+ * Payload for chat IPC calls.
  */
 export type ChatPayload = {
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
@@ -67,89 +68,112 @@ export type ChatPayload = {
   responseFormat?: 'json' | 'text';
 };
 
+type StreamRequest = {
+  requestId: string;
+  payload: ChatPayload;
+};
+
+const activeStreams = new Map<string, AbortController>();
+
+function validateChatPayload(payload: ChatPayload): void {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid payload: must be an object');
+  }
+  if (!Array.isArray(payload.messages)) {
+    throw new Error('Invalid payload: messages must be an array');
+  }
+  if (payload.messages.length === 0) {
+    throw new Error('Invalid payload: messages array cannot be empty');
+  }
+
+  for (const msg of payload.messages) {
+    if (!msg || typeof msg !== 'object') {
+      throw new Error('Invalid message: must be an object');
+    }
+    if (typeof msg.role !== 'string' || !['user', 'assistant', 'system'].includes(msg.role)) {
+      throw new Error('Invalid message: role must be user, assistant, or system');
+    }
+    if (typeof msg.content !== 'string') {
+      throw new Error('Invalid message: content must be a string');
+    }
+    // Reasonable content length limit (100k characters ~ 25k tokens)
+    if (msg.content.length > 100000) {
+      throw new Error('Invalid message: content too long (max 100k characters)');
+    }
+  }
+
+  if (payload.model !== undefined && typeof payload.model !== 'string') {
+    throw new Error('Invalid model: must be a string');
+  }
+  if (
+    payload.profile !== undefined &&
+    !isChatModelProfileId(payload.profile)
+  ) {
+    throw new Error('Invalid profile: unknown chat model profile');
+  }
+  if (payload.temperature !== undefined && typeof payload.temperature !== 'number') {
+    throw new Error('Invalid temperature: must be a number');
+  }
+  if (payload.maxTokens !== undefined && typeof payload.maxTokens !== 'number') {
+    throw new Error('Invalid maxTokens: must be a number');
+  }
+  if (payload.responseFormat !== undefined && !['json', 'text'].includes(payload.responseFormat)) {
+    throw new Error('Invalid responseFormat: must be "json" or "text"');
+  }
+}
+
+function getCandidateModels(payload: ChatPayload): string[] {
+  const profile = getChatModelProfile(
+    payload.profile ?? DEFAULT_CHAT_MODEL_PROFILE_ID
+  );
+
+  return payload.model
+    ? [payload.model]
+    : [profile.model, ...(profile.fallbackModels ?? [])];
+}
+
+function buildCompletionOptionsForModel(
+  payload: ChatPayload,
+  model: string
+): OpenAI.Chat.ChatCompletionCreateParamsNonStreaming {
+  const profile = getChatModelProfile(
+    payload.profile ?? DEFAULT_CHAT_MODEL_PROFILE_ID
+  );
+  const maxCompletionTokens = payload.maxTokens ?? profile.maxCompletionTokens;
+
+  return {
+    model,
+    messages: payload.messages,
+    ...(payload.temperature !== undefined && {
+      temperature: payload.temperature,
+    }),
+    ...(maxCompletionTokens !== undefined && {
+      max_completion_tokens: maxCompletionTokens,
+    }),
+    ...(profile.reasoningEffort && supportsReasoningEffort(model) && {
+      reasoning_effort: profile.reasoningEffort,
+    }),
+    ...(payload.responseFormat === 'json' && {
+      response_format: { type: 'json_object' },
+    }),
+  };
+}
+
 /**
- * Registers IPC handlers for OpenAI chat integration
+ * Registers IPC handlers for OpenAI chat integration.
  */
 export function registerChatHandlers(): void {
   safeHandle('chat:send', async (payload: ChatPayload) => {
-    // Validate payload structure
-    if (!payload || typeof payload !== 'object') {
-      throw new Error('Invalid payload: must be an object');
-    }
-    if (!Array.isArray(payload.messages)) {
-      throw new Error('Invalid payload: messages must be an array');
-    }
-    if (payload.messages.length === 0) {
-      throw new Error('Invalid payload: messages array cannot be empty');
-    }
-
-    // Validate each message
-    for (const msg of payload.messages) {
-      if (!msg || typeof msg !== 'object') {
-        throw new Error('Invalid message: must be an object');
-      }
-      if (typeof msg.role !== 'string' || !['user', 'assistant', 'system'].includes(msg.role)) {
-        throw new Error('Invalid message: role must be user, assistant, or system');
-      }
-      if (typeof msg.content !== 'string') {
-        throw new Error('Invalid message: content must be a string');
-      }
-      // Reasonable content length limit (100k characters ~ 25k tokens)
-      if (msg.content.length > 100000) {
-        throw new Error('Invalid message: content too long (max 100k characters)');
-      }
-    }
-
-    // Validate optional parameters
-    if (payload.model !== undefined && typeof payload.model !== 'string') {
-      throw new Error('Invalid model: must be a string');
-    }
-    if (
-      payload.profile !== undefined &&
-      !isChatModelProfileId(payload.profile)
-    ) {
-      throw new Error('Invalid profile: unknown chat model profile');
-    }
-    if (payload.temperature !== undefined && typeof payload.temperature !== 'number') {
-      throw new Error('Invalid temperature: must be a number');
-    }
-    if (payload.maxTokens !== undefined && typeof payload.maxTokens !== 'number') {
-      throw new Error('Invalid maxTokens: must be a number');
-    }
-    if (payload.responseFormat !== undefined && !['json', 'text'].includes(payload.responseFormat)) {
-      throw new Error('Invalid responseFormat: must be "json" or "text"');
-    }
+    validateChatPayload(payload);
 
     const openai = await getOpenAIClient();
-    const profile = getChatModelProfile(
-      payload.profile ?? DEFAULT_CHAT_MODEL_PROFILE_ID
-    );
-    const maxCompletionTokens =
-      payload.maxTokens ?? profile.maxCompletionTokens;
-    const candidateModels = payload.model
-      ? [payload.model]
-      : [profile.model, ...(profile.fallbackModels ?? [])];
+    const candidateModels = getCandidateModels(payload);
 
     let completion: OpenAI.Chat.ChatCompletion | null = null;
     let lastError: unknown = null;
 
     for (const model of candidateModels) {
-      const completionOptions: OpenAI.Chat.ChatCompletionCreateParams = {
-        model,
-        messages: payload.messages,
-        ...(payload.temperature !== undefined && {
-          temperature: payload.temperature,
-        }),
-        ...(maxCompletionTokens !== undefined && {
-          max_completion_tokens: maxCompletionTokens,
-        }),
-        ...(profile.reasoningEffort && supportsReasoningEffort(model) && {
-          reasoning_effort: profile.reasoningEffort,
-        }),
-        ...(payload.responseFormat === 'json' && {
-          response_format: { type: 'json_object' },
-        }),
-      };
+      const completionOptions = buildCompletionOptionsForModel(payload, model);
 
       try {
         completion = await openai.chat.completions.create(completionOptions);
@@ -178,5 +202,98 @@ export function registerChatHandlers(): void {
       output_text: completion.choices[0]?.message?.content ?? '',
       raw: completion,
     };
+  });
+
+  ipcMain.on('chat:stream:start', async (event, request: StreamRequest) => {
+    const { requestId, payload } = request ?? {};
+
+    try {
+      if (!requestId || typeof requestId !== 'string') {
+        throw new Error('Invalid stream request: requestId is required');
+      }
+
+      validateChatPayload(payload);
+
+      if (payload.responseFormat === 'json') {
+        throw new Error('Streaming JSON responses is not supported');
+      }
+
+      const openai = await getOpenAIClient();
+      const abortController = new AbortController();
+      const candidateModels = getCandidateModels(payload);
+
+      activeStreams.set(requestId, abortController);
+
+      let outputText = '';
+      let lastError: unknown = null;
+      let streamedSuccessfully = false;
+
+      for (const model of candidateModels) {
+        try {
+          const stream = await openai.chat.completions.create(
+            {
+              ...buildCompletionOptionsForModel(payload, model),
+              stream: true,
+            },
+            { signal: abortController.signal }
+          );
+
+          for await (const chunk of stream) {
+            if (abortController.signal.aborted) break;
+
+            const delta = chunk.choices[0]?.delta?.content ?? '';
+            if (!delta) continue;
+
+            streamedSuccessfully = true;
+            outputText += delta;
+            event.sender.send('chat:stream:delta', { requestId, delta });
+          }
+
+          if (!abortController.signal.aborted) {
+            event.sender.send('chat:stream:done', {
+              requestId,
+              output_text: outputText,
+            });
+          }
+
+          return;
+        } catch (error) {
+          lastError = error;
+
+          if (
+            streamedSuccessfully ||
+            payload.model ||
+            abortController.signal.aborted ||
+            !shouldTryFallbackModel(error)
+          ) {
+            throw error;
+          }
+
+          console.warn(
+            `[chat] Streaming model "${model}" failed; trying fallback if available:`,
+            getErrorMessage(error)
+          );
+        }
+      }
+
+      throw lastError instanceof Error
+        ? lastError
+        : new Error('Failed to create streaming chat completion');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown streaming error';
+      event.sender.send('chat:stream:error', { requestId, error: message });
+    } finally {
+      if (requestId) {
+        activeStreams.delete(requestId);
+      }
+    }
+  });
+
+  ipcMain.on('chat:stream:cancel', (_event, requestId: string) => {
+    const abortController = activeStreams.get(requestId);
+    if (!abortController) return;
+
+    abortController.abort();
+    activeStreams.delete(requestId);
   });
 }

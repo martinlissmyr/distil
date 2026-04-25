@@ -5,20 +5,30 @@ import { Box, Group, Text, Button, Stack } from '@mantine/core';
 import type { LocalizedSuggestionAction } from '../../chat/chatHints';
 import type { ChatMessage } from '../../hooks/useChatMessages';
 import { MarkdownContent } from '../common/MarkdownContent';
+import classes from './MessageBubble.module.scss';
 
 type MessageBubbleProps = {
   message: ChatMessage;
   onSuggestionClick?: (action: LocalizedSuggestionAction) => void;
 };
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({
+const AssistantContent = React.memo(function AssistantContent({
+  content,
+  isStreaming,
+}: {
+  content: string;
+  isStreaming: boolean;
+}) {
+  return <MarkdownContent content={content} isStreaming={isStreaming} />;
+});
+
+export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   message,
   onSuggestionClick,
 }) => {
   const isUser = message.role === 'user';
-  const [displayedContent, setDisplayedContent] = useState('');
-  const [isTypingComplete, setIsTypingComplete] = useState(isUser);
-  const [visibleActions, setVisibleActions] = useState<number>(0);
+  const isStreaming = message.status === 'streaming';
+  const canShowSuggestions = !isStreaming;
 
   // Track which suggestion buttons are still shown (per message)
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState<Set<string>>(new Set());
@@ -30,59 +40,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     return list.filter((a) => !hiddenSuggestionIds.has(a.id));
   }, [message.suggestions, hiddenSuggestionIds]);
 
-  // Typing animation for assistant messages
   useEffect(() => {
-    if (isUser || message.skipAnimation) {
-      // User messages or restored messages: show immediately
-      setDisplayedContent(message.content);
-      setIsTypingComplete(true);
-      return;
-    }
-
-    setDisplayedContent('');
-    setIsTypingComplete(false);
-    setVisibleActions(0);
-
-    // Reset hidden suggestions whenever this message changes
     setHiddenSuggestionIds(new Set());
-
-    const content = message.content;
-    const typingSpeed = 10; // ms per character
-    let currentIndex = 0;
-
-    const interval = setInterval(() => {
-      if (currentIndex < content.length) {
-        setDisplayedContent(content.slice(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        setIsTypingComplete(true);
-        clearInterval(interval);
-      }
-    }, typingSpeed);
-
-    return () => clearInterval(interval);
-  }, [message.id, message.content, isUser, message.skipAnimation]);
-
-  // Staggered animation for action buttons (based on *remaining* suggestions)
-  useEffect(() => {
-    if (!isTypingComplete || visibleSuggestions.length === 0) return;
-
-    setVisibleActions(0);
-    const totalActions = visibleSuggestions.length;
-    let currentAction = 0;
-
-    const staggerDelay = 80; // ms between each button
-    const interval = setInterval(() => {
-      if (currentAction < totalActions) {
-        currentAction++;
-        setVisibleActions(currentAction);
-      } else {
-        clearInterval(interval);
-      }
-    }, staggerDelay);
-
-    return () => clearInterval(interval);
-  }, [isTypingComplete, visibleSuggestions.length]);
+  }, [message.id]);
 
   const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Remove button locally immediately
@@ -156,21 +116,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               maxWidth: '100%',
             }}
           >
-            <MarkdownContent content={displayedContent} />
+            <AssistantContent content={message.content} isStreaming={isStreaming} />
           </Box>
 
-          {isTypingComplete && visibleSuggestions.length > 0 && (
+          {canShowSuggestions && visibleSuggestions.length > 0 && (
             <Stack mt="sm" gap="sm" align="flex-end" style={{ overflow: 'hidden' }}>
               {visibleSuggestions.map((action, index) => (
                 <Box
                   key={action.id}
+                  className={classes.suggestionAction}
                   style={{
-                    opacity: index < visibleActions ? 1 : 0,
-                    transform:
-                      index < visibleActions
-                        ? 'translateX(0) scale(1)'
-                        : 'translateX(20px) scale(0.95)',
-                    transition: 'opacity 200ms ease-out, transform 200ms ease-out',
+                    animationDelay: `${index * 80}ms`,
                   }}
                 >
                   <Button
@@ -190,4 +146,4 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}
     </Group>
   );
-};
+});

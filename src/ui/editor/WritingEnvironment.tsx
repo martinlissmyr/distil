@@ -13,7 +13,7 @@ import { useEditorChat } from '../../hooks/useEditorChat';
 import { useMarkdownExtraction } from '../../hooks/useMarkdownExtraction';
 import { useEditorSearch } from '../../hooks/useEditorSearch';
 import { useEditorSync } from '../../hooks/useEditorSync';
-import { useNavigation } from '../../hooks/useNavigation';
+import { useNavigation, type EditorPosition } from '../../hooks/useNavigation';
 import { createExtensionsFromConfig, createToolbarFromConfig } from './primitives/editorConfigFactory';
 import { getDocKind, isRichTextDoc, isMultiPartTextDoc } from '../../models/docs';
 import { defaultEmptyDoc } from './primitives/defaultEmptyDoc';
@@ -97,6 +97,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isRestoringPosition, setIsRestoringPosition] = useState(true);
   const hasRestoredPositionRef = useRef(false);
+  const lastSavedPositionRef = useRef<EditorPosition | null>(null);
 
   // Create internal viewport ref, use external if provided
   const internalViewportRef = useRef<HTMLDivElement>(null);
@@ -154,14 +155,29 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   useEffect(() => {
     if (!positionKey || !editor) return;
 
+    lastSavedPositionRef.current = null;
+
     const savePosition = () => {
       if (!viewportRef?.current || !editor) return;
 
-      saveEditorPosition(positionKey, {
+      const nextPosition = {
         scrollTop: viewportRef.current.scrollTop,
         cursorFrom: editor.state.selection.from,
         cursorTo: editor.state.selection.to,
-      });
+      };
+
+      const lastPosition = lastSavedPositionRef.current;
+      if (
+        lastPosition &&
+        lastPosition.scrollTop === nextPosition.scrollTop &&
+        lastPosition.cursorFrom === nextPosition.cursorFrom &&
+        lastPosition.cursorTo === nextPosition.cursorTo
+      ) {
+        return;
+      }
+
+      lastSavedPositionRef.current = nextPosition;
+      saveEditorPosition(positionKey, nextPosition);
     };
 
     let intervalId: NodeJS.Timeout | null = null;

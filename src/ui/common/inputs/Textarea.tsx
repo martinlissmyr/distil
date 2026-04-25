@@ -32,7 +32,7 @@ type TextareaProps = {
   actionButtonText?: string;
   onActionButtonClick?: (value: string) => void;
 
-  textareaRef?: RefObject<HTMLTextAreaElement>;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
 
   /** Optional external error override */
   error?: string;

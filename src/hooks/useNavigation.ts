@@ -66,7 +66,7 @@ export const useLeaveGuardStore = create<LeaveGuardStore>((set, get) => ({
 // navigation store
 // -------------------------
 
-type EditorPosition = {
+export type EditorPosition = {
   scrollTop: number;
   cursorFrom: number;
   cursorTo: number;
@@ -166,12 +166,24 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
     }
   },
   saveEditorPosition: (key, position) => {
-    set((state) => ({
-      editorPositions: {
-        ...(state.editorPositions || {}),
-        [key]: position
+    set((state) => {
+      const current = state.editorPositions?.[key];
+      if (
+        current &&
+        current.scrollTop === position.scrollTop &&
+        current.cursorFrom === position.cursorFrom &&
+        current.cursorTo === position.cursorTo
+      ) {
+        return state;
       }
-    }));
+
+      return {
+        editorPositions: {
+          ...(state.editorPositions || {}),
+          [key]: position,
+        },
+      };
+    });
   },
   getEditorPosition: (key) => get().editorPositions?.[key],
   restoreState: (state) =>

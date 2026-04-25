@@ -1,5 +1,6 @@
 // electron/preload.ts
 import { ipcRenderer, contextBridge } from 'electron'
+import type { IpcRendererEvent } from 'electron'
 
 contextBridge.exposeInMainWorld('theme', {
   get: () => ipcRenderer.invoke('theme:get'),
@@ -103,6 +104,58 @@ contextBridge.exposeInMainWorld('chat', {
     responseFormat?: 'json' | 'text';
   }) => {
     return ipcRenderer.invoke('chat:send', payload)
+  },
+  stream: (
+    payload: {
+      messages: Array<{ role: string; content: string }>;
+      profile?: 'chat' | 'classifier' | 'projection';
+      model?: string;
+      temperature?: number;
+      maxTokens?: number;
+      responseFormat?: 'json' | 'text';
+    },
+    handlers: {
+      onDelta: (delta: string) => void;
+      onDone: (result: { output_text: string }) => void;
+      onError: (error: string) => void;
+    }
+  ) => {
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const cleanup = () => {
+      ipcRenderer.removeListener('chat:stream:delta', handleDelta);
+      ipcRenderer.removeListener('chat:stream:done', handleDone);
+      ipcRenderer.removeListener('chat:stream:error', handleError);
+    };
+
+    const handleDelta = (_event: IpcRendererEvent, event: { requestId: string; delta: string }) => {
+      if (event.requestId !== requestId) return;
+      handlers.onDelta(event.delta);
+    };
+
+    const handleDone = (_event: IpcRendererEvent, event: { requestId: string; output_text: string }) => {
+      if (event.requestId !== requestId) return;
+      cleanup();
+      handlers.onDone({ output_text: event.output_text });
+    };
+
+    const handleError = (_event: IpcRendererEvent, event: { requestId: string; error: string }) => {
+      if (event.requestId !== requestId) return;
+      cleanup();
+      handlers.onError(event.error);
+    };
+
+    ipcRenderer.on('chat:stream:delta', handleDelta);
+    ipcRenderer.on('chat:stream:done', handleDone);
+    ipcRenderer.on('chat:stream:error', handleError);
+    ipcRenderer.send('chat:stream:start', { requestId, payload });
+
+    return {
+      cancel: () => {
+        cleanup();
+        ipcRenderer.send('chat:stream:cancel', requestId);
+      },
+    };
   },
 })
 

@@ -2,6 +2,21 @@
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import type { ChatMessage } from './useChatMessages';
 
+function hasSelectionInside(element: HTMLElement): boolean {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+    return false;
+  }
+
+  const anchorNode = selection.anchorNode;
+  const focusNode = selection.focusNode;
+
+  return Boolean(
+    (anchorNode && element.contains(anchorNode)) ||
+    (focusNode && element.contains(focusNode))
+  );
+}
+
 /**
  * Hook for managing auto-scroll behavior in chat
  * Focuses on target message (user or hint) by scrolling it to top with space below
@@ -106,6 +121,11 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     // Scroll to bottom after spacer is applied
     requestAnimationFrame(() => {
       setTimeout(() => {
+        if (hasSelectionInside(vp)) {
+          setIsReady(true);
+          return;
+        }
+
         vp.scrollTo({
           top: vp.scrollHeight - vp.clientHeight,
           behavior: 'auto',
