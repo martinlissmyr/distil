@@ -5,6 +5,7 @@ import { Box, Group, Text, Button, Stack } from '@mantine/core';
 import type { LocalizedSuggestionAction } from '../../chat/chatHints';
 import type { ChatMessage } from '../../hooks/useChatMessages';
 import { MarkdownContent } from '../common/MarkdownContent';
+import classes from './MessageBubble.module.scss';
 
 type MessageBubbleProps = {
   message: ChatMessage;
@@ -26,7 +27,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   const isUser = message.role === 'user';
   const [displayedContent, setDisplayedContent] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(isUser);
-  const [visibleActions, setVisibleActions] = useState<number>(0);
 
   // Track which suggestion buttons are still shown (per message)
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState<Set<string>>(new Set());
@@ -43,32 +43,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   useEffect(() => {
     setDisplayedContent(message.content);
     setIsTypingComplete(true);
-    setVisibleActions(0);
 
     // Reset hidden suggestions whenever this message changes
     setHiddenSuggestionIds(new Set());
   }, [message.id, message.content]);
-
-  // Staggered animation for action buttons (based on *remaining* suggestions)
-  useEffect(() => {
-    if (!isTypingComplete || visibleSuggestions.length === 0) return;
-
-    setVisibleActions(0);
-    const totalActions = visibleSuggestions.length;
-    let currentAction = 0;
-
-    const staggerDelay = 80; // ms between each button
-    const interval = setInterval(() => {
-      if (currentAction < totalActions) {
-        currentAction++;
-        setVisibleActions(currentAction);
-      } else {
-        clearInterval(interval);
-      }
-    }, staggerDelay);
-
-    return () => clearInterval(interval);
-  }, [isTypingComplete, visibleSuggestions.length]);
 
   const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Remove button locally immediately
@@ -150,13 +128,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
               {visibleSuggestions.map((action, index) => (
                 <Box
                   key={action.id}
+                  className={classes.suggestionAction}
                   style={{
-                    opacity: index < visibleActions ? 1 : 0,
-                    transform:
-                      index < visibleActions
-                        ? 'translateX(0) scale(1)'
-                        : 'translateX(20px) scale(0.95)',
-                    transition: 'opacity 200ms ease-out, transform 200ms ease-out',
+                    animationDelay: `${index * 80}ms`,
                   }}
                 >
                   <Button
