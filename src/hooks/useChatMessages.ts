@@ -1,5 +1,5 @@
 // src/hooks/useChatMessages.ts
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { EditorKind } from '../types/chat';
 import {
   getInitialAssistantHint,
@@ -17,6 +17,7 @@ export type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  status?: 'streaming' | 'complete' | 'error';
 
   /**
    * SHOW/RENDER but DO NOT send to LLM as history
@@ -119,6 +120,7 @@ export function useChatMessages({
           ...m,
           // Ephemeral messages are not persisted, so all restored messages are non-ephemeral
           ephemeral: false,
+          status: 'complete' as const,
           suggestions: undefined, // Suggestions are not persisted
           skipAnimation: true, // Don't animate restored messages
         }));
@@ -223,6 +225,7 @@ export function useChatMessages({
             id: `hint:${threadId}:${Date.now()}`,
             role: 'assistant',
             content: hint.introMessage,
+            status: 'complete',
             suggestions: hint.actions,
             ephemeral: true,
           },
@@ -272,7 +275,7 @@ export function useChatMessages({
     saveTimeoutRef.current = setTimeout(() => {
       // Filter out ephemeral messages and limit to 100
       const persistableMessages = messages
-        .filter(m => !m.ephemeral)
+        .filter(m => !m.ephemeral && m.status !== 'streaming')
         .slice(-100)
         .map(m => ({
           id: m.id,
@@ -303,8 +306,31 @@ export function useChatMessages({
     };
   }, [messages, threadId, hasLoadedHistory]);
 
-  const addMessage = (message: ChatMessage) => setMessages((prev) => [...prev, message]);
-  const addMessages = (newMessages: ChatMessage[]) => setMessages((prev) => [...prev, ...newMessages]);
+  const addMessage = useCallback(
+    (message: ChatMessage) => setMessages((prev) => [...prev, message]),
+    []
+  );
 
-  return { messages, addMessage, addMessages, isInitializing };
+  const addMessages = useCallback(
+    (newMessages: ChatMessage[]) => setMessages((prev) => [...prev, ...newMessages]),
+    []
+  );
+
+  const updateMessage = useCallback(
+    (id: string, patch: Partial<ChatMessage>) => setMessages((prev) =>
+      prev.map((message) => (message.id === id ? { ...message, ...patch } : message))
+    ),
+    []
+  );
+
+  const appendToMessage = useCallback(
+    (id: string, delta: string) => setMessages((prev) =>
+      prev.map((message) =>
+        message.id === id ? { ...message, content: message.content + delta } : message
+      )
+    ),
+    []
+  );
+
+  return { messages, addMessage, addMessages, updateMessage, appendToMessage, isInitializing };
 }

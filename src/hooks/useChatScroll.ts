@@ -140,5 +140,25 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
     focusTargetMessage();
   }, [focusTargetMessage]);
 
+  useEffect(() => {
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage?.status !== 'streaming') return;
+
+    const vp = viewportRef.current;
+    if (!vp || hasSelectionInside(vp)) return;
+
+    const distanceFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
+    if (distanceFromBottom > 120) return;
+
+    const frame = requestAnimationFrame(() => {
+      vp.scrollTo({
+        top: vp.scrollHeight - vp.clientHeight,
+        behavior: 'auto',
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [messages]);
+
   return { viewportRef, contentRef, spacerRef, spacerHeight, isReady };
 }

@@ -2,19 +2,30 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remend from 'remend';
 import styles from './MarkdownContent.module.scss';
 
 type MarkdownContentProps = {
   content: string;
   size?: string;
   compact?: boolean;
+  isStreaming?: boolean;
 };
 
 export const MarkdownContent: React.FC<MarkdownContentProps> = ({
   content,
   size = 'sm',
   compact = true,
+  isStreaming = false,
 }) => {
+  const renderedContent = isStreaming
+    ? remend(content, {
+        images: false,
+        links: false,
+        katex: false,
+      })
+    : content;
+
   return (
     <div className={styles.markdown} data-size={size} data-compact={compact}>
       <ReactMarkdown
@@ -40,7 +51,7 @@ export const MarkdownContent: React.FC<MarkdownContentProps> = ({
           blockquote: ({ children }) => <blockquote>{children}</blockquote>,
         }}
       >
-        {content}
+        {renderedContent}
       </ReactMarkdown>
     </div>
   );

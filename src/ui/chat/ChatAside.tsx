@@ -153,7 +153,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
 
   const threadId = getThreadId(doc);
 
-  const { messages, addMessage, isInitializing } = useChatMessages({
+  const { messages, addMessage, updateMessage, appendToMessage, isInitializing } = useChatMessages({
     threadId,
     kind,
     fullTextMarkdown,
@@ -176,6 +176,8 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
     selectionMarkdown,
     messages,
     addMessage,
+    updateMessage,
+    appendToMessage,
     projectId,
     storyId,
   });

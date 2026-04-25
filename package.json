@@ -126,6 +126,7 @@
     "react-dom": "19.1.1",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "remend": "1.2.0",
     "zod": "^4.3.2",
     "zustand": "^5.0.8"
   },

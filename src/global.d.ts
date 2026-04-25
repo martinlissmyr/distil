@@ -202,6 +202,21 @@ declare global {
           raw: unknown;
         }>
       >;
+      stream: (
+        payload: {
+          messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+          profile?: ChatModelProfileId;
+          model?: string;
+          temperature?: number;
+          maxTokens?: number;
+          responseFormat?: 'json' | 'text';
+        },
+        handlers: {
+          onDelta: (delta: string) => void;
+          onDone: (result: { output_text: string }) => void;
+          onError: (error: string) => void;
+        }
+      ) => { cancel: () => void };
     };
 
     settings: {

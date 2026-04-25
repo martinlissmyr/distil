@@ -14,10 +14,12 @@ type MessageBubbleProps = {
 
 const AssistantContent = React.memo(function AssistantContent({
   content,
+  isStreaming,
 }: {
   content: string;
+  isStreaming: boolean;
 }) {
-  return <MarkdownContent content={content} />;
+  return <MarkdownContent content={content} isStreaming={isStreaming} />;
 });
 
 export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
@@ -25,8 +27,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   onSuggestionClick,
 }) => {
   const isUser = message.role === 'user';
-  const [displayedContent, setDisplayedContent] = useState('');
-  const [isTypingComplete, setIsTypingComplete] = useState(isUser);
+  const isStreaming = message.status === 'streaming';
+  const canShowSuggestions = !isStreaming;
 
   // Track which suggestion buttons are still shown (per message)
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState<Set<string>>(new Set());
@@ -38,15 +40,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     return list.filter((a) => !hiddenSuggestionIds.has(a.id));
   }, [message.suggestions, hiddenSuggestionIds]);
 
-  // Keep rendered message text stable so native text selection inside chat
-  // bubbles is not cleared by per-character DOM replacement.
   useEffect(() => {
-    setDisplayedContent(message.content);
-    setIsTypingComplete(true);
-
-    // Reset hidden suggestions whenever this message changes
     setHiddenSuggestionIds(new Set());
-  }, [message.id, message.content]);
+  }, [message.id]);
 
   const handleSuggestionClick = (action: LocalizedSuggestionAction) => {
     // Remove button locally immediately
@@ -120,10 +116,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
               maxWidth: '100%',
             }}
           >
-            <AssistantContent content={displayedContent} />
+            <AssistantContent content={message.content} isStreaming={isStreaming} />
+            {isStreaming && <span className={classes.streamingCursor} aria-hidden="true" />}
           </Box>
 
-          {isTypingComplete && visibleSuggestions.length > 0 && (
+          {canShowSuggestions && visibleSuggestions.length > 0 && (
             <Stack mt="sm" gap="sm" align="flex-end" style={{ overflow: 'hidden' }}>
               {visibleSuggestions.map((action, index) => (
                 <Box
