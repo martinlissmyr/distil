@@ -1,7 +1,7 @@
 {
   "name": "Distil",
   "private": true,
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "A writing environment for turning thought into prose",
   "author": "Martin Lissmyr <martin@lissmyr.com>",
   "type": "module",
