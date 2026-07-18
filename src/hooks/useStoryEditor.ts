@@ -25,12 +25,17 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   const currentPartId = storyId ? getCurrentPartId(storyId) : undefined;
   const [currentTitle, setCurrentTitle] = useState('');
   const [loadedDoc, setLoadedDoc] = useState<JSONContent | null>(null);
+  const [loadedPartId, setLoadedPartId] = useState<string | null>(null);
   const [editedDoc, setEditedDoc] = useState<JSONContent | null>(null);
   const [dirty, setDirty] = useState(false);
 
   // Watch store's currentPartDoc for part switching
   const currentPartDoc = useAppStore((state) => state.currentPartDoc);
-  const currentDoc = dirty ? editedDoc : currentPartDoc ?? loadedDoc;
+  const currentDoc = dirty
+    ? editedDoc
+    : loadedPartId === currentPartId
+      ? loadedDoc
+      : currentPartDoc ?? loadedDoc;
 
   /**
    * Load a story's content into the editor
@@ -38,9 +43,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   const loadStory = useCallback((story: { title: string; doc: JSONContent }) => {
     setCurrentTitle(story.title);
     setLoadedDoc(story.doc);
+    setLoadedPartId(currentPartId ?? null);
     setEditedDoc(null);
     setDirty(false);
-  }, []);
+  }, [currentPartId]);
 
   /**
    * Clear the editor (when navigating away from a story)
@@ -48,6 +54,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   const clearEditor = useCallback(() => {
     setCurrentTitle('');
     setLoadedDoc(null);
+    setLoadedPartId(null);
     setEditedDoc(null);
     setDirty(false);
   }, []);
@@ -98,6 +105,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
       }
 
       if (saveResponse.ok) {
+        setLoadedDoc(currentDoc);
+        setLoadedPartId(currentPartId);
+        setEditedDoc(null);
+        useAppStore.setState({ currentPartDoc: currentDoc });
         setDirty(false);
         // Reload story metadata to keep store in sync after saving part
         await loadStoryMetadata(projectId, storyId);
@@ -146,7 +157,9 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
           if (saveResponse.ok) {
             setLoadedDoc(currentDoc);
+            setLoadedPartId(currentPartId);
             setEditedDoc(null);
+            useAppStore.setState({ currentPartDoc: currentDoc });
             setDirty(false);
             // Reload story metadata to keep store in sync after saving part
             await loadStoryMetadata(projectId, storyId);
@@ -177,7 +190,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
     // Direct setters (for compatibility)
     setCurrentTitle,
-    setCurrentDoc: setLoadedDoc,
+    setCurrentDoc: (doc: JSONContent | null) => {
+      setLoadedDoc(doc);
+      setLoadedPartId(currentPartId ?? null);
+    },
     setDirty,
   };
 }
