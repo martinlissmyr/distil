@@ -1,5 +1,5 @@
 // src/ui/editor/SearchPanel.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { TextInput, ActionIcon, Group, Paper, Text } from '@mantine/core';
 import { Editor } from '@tiptap/react';
 import { SearchQuery, setSearchState, findNext, findPrev } from 'prosemirror-search';
@@ -13,7 +13,7 @@ export type SearchPanelProps = {
 
 export const SearchPanel: React.FC<SearchPanelProps> = ({ editor, onClose }) => {
   const [searchValue, setSearchValue] = useState('');
-  const [selectionFrom, setSelectionFrom] = useState(0);
+  const [, setSelectionVersion] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevSearchValueRef = useRef('');
 
@@ -30,26 +30,63 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ editor, onClose }) => 
     if (!editor) return;
 
     const updateSelection = () => {
-      setSelectionFrom(editor.state.selection.from);
+      setSelectionVersion((version) => version + 1);
     };
 
     // Update immediately
     updateSelection();
 
-    // Listen for transaction updates
-    const { view } = editor;
-    const originalDispatch = view.dispatch;
-    view.dispatch = (tr) => {
-      originalDispatch(tr);
-      if (tr.selectionSet) {
-        updateSelection();
-      }
-    };
+    editor.on('selectionUpdate', updateSelection);
 
     return () => {
-      view.dispatch = originalDispatch;
+      editor.off('selectionUpdate', updateSelection);
     };
   }, [editor]);
+
+  // Calculate total matches by searching through the document
+  const getTotalMatches = useCallback((): number => {
+    if (!editor || !searchValue.trim()) return 0;
+
+    const query = new SearchQuery({ search: searchValue, caseSensitive: false });
+    if (!query.valid) return 0;
+
+    let count = 0;
+    let pos = 0;
+    const docSize = editor.state.doc.content.size;
+
+    while (pos < docSize) {
+      const result = query.findNext(editor.state, pos);
+      if (!result) break;
+      count++;
+      pos = result.to;
+    }
+
+    return count;
+  }, [editor, searchValue]);
+
+  // Get current selection position to determine which match we're on
+  const getCurrentMatchIndex = useCallback((totalMatches: number): number => {
+    if (!editor || !searchValue.trim() || totalMatches === 0) return -1;
+
+    const query = new SearchQuery({ search: searchValue, caseSensitive: false });
+    if (!query.valid) return -1;
+
+    const { from } = editor.state.selection;
+    let pos = 0;
+    let index = 0;
+
+    while (pos < from) {
+      const result = query.findNext(editor.state, pos);
+      if (!result) break;
+      if (result.from <= from && result.to >= from) {
+        return index;
+      }
+      index++;
+      pos = result.to;
+    }
+
+    return -1;
+  }, [editor, searchValue]);
 
   // Update search query when search value changes
   useEffect(() => {
@@ -109,65 +146,15 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ editor, onClose }) => 
     }, 150);
 
     return () => clearTimeout(timeoutId);
-  }, [searchValue, editor]);
-
-  // Calculate total matches by searching through the document
-  const getTotalMatches = (): number => {
-    if (!editor || !searchValue.trim()) return 0;
-
-    const query = new SearchQuery({ search: searchValue, caseSensitive: false });
-    if (!query.valid) return 0;
-
-    let count = 0;
-    let pos = 0;
-    const docSize = editor.state.doc.content.size;
-
-    while (pos < docSize) {
-      const result = query.findNext(editor.state, pos);
-      if (!result) break;
-      count++;
-      pos = result.to;
-    }
-
-    return count;
-  };
-
-  // Get current selection position to determine which match we're on
-  const getCurrentMatchIndex = (totalMatches: number): number => {
-    if (!editor || !searchValue.trim() || totalMatches === 0) return -1;
-
-    const query = new SearchQuery({ search: searchValue, caseSensitive: false });
-    if (!query.valid) return -1;
-
-    const { from } = editor.state.selection;
-    let pos = 0;
-    let index = 0;
-
-    while (pos < from) {
-      const result = query.findNext(editor.state, pos);
-      if (!result) break;
-      if (result.from <= from && result.to >= from) {
-        return index;
-      }
-      index++;
-      pos = result.to;
-    }
-
-    return -1;
-  };
+  }, [searchValue, editor, getTotalMatches]);
 
   // Recalculate matches and current index whenever selection changes
-  const totalMatches = getTotalMatches();
-  const currentIndex = getCurrentMatchIndex(totalMatches);
+  const totalMatches = useMemo(() => getTotalMatches(), [getTotalMatches]);
+  const currentIndex = useMemo(
+    () => getCurrentMatchIndex(totalMatches),
+    [getCurrentMatchIndex, totalMatches]
+  );
   const displayIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
-
-  // Force re-render when selection changes by including selectionFrom in the calculation
-  useEffect(() => {
-    // This effect ensures the counter updates when selectionFrom changes
-    if (searchValue.trim() && totalMatches > 0) {
-      getCurrentMatchIndex(totalMatches);
-    }
-  }, [selectionFrom]);
 
   // Navigation handlers
   const handleNext = () => {

@@ -1,6 +1,7 @@
 // src/ui/chat/ChatAside.tsx
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Box, Stack, ScrollArea, Textarea, Button, Group } from '@mantine/core';
+import type { Editor } from '@tiptap/react';
 
 import type { EditorKind } from '../../types/chat';
 import type { LocalizedSuggestionAction } from '../../chat/chatHints';
@@ -51,12 +52,12 @@ type ChatAsideProps = {
   /**
    * Wizard boundary. Parent decides how to start wizard (engine/store/etc).
    */
-  onOpenWizard?: (args: { wizardId: string; doc: DocRefWithKind; editor?: any }) => void;
+  onOpenWizard?: (args: { wizardId: string; doc: DocRefWithKind; editor?: Editor }) => void;
 
   /**
    * TipTap instance (optional, only used when opening wizards).
    */
-  editor?: any;
+  editor?: Editor;
 };
 
 function resolveDocRef(

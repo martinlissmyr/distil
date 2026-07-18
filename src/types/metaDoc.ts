@@ -1,4 +1,5 @@
 // src/types/metaDoc.ts
+import type { JSONContent } from '@tiptap/react';
 import type { MetaDocKey as MetaDocKeyImport } from '../models/docs';
 import type { DocRef } from './docRef';
 
@@ -18,7 +19,7 @@ export type MetaDocKey = MetaDocKeyImport;
  */
 export type MetaScope = DocRef;
 
-export type MetaDocJson = any;
+export type MetaDocJson = JSONContent;
 
 export type MetaDocState = {
   scope: DocRef;

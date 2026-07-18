@@ -1,5 +1,11 @@
 // src/wizards/navigation.ts
-import type { WizardConfig, WizardStep, CompoundStep, ConditionExpression } from './types';
+import type {
+  WizardConfig,
+  WizardStep,
+  CompoundStep,
+  ConditionExpression,
+  WizardValueMap,
+} from './types';
 
 /**
  * Get the current step from a wizard config given the current step path
@@ -34,7 +40,7 @@ export function getCurrentStep(
  */
 export function shouldSkipStep(
   step: WizardStep,
-  answers: Record<string, any>
+  answers: WizardValueMap
 ): boolean {
   if (!step.skipIf) return false;
   return evaluateCondition(step.skipIf, answers);
@@ -45,15 +51,23 @@ export function shouldSkipStep(
  */
 function evaluateCondition(
   condition: ConditionExpression,
-  answers: Record<string, any>
+  answers: WizardValueMap
 ): boolean {
   switch (condition.type) {
     case 'isEmpty':
       return !answers[condition.stepId];
     case 'equals':
       return answers[condition.stepId] === condition.value;
-    case 'contains':
-      return answers[condition.stepId]?.includes(condition.value) ?? false;
+    case 'contains': {
+      const candidate = answers[condition.stepId];
+      if (typeof candidate === 'string') {
+        return candidate.includes(String(condition.value));
+      }
+      if (Array.isArray(candidate)) {
+        return candidate.includes(condition.value);
+      }
+      return false;
+    }
     case 'and':
       return condition.conditions.every((c) => evaluateCondition(c, answers));
     case 'or':
@@ -92,7 +106,7 @@ export function isLastStep(config: WizardConfig, stepPath: number[]): boolean {
 export function getNextStepPath(
   config: WizardConfig,
   currentPath: number[],
-  answers: Record<string, any>
+  answers: WizardValueMap
 ): number[] | null {
   if (currentPath.length === 0) return [0];
 
@@ -101,7 +115,7 @@ export function getNextStepPath(
 
   // If current step is a compound step, enter its first sub-step
   if (currentStep.type === 'compound' && currentStep.subSteps.length > 0) {
-    let nextPath = [...currentPath, 0];
+    const nextPath = [...currentPath, 0];
     const nextStep = getCurrentStep(config, nextPath);
 
     // Skip if necessary
@@ -122,7 +136,7 @@ export function getNextStepPath(
 
   if (currentIndex + 1 < steps.length) {
     // Next sibling exists
-    let nextPath = [...parentPath, currentIndex + 1];
+    const nextPath = [...parentPath, currentIndex + 1];
     const nextStep = getCurrentStep(config, nextPath);
 
     // Skip if necessary
@@ -156,7 +170,7 @@ export function getPreviousStepPath(
   // If we can go back at current level
   if (currentIndex > 0) {
     const parentPath = currentPath.slice(0, -1);
-    let prevPath = [...parentPath, currentIndex - 1];
+    const prevPath = [...parentPath, currentIndex - 1];
     const prevStep = getCurrentStep(config, prevPath);
 
     // If previous step is compound, navigate to its last descendant
@@ -204,7 +218,7 @@ function getLastDescendantPath(
  */
 export function isStepComplete(
   step: WizardStep,
-  answers: Record<string, any>
+  answers: WizardValueMap
 ): boolean {
   if (step.type === 'llm-processing') {
     // LLM steps are considered complete when they have a result

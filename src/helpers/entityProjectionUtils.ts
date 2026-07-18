@@ -2,6 +2,24 @@
 import type { DocumentTypeDef } from '../models/entities/schemas/types';
 import { interpolate } from './interpolate';
 
+type EntityProjectionSourceValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | EntityProjectionSourceValue[]
+  | { [key: string]: EntityProjectionSourceValue };
+
+type EntityProjectionValue =
+  | string
+  | number
+  | boolean
+  | null;
+
+type EntityProjectionSourceRecord = Record<string, EntityProjectionSourceValue>;
+type EntityProjectionRecord = Record<string, EntityProjectionValue>;
+
 // Load all projection templates at build time
 const templateLoaders = import.meta.glob(
   '../models/entities/projectionTemplates/*.md',
@@ -40,8 +58,8 @@ const templateLoaders = import.meta.glob(
  * @returns The primary title string
  */
 export function getPrimaryTitleValue(
-  entityDoc: Record<string, any>,
-  schema: DocumentTypeDef<any>
+  entityDoc: EntityProjectionSourceRecord,
+  schema: DocumentTypeDef<readonly import('../models/entities/schemas/types').GroupDef[] | undefined>
 ): string {
   // Find field with primaryTitle role
   const titleField = schema.fields.find(f => f.fieldRole === 'primaryTitle');
@@ -79,16 +97,23 @@ export function getPrimaryTitleValue(
  * @returns Projection object with only included fields
  */
 export function buildEntityProjection(
-  entityDoc: Record<string, any>,
-  schema: DocumentTypeDef<any>
-): Record<string, any> {
-  const projection: Record<string, any> = {};
+  entityDoc: EntityProjectionSourceRecord,
+  schema: DocumentTypeDef<readonly import('../models/entities/schemas/types').GroupDef[] | undefined>
+): EntityProjectionRecord {
+  const projection: EntityProjectionRecord = {};
 
   for (const field of schema.fields) {
     if (!field.includeInProjection) continue;
 
     const value = entityDoc[field.name];
     if (value === undefined || value === null || value === '') continue;
+    if (
+      typeof value !== 'string' &&
+      typeof value !== 'number' &&
+      typeof value !== 'boolean'
+    ) {
+      continue;
+    }
 
     projection[field.name] = value;
   }
@@ -116,8 +141,8 @@ export function buildEntityProjection(
  * @returns Copy of the projection object
  */
 function flattenForInterpolation(
-  projection: Record<string, any>
-): Record<string, any> {
+  projection: EntityProjectionRecord
+): EntityProjectionRecord {
   return { ...projection };
 }
 
@@ -146,8 +171,8 @@ function flattenForInterpolation(
  * @returns Interpolated markdown string
  */
 export function buildEntityProjectionMarkdown(
-  entityDoc: Record<string, any>,
-  schema: DocumentTypeDef<any>,
+  entityDoc: EntityProjectionSourceRecord,
+  schema: DocumentTypeDef<readonly import('../models/entities/schemas/types').GroupDef[] | undefined>,
   template: string
 ): string {
   // Build projection
@@ -163,7 +188,6 @@ export function buildEntityProjectionMarkdown(
     if (typeof value === 'string') return value.trim().length > 0;
     if (typeof value === 'number') return true;
     if (typeof value === 'boolean') return true;
-    if (Array.isArray(value)) return value.length > 0;
     return true;
   };
 

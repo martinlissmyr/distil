@@ -1,6 +1,7 @@
 // src/wizards/types.ts
 import type { EditorKind } from '../types/chat';
 import type { DocRef, MetaDocKey } from '../types/metaDoc';
+import type { Editor } from '@tiptap/react';
 import type { RefObject } from 'react';
 
 /**
@@ -8,6 +9,14 @@ import type { RefObject } from 'react';
  */
 
 export type WizardId = string;
+export type WizardValue =
+  | string
+  | number
+  | boolean
+  | null
+  | WizardValue[]
+  | { [key: string]: WizardValue };
+export type WizardValueMap = Record<string, WizardValue>;
 
 export type OpenWizardCommand = {
   type: 'openWizard';
@@ -125,8 +134,8 @@ export type PromptTemplate = {
  */
 export type ConditionExpression =
   | { type: 'isEmpty'; stepId: string }
-  | { type: 'equals'; stepId: string; value: any }
-  | { type: 'contains'; stepId: string; value: any }
+  | { type: 'equals'; stepId: string; value: WizardValue }
+  | { type: 'contains'; stepId: string; value: WizardValue }
   | { type: 'and'; conditions: ConditionExpression[] }
   | { type: 'or'; conditions: ConditionExpression[] };
 
@@ -147,8 +156,9 @@ export type WizardContext = {
   targetKey?: MetaDocKey;
 
   /** TipTap Editor instance or Input Ref to insert results into */
-  targetEditor?: any;
-  targetInputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
+  targetEditor?: Editor | null;
+  targetInputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  currentContent?: string;
 
   llmContext?: {
     kinds: EditorKind[];
@@ -156,7 +166,7 @@ export type WizardContext = {
   };
 
   /** Optional: Current entity projection for template interpolation */
-  currentProjection?: Record<string, any>;
+  currentProjection?: WizardValueMap;
 };
 
 /**
@@ -167,9 +177,9 @@ export type ActiveWizard = {
   title: string;
   config: WizardConfig;
   currentStepPath: number[];
-  answers: Record<string, any>;
+  answers: WizardValueMap;
   completedSteps: Set<string>;
-  llmResults: Record<string, any>;
+  llmResults: WizardValueMap;
   llmDrafts?: Record<string, string>;
   isLlmProcessing: boolean;
   startedAt: number;
@@ -194,12 +204,12 @@ export type WizardActions = {
   goToStep: (stepPath: number[]) => void;
   nextStep: () => Promise<void>;
   previousStep: () => void;
-  setAnswer: (stepId: string, value: any) => void;
-  getAnswer: (stepId: string) => any;
+  setAnswer: (stepId: string, value: WizardValue) => void;
+  getAnswer: (stepId: string) => WizardValue | undefined;
   processLlmStep: (step: LlmProcessingStep) => Promise<void>;
   clearLlmResult: (resultKey: string) => void;
   bakeWizard: () => Promise<string>;
   insertResult: (text: string) => Promise<void>;
-  setLlmResult: (resultKey: string, value: any) => void;
+  setLlmResult: (resultKey: string, value: WizardValue) => void;
   setLlmDraft: (resultKey: string, value: string) => void;
 };

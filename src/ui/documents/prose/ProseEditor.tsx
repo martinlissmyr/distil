@@ -1,5 +1,6 @@
 // src/ui/story/StoryTextView.tsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import type { JSONContent } from '@tiptap/react';
 import { Box } from '@mantine/core';
 import { WritingEnvironment } from '../../editor/WritingEnvironment';
 import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
@@ -15,8 +16,8 @@ import { StoryPreview } from './StoryPreview';
 type StoryTextViewProps = {
   projectId: string;
   storyId: string;
-  doc: any;
-  onChange: (doc: any) => void;
+  doc: JSONContent | null;
+  onChange: (doc: JSONContent) => void;
   title: string;
 };
 
@@ -29,7 +30,12 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   onChange,
   title,
 }) => {
-  const [subview, setSubview] = useState<Subview>('editor');
+  const storyKey = `${projectId}:${storyId}`;
+  const [subviewState, setSubviewState] = useState<{ storyKey: string; view: Subview }>({
+    storyKey,
+    view: 'editor',
+  });
+  const subview = subviewState.storyKey === storyKey ? subviewState.view : 'editor';
 
   // Get parts state from app store
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
@@ -44,39 +50,27 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   const { setCurrentPartId: setNavCurrentPartId } = useNavigation();
 
   // Load story metadata on mount (only if not already loaded)
-  const [isLoading, setIsLoading] = React.useState(false);
-  const hasLoadedRef = useRef(false);
+  const hasLoadedRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Only run this logic once on mount, not on subsequent part changes
-    if (hasLoadedRef.current) return;
-    hasLoadedRef.current = true;
+    if (hasLoadedRef.current === storyKey) return;
+    hasLoadedRef.current = storyKey;
 
     if (!currentStoryMetadata || currentStoryMetadata.id !== storyId) {
       //console.log('[STORYVIEW] Metadata not loaded for story', storyId, ', calling loadStoryForView');
-      setIsLoading(true);
-      void useAppStore.getState().loadStoryForView(projectId, storyId).finally(() => {
-        setIsLoading(false);
-      });
+      void useAppStore.getState().loadStoryForView(projectId, storyId);
     } else if (currentPartId && !currentPartDoc) {
       // Metadata already loaded, but ensure part doc is loaded for current part
       // This prevents showing stale content when navigating back to a story
       //console.log('[STORYVIEW] Metadata already loaded, ensuring part doc loaded for:', currentPartId);
-      setIsLoading(true);
-      void useAppStore.getState().loadCurrentPartDoc(projectId, storyId, currentPartId).finally(() => {
-        setIsLoading(false);
-      });
+      void useAppStore.getState().loadCurrentPartDoc(projectId, storyId, currentPartId);
     }
-  }, [projectId, storyId, currentStoryMetadata, currentPartId]);
+  }, [projectId, storyId, storyKey, currentStoryMetadata, currentPartId, currentPartDoc]);
 
   // Reset the ref when story changes
   useEffect(() => {
-    hasLoadedRef.current = false;
-  }, [projectId, storyId]);
-
-  // Reset subview to editor when navigation changes (e.g., returning from chapters view)
-  useEffect(() => {
-    setSubview('editor');
+    hasLoadedRef.current = null;
   }, [projectId, storyId]);
 
   const partsEnabled = currentStoryMetadata?.partsEnabled ?? false;
@@ -108,7 +102,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   // Syncing store → parent would create circular data flow and overwrite correct content with stale data.
 
   // Update and save handlers - memoized to prevent unnecessary re-renders
-  const handleUpdate = useCallback((nextDoc: any) => {
+  const handleUpdate = useCallback((nextDoc: JSONContent) => {
     onChange(nextDoc);
   }, [onChange]);
 
@@ -159,11 +153,11 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   };
 
   const handleOpenChaptersOverview = () => {
-    setSubview('chapters');
+    setSubviewState({ storyKey, view: 'chapters' });
   };
 
   const handleOpenStoryPreview = () => {
-    setSubview('storyPreview');
+    setSubviewState({ storyKey, view: 'storyPreview' });
   };
 
   const handleCreatePart = async () => {
@@ -251,7 +245,9 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   );
 
   // Don't render editor until part data is synced
-  if (isLoading) return null;
+  const storyMetadataMissing = !currentStoryMetadata || currentStoryMetadata.id !== storyId;
+  const currentPartDocMissing = !!currentPartId && !currentPartDoc;
+  if (storyMetadataMissing || currentPartDocMissing) return null;
 
   // Show story preview subview
   if (subview === 'storyPreview') {
@@ -260,7 +256,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
         projectId={projectId}
         storyId={storyId}
         currentStoryTitle={title}
-        onNavigateToEditor={() => setSubview('editor')}
+        onNavigateToEditor={() => setSubviewState({ storyKey, view: 'editor' })}
       />
     );
   }
@@ -272,7 +268,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
         projectId={projectId}
         storyId={storyId}
         currentStoryTitle={title}
-        onNavigateToEditor={() => setSubview('editor')}
+        onNavigateToEditor={() => setSubviewState({ storyKey, view: 'editor' })}
       />
     );
   }
@@ -281,7 +277,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   return (
       <WritingEnvironment
         docKind="prose"
-        content={doc}
+        content={doc ?? undefined}
         onUpdate={handleUpdate}
         onSave={handleSave}
         autosaveDelay={1000}

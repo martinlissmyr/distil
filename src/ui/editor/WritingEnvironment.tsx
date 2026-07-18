@@ -98,6 +98,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   const [isRestoringPosition, setIsRestoringPosition] = useState(true);
   const hasRestoredPositionRef = useRef(false);
   const lastSavedPositionRef = useRef<EditorPosition | null>(null);
+  const restorationTimerRef = useRef<number | null>(null);
 
   // Create internal viewport ref, use external if provided
   const internalViewportRef = useRef<HTMLDivElement>(null);
@@ -105,6 +106,16 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
 
   // Navigation store actions
   const { saveEditorPosition, getEditorPosition } = useNavigation();
+
+  const scheduleRestorationState = (nextValue: boolean) => {
+    if (restorationTimerRef.current !== null) {
+      window.clearTimeout(restorationTimerRef.current);
+    }
+    restorationTimerRef.current = window.setTimeout(() => {
+      setIsRestoringPosition(nextValue);
+      restorationTimerRef.current = null;
+    }, 0);
+  };
 
   // Get editor config from doc model
   const docKindConfig = getDocKind(docKind);
@@ -199,16 +210,16 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
       if (intervalId) clearInterval(intervalId);
       savePosition();
     };
-  }, [editor, positionKey, saveEditorPosition]);
+  }, [editor, positionKey, saveEditorPosition, viewportRef]);
 
   // Restore editor position on mount
   useLayoutEffect(() => {
     if (!positionKey || !editor || !content) {
-      setIsRestoringPosition(false);
+      scheduleRestorationState(false);
       return;
     }
     if (hasRestoredPositionRef.current) {
-      setIsRestoringPosition(false);
+      scheduleRestorationState(false);
       return;
     }
 
@@ -219,7 +230,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
       setTimeout(() => {
         // Check if viewport is available now (after timeout)
         if (!editor || !viewportRef?.current) {
-          setIsRestoringPosition(false);
+          scheduleRestorationState(false);
           return;
         }
 
@@ -240,7 +251,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
         }
 
         hasRestoredPositionRef.current = true;
-        setIsRestoringPosition(false);
+        scheduleRestorationState(false);
 
         // Restore cursor position after a slight delay to ensure useEditorSync has completed
         // useEditorSync resets cursor to 0, so we need to restore after it runs
@@ -262,13 +273,21 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
         }
       }, 100);
     });
-  }, [editor, content, positionKey, getEditorPosition]);
+  }, [editor, content, positionKey, getEditorPosition, viewportRef]);
 
   // Reset restoration state when position key changes
   useEffect(() => {
     hasRestoredPositionRef.current = false;
-    setIsRestoringPosition(true);
+    scheduleRestorationState(true);
   }, [positionKey]);
+
+  useEffect(() => {
+    return () => {
+      if (restorationTimerRef.current !== null) {
+        window.clearTimeout(restorationTimerRef.current);
+      }
+    };
+  }, []);
 
   // Create toolbar from config
   const toolbar = createToolbarFromConfig(editorConfig, editor);

@@ -31,9 +31,10 @@ async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
 
   try {
     await fs.rename(tmp, file)
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Windows can fail if destination exists
-    if (e?.code === 'EEXIST' || e?.code === 'EPERM') {
+    const err = e as NodeJS.ErrnoException
+    if (err?.code === 'EEXIST' || err?.code === 'EPERM') {
       await fs.rm(file, { force: true }).catch(() => {})
       await fs.rename(tmp, file)
     } else {

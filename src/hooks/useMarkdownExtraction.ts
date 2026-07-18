@@ -24,6 +24,7 @@ export function useMarkdownExtraction(
   const [fullTextMarkdown, setFullTextMarkdown] = useState<string | null>(null);
   const [selectionMarkdown, setSelectionMarkdown] = useState('');
   const [hasSelection, setHasSelection] = useState(false);
+  const [hadSelectionOnce, setHadSelectionOnce] = useState(false);
 
   // Track if user has ever made a selection (menu stays open once triggered)
   const hadSelectionRef = useRef(false);
@@ -65,6 +66,7 @@ export function useMarkdownExtraction(
       // Update ref for bubble menu - once set, stays true forever
       if (hasActiveSelection) {
         hadSelectionRef.current = true;
+        setHadSelectionOnce(true);
       }
 
       if (hasActiveSelection) {
@@ -96,6 +98,6 @@ export function useMarkdownExtraction(
     fullTextMarkdown,
     selectionMarkdown,
     hasSelection,
-    hadSelectionOnce: hadSelectionRef.current,
+    hadSelectionOnce,
   };
 }

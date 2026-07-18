@@ -35,7 +35,12 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
   onDelete,
 }) => {
   /** What the user is typing (can be empty, can include whitespace) */
-  const [draftName, setDraftName] = useState(initialName);
+  const sessionKey = `${opened}:${initialName}:${entityType}`;
+  const [draftState, setDraftState] = useState<{ sessionKey: string; draftName: string }>({
+    sessionKey,
+    draftName: initialName,
+  });
+  const draftName = draftState.sessionKey === sessionKey ? draftState.draftName : initialName;
 
   /** Snapshot of the initial value for this open session */
   const initialRef = useRef<string>(initialName);
@@ -51,11 +56,15 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
   useEffect(() => {
     if (!opened) return;
 
-    setDraftName(initialName);
-    initialRef.current = initialName;
-    setDeleteConfirm(false);
-    setIsClosing(false);
-  }, [opened, initialName]);
+    const timeoutId = window.setTimeout(() => {
+      setDraftState({ sessionKey, draftName: initialName });
+      initialRef.current = initialName;
+      setDeleteConfirm(false);
+      setIsClosing(false);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [opened, initialName, sessionKey]);
 
   const handleDeleteClick = async () => {
     if (!deleteConfirm) {
@@ -96,7 +105,7 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
       label: fieldLabel,
       value: draftName,
       onChange: (v) => {
-        setDraftName(v);
+        setDraftState({ sessionKey, draftName: v });
         if (deleteConfirm) setDeleteConfirm(false);
       },
       placeholder: entityType === 'project' ? 'Project name' : 'Story title',

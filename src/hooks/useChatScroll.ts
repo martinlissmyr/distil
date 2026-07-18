@@ -30,6 +30,7 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
   const [spacerHeight, setSpacerHeight] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const lastFocusedIndexRef = useRef<number>(-1);
+  const focusTimerRef = useRef<number | null>(null);
 
   // Measure viewport height
   useEffect(() => {
@@ -137,7 +138,16 @@ export function useChatScroll(messages: ChatMessage[], isInitializing: boolean =
 
   // Focus when messages or initialization state changes
   useLayoutEffect(() => {
-    focusTargetMessage();
+    focusTimerRef.current = window.setTimeout(() => {
+      focusTargetMessage();
+      focusTimerRef.current = null;
+    }, 0);
+    return () => {
+      if (focusTimerRef.current !== null) {
+        window.clearTimeout(focusTimerRef.current);
+        focusTimerRef.current = null;
+      }
+    };
   }, [focusTargetMessage]);
 
   return { viewportRef, contentRef, spacerRef, spacerHeight, isReady };

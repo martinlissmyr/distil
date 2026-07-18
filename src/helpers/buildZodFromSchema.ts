@@ -1,6 +1,6 @@
 // /src/helpers/buildZodFromSchema.ts
 import { z } from 'zod';
-import type { FieldDef, DocumentTypeDef } from '../models/entities/schemas/types';
+import type { FieldDef, DocumentTypeDef, GroupDef } from '../models/entities/schemas/types';
 
 /**
  * Build a Zod schema for the "data shape" from your field DSL.
@@ -8,7 +8,18 @@ import type { FieldDef, DocumentTypeDef } from '../models/entities/schemas/types
  * (e.g., "identity.name") remains for backwards compatibility but is not used.
  */
 
-function setDeep(obj: any, path: string[], value: any) {
+interface ZodShape {
+  [key: string]: ZodShapeValue;
+}
+
+type ZodShapeValue = z.ZodTypeAny | ZodShape;
+type GroupedDocumentTypeDef = DocumentTypeDef<readonly GroupDef[] | undefined>;
+
+function isDocumentTypeDef(input: readonly FieldDef[] | GroupedDocumentTypeDef): input is GroupedDocumentTypeDef {
+  return !Array.isArray(input);
+}
+
+function setDeep(obj: ZodShape, path: string[], value: z.ZodTypeAny): ZodShape {
   let cur = obj;
   for (let i = 0; i < path.length - 1; i++) {
     const k = path[i]!;
@@ -25,14 +36,14 @@ function setDeep(obj: any, path: string[], value: any) {
     }
 
     cur[k] ??= {};
-    cur = cur[k];
+    cur = cur[k] as ZodShape;
   }
 
   cur[path[path.length - 1]!] = value;
   return obj;
 }
 
-function isPlainObject(v: unknown): v is Record<string, any> {
+function isPlainObject(v: unknown): v is ZodShape {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
@@ -40,18 +51,18 @@ function isPlainObject(v: unknown): v is Record<string, any> {
  * Convert a plain nested shape into Zod objects recursively.
  * Leaves any Zod schemas untouched.
  */
-function toZod(value: any): any {
+function toZod(value: ZodShapeValue): z.ZodTypeAny {
   // If it already looks like a Zod schema, return it
   if (value && typeof value === 'object' && typeof value.safeParse === 'function') {
-    return value;
+    return value as z.ZodTypeAny;
   }
 
   if (!isPlainObject(value)) {
     // Shouldn't normally happen (setDeep only sets objects or zod schemas)
-    return z.any();
+    return z.unknown();
   }
 
-  const out: Record<string, any> = {};
+  const out: Record<string, z.ZodTypeAny> = {};
   for (const [k, v] of Object.entries(value)) {
     out[k] = toZod(v);
   }
@@ -61,10 +72,10 @@ function toZod(value: any): any {
 /**
  * Backwards-compatible: accept either fields array or a full document type.
  */
-export function buildZodFromSchema(input: readonly FieldDef[] | DocumentTypeDef<any>) {
-  const fields: readonly FieldDef[] = Array.isArray(input) ? input : (input as DocumentTypeDef<any>).fields;
+export function buildZodFromSchema(input: readonly FieldDef[] | GroupedDocumentTypeDef) {
+  const fields: readonly FieldDef[] = isDocumentTypeDef(input) ? input.fields : input;
 
-  const shape: any = {};
+  const shape: ZodShape = {};
   for (const f of fields) {
     if (!f?.name) continue;
     setDeep(shape, f.name.split('.'), f.schema);

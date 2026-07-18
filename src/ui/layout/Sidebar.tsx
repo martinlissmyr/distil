@@ -8,7 +8,7 @@ import {
   Stack,
 } from '@mantine/core';
 
-import {Icon} from '../common/Icon';
+import { Icon, type IconType } from '../common/Icon';
 
 import { getStorySections, getRootSections } from '../../models/sections';
 import { type Project, type StoryMeta, client } from '../../api/client';
@@ -48,13 +48,12 @@ const SidebarCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // ─────────────────────────────────────────────────────────────
 
 type NavItemProps = {
-  icon?: string;
+  icon?: IconType;
   label?: string;
   active?: boolean;
   p?: string;
   onClick?: () => void;
-  [key: string]: any;
-};
+} & Omit<React.ComponentProps<typeof NavLink>, 'leftSection'>;
 
 const NavItem: React.FC<NavItemProps> = ({
   icon,
@@ -66,7 +65,7 @@ const NavItem: React.FC<NavItemProps> = ({
       leftSection={
         icon ? (
           <Icon
-            type={icon as any}
+            type={icon}
             size={20}
             style={{ opacity: 0.2 }}
           />
@@ -81,7 +80,7 @@ const NavItem: React.FC<NavItemProps> = ({
 
 const NavGroupLabel = ({
   title
-}: { title: any }) => {
+}: { title: React.ReactNode }) => {
   return (
     <Group m="xs" mt="lg">
       <Text size="sm" fw={700}>
@@ -94,7 +93,7 @@ const NavGroupLabel = ({
 const BackButton = ({
   onBack,
   label = "Back"
-}: { onBack: any, label?: string }) => {
+}: { onBack: () => void; label?: string }) => {
   return (
     <Group p="xs">
       <Button
@@ -144,7 +143,7 @@ const ProjectsSidebar: React.FC<ProjectsSidebarProps> = ({
           .map(section => (
             <NavItem
               key={section.id}
-              icon={section.id}
+              icon={section.id as IconType}
               label={section.label}
               active={rootSection === section.id}
               onClick={() => onSelectRootSection(section.id as RootSection)}
@@ -214,7 +213,7 @@ const StorySidebar: React.FC<StorySidebarProps> = ({
         {getStorySections({ implementedOnly: false }).map(storySection => (
           <NavItem
             key={storySection.id}
-            icon={storySection.id}
+            icon={storySection.id as IconType}
             label={storySection.label}
             active={section === storySection.id}
             onClick={() => onSelectStorySection(storySection.id as StorySection)}

@@ -59,7 +59,7 @@ export type FieldDef<TGroup extends string = string> = {
   includeInProjection?: boolean;
 };
 
-export const defineField = <T extends FieldDef<any>>(field: T) => field;
+export const defineField = <T extends FieldDef<string>>(field: T) => field;
 
 /**
  * Document type definition
@@ -85,4 +85,3 @@ export const defineType = <
 >(
   type: TType
 ) => type;
-

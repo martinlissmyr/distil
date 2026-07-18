@@ -340,60 +340,55 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
     return true;
   })();
 
-  const Header = () => {
-    return (
-      <Box
-        px={20}
-        py={20}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-        }}
-      >
-        <TopNavigation
-          title={topTitle}
-          onBack={canGoBack ? handleBack : undefined}
-          onClose={handleClose}
-        />
-      </Box>
-    );
-  }
+  const rejectLabel = currentStep?.type === 'llm-processing'
+    ? currentStep.approvalOptions?.rejectLabel ?? 'Regenerate'
+    : 'Reject';
 
-  const Footer = () => {
-    return (
-      <Group
-        justify={'flex-end'}
-        mx="20"
-        mb="20"
-        style={{
-          flex: '0 0 auto'
-        }}
-      >
-        {!usesApprovalButtons ? (
-          <Button onClick={handleNext} disabled={!canGoNext}>
+  const header = (
+    <Box
+      px={20}
+      py={20}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+      }}
+    >
+      <TopNavigation
+        title={topTitle}
+        onBack={canGoBack ? handleBack : undefined}
+        onClose={handleClose}
+      />
+    </Box>
+  );
+
+  const footer = (
+    <Group
+      justify="flex-end"
+      mx="20"
+      mb="20"
+      style={{
+        flex: '0 0 auto'
+      }}
+    >
+      {!usesApprovalButtons ? (
+        <Button onClick={handleNext} disabled={!canGoNext}>
+          {isLastStep ? 'Finish' : 'Next'}
+        </Button>
+      ) : (
+        <Group gap="sm">
+          <Button variant="default" onClick={handleReject} disabled={approvalButtonsDisabled}>
+            {rejectLabel}
+          </Button>
+          <Button onClick={handleApprove} disabled={approvalButtonsDisabled}>
             {isLastStep ? 'Finish' : 'Next'}
           </Button>
-        ) : (
-          <Group gap="sm">
-            <Button variant="default" onClick={handleReject} disabled={approvalButtonsDisabled}>
-              {(() => {
-                if (currentStep?.type === 'llm-processing') {
-                  return (currentStep as LlmProcessingStep).approvalOptions?.rejectLabel ?? 'Regenerate';
-                }
-                return 'Reject';
-              })()}
-            </Button>
-            <Button onClick={handleApprove} disabled={approvalButtonsDisabled}>
-              {isLastStep ? 'Finish' : 'Next'}
-            </Button>
-          </Group>
-        )}
-      </Group>
-    );
-  }
+        </Group>
+      )}
+    </Group>
+  );
 
   return (
     <BaseModal
@@ -401,8 +396,8 @@ export const WizardModal: React.FC<WizardModalProps> = ({ opened, onClose }) => 
       onClose={handleClose}
       variant="sheet"
       overlayPreset="glassLight"
-      header={<Header/>}
-      footer={<Footer/>}
+      header={header}
+      footer={footer}
     >
         {/* Top Shader */}
         <Box

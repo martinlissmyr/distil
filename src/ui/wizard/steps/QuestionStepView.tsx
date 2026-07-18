@@ -1,23 +1,42 @@
 // src/ui/wizard/steps/QuestionStepView.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Stack,
   Text,
   Title
 } from '@mantine/core';
-import type { QuestionStep } from '../../../wizards/types';
+import type { QuestionStep, WizardValue } from '../../../wizards/types';
 import { useAppStore } from '../../../state/useAppStore';
 
 import { ScaleSlider } from '../../common/inputs/ScaleSlider';
 import { Textarea } from '../../common/inputs/Textarea';
 import { TextInput } from '../../common/inputs/TextInput';
-import { RadioGroup } from '../../common/inputs/RadioGroup';
-import { CheckboxGroup } from '../../common/inputs/CheckboxGroup';
+import { RadioGroup, type RadioOption } from '../../common/inputs/RadioGroup';
+import { CheckboxGroup, type CheckboxOption } from '../../common/inputs/CheckboxGroup';
 
 
 type QuestionStepViewProps = {
   step: QuestionStep;
 };
+
+function isOptionRecord(value: WizardValue): value is RadioOption {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'value' in value &&
+    typeof value.value === 'string' &&
+    'label' in value &&
+    typeof value.label === 'string'
+  );
+}
+
+function toStringArray(value: WizardValue): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string');
+}
 
 export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   const { getAnswer, setAnswer, activeWizard } = useAppStore();
@@ -25,8 +44,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
   // Get existing answer - type varies by question type
   const existingAnswer = getAnswer(step.id);
 
-  // Initialize state based on question type
-  const getInitialValue = () => {
+  const getValue = (): WizardValue => {
     if (existingAnswer !== undefined && existingAnswer !== null) {
       return existingAnswer;
     }
@@ -41,70 +59,18 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
     }
   };
 
-  const [value, setValue] = useState<any>(getInitialValue());
-
-  // Update local state if answer changes externally
-  useEffect(() => {
-    if (existingAnswer !== undefined && existingAnswer !== null) {
-      setValue(existingAnswer);
-    }
-  }, [existingAnswer]);
-
-  // Update store when value changes
-  useEffect(() => {
-    setAnswer(step.id, value);
-    validateAnswer(value);
-  }, [value, step.id, setAnswer]);
-
-  const validateAnswer = (val: any): boolean => {
-
-    // Check required for text/textarea
-    if (step.questionType === 'text' || step.questionType === 'textarea') {
-      if (step.required && !String(val || '').trim()) {
-        return false;
-      }
-
-      // Check minLength
-      if (step.minLength && String(val || '').trim().length < step.minLength) {
-        return false;
-      }
-
-      // Check maxLength - don't set error, let the character counter turn red instead
-      if (step.maxLength && String(val || '').length > step.maxLength) {
-        return false;
-      }
-    }
-
-    // Check required for select types
-    if (step.questionType === 'single-select' || step.questionType === 'multi-select') {
-      if (step.required && (!val || (Array.isArray(val) && val.length === 0))) {
-        return false;
-      }
-
-      // Check min/max selections for multi-select
-      if (step.questionType === 'multi-select' && Array.isArray(val)) {
-        if (step.minSelections && val.length < step.minSelections) {
-          return false;
-        }
-        if (step.maxSelections && val.length > step.maxSelections) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  };
+  const value = getValue();
 
   const handleScaleChange = (newValue: number) => {
-    setValue(newValue);
+    setAnswer(step.id, newValue);
   };
 
   const handleSingleSelectChange = (newValue: string) => {
-    setValue(newValue);
+    setAnswer(step.id, newValue);
   };
 
   // Get options array (handle both static arrays and dynamic variables)
-  const getOptions = () => {
+  const getOptions = (): RadioOption[] => {
     if (!step.options) return [];
     if (Array.isArray(step.options)) return step.options;
 
@@ -117,7 +83,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
 
         // Result should be an array of option objects
         if (Array.isArray(result)) {
-          return result;
+          return result.filter(isOptionRecord);
         }
 
         console.warn(`[QuestionStepView] Dynamic options "${resultKey}" not found or not an array in llmResults`);
@@ -147,7 +113,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
       {step.questionType === 'textarea' && (
         <Textarea
           value={String(value ?? '')}
-          onChange={setValue}
+          onChange={(nextValue) => setAnswer(step.id, nextValue)}
           placeholder={step.placeholder}
           required={step.required}
           minLength={step.minLength}
@@ -159,7 +125,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
       {step.questionType === 'text' && (
         <TextInput
           value={String(value ?? '')}
-          onChange={setValue}
+          onChange={(nextValue) => setAnswer(step.id, nextValue)}
           placeholder={step.placeholder}
           required={step.required}
           minLength={step.minLength}
@@ -173,7 +139,7 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
           onChange={handleScaleChange}
           min={step.min ?? 0}
           max={step.max ?? 10}
-          labels={step.scaleLabels as any}
+          labels={step.scaleLabels ?? { min: String(step.min ?? 0), max: String(step.max ?? 10) }}
         />
       )}
 
@@ -188,9 +154,9 @@ export const QuestionStepView: React.FC<QuestionStepViewProps> = ({ step }) => {
 
       {step.questionType === 'multi-select' && (
         <CheckboxGroup
-          value={Array.isArray(value) ? value : []}
-          onChange={setValue}
-          options={options}
+          value={toStringArray(value)}
+          onChange={(nextValue) => setAnswer(step.id, nextValue)}
+          options={options as CheckboxOption[]}
           required={step.required}
           minSelections={step.minSelections}
           maxSelections={step.maxSelections}

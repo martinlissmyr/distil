@@ -2,6 +2,9 @@
 import path from 'path'
 import fs from 'fs/promises'
 import type { JSONContent } from '@tiptap/react'
+import type { EntityIndex } from '../../src/models/entities/entityIndex'
+import type { CharacterDoc } from '../../src/models/entities/schemas/character'
+import type { LocationDoc } from '../../src/models/entities/schemas/location'
 import { sanitizeId } from '../validation'
 import { writeQueue } from './writeQueue'
 import { calculateWordCount } from '../utils/wordCount'
@@ -74,6 +77,8 @@ export type ChatThread = {
   lastUpdated: string
 }
 
+type EntityDoc = CharacterDoc | LocationDoc
+
 // ---- Safe/atomic JSON helpers ----
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -92,9 +97,10 @@ export async function writeJsonAtomic(file: string, data: unknown): Promise<void
 
   try {
     await fs.rename(tmp, file)
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Windows can fail if destination exists
-    if (e?.code === 'EEXIST' || e?.code === 'EPERM') {
+    const err = e as NodeJS.ErrnoException
+    if (err?.code === 'EEXIST' || err?.code === 'EPERM') {
       await fs.rm(file, { force: true }).catch(() => {})
       await fs.rename(tmp, file)
     } else {
@@ -361,7 +367,7 @@ export async function updateStory(
 
     const updated: StoryMetadata = {
       ...existing,
-      ...(updates as any),
+      ...updates,
       updatedAt: new Date().toISOString(),
     }
 
@@ -579,11 +585,11 @@ export async function loadEntityIndex(
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location'
-): Promise<any | null> {
+): Promise<EntityIndex | null> {
   const file = await getEntityIndexFile(projectId, storyId, entityType)
   try {
     const raw = await fs.readFile(file, 'utf-8')
-    return JSON.parse(raw)
+    return JSON.parse(raw) as EntityIndex
   } catch (err: unknown) {
     // File doesn't exist yet - expected for new stories
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -597,7 +603,7 @@ export async function saveEntityIndex(
   projectId: string,
   storyId: string,
   entityType: 'character' | 'location',
-  index: any
+  index: EntityIndex
 ): Promise<void> {
   return saveWithRecovery(
     async () => {
@@ -628,11 +634,11 @@ export async function loadEntityDoc(
   storyId: string,
   entityType: 'character' | 'location',
   entityId: string
-): Promise<any | null> {
+): Promise<EntityDoc | null> {
   const file = await getEntityDocFile(projectId, storyId, entityType, entityId)
   try {
     const raw = await fs.readFile(file, 'utf-8')
-    return JSON.parse(raw)
+    return JSON.parse(raw) as EntityDoc
   } catch (err: unknown) {
     // File doesn't exist yet - expected for new entities
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -647,7 +653,7 @@ export async function saveEntityDoc(
   storyId: string,
   entityType: 'character' | 'location',
   entityId: string,
-  doc: any
+  doc: EntityDoc
 ): Promise<void> {
   return saveWithRecovery(
     async () => {

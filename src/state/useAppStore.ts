@@ -1,5 +1,6 @@
 // src/state/useAppStore.ts
 import { create } from 'zustand';
+import type { JSONContent } from '@tiptap/react';
 import { client } from '../api/client';
 import { metaJsonToMarkdown } from '../helpers/markdownUtils';
 import type { MetaScope, MetaDocKey, MetaDocState } from '../types/metaDoc';
@@ -44,7 +45,7 @@ type AppStore = {
 
   ensureMetaDocsLoaded: (scope: MetaScope, keys: MetaDocKey[]) => Promise<void>;
 
-  updateMetaDoc: (scope: MetaScope, key: MetaDocKey, json: any) => void;
+  updateMetaDoc: (scope: MetaScope, key: MetaDocKey, json: JSONContent) => void;
 
   saveMetaDoc: (scope: MetaScope, key: MetaDocKey) => Promise<void>;
 
@@ -56,7 +57,7 @@ type AppStore = {
   // ---- Story parts state ----
   currentStoryMetadata: StoryMetadata | null;
   currentPartIdMap: { [storyId: string]: string };
-  currentPartDoc: any | null; // TipTap JSONContent for current part
+  currentPartDoc: JSONContent | null; // TipTap JSONContent for current part
 
   loadStoryMetadata: (projectId: string, storyId: string) => Promise<void>;
   loadStoryForView: (projectId: string, storyId: string, options?: { restorePartId?: string }) => Promise<void>;
@@ -94,6 +95,9 @@ export const docIdForPrimary = (args: {
   // fallback (should be rare)
   return `root::${kind}`;
 };
+
+const omitStoryId = (map: { [storyId: string]: string }, storyId: string) =>
+  Object.fromEntries(Object.entries(map).filter(([id]) => id !== storyId));
 
 const isSupportedUiSchemaSetting = (v: unknown): v is UiSchemaSetting => {
   return (
@@ -275,7 +279,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }));
 
       try {
-        let json: any | null = null;
+        let json: JSONContent | null = null;
 
         if (scope.scope === 'root') {
           const response = await client.loadRootMetaDoc(key);
@@ -411,7 +415,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const partExists = metadata.parts.some((p) => p.id === currentPartId);
         if (!partExists) {
           console.warn(`Part ${currentPartId} not found in metadata for story ${storyId}, clearing part state`);
-          const { [storyId]: _, ...rest } = get().currentPartIdMap;
+          const rest = omitStoryId(get().currentPartIdMap, storyId);
           set({ currentPartIdMap: rest, currentPartDoc: null });
         }
       }
@@ -431,7 +435,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const currentMap = get().currentPartIdMap;
     if (partId === null) {
       // Remove entry if partId is null
-      const { [storyId]: _, ...rest } = currentMap;
+      const rest = omitStoryId(currentMap, storyId);
       set({ currentPartIdMap: rest });
     } else {
       // Add or update entry
@@ -516,7 +520,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         currentPartDoc: null
       });
       // Remove this story from the part ID map
-      const { [storyId]: _, ...restMap } = get().currentPartIdMap;
+      const restMap = omitStoryId(get().currentPartIdMap, storyId);
       set({ currentPartIdMap: restMap });
     }
 
@@ -581,7 +585,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             await get().loadCurrentPartDoc(projectId, storyId, otherPart.id);
           }
         } else {
-          const { [storyId]: _, ...rest } = get().currentPartIdMap;
+          const rest = omitStoryId(get().currentPartIdMap, storyId);
           set({ currentPartIdMap: rest, currentPartDoc: null });
         }
       }

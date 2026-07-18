@@ -1,5 +1,6 @@
 // src/ui/documents/meta/MetaTextEditor.tsx
 import { useEffect, useMemo, useCallback } from 'react';
+import type { JSONContent } from '@tiptap/react';
 import { WritingEnvironment } from '../../editor/WritingEnvironment';
 import type { ChatConfig } from '../../../types/editor';
 
@@ -37,15 +38,10 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
   const updateMetaDoc = useAppStore((s) => s.updateMetaDoc);
   const saveMetaDoc = useAppStore((s) => s.saveMetaDoc);
+  const scopedStoryId = scope.scope === 'story' ? scope.storyId : undefined;
 
   // Stable id for this (scope, key) combo
-  const id = useMemo(() => metaId(scope, metaKey), [
-    scope.scope,
-    // these properties only exist for some scopes, but that's fine
-    (scope as any).projectId,
-    (scope as any).storyId,
-    metaKey,
-  ]);
+  const id = useMemo(() => metaId(scope, metaKey), [scope, metaKey]);
 
   // Subscribe directly to this metaDoc's state
   const metaDoc = useAppStore((s) => s.metaDocs[id]);
@@ -56,7 +52,7 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
   }, [scope, metaKey, ensureMetaDocsLoaded]);
 
   // Update handler - memoized to prevent unnecessary re-renders
-  const handleUpdate = useCallback((nextDoc: any) => {
+  const handleUpdate = useCallback((nextDoc: JSONContent) => {
     updateMetaDoc(scope, metaKey, nextDoc);
   }, [scope, metaKey, updateMetaDoc]);
 
@@ -67,16 +63,16 @@ export const MetaTextEditor: React.FC<MetaTextEditorProps> = ({
 
   // Calculate position key for scroll restoration
   const positionKey = useMemo(() => {
-    if (scope.scope === 'story') {
-      return `${scope.storyId}:${metaKey}`;
+    if (scopedStoryId) {
+      return `${scopedStoryId}:${metaKey}`;
     }
     return `${metaKey}:${metaKey}`; // root sections
-  }, [scope, metaKey]);
+  }, [scopedStoryId, metaKey]);
 
   return (
     <WritingEnvironment
       docKind={metaKey}
-      content={metaDoc?.json}
+      content={metaDoc?.json ?? undefined}
       onUpdate={handleUpdate}
       onSave={handleSave}
       autosaveDelay={800}

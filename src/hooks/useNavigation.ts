@@ -144,6 +144,9 @@ function getInitialNavState(): Omit<NavState, 'currentPartIdMap'> & { currentPar
 
 const initialNavState = getInitialNavState();
 
+const omitStoryId = (map: { [storyId: string]: string }, storyId: string) =>
+  Object.fromEntries(Object.entries(map).filter(([id]) => id !== storyId));
+
 const useNavigationStore = create<NavigationStore>((set, get) => ({
   ...initialNavState,
   isInitializing: true,
@@ -158,7 +161,7 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
     const currentMap = get().currentPartIdMap;
     if (partId === null) {
       // Remove entry if partId is null
-      const { [storyId]: _, ...rest } = currentMap;
+      const rest = omitStoryId(currentMap, storyId);
       set({ currentPartIdMap: rest });
     } else {
       // Add or update entry

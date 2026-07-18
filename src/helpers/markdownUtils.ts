@@ -10,6 +10,15 @@ import { proseEditorConfig, metaEditorConfig } from '../models/docs/editorConfig
 let metaMarkdownEditor: Editor | null = null;
 let proseMarkdownEditor: Editor | null = null;
 
+type MarkdownCapableEditor = Editor & {
+  getMarkdown?: () => string;
+  storage?: {
+    markdown?: {
+      getMarkdown?: () => string;
+    };
+  };
+};
+
 function getMetaMarkdownEditor(): Editor {
   if (!metaMarkdownEditor) {
     metaMarkdownEditor = new Editor({
@@ -46,9 +55,9 @@ export function jsonToMarkdown(
   doc: JSONContent,
   schema: 'meta' | 'prose' = 'meta'
 ): string {
-  const editor = schema === 'meta'
+  const editor = (schema === 'meta'
     ? getMetaMarkdownEditor()
-    : getProseMarkdownEditor();
+    : getProseMarkdownEditor()) as MarkdownCapableEditor;
 
   // Replace content with the provided JSON
   editor.commands.setContent(doc, { emitUpdate: false });
@@ -56,8 +65,8 @@ export function jsonToMarkdown(
   // Get markdown from the extension
   // Different TipTap versions expose this differently, so we try both
   const md =
-    (editor as any).getMarkdown?.() ??
-    (editor as any).storage?.markdown?.getMarkdown?.() ??
+    editor.getMarkdown?.() ??
+    editor.storage?.markdown?.getMarkdown?.() ??
     '';
 
   return md.trim();

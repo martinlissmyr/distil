@@ -25,13 +25,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   const [stack, setStack] = useState<SettingsViewId[]>(['root']);
   const activeView = stack[stack.length - 1];
 
-  const push = (id: SettingsViewId) => setStack((s) => [...s, id]);
-  const pop = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
-  const reset = () => setStack(['root']);
-
-  useEffect(() => {
-    if (!opened) reset();
-  }, [opened]);
+  const push = (id: SettingsViewId) => {
+    if (id === 'apiKey') {
+      setApiKeyDraft(apiKeySaved);
+      setApiKeySaveError('');
+      setDeleteConfirm(false);
+    }
+    setStack((s) => [...s, id]);
+  };
+  const pop = () => {
+    debouncedSaveApiKey.cancel();
+    setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
+  };
+  const closeModal = () => {
+    debouncedSaveApiKey.cancel();
+    setStack(['root']);
+    onClose();
+  };
 
   // ---- API key state (used by root + apiKey view) ----
   const [apiKeySaved, setApiKeySaved] = useState(''); // last saved/loaded value
@@ -46,14 +56,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   const [writingLanguageSaving, setWritingLanguageSaving] = useState(false);
 
   // ---- UI Schema (Zustand; applies immediately app-wide) ----
-  // NOTE: these store fields/actions must exist (mirror writingLanguage pattern):
-  // uiSchemaSetting, uiSchemaLoaded, loadUiSchema, setUiSchema
-  const uiSchema = useAppStore((s) => (s as any).uiSchemaSetting as UiSchemaSetting);
-  const uiSchemaLoaded = useAppStore((s) => Boolean((s as any).uiSchemaLoaded));
-  const loadUiSchema = useAppStore((s) => (s as any).loadUiSchemaSetting as () => Promise<void>);
-  const setUiSchema = useAppStore(
-    (s) => (s as any).setUiSchemaSetting as (v: UiSchemaSetting) => Promise<void>
-  );
+  const uiSchema = useAppStore((s) => s.uiSchemaSetting);
+  const uiSchemaLoaded = useAppStore((s) => s.uiSchemaLoaded);
+  const loadUiSchema = useAppStore((s) => s.loadUiSchema);
+  const setUiSchema = useAppStore((s) => s.setUiSchemaSetting);
 
   const [uiSchemaSaving, setUiSchemaSaving] = useState(false);
 
@@ -174,20 +180,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
     };
   }, [opened, writingLanguageLoaded, loadWritingLanguage, uiSchemaLoaded, loadUiSchema]);
 
-  // When entering/leaving the apiKey subview
-  useEffect(() => {
-    if (activeView === 'apiKey') {
-      // entering apiKey view: reset transient state and draft to last saved
-      setApiKeyDraft(apiKeySaved);
-      setApiKeySaveError('');
-      setDeleteConfirm(false);
-    } else {
-      // leaving apiKey view: cancel pending autosave
-      debouncedSaveApiKey.cancel();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView, apiKeySaved]);
-
   const handleApiKeyChange = (v: string) => {
     setApiKeyDraft(v);
     if (deleteConfirm) setDeleteConfirm(false);
@@ -292,12 +284,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ opened, onClose })
   return (
     <BaseModal
       opened={opened}
-      onClose={onClose}
+      onClose={closeModal}
       variant="dialog"
       overlayPreset="glassLight"
       header={
         <Box p={12}>
-          <TopNavigation title={title} onBack={stack.length > 1 ? pop : undefined} onClose={onClose} />
+          <TopNavigation title={title} onBack={stack.length > 1 ? pop : undefined} onClose={closeModal} />
         </Box>
       }
     >

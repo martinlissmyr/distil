@@ -1,10 +1,16 @@
 // src/global.d.ts
 export {};
 
+import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from './types/language';
 import type { UiSchema } from './types/ui';
-import type { EntityType } from './models/entityIndex';
+import type { EntityType, EntityIndex } from './models/entities/entityIndex';
+import type { CharacterDoc } from './models/entities/schemas/character';
+import type { LocationDoc } from './models/entities/schemas/location';
+import type { PartDoc, StoryMetadata } from './models/story';
+import type { MergedStory } from './models/export';
 import type { ChatModelProfileId } from './types/ai';
+import type { ChatThread } from '../electron/fs/fs';
 
 /**
  * Standardized IPC response types
@@ -13,20 +19,7 @@ type IpcResponse<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
-/**
- * Chat thread persistence type
- */
-type ChatThread = {
-  threadId: string;
-  messages: Array<{
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    actualPrompt?: string;
-  }>;
-  createdAt: string;
-  lastUpdated: string;
-};
+type EntityDoc = CharacterDoc | LocationDoc;
 
 declare global {
   interface Window {
@@ -74,15 +67,7 @@ declare global {
       saveStoryMetadata: (
         projectId: string,
         storyId: string,
-        metadata: {
-          id: string;
-          title: string;
-          order: number;
-          partsEnabled: boolean;
-          parts: any[];
-          createdAt: string;
-          updatedAt: string;
-        }
+        metadata: StoryMetadata
       ) => Promise<IpcResponse<undefined>>;
       updateStory: (
         projectId: string,
@@ -94,13 +79,13 @@ declare global {
 
       // Parts (multi-part documents)
       loadPartDoc: (projectId: string, storyId: string, partId: string) => Promise<
-        IpcResponse<{ id: string; doc: any; updatedAt: string }>
+        IpcResponse<PartDoc>
       >;
       savePartDoc: (
         projectId: string,
         storyId: string,
         partId: string,
-        doc: any
+        doc: JSONContent
       ) => Promise<IpcResponse<undefined>>;
       createPart: (projectId: string, storyId: string, order: number) => Promise<
         IpcResponse<{
@@ -121,27 +106,27 @@ declare global {
         projectId: string,
         storyId: string,
         key: string
-      ) => Promise<IpcResponse<any | null>>;
+      ) => Promise<IpcResponse<JSONContent | null>>;
       saveStoryMetaDoc: (
         projectId: string,
         storyId: string,
         key: string,
-        doc: any
+        doc: JSONContent
       ) => Promise<IpcResponse<undefined>>;
-      loadRootMetaDoc: (key: string) => Promise<IpcResponse<any | null>>;
-      saveRootMetaDoc: (key: string, doc: any) => Promise<IpcResponse<undefined>>;
+      loadRootMetaDoc: (key: string) => Promise<IpcResponse<JSONContent | null>>;
+      saveRootMetaDoc: (key: string, doc: JSONContent) => Promise<IpcResponse<undefined>>;
 
       // Entity Indices
       loadEntityIndex: (
         projectId: string,
         storyId: string,
         entityType: EntityType
-      ) => Promise<IpcResponse<any | null>>;
+      ) => Promise<IpcResponse<EntityIndex | null>>;
       saveEntityIndex: (
         projectId: string,
         storyId: string,
         entityType: EntityType,
-        index: any
+        index: EntityIndex
       ) => Promise<IpcResponse<undefined>>;
 
       // Entity Documents
@@ -150,13 +135,13 @@ declare global {
         storyId: string,
         entityType: 'character' | 'location',
         entityId: string
-      ) => Promise<IpcResponse<any>>;
+      ) => Promise<IpcResponse<EntityDoc | null>>;
       saveEntityDoc: (
         projectId: string,
         storyId: string,
         entityType: 'character' | 'location',
         entityId: string,
-        doc: any
+        doc: EntityDoc
       ) => Promise<IpcResponse<undefined>>;
 
       // Chat thread persistence
@@ -171,16 +156,7 @@ declare global {
         IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
       >;
       getMergedStory: (projectId: string, storyId: string) => Promise<
-        IpcResponse<{
-          title: string;
-          parts: Array<{
-            partId: string;
-            partIndex: number;
-            partTitle: string;
-            content: any;
-          }>;
-          metadata: any;
-        }>
+        IpcResponse<MergedStory>
       >;
       showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') => Promise<
         IpcResponse<string | null>

@@ -17,6 +17,7 @@ import {
   getInitialAssistantHint,
   type AssistantHint,
 } from '../../chat/chatHints';
+import { DEFAULT_WRITING_LANGUAGE } from '../../types/language';
 import type { MetaDocKey } from '../../types/metaDoc';
 import {
   docKinds,
@@ -51,11 +52,6 @@ export const InitialHintsTest: React.FC = () => {
 
   const [result, setResult] = useState<AssistantHint | null>(null);
 
-  // Reset result on targetKind change
-  useEffect(() => {
-    setResult(null);
-  }, [targetKind]);
-
   // Compute the result whenever relevant state changes
   useEffect(() => {
     let cancelled = false;
@@ -74,9 +70,8 @@ export const InitialHintsTest: React.FC = () => {
         kind: targetKind,
         selfState,
         upstream,
-        // include these if your HintContext requires them:
-        // language,
-      } as any);
+        language: DEFAULT_WRITING_LANGUAGE,
+      });
 
       if (cancelled) return;
       setResult(hint);
@@ -346,7 +341,7 @@ export const InitialHintsTest: React.FC = () => {
 
                           {action.kind === 'wizard' && action.command?.type === 'openWizard' && (
                             <Text size="xs" c="dimmed">
-                              Open wizard: {(action.command as any).wizardId}
+                              Open wizard: {action.command.wizardId}
                             </Text>
                           )}
                         </Stack>

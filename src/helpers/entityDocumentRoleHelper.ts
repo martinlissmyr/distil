@@ -1,15 +1,19 @@
 // src/helpers/entityDocumentRoleHelper.ts
-import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
+import type { DocumentTypeDef, FieldDef, GroupDef } from '../models/entities/schemas/types';
+
+type FieldWithDocumentRoleDescription = FieldDef & {
+  documentRoleDescription?: string;
+};
 
 /**
  * Extracts assistant-facing "documentRoleDescription" lines from a schema type.
  * Keeps schema order. Skips empty/undefined values.
  */
 export function extractDocumentRoleDescriptions(
-  schema: DocumentTypeDef<any>
+  schema: DocumentTypeDef<readonly GroupDef[] | undefined>
 ): string[] {
-  return (schema.fields as readonly FieldDef[]).flatMap((f) => {
-    const d = (f as any).documentRoleDescription;
+  return (schema.fields as readonly FieldWithDocumentRoleDescription[]).flatMap((f) => {
+    const d = f.documentRoleDescription;
     if (typeof d !== 'string') return [];
     const trimmed = d.trim();
     return trimmed.length > 0 ? [trimmed] : [];
@@ -22,7 +26,7 @@ export function extractDocumentRoleDescriptions(
  * - Bar
  */
 export function extractDocumentRoleDescriptionsMarkdown(
-  schema: DocumentTypeDef<any>,
+  schema: DocumentTypeDef<readonly GroupDef[] | undefined>,
   options: { bullet?: '-' | '*' } = {}
 ): string {
   const bullet = options.bullet ?? '-';

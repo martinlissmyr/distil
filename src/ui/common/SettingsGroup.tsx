@@ -122,7 +122,13 @@ export type SettingsGroupProps = {
   disabled?: boolean;
 };
 
-export const SettingsGroupLabel = ({ label, description }: { label: any; description: any }) => {
+export const SettingsGroupLabel = ({
+  label,
+  description,
+}: {
+  label: React.ReactNode;
+  description: React.ReactNode;
+}) => {
   return (
     <Box px={12}>
       {label && (
@@ -290,7 +296,6 @@ const RightSide: React.FC<{ item: SettingItem; disabled?: boolean }> = ({
         placeholder: t.placeholder,
         disabled,
         variant: 'unstyled' as const,
-        color: undefined as any,
         autoComplete: 'off',
         onKeyDown: handleKeyDown,
       };

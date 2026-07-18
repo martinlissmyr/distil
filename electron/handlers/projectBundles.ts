@@ -9,6 +9,7 @@ import {
   removeProject,
   type ProjectRegistryEntry
 } from '../fs/registry'
+import type { ProjectMeta } from '../fs/fs'
 
 // Get the root Distil directory where project bundles live
 export function getDistilRoot(): string {
@@ -21,8 +22,13 @@ export function getDistilRoot(): string {
 function sanitizeProjectName(name: string): string {
   // Replace invalid filename characters with underscores
   // Keep: letters, numbers, spaces, hyphens, underscores
-  return name
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+  const sanitized = Array.from(name, (char) => {
+    const code = char.charCodeAt(0)
+    const isControl = code >= 0 && code <= 31
+    return isControl || '<>:"/\\|?*'.includes(char) ? '_' : char
+  }).join('')
+
+  return sanitized
     .replace(/\s+/g, ' ') // Normalize multiple spaces
     .trim()
     .substring(0, 200) // Limit length
@@ -134,7 +140,7 @@ export async function updateProjectBundle(
 
   // Update project.json in bundle
   const projectFile = path.join(newBundlePath, 'project.json')
-  const projectMeta = await readJson<any>(projectFile)
+  const projectMeta = await readJson<ProjectMeta>(projectFile)
 
   if (updates.name !== undefined) {
     projectMeta.name = updates.name

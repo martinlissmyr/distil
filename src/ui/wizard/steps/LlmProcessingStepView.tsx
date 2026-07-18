@@ -1,5 +1,5 @@
 // src/ui/wizard/steps/LlmProcessingStepView.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import {
   Stack,
   Text,
@@ -39,19 +39,7 @@ export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ st
   const hasResult = rawResult !== undefined;
   const showResult = !isProcessing && !error && hasResult && !step.hidden;
 
-  const storedDraft = activeWizard?.llmDrafts?.[step.resultKey];
-
-  // Initial text comes from draft if exists, else from raw result
-  const initialText = useMemo(() => {
-    return storedDraft ?? toEditableString(rawResult);
-  }, [storedDraft, rawResult]);
-
-  const [draft, setDraft] = useState(initialText);
-
-  // Keep local in sync if a new result arrives (regen)
-  useEffect(() => {
-    setDraft(initialText);
-  }, [initialText]);
+  const draft = activeWizard?.llmDrafts?.[step.resultKey] ?? toEditableString(rawResult);
 
   return (
     <Stack gap="md">
@@ -82,8 +70,6 @@ export const LlmProcessingStepView: React.FC<LlmProcessingStepViewProps> = ({ st
               value={draft}
               onChange={(e) => {
                 const v = e.currentTarget.value;
-                setDraft(v);
-                // Update store draft on every change (debounced by React)
                 setLlmDraft(step.resultKey, v);
               }}
               radius={8}

@@ -1,6 +1,8 @@
 // src/types/editor.ts
 
 import type { EditorKind } from './chat';
+import type { DocRefWithKind } from './docRef';
+import type { DocKindId } from '../models/docs';
 
 export type ChatConfig = {
   kind?: EditorKind;
@@ -8,11 +10,11 @@ export type ChatConfig = {
   storyTitle?: string;
   projectId?: string;
   projectName?: string;
-  doc?: any;
-  docKind?: string;
+  doc?: DocRefWithKind;
+  docKind?: DocKindId;
   onNavigate?: (target: string) => void;
   llmContext?: {
-    kinds: string[];
+    kinds: EditorKind[];
     markdown: string;
   };
 };

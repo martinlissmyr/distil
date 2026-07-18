@@ -1,5 +1,5 @@
 // src/ui/playground/IsolatedLlmStepTester.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Stack,
   Paper,
@@ -18,6 +18,7 @@ import type { TestableLlmStep } from '../../wizards/testUtils';
 import { buildPromptForStep } from '../../wizards/promptBuilder';
 import { useAppStore } from '../../state/useAppStore';
 import { getContextDocs } from '../../chat/contextSelector';
+import type { EditorKind } from '../../types/chat';
 
 type IsolatedLlmStepTesterProps = {
   testableStep: TestableLlmStep;
@@ -25,7 +26,7 @@ type IsolatedLlmStepTesterProps = {
     wizardId: string;
     storyId: string;
     projectId: string;
-    docKind: string;
+    docKind: EditorKind;
   };
 };
 
@@ -43,7 +44,7 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
   const [llmResult, setLlmResult] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ViewTab>('system');
 
-  const handleRunTest = async () => {
+  const handleRunTest = useCallback(async () => {
     setIsProcessing(true);
     setError(null);
     setSystemPrompt(null);
@@ -54,20 +55,20 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
     const {
       kinds: contextKinds,
       markdown: contextMarkdown,
-    } = await getContextDocs(wizard.docKind as any, '', wizard.projectId, wizard.storyId, {
+    } = await getContextDocs(wizard.docKind, '', wizard.projectId, wizard.storyId, {
       language: useAppStore.getState().writingLanguage,
     });
 
     const wizardContext = {
       llmContext: {
-        kinds: contextKinds as any[],
+        kinds: contextKinds,
         markdown: contextMarkdown,
       },
       ref: {
         projectId: wizard.projectId,
         storyId: wizard.storyId,
         scope: 'story' as const,
-        docKind: wizard.docKind as any,
+        docKind: wizard.docKind,
       },
       targetEditor: null,
       currentContent: "Jag har redan lite innehåll.",
@@ -96,9 +97,12 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
       setAssistantPrompt(assistantMsg?.content || 'No user prompt');
 
       // Send to LLM via window.chat API
-      const response = await (window as any).chat.send({ messages });
-      if (!response.ok || !response.data?.output_text) {
+      const response = await window.chat.send({ messages });
+      if (!response.ok) {
         throw new Error(response.error || 'Chat failed');
+      }
+      if (!response.data?.output_text) {
+        throw new Error('Chat failed');
       }
 
       setLlmResult(response.data.output_text);
@@ -108,12 +112,15 @@ export const IsolatedLlmStepTester: React.FC<IsolatedLlmStepTesterProps> = ({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [testableStep.step, wizard.docKind, wizard.projectId, wizard.storyId]);
 
   // Auto-run test on mount or when testableStep changes
   useEffect(() => {
-    handleRunTest();
-  }, [testableStep.step.id]);
+    const timeoutId = window.setTimeout(() => {
+      void handleRunTest();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [handleRunTest, testableStep.step.id]);
 
   const renderContent = () => {
     if (activeTab === 'system') {

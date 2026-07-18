@@ -16,6 +16,11 @@ export type ProjectionSummaryResult = {
   error?: string;
 };
 
+type ProjectionEntityRecord = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
 /**
  * Returns the system prompt for projection generation.
  * Currently returns the imported markdown prompt directly.
@@ -117,7 +122,7 @@ export async function loadPrimaryCharacterProjections(
         );
 
         if (charDocResponse.ok && charDocResponse.data) {
-          const charDoc = charDocResponse.data as import('../models/entities/schemas/character').CharacterDoc;
+          const charDoc = charDocResponse.data as ProjectionEntityRecord;
 
           // Only include primary tier characters
           if (charDoc.tier === 'primary') {

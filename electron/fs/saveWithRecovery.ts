@@ -10,9 +10,10 @@ export async function saveWithRecovery<T>(
 ): Promise<T> {
   try {
     return await operation()
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as NodeJS.ErrnoException
     // If file/directory not found, bundle might have been renamed
-    if (err?.code === 'ENOENT') {
+    if (error?.code === 'ENOENT') {
       console.warn(`[saveWithRecovery] ${operationName} failed (ENOENT), syncing registry and retrying...`)
 
       try {
@@ -28,6 +29,6 @@ export async function saveWithRecovery<T>(
     }
 
     // Other errors - rethrow
-    throw err
+    throw error
   }
 }

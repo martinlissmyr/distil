@@ -5,13 +5,12 @@ import type { MetaScope, MetaDocKey } from '../types/metaDoc';
 
 export function usePreloadMetaDocs(scope: MetaScope, keys: MetaDocKey[]) {
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
+  const projectId = scope.scope !== 'root' ? scope.projectId : undefined;
+  const storyId = scope.scope === 'story' ? scope.storyId : undefined;
+  const keySignature = keys.join('|');
 
   useEffect(() => {
     if (!keys.length) return;
     void ensureMetaDocsLoaded(scope, keys);
-  }, [scope.scope, 
-      'projectId' in scope ? scope.projectId : undefined,
-      'storyId' in scope ? (scope as any).storyId : undefined,
-      keys.join('|'),
-      ensureMetaDocsLoaded]);
+  }, [scope, keys, keySignature, projectId, storyId, ensureMetaDocsLoaded]);
 }

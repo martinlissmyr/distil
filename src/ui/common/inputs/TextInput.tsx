@@ -64,7 +64,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   const charCount = value.length;
   const overMax = Boolean(maxLength && charCount > maxLength);
 
-  const RightSection = () => {
+  const rightSection = (() => {
     if (effectiveError) {
       return (
         <Badge
@@ -88,7 +88,8 @@ export const TextInput: React.FC<TextInputProps> = ({
         </Badge>
       );
     }
-  }
+    return null;
+  })();
 
   return (
     <div className={classes.wrapper}>
@@ -105,7 +106,7 @@ export const TextInput: React.FC<TextInputProps> = ({
         data-error={effectiveError !== ''}
         data-counter={showCounter}
         size="sm"
-        rightSection={<RightSection/>}
+        rightSection={rightSection}
       />
       {description && (
         <Text

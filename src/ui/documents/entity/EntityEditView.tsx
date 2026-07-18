@@ -17,14 +17,22 @@ import type { DocRefWithKind } from '../../../types/docRef';
 import { getContextDocs } from '../../../chat/contextSelector';
 import { useAppStore } from '../../../state/useAppStore';
 import { getZodDefault, getRequiredFields } from '../../../helpers/zodHelpers';
+import type { CharacterDoc } from '../../../models/entities/schemas/character';
+import type { LocationDoc } from '../../../models/entities/schemas/location';
+import type { GroupDef } from '../../../models/entities/schemas/types';
 
-type EntityEditViewProps<T extends Record<string, any>> = {
+type EntityFieldValue = string | number | boolean | null | undefined;
+type EntityFormData = Record<string, EntityFieldValue>;
+type EntityDoc = CharacterDoc | LocationDoc;
+type EntitySchema = DocumentTypeDef<readonly GroupDef[] | undefined>;
+
+type EntityEditViewProps = {
   projectId: string;
   storyId: string;
-  entityDoc: T | null; // null = creating new entity
-  schema: DocumentTypeDef<any>;
+  entityDoc: EntityDoc | null; // null = creating new entity
+  schema: EntitySchema;
   onBack: () => void;
-  onSave: (doc: Partial<T>) => Promise<void>;
+  onSave: (doc: EntityDoc) => Promise<void>;
   title: string;
   /** Optional: Enable AI chat sidebar */
   withChat?: boolean;
@@ -32,7 +40,7 @@ type EntityEditViewProps<T extends Record<string, any>> = {
   doc?: DocRefWithKind;
 };
 
-export function EntityEditView<T extends Record<string, any>>({
+export function EntityEditView({
   projectId,
   storyId,
   entityDoc,
@@ -42,11 +50,15 @@ export function EntityEditView<T extends Record<string, any>>({
   title,
   withChat = false,
   doc,
-}: EntityEditViewProps<T>) {
+}: EntityEditViewProps) {
   const isNew = entityDoc === null;
+  const initialFormData = useMemo<EntityFormData>(
+    () => (entityDoc ?? {}) as EntityFormData,
+    [entityDoc]
+  );
 
   // Form state - store all field values
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<EntityFormData>(initialFormData);
   const [saving, setSaving] = useState(false);
 
   // Leave guard integration
@@ -54,24 +66,19 @@ export function EntityEditView<T extends Record<string, any>>({
   const requestNavigate = useLeaveGuardStore((s) => s.requestNavigate);
 
   // Keep a stable "baseline" snapshot for dirty detection (avoids re-stringifying initial state on every render)
-  const baselineRef = useRef<string>('');
+  const baselineRef = useRef<string>(JSON.stringify(initialFormData));
 
   const handleBack = useCallback(() => {
     requestNavigate(onBack);
   }, [requestNavigate, onBack]);
 
-  // Load entity data when editing / creating
+  // Ensure we don’t leave the global guard stuck “dirty” if this component unmounts
   useEffect(() => {
-    const initial = entityDoc ?? {};
-    setFormData(initial);
-    baselineRef.current = JSON.stringify(initial);
     setDirty(false);
-
-    // Ensure we don’t leave the global guard stuck “dirty” if this component unmounts
     return () => {
       setDirty(false);
     };
-  }, [entityDoc, setDirty]);
+  }, [setDirty]);
 
   // Dirty tracking (cheap enough for small docs)
   useEffect(() => {
@@ -79,13 +86,7 @@ export function EntityEditView<T extends Record<string, any>>({
     setDirty(now !== baselineRef.current);
   }, [formData, setDirty]);
 
-  // Markdown export for chat
-  const [fullTextMarkdown, setFullTextMarkdown] = useState<string>('');
-
-  useEffect(() => {
-    const markdown = entityToMarkdown(formData, schema);
-    setFullTextMarkdown(markdown);
-  }, [formData, schema]);
+  const fullTextMarkdown = useMemo(() => entityToMarkdown(formData, schema), [formData, schema]);
 
   // Initialize hook with static config (projectId/storyId only)
   const { handleOpenWizard } = useEditorChat({
@@ -134,19 +135,19 @@ export function EntityEditView<T extends Record<string, any>>({
     });
   };
 
-  const handleFieldChange = useCallback((fieldName: string, value: any) => {
+  const handleFieldChange = useCallback((fieldName: string, value: EntityFieldValue) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
   }, []);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      const docToSave: any = {
+      const docToSave = {
         ...formData,
         id: entityDoc?.id || `${schema.name}-${Date.now()}`,
         version: schema.version,
         updatedAt: new Date().toISOString(),
-      };
+      } as EntityDoc;
 
       if (!entityDoc?.createdAt) {
         docToSave.createdAt = new Date().toISOString();
@@ -164,7 +165,7 @@ export function EntityEditView<T extends Record<string, any>>({
     } finally {
       setSaving(false);
     }
-  }, [entityDoc?.createdAt, entityDoc?.id, formData, onBack, onSave, schema.name, schema.version, setDirty]);
+  };
 
   // Check if we can save (all required fields must have values)
   const canSave = useMemo(() => {
@@ -201,7 +202,7 @@ export function EntityEditView<T extends Record<string, any>>({
 
   // Render grouped fields using SettingsGroup
   const renderGroupedFields = (groupId: string, fields: FieldDef[]) => {
-    const group = schema.groups?.find((g: any) => g.id === groupId);
+    const group = schema.groups?.find((g) => g.id === groupId);
 
     const items = fields
       .map((field) => {
@@ -351,7 +352,7 @@ export function EntityEditView<T extends Record<string, any>>({
         >
           <Stack gap="lg" className={`${styles.editor} ${styles.editorContent}`}>
             {/* Render groups first */}
-            {schema.groups?.map((group: any) => {
+            {schema.groups?.map((group) => {
               const fields = fieldsByGroup.get(group.id) || [];
               if (fields.length === 0) return null;
               return renderGroupedFields(group.id, fields);

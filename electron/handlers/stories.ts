@@ -13,13 +13,16 @@ import {
   deletePart,
   reorderParts,
 } from '../fs/fs';
+import type { StoryMetadata } from '../fs/fs';
 import {
   validateProjectId,
   validateStoryId,
   validateName,
   validateIdArray,
+  validateJsonDoc,
 } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
+import type { JSONContent } from '@tiptap/react';
 
 /**
  * Registers IPC handlers for story CRUD operations (multi-part structure)
@@ -43,7 +46,7 @@ export function registerStoryHandlers(): void {
     return loadStoryMetadata(projectId, storyId);
   });
 
-  safeHandle('story:saveMetadata', async (projectId: string, storyId: string, metadata) => {
+  safeHandle('story:saveMetadata', async (projectId: string, storyId: string, metadata: StoryMetadata) => {
     validateProjectId(projectId);
     validateStoryId(storyId);
     await saveStoryMetadata(projectId, storyId, metadata);
@@ -85,12 +88,13 @@ export function registerStoryHandlers(): void {
     return loadPartDoc(projectId, storyId, partId);
   });
 
-  safeHandle('part:save', async (projectId: string, storyId: string, partId: string, doc) => {
+  safeHandle('part:save', async (projectId: string, storyId: string, partId: string, doc: JSONContent) => {
     validateProjectId(projectId);
     validateStoryId(storyId);
     if (!partId || typeof partId !== 'string') {
       throw new Error('Invalid partId');
     }
+    validateJsonDoc(doc);
     await savePartDoc(projectId, storyId, partId, doc);
     return undefined; // void return
   });

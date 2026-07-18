@@ -1,8 +1,8 @@
 import { Text, ActionIcon, Card, Box, Stack, Textarea, Flex } from '@mantine/core';
 import { useDebouncedCallback } from '@mantine/hooks';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './EntityCard.module.scss';
-import {Icon} from './Icon'
+import { Icon, type IconType } from './Icon';
 
 type EntityCardProps = {
   id: string;
@@ -34,14 +34,10 @@ export function EntityCard({
   onCommentChange,
 }: EntityCardProps) {
   const isListMode = mode === 'list';
-
-  // Local state for smooth typing experience
-  const [localComment, setLocalComment] = useState(comment || '');
-
-  // Sync local state when prop changes (e.g., switching entities)
-  useEffect(() => {
-    setLocalComment(comment || '');
-  }, [comment]);
+  const iconType = isIconType(icon) ? icon : undefined;
+  const commentKey = `${id}:${comment ?? ''}`;
+  const [activeCommentKey, setActiveCommentKey] = useState(commentKey);
+  const localComment = activeCommentKey === commentKey ? comment ?? '' : comment ?? '';
 
   const debouncedCommentChange = useDebouncedCallback((value: string) => {
     if (onCommentChange) {
@@ -50,7 +46,7 @@ export function EntityCard({
   }, 800);
 
   const handleCommentChange = (value: string) => {
-    setLocalComment(value); // Update immediately for smooth typing
+    setActiveCommentKey(`${id}:${value}`);
     debouncedCommentChange(value); // Debounce the callback to parent
   };
 
@@ -93,8 +89,8 @@ export function EntityCard({
         className={styles.entityListCardWrapper}
       >
         <Flex className={styles.listCardIcon}>
-          {icon && (
-            <Icon type={icon as any} size={40} strokeWidth={1} style={{opacity: .3}}/>
+          {iconType && (
+            <Icon type={iconType} size={40} strokeWidth={1} style={{ opacity: 0.3 }} />
           )}
           {!icon && number && (
             <Box>{number}</Box>
@@ -113,6 +109,7 @@ export function EntityCard({
           )}
           {onCommentChange && (
             <Textarea
+              key={commentKey}
               value={localComment}
               onChange={(e) => handleCommentChange(e.currentTarget.value)}
               placeholder="Add a note..."
@@ -137,7 +134,7 @@ export function EntityCard({
       <Card className={styles.entityGridCard}>
         <Stack justify="center" align="center" gap="xs" style={{ height: '100%' }}>
           <Box>
-            <Icon type={icon as any} size={60} strokeWidth={1} style={{opacity: .3}}/>
+            {iconType ? <Icon type={iconType} size={60} strokeWidth={1} style={{ opacity: 0.3 }} /> : null}
           </Box>
         </Stack>
         {actionButtons}
@@ -190,3 +187,51 @@ export function CreateEntityCard({
     </Stack>
   );
 }
+
+const ICON_TYPES = new Set<IconType>([
+  'parts',
+  'part',
+  'more',
+  'validationError',
+  'validationOk',
+  'validationEmpty',
+  'projects',
+  'project',
+  'manifest',
+  'playground',
+  'stories',
+  'story',
+  'prose',
+  'brief',
+  'outline',
+  'world',
+  'characters',
+  'character',
+  'locations',
+  'location',
+  'console',
+  'settings',
+  'back',
+  'forward',
+  'up',
+  'down',
+  'edit',
+  'add',
+  'trash',
+  'prompt',
+  'navigate',
+  'wizard',
+  'close',
+  'selection',
+  'check',
+  'h2',
+  'h3',
+  'bulletList',
+  'orderedList',
+  'horizontalRule',
+  'readingMode',
+  'search',
+]);
+
+const isIconType = (value: string | undefined): value is IconType =>
+  typeof value === 'string' && ICON_TYPES.has(value as IconType);

@@ -1,6 +1,7 @@
 // src/ui/common/inputs/Select.tsx
 import React from 'react';
 import { Select as MantineSelect, Text } from '@mantine/core';
+import type { ComboboxItem, ComboboxItemGroup } from '@mantine/core';
 import classes from './Select.module.scss';
 
 type SelectProps = {
@@ -10,7 +11,7 @@ type SelectProps = {
   label?: string;
   description?: string;
   placeholder?: string;
-  data: any;
+  data: Array<string | ComboboxItem | ComboboxItemGroup>;
 };
 
 export const Select: React.FC<SelectProps> = ({
