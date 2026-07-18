@@ -69,6 +69,19 @@ export const actions = {
     },
   } satisfies SuggestionAction,
 
+  writeStyle: {
+    id: 'write-style',
+    label: {
+      en: 'Write a style guide',
+      sv: 'Skriv en stilguide',
+    },
+    kind: 'navigate',
+    command: {
+      type: 'navigateToStorySection',
+      section: 'style',
+    },
+  } satisfies SuggestionAction,
+
   manifestStart: {
     id: 'manifest-start',
     label: {

@@ -10,6 +10,7 @@ import { ProseEditor } from '../documents/prose/ProseEditor';
 import { OutlineView } from '../documents/meta/OutlineView';
 import { WorldView } from '../documents/meta/WorldView';
 import { BriefView } from '../documents/meta/BriefView';
+import { StyleView } from '../documents/meta/StyleView';
 import { EntityIndexView } from '../documents/entity/EntityIndexView';
 import type { Project, StoryMeta } from '../../api/client';
 import type { AppSection, RootSection, StorySection } from '../../hooks/useNavigation';
@@ -155,6 +156,15 @@ export const AppContent: React.FC<AppContentProps> = ({
             projectId={selectedProjectId}
             storyId={selectedStoryId}
             title={`${currentTitle} – Brief`}
+          />
+        );
+
+      case 'StoryStyleView':
+        return (
+          <StyleView
+            projectId={selectedProjectId}
+            storyId={selectedStoryId}
+            title={`${currentTitle} – Style`}
           />
         );
 

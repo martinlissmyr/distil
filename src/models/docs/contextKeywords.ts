@@ -27,6 +27,12 @@ const CONTEXT_KEYWORDS: Record<
       'världsbygge', 'worldbuilding', 'regler', 'lagar', 'fysik',
       'historisk', 'kontext', 'tid', 'rum',
     ],
+    style: [
+      'stil', 'röst', 'berättarröst', 'språk', 'språkdräkt',
+      'tonfall', 'tempo', 'rytm', 'meningsbyggnad', 'register',
+      'perspektiv', 'pov', 'tempus', 'dialogstil', 'bildspråk',
+      'metaforer', 'sensorik', 'prosa', 'stilguide',
+    ],
   },
   en: {
     brief: [
@@ -44,6 +50,12 @@ const CONTEXT_KEYWORDS: Record<
       'place', 'places', 'location', 'geography', 'society', 'culture',
       'worldbuilding', 'world building', 'rules', 'laws', 'physics',
       'historical', 'context', 'time', 'space',
+    ],
+    style: [
+      'style', 'voice', 'narrative voice', 'prose style', 'language',
+      'register', 'rhythm', 'sentence texture', 'point of view', 'pov',
+      'tense', 'dialogue style', 'imagery', 'metaphor', 'sensory',
+      'style guide', 'tone of voice',
     ],
   },
 };

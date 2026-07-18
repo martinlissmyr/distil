@@ -18,6 +18,7 @@ export const contextLayerOrder = [
   'storyStructure', // Outline / beats / structure
   'storyWorld',     // Worldbuilding for the story
   'storyEntities',  // Characters, locations, etc. (future)
+  'storyExpression', // Story-specific prose style and expression
   'storyText',      // Final prose / story text
 ] as const;
 
@@ -39,7 +40,7 @@ export type DocRole = 'meta' | 'primary';
 // ---------------------------------------------------------------------------
 
 // Forward declare MetaDocKey to break circular references in additionalContexts
-type MetaDocKeyBase = 'manifest' | 'brief' | 'outline' | 'world' | 'characters' | 'locations';
+type MetaDocKeyBase = 'manifest' | 'brief' | 'outline' | 'world' | 'characters' | 'locations' | 'style';
 
 /**
  * Rich text documents store TipTap JSONContent and use standard editors.
@@ -209,6 +210,31 @@ export const docKinds = {
     contextUsageHint:
       'the request calls for a detailed depiction of locations, eras, or world-specific characteristics.',
   } satisfies RichTextDocConfig,
+  style: {
+    storageType: 'richText',
+    id: 'style',
+    scope: 'story',
+    role: 'meta',
+    title: 'Story Style Guide',
+    shortDescription: 'A story-specific prose style guide',
+    contextTag: 'voice/style',
+    contextLayer: 'storyExpression',
+    isContextDoc: true,
+    editorConfig: metaEditorConfig,
+    contextCriteria:
+      'Required when prose generation, revision, tone matching, narrative voice, dialogue style, rhythm, register, or stylistic consistency would inform or improve the answer.',
+    contextIncludes: [
+      'Narrative voice and point of view',
+      'Tense and distance',
+      'Rhythm, sentence texture, and pacing at the prose level',
+      'Language register and vocabulary preferences',
+      'Dialogue style and narration/dialogue balance',
+      'Imagery, metaphor, and sensory style',
+      'Stylistic do/don\'t rules for drafting and revision',
+    ],
+    contextUsageHint:
+      'the response should draft, revise, critique, or preserve the story’s prose voice and stylistic execution.',
+  } satisfies RichTextDocConfig,
   prose: {
     storageType: 'multiPartText',
     id: 'prose',
@@ -219,6 +245,9 @@ export const docKinds = {
     contextLayer: 'storyText',
     isContextDoc: false,
     editorConfig: proseEditorConfig,
+    additionalContexts: {
+      alwaysInclude: ['style'],
+    },
   } satisfies MultiPartTextDocConfig,
   characters: {
     storageType: 'entityIndex',
@@ -449,7 +478,7 @@ export type ContextRules = {
  *     → story-scope meta docs go into intelligentlySelect.
  *
  * This reproduces the CONTEXT_RULES:
- *   prose   → always: [manifest], intelligent: [brief, outline, world]
+ *   prose   → always: [manifest, style], intelligent: [brief, outline, world, characters, locations]
  *   brief   → always: [manifest]
  *   outline → always: [manifest, brief]
  *   world   → always: [manifest, brief]
@@ -493,6 +522,10 @@ export function getContextRulesFor(target: DocKindId): ContextRules {
     const additional = targetCfg.additionalContexts;
     if ('alwaysInclude' in additional && Array.isArray(additional.alwaysInclude)) {
       for (const key of additional.alwaysInclude) {
+        const intelligentIndex = intelligentlySelect.indexOf(key);
+        if (intelligentIndex !== -1) {
+          intelligentlySelect.splice(intelligentIndex, 1);
+        }
         if (!alwaysInclude.includes(key)) {
           alwaysInclude.push(key);
         }

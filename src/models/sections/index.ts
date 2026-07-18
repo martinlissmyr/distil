@@ -42,7 +42,7 @@ export type StorySectionConfig = BaseSectionConfig & {
   /** The doc kind this section edits (if any) - using string to allow future doc kinds not yet in model */
   readonly docKind?: DocKindId | string;
   /** View component name for routing */
-  readonly component: 'StoryTextView' | 'StoryOutlineView' | 'StoryBriefView' | 'StoryWorldView' | 'EntityIndexView' | 'Placeholder';
+  readonly component: 'StoryTextView' | 'StoryOutlineView' | 'StoryBriefView' | 'StoryWorldView' | 'StoryStyleView' | 'EntityIndexView' | 'Placeholder';
 };
 
 /** Root-scoped section configuration */
@@ -129,6 +129,17 @@ export const sectionConfigs = {
     label: 'Locations',
     order: 6,
     component: 'EntityIndexView',
+    isImplemented: true,
+  } as const as StorySectionConfig,
+
+  style: {
+    id: 'style',
+    uiMode: 'meta',
+    scope: 'story',
+    docKind: 'style',
+    label: 'Style',
+    order: 7,
+    component: 'StoryStyleView',
     isImplemented: true,
   } as const as StorySectionConfig,
 

@@ -46,8 +46,9 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 1. **Identity & Governance** — values, voice, tone, constraints (Author Manifest)
 2. **Domain & Methodology** — how work is done (system prompts, editor roles, wizard definitions)
 3. **Project Intent** — goals, audience, scope, creative direction (Story Brief)
-4. **Structured Knowledge** — outlines, worldbuilding, characters, plans
-5. **Task Execution** — moment-to-moment writing and problem-solving (Prose editor with AI)
+4. **Structured Knowledge** — outlines, worldbuilding, characters, locations, plans
+5. **Story Expression** — story-specific prose voice, register, rhythm, and style constraints
+6. **Task Execution** — moment-to-moment writing and problem-solving (Prose editor with AI)
 
 ## High-Level Architecture
 
@@ -63,7 +64,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 
 **Chat Integration** (`electron/chat.ts`)
 - Handles OpenAI API calls via IPC (`chat:send`)
-- Uses GPT-4.1-mini model
+- Routes requests through centralized model profiles in `electron/ai/modelProfiles.ts`
 - Caches OpenAI client instances between calls
 
 **Secure Storage** (`electron/secureStore.ts`)
@@ -81,7 +82,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
   - `project.json` (project metadata including unique ID)
   - `stories/{storyId}/` (story content, parts, entities, chat threads)
     - `story.json` (story metadata and content)
-    - `{storyId}-{key}.json` (MetaDocs: outline, brief, world, etc.)
+    - `{storyId}-{key}.json` (MetaDocs: brief, outline, world, style, etc.)
     - `parts/part-{id}.json` (chapter/part documents for multi-part stories)
     - `{storyId}-characters.json`, `{storyId}-locations.json` (entity indices)
     - `chats/{threadId}.json` (story-scoped chat threads)
@@ -118,7 +119,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Three-level hierarchy: root → project → story
 - Section IDs and configuration defined in sections model (`src/models/sections/`)
 - Root sections: projects, manifest, playground
-- Story sections: prose, brief, outline, world, characters, locations
+- Story sections: prose, brief, outline, world, characters, locations, style
 - App loads last-used navigation state on startup
 
 **Data Model**
@@ -137,12 +138,12 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
   - `projection`: AI-generated summary (with timestamp) used for chapter overview + continuity
 
 **MetaDocs**
-- Stored as separate files, loaded on-demand (outline, brief, etc.)
+- Stored as separate files, loaded on-demand (brief, outline, world, style, etc.)
 - Manifest: Root-level TipTap document for author's style/tone guide (loaded via `loadRootMetaDoc('manifest')`)
 
 **Editor Architecture**
 - Uses TipTap for rich text editing (based on ProseMirror)
-- Two editor types: ProseEditor (main story text) and MetaTextEditor (outline/brief/manifest)
+- Two editor types: ProseEditor (main story text) and MetaTextEditor (brief/outline/world/style/manifest)
 - Editor behavior driven by EditorConfig from doc model (heading levels, lists, toolbar items)
 - Factory functions convert configs to TipTap extensions and toolbar components
 - Documents stored as TipTap JSONContent format
@@ -153,9 +154,9 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Documents organized by three axes:
   - **Scope**: root / project / story (data organization)
   - **Role**: meta (supporting docs) / primary (the actual story text)
-  - **Context Layer**: LCRF layer mapping (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyText)
+  - **Context Layer**: LCRF layer mapping (author → projectConcept → storyConcept → storyStructure → storyWorld → storyEntities → storyExpression → storyText)
 - **Document Type Discrimination**: Uses discriminated union for config types:
-  - **RichTextDocConfig**: TipTap-based documents (prose, outline, brief, world, manifest)
+  - **RichTextDocConfig**: TipTap-based documents (prose, brief, outline, world, style, manifest)
   - **EntityIndexDocConfig**: Structured JSON indices for entities (characters, locations)
 - Each doc kind includes:
   - LCRF layer assignment (which layer of the stack it belongs to)
@@ -168,10 +169,15 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
   - Entity indices store lightweight projections (EntityIndex with EntityIndexEntry[])
   - Storage: `{storyId}-characters.json` and `{storyId}-locations.json`
   - EntityIndexDocConfig distinguishes them from rich text documents
+- **Style Guide**: Story-specific style registered at `storyExpression` layer
+  - Stored as a story-scoped rich text MetaDoc (`{storyId}-style.json`)
+  - Always included for prose through the existing `additionalContexts` mechanism
+  - Informs prose drafting and revision without overriding upstream concept, structure, world, or entity authority
 - **Derived Context Rules**: `getContextRulesFor(target)` implements LCRF authority flow
   - Upstream layers (higher in the stack) are "always included" for downstream editing
   - Root-scope docs (Identity & Governance) always included in all contexts
   - Story-scope docs intelligently selected based on relevance to current task
+  - Target-level `additionalContexts` can promote specific story meta docs, such as `style` for prose, to always-included context
 - This is the technical implementation of LCRF's layered architecture
 
 **Editor Configuration Model** (`src/models/docs/editorConfig.ts`)
@@ -213,7 +219,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
   - Result: AI receives *just enough context* — no more, no less
 - **prompts/buildFromTemplates.ts**: Template-based prompt construction (system/assistant/user)
 - **chatHints.ts**: Context-aware suggestion system that guides users through LCRF layer construction
-  - Keeps existing chat hints & suggestions behavior (manifest → brief → outline → prose)
+  - Keeps existing chat hints & suggestions behavior (manifest → brief → outline → style → prose)
 - **Chat thread persistence (behavior & message handling)** (`src/hooks/useChatMessages.ts`, `src/ui/chat/ChatAside.tsx`)
   - Chat conversations persist per-document with thread-based storage
   - Thread IDs generated from document scope:
@@ -265,7 +271,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
   - Takes `docKind`, `content`, `onUpdate`, `onSave` - fully declarative API
   - Supports custom content injection via `renderEditorContent` prop
   - Used by both MetaTextEditor and StoryTextView
-- `MetaTextEditor`: High-level wrapper for meta documents (manifest, brief, outline, world)
+- `MetaTextEditor`: High-level wrapper for meta documents (manifest, brief, outline, world, style)
   - Loads from Zustand store, passes to WritingEnvironment
   - Simple API: just `scope` + `metaKey`
 - `SearchPanel`: Find/replace panel (Cmd+F / Ctrl+F)
@@ -354,7 +360,7 @@ Distil is a concrete implementation of LCRF, a human-intention–driven architec
 - Consumers check `response.ok` and handle errors explicitly
 
 **MetaDocs System**
-- Flexible document system for story metadata (outline, brief, etc.)
+- Flexible document system for story metadata (brief, outline, world, style, etc.)
 - Scoped to root/project/story levels (e.g., `loadStoryMetaDoc`, `loadRootMetaDoc`)
 - **Efficient storage**
   - Each metaDoc stored as a separate JSON file (e.g., `{storyId}-outline.json`)

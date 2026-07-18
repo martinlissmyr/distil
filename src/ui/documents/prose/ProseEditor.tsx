@@ -241,7 +241,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
   // Preload context docs
   usePreloadMetaDocs(
     { scope: 'story', projectId, storyId },
-    ['brief', 'outline']
+    ['brief', 'outline', 'style']
   );
 
   // Don't render editor until part data is synced

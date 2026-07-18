@@ -12,6 +12,10 @@ Before you start writing, consider creating a brief (core idea, premise, themes)
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
 Before you dive in, consider creating an outline (plot structure, character arcs) to guide your writing.
 {{/if}}
+
+{{#if hasContent(manifest) && hasContent(brief) && hasContent(outline) && !hasContent(style)}}
+Before drafting further, consider creating a story style guide for voice, point of view, rhythm, register, and dialogue style.
+{{/if}}
 {{/if}}
 
 {{#if selfHasContent}}
@@ -27,5 +31,9 @@ However, it would be easier for me to help you if you'd consider creating a brie
 
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
 Although, before moving on, consider creating an outline (plot structure, character arcs) to guide your writing.
+{{/if}}
+
+{{#if hasContent(manifest) && hasContent(brief) && hasContent(outline) && !hasContent(style)}}
+It would also help to define a story style guide so I can keep prose feedback aligned with the intended voice.
 {{/if}}
 {{/if}}

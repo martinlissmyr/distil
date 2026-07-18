@@ -12,6 +12,10 @@ Innan du börjar skriva är det en god idé att skapa en brief där du beskriver
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
 Innan du börjar är det effektivt att skapa en outline där du beskriver berättelsens struktur och framåtrörelse. Denna fungerar sedan som ett effektivt stöd i skrivandet.
 {{/if}}
+
+{{#if hasContent(manifest) && hasContent(brief) && hasContent(outline) && !hasContent(style)}}
+Innan du skriver vidare kan det vara värdefullt att skapa en stilguide för berättarröst, perspektiv, rytm, register och dialogstil.
+{{/if}}
 {{/if}}
 
 {{#if selfHasContent}}
@@ -26,5 +30,9 @@ Det blir dock lättare att hjälpa dig om du först skapar en brief för din tex
 
 {{#if hasContent(manifest) && hasContent(brief) && !hasContent(outline)}}
 Innan du går vidare kan det vara hjälpsamt att skapa en disposition eller outline som beskriver berättelsens struktur, karaktärsbågar och utveckling.
+{{/if}}
+
+{{#if hasContent(manifest) && hasContent(brief) && hasContent(outline) && !hasContent(style)}}
+Det skulle också hjälpa att definiera en stilguide så att responsen på prosan kan följa berättelsens avsedda röst.
 {{/if}}
 {{/if}}

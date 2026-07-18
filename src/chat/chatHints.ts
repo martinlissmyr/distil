@@ -63,7 +63,7 @@ const isEmpty = (s?: DocState) => s === 'empty';
 const isMissing = (s?: DocState) => s === 'missing';
 
 // Only doc kinds that have hint templates
-type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief' | 'world' | 'characters' | 'locations';
+type TemplateKey = 'prose' | 'manifest' | 'outline' | 'brief' | 'world' | 'style' | 'characters' | 'locations';
 
 function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'prose') return 'prose';
@@ -71,6 +71,7 @@ function kindToTemplateKey(kind: DocKindId): TemplateKey | null {
   if (kind === 'outline') return 'outline';
   if (kind === 'brief') return 'brief';
   if (kind === 'world') return 'world';
+  if (kind === 'style') return 'style';
   if (kind === 'characters') return 'characters';
   if (kind === 'locations') return 'locations';
   return null;
@@ -135,6 +136,8 @@ function getWriteActionForTopmostMissingUpstreamDoc(
       return actions.writeBrief;
     case 'outline':
       return actions.writeOutline;
+    case 'style':
+      return actions.writeStyle;
     // add this only if you actually have it
     // case 'world':
     //   return actions.writeWorld;

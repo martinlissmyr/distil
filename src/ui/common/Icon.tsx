@@ -36,6 +36,7 @@ import {
   Trash2,
   Search,
   BookOpenText,
+  Speech,
 } from 'lucide-react';
 
 export type IconType =
@@ -55,6 +56,7 @@ export type IconType =
   | 'brief'
   | 'outline'
   | 'world'
+  | 'style'
   | 'characters'
   | 'character'
   | 'locations'
@@ -145,6 +147,9 @@ export const Icon = ({type, size = 20, ...props}: {type: IconType, size?: number
 		}
 		case 'world': {
 			return <Globe {...iconProps}/>
+		}
+		case 'style': {
+			return <Speech {...iconProps}/>
 		}
 		case 'characters': {
 			return <Users {...iconProps}/>

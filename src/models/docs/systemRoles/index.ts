@@ -6,12 +6,14 @@ import manifestSystemRoleMd from './manifestRole.md?raw';
 import outlineSystemRoleMd from './outlineRole.md?raw';
 import briefSystemRoleMd from './briefRole.md?raw';
 import worldSystemRoleMd from './worldRole.md?raw';
+import styleSystemRoleMd from './styleRole.md?raw';
 import defaultSystemRoleMd from './defaultRole.md?raw';
 
 const systemRoleByDocKind: Partial<Record<DocKindId, string>> = {
   prose: proseSystemRoleMd,
   brief: briefSystemRoleMd,
   world: worldSystemRoleMd,
+  style: styleSystemRoleMd,
   manifest: manifestSystemRoleMd,
   outline: outlineSystemRoleMd,
 };
