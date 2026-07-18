@@ -252,6 +252,7 @@ export function useChatMessages({
   }, [
     threadId,
     kind,
+    fullTextMarkdown,
     isTextLoaded,
     metaDocs,
     projectId,

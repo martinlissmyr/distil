@@ -1,11 +1,34 @@
 // electron/preload.ts
 import { ipcRenderer, contextBridge } from 'electron'
 import type { IpcRendererEvent } from 'electron'
+import type { JSONContent } from '@tiptap/react'
+import type { WritingLanguage } from '../src/types/language'
+import type { UiSchema } from '../src/types/ui'
+import type { ChatModelProfileId } from '../src/types/ai'
+import type { EntityType, EntityIndex } from '../src/models/entities/entityIndex'
+import type { CharacterDoc } from '../src/models/entities/schemas/character'
+import type { LocationDoc } from '../src/models/entities/schemas/location'
+import type { StoryMetadata, PartDoc } from '../src/models/story'
+import type { MergedStory } from '../src/models/export'
+import type { ChatThread, ProjectMeta, StoryMeta } from './fs/fs'
+
+type EntityDoc = CharacterDoc | LocationDoc
+type ProjectUpdate = { name?: string }
+type StoryUpdate = { title?: string }
+type ChatMessage = { role: 'user' | 'assistant' | 'system'; content: string }
+type ChatPayload = {
+  messages: ChatMessage[];
+  profile?: ChatModelProfileId;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  responseFormat?: 'json' | 'text';
+}
 
 contextBridge.exposeInMainWorld('theme', {
   get: () => ipcRenderer.invoke('theme:get'),
-  onChange: (callback: (theme: string) => void) => {
-    ipcRenderer.on('theme:changed', (_event, theme) => {
+  onChange: (callback: (theme: UiSchema) => void) => {
+    ipcRenderer.on('theme:changed', (_event, theme: UiSchema) => {
       callback(theme)
     })
   },
@@ -13,9 +36,9 @@ contextBridge.exposeInMainWorld('theme', {
 
 contextBridge.exposeInMainWorld('distil', {
   // -------- projects ----------
-  listProjects: () => ipcRenderer.invoke('projects:list'),
+  listProjects: () => ipcRenderer.invoke('projects:list') as Promise<ProjectMeta[]>,
   createProject: (name: string) => ipcRenderer.invoke('projects:create', name),
-  updateProject: (id: string, updates: any) =>
+  updateProject: (id: string, updates: ProjectUpdate) =>
     ipcRenderer.invoke('projects:update', id, updates),
   deleteProject: (id: string) => ipcRenderer.invoke('projects:delete', id),
   reorderProjects: (ids: string[]) =>
@@ -23,14 +46,14 @@ contextBridge.exposeInMainWorld('distil', {
 
   // -------- stories ----------
   listStories: (projectId: string) =>
-    ipcRenderer.invoke('stories:list', projectId),
+    ipcRenderer.invoke('stories:list', projectId) as Promise<StoryMeta[]>,
   createStory: (projectId: string, title: string) =>
     ipcRenderer.invoke('story:create', projectId, title),
   loadStoryMetadata: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('story:loadMetadata', projectId, storyId),
-  saveStoryMetadata: (projectId: string, storyId: string, metadata: any) =>
+  saveStoryMetadata: (projectId: string, storyId: string, metadata: StoryMetadata) =>
     ipcRenderer.invoke('story:saveMetadata', projectId, storyId, metadata),
-  updateStory: (projectId: string, storyId: string, updates: any) =>
+  updateStory: (projectId: string, storyId: string, updates: StoryUpdate) =>
     ipcRenderer.invoke('story:update', projectId, storyId, updates),
   deleteStory: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('story:delete', projectId, storyId),
@@ -39,8 +62,8 @@ contextBridge.exposeInMainWorld('distil', {
 
   // -------- parts (multi-part documents) ----------
   loadPartDoc: (projectId: string, storyId: string, partId: string) =>
-    ipcRenderer.invoke('part:load', projectId, storyId, partId),
-  savePartDoc: (projectId: string, storyId: string, partId: string, doc: any) =>
+    ipcRenderer.invoke('part:load', projectId, storyId, partId) as Promise<PartDoc>,
+  savePartDoc: (projectId: string, storyId: string, partId: string, doc: JSONContent) =>
     ipcRenderer.invoke('part:save', projectId, storyId, partId, doc),
   createPart: (projectId: string, storyId: string, order: number) =>
     ipcRenderer.invoke('part:create', projectId, storyId, order),
@@ -56,30 +79,30 @@ contextBridge.exposeInMainWorld('distil', {
     projectId: string,
     storyId: string,
     key: string,
-    doc: any
+    doc: JSONContent
   ) => ipcRenderer.invoke('storyMeta:save', projectId, storyId, key, doc),
 
   // -------- root metaDocs (e.g. manifest) ----------
   loadRootMetaDoc: (key: string) =>
     ipcRenderer.invoke('rootMeta:load', key),
-  saveRootMetaDoc: (key: string, doc: any) =>
+  saveRootMetaDoc: (key: string, doc: JSONContent) =>
     ipcRenderer.invoke('rootMeta:save', key, doc),
 
   // -------- entity indices ----------
-  loadEntityIndex: (projectId: string, storyId: string, entityType: 'character' | 'location') =>
+  loadEntityIndex: (projectId: string, storyId: string, entityType: EntityType) =>
     ipcRenderer.invoke('entity:loadIndex', projectId, storyId, entityType),
-  saveEntityIndex: (projectId: string, storyId: string, entityType: 'character' | 'location', index: any) =>
+  saveEntityIndex: (projectId: string, storyId: string, entityType: EntityType, index: EntityIndex) =>
     ipcRenderer.invoke('entity:saveIndex', projectId, storyId, entityType, index),
 
   // -------- entity documents ----------
-  loadEntityDoc: (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string) =>
+  loadEntityDoc: (projectId: string, storyId: string, entityType: EntityType, entityId: string) =>
     ipcRenderer.invoke('entity:load', projectId, storyId, entityType, entityId),
-  saveEntityDoc: (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: any) =>
+  saveEntityDoc: (projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: EntityDoc) =>
     ipcRenderer.invoke('entity:save', projectId, storyId, entityType, entityId, doc),
 
   // -------- chat threads ----------
   loadChatThread: (threadId: string) => ipcRenderer.invoke('chat:load', threadId),
-  saveChatThread: (thread: any) => ipcRenderer.invoke('chat:save', thread),
+  saveChatThread: (thread: ChatThread) => ipcRenderer.invoke('chat:save', thread),
 
   // -------- export ----------
   exportToDocx: (projectId: string, storyId: string) =>
@@ -87,7 +110,7 @@ contextBridge.exposeInMainWorld('distil', {
   exportToPdf: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('export:exportToPdf', projectId, storyId),
   getMergedStory: (projectId: string, storyId: string) =>
-    ipcRenderer.invoke('export:getMergedStory', projectId, storyId),
+    ipcRenderer.invoke('export:getMergedStory', projectId, storyId) as Promise<MergedStory>,
   showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') =>
     ipcRenderer.invoke('export:showSaveDialog', storyTitle, format),
   saveFile: (filePath: string, buffer: Uint8Array) =>
@@ -95,25 +118,11 @@ contextBridge.exposeInMainWorld('distil', {
 })
 
 contextBridge.exposeInMainWorld('chat', {
-  send: async (payload: {
-    messages: Array<{ role: string; content: string }>;
-    profile?: 'chat' | 'classifier' | 'projection';
-    model?: string;
-    temperature?: number;
-    maxTokens?: number;
-    responseFormat?: 'json' | 'text';
-  }) => {
+  send: async (payload: ChatPayload) => {
     return ipcRenderer.invoke('chat:send', payload)
   },
   stream: (
-    payload: {
-      messages: Array<{ role: string; content: string }>;
-      profile?: 'chat' | 'classifier' | 'projection';
-      model?: string;
-      temperature?: number;
-      maxTokens?: number;
-      responseFormat?: 'json' | 'text';
-    },
+    payload: ChatPayload,
     handlers: {
       onDelta: (delta: string) => void;
       onDone: (result: { output_text: string }) => void;
@@ -167,7 +176,7 @@ contextBridge.exposeInMainWorld('settings', {
 
   // ---- writing language ----
   getWritingLanguage: () => ipcRenderer.invoke('settings:getWritingLanguage'),
-  setWritingLanguage: (lang: string) =>
+  setWritingLanguage: (lang: WritingLanguage) =>
     ipcRenderer.invoke('settings:setWritingLanguage', lang),
 
   // ---- UI Schema ----
@@ -185,7 +194,7 @@ contextBridge.exposeInMainWorld('menu', {
   updateContext: (context: { isStoryContext: boolean; projectId?: string; storyId?: string }) =>
     ipcRenderer.send('menu:updateContext', context),
   onExport: (callback: (format: 'docx' | 'pdf') => void) => {
-    const handler = (_event: any, format: 'docx' | 'pdf') => callback(format);
+    const handler = (_event: IpcRendererEvent, format: 'docx' | 'pdf') => callback(format);
     ipcRenderer.on('menu:export', handler);
 
     // Return cleanup function
@@ -194,7 +203,7 @@ contextBridge.exposeInMainWorld('menu', {
     };
   },
   onNavigateToProject: (callback: (projectId: string) => void) => {
-    const handler = (_event: any, projectId: string) => callback(projectId);
+    const handler = (_event: IpcRendererEvent, projectId: string) => callback(projectId);
     ipcRenderer.on('navigation:openProject', handler);
 
     // Return cleanup function

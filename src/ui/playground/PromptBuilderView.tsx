@@ -1,5 +1,6 @@
 // src/ui/playground/PromptBuilderView.tsx
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import type { JSONContent } from '@tiptap/react';
 import {
   Box,
   Stack,
@@ -97,6 +98,7 @@ export const PromptBuilderView: React.FC = () => {
     // These are meta doc keys by construction in getContextRulesFor
     return [...contextRules.alwaysInclude, ...contextRules.intelligentlySelect];
   }, [contextRules]);
+  const visibleStories = needsStory ? stories : [];
 
   // Options for selecting doc kind (from docs model)
   const docKindOptions = useMemo(() => {
@@ -131,30 +133,12 @@ export const PromptBuilderView: React.FC = () => {
 
   // Load stories when project selected (only when needed)
   useEffect(() => {
-    if (!needsStory) {
-      setStories([]);
-      return;
-    }
+    if (!needsStory || !state.selectedProjectId) return;
 
-    if (state.selectedProjectId) {
-      client.listStories(state.selectedProjectId).then((response) => {
-        if (response.ok) setStories(response.data);
-      });
-    } else {
-      setStories([]);
-    }
+    client.listStories(state.selectedProjectId).then((response) => {
+      if (response.ok) setStories(response.data);
+    });
   }, [needsStory, state.selectedProjectId]);
-
-  // Reset story selection when switching away from story docs
-  useEffect(() => {
-    if (!needsStory) {
-      setState((s) => ({
-        ...s,
-        selectedProjectId: null,
-        selectedStoryId: null,
-      }));
-    }
-  }, [needsStory]);
 
   // Load main doc content when (kind + scope identifiers) change
   useEffect(() => {
@@ -208,7 +192,7 @@ export const PromptBuilderView: React.FC = () => {
         const metadata = metadataRes.data;
 
         // Load first part if available
-        let partDoc: any;
+        let partDoc: JSONContent;
         if (metadata.parts.length > 0) {
           const firstPart = metadata.parts[0];
           const partRes = await client.loadPartDoc(projectId, storyId, firstPart.id);
@@ -257,8 +241,7 @@ export const PromptBuilderView: React.FC = () => {
       setMainHasContent(false);
     };
 
-    loadMain();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadMain();
   }, [state.kind, needsStory, needsRoot, state.selectedProjectId, state.selectedStoryId]);
 
   // Load + compute context doc content status derived from docs model rules
@@ -360,7 +343,7 @@ export const PromptBuilderView: React.FC = () => {
 
       const prompt = await buildPrompt({
         rawUserPrompt: state.userPrompt,
-        kind: state.kind as any,
+        kind: state.kind,
         title: state.loadedTitle || getDocTitle(state.kind),
         scope: state.scope,
         fullTextMarkdown: fullText,
@@ -368,7 +351,7 @@ export const PromptBuilderView: React.FC = () => {
         projectId: needsStory ? state.selectedProjectId || undefined : undefined,
         storyId: needsStory ? state.selectedStoryId || undefined : undefined,
         language: DEFAULT_WRITING_LANGUAGE,
-      } as any);
+      });
 
       setBuiltPrompt(prompt);
     } finally {
@@ -414,6 +397,7 @@ export const PromptBuilderView: React.FC = () => {
                 value={state.kind}
                 onChange={(value) => {
                   const kind = (value as DocKindId) || 'prose';
+                  const kindScope = getDocScope(kind);
                   setState((s) => ({
                     ...s,
                     kind,
@@ -421,6 +405,8 @@ export const PromptBuilderView: React.FC = () => {
                     emptyMainDoc: false,
                     simulateEmptyContextDocs: {},
                     scope: 'text',
+                    selectedProjectId: kindScope === 'story' ? s.selectedProjectId : null,
+                    selectedStoryId: kindScope === 'story' ? s.selectedStoryId : null,
                     loadedTitle: '',
                     loadedFullText: '',
                     loadedSelection: '',
@@ -451,7 +437,7 @@ export const PromptBuilderView: React.FC = () => {
                     <Select
                       label="Story"
                       placeholder="Select a story"
-                      data={stories.map((s) => ({ value: s.id, label: s.title }))}
+                      data={visibleStories.map((s) => ({ value: s.id, label: s.title }))}
                       value={state.selectedStoryId}
                       onChange={(value) => setState((s) => ({ ...s, selectedStoryId: value }))}
                       clearable

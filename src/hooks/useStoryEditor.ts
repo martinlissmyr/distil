@@ -24,37 +24,38 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
   const loadStoryMetadata = useAppStore((state) => state.loadStoryMetadata);
   const currentPartId = storyId ? getCurrentPartId(storyId) : undefined;
   const [currentTitle, setCurrentTitle] = useState('');
-  const [currentDoc, setCurrentDoc] = useState<JSONContent | null>(null);
+  const [loadedDoc, setLoadedDoc] = useState<JSONContent | null>(null);
+  const [loadedPartId, setLoadedPartId] = useState<string | null>(null);
+  const [editedDoc, setEditedDoc] = useState<JSONContent | null>(null);
   const [dirty, setDirty] = useState(false);
 
   // Watch store's currentPartDoc for part switching
   const currentPartDoc = useAppStore((state) => state.currentPartDoc);
-
-  useEffect(() => {
-    if (!currentPartDoc) return;
-
-    //console.log('[EDITOR] currentPartDoc changed, updating editor');
-    // Update local editor state when part doc changes in store
-    // Use setCurrentDoc directly to avoid triggering loadStory's dirty reset
-    setCurrentDoc(currentPartDoc);
-    setDirty(false); // New part is clean
-  }, [currentPartDoc]);
+  const currentDoc = dirty
+    ? editedDoc
+    : loadedPartId === currentPartId
+      ? loadedDoc
+      : currentPartDoc ?? loadedDoc;
 
   /**
    * Load a story's content into the editor
    */
   const loadStory = useCallback((story: { title: string; doc: JSONContent }) => {
     setCurrentTitle(story.title);
-    setCurrentDoc(story.doc);
+    setLoadedDoc(story.doc);
+    setLoadedPartId(currentPartId ?? null);
+    setEditedDoc(null);
     setDirty(false);
-  }, []);
+  }, [currentPartId]);
 
   /**
    * Clear the editor (when navigating away from a story)
    */
   const clearEditor = useCallback(() => {
     setCurrentTitle('');
-    setCurrentDoc(null);
+    setLoadedDoc(null);
+    setLoadedPartId(null);
+    setEditedDoc(null);
     setDirty(false);
   }, []);
 
@@ -62,7 +63,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
    * Update the document content and mark as dirty
    */
   const updateDoc = useCallback((doc: JSONContent) => {
-    setCurrentDoc(doc);
+    setEditedDoc(doc);
     setDirty(true);
   }, []);
 
@@ -104,6 +105,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
       }
 
       if (saveResponse.ok) {
+        setLoadedDoc(currentDoc);
+        setLoadedPartId(currentPartId);
+        setEditedDoc(null);
+        useAppStore.setState({ currentPartDoc: currentDoc });
         setDirty(false);
         // Reload story metadata to keep store in sync after saving part
         await loadStoryMetadata(projectId, storyId);
@@ -116,7 +121,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
       console.error('Save failed:', e);
       return false;
     }
-  }, [currentDoc, currentTitle, currentPartId]);
+  }, [currentDoc, currentTitle, currentPartId, loadStoryMetadata]);
 
   /**
    * Autosave effect - saves 1000ms after changes when dirty
@@ -151,6 +156,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
           }
 
           if (saveResponse.ok) {
+            setLoadedDoc(currentDoc);
+            setLoadedPartId(currentPartId);
+            setEditedDoc(null);
+            useAppStore.setState({ currentPartDoc: currentDoc });
             setDirty(false);
             // Reload story metadata to keep store in sync after saving part
             await loadStoryMetadata(projectId, storyId);
@@ -164,7 +173,7 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [dirty, currentDoc, currentTitle, projectId, storyId, currentPartId]);
+  }, [dirty, currentDoc, currentTitle, projectId, storyId, currentPartId, loadStoryMetadata]);
 
   return {
     // State
@@ -181,7 +190,10 @@ export function useStoryEditor(projectId: string | null, storyId: string | null)
 
     // Direct setters (for compatibility)
     setCurrentTitle,
-    setCurrentDoc,
+    setCurrentDoc: (doc: JSONContent | null) => {
+      setLoadedDoc(doc);
+      setLoadedPartId(currentPartId ?? null);
+    },
     setDirty,
   };
 }

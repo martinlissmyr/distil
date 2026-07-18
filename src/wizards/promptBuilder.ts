@@ -1,5 +1,5 @@
 // src/wizards/promptBuilder.ts
-import type { LlmProcessingStep, WizardContext } from './types';
+import type { LlmProcessingStep, WizardContext, WizardValueMap } from './types';
 import { interpolate } from '../helpers/interpolate';
 import { WRITING_LANGUAGE_LABEL, DEFAULT_WRITING_LANGUAGE } from '../types/language';
 
@@ -47,8 +47,8 @@ export type BuiltPrompt = {
  */
 export async function buildPromptForStep(
   step: LlmProcessingStep,
-  answers: Record<string, any>,
-  llmResults: Record<string, any>,
+  answers: WizardValueMap,
+  llmResults: WizardValueMap,
   wizardContext: WizardContext,
   deps: PromptBuilderDeps,
   useTestPrompt = false

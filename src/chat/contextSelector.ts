@@ -19,6 +19,7 @@ import {
 import contextClassificationPromptMd from './prompts/contextClassificationPrompt.md?raw';
 import entitySelectionPromptMd from './prompts/entitySelectionPrompt.md?raw';
 import { interpolate } from '../helpers/interpolate';
+import { getPrimaryTitleValue } from '../helpers/entityProjectionUtils';
 import { loadFixtureEntityIndex } from '../fixtures/fixtureLoader';
 import { characterType } from '../models/entities/schemas/character';
 import { locationType } from '../models/entities/schemas/location';
@@ -166,7 +167,7 @@ export async function getContextDocs(
               if (response.ok && response.data) {
                 const markdown = entityToMarkdown(response.data, schema);
                 contexts.docs.push({
-                  label: `${labelPrefix} (FULL): ${response.data.name}`,
+                  label: `${labelPrefix} (FULL): ${getPrimaryTitleValue(response.data, schema)}`,
                   content: markdown,
                 });
               }
@@ -308,7 +309,7 @@ export function buildPrompt(ambiguousNeededContexts: MetaDocKey[]): string {
 export type LlmContextResult = {
   relevantContexts: MetaDocKey[];
   entityDepths: Map<MetaDocKey, EntityDepth>; // depth for each entity type
-  result: Record<string, any> | null; // raw LLM JSON for testing
+  result: Record<string, unknown> | null; // raw LLM JSON for testing
 };
 
 export async function determineContextNeedsWithLLMClassification(
@@ -379,7 +380,7 @@ export async function determineContextNeedsWithLLMClassification(
 export type ContextNeedsResult = {
   relevantContexts: MetaDocKey[];
   entityDepths: Map<MetaDocKey, EntityDepth>;
-  result: Record<string, any> | null; // null when only heuristics used
+  result: Record<string, unknown> | null; // null when only heuristics used
 };
 
 export async function determineContextNeeds(
@@ -480,7 +481,7 @@ async function loadEntityProjections(
 
 export type EntitySelectionResult = {
   selectedEntityIds: string[];
-  result: Record<string, any> | null; // raw LLM JSON for testing
+  result: Record<string, unknown> | null; // raw LLM JSON for testing
 };
 
 /**

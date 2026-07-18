@@ -4,11 +4,11 @@ import { client, StoryMeta } from '../api/client';
 import type { StorySection } from './useNavigation';
 import type { JSONContent } from '@tiptap/react';
 
-interface EntityCRUD<T> {
+interface EntityCRUD<T, TCreate, TUpdate> {
   items: T[];
   isLoading: boolean;
-  create: (data: any) => Promise<T | null>;
-  update: (id: string, data: any) => Promise<T | null>;
+  create: (data: TCreate) => Promise<T | null>;
+  update: (id: string, data: TUpdate) => Promise<T | null>;
   delete: (id: string) => Promise<boolean>;
   reorder: (ids: string[]) => Promise<boolean>;
   reload: () => Promise<void>;
@@ -23,7 +23,7 @@ export interface StoryHandlersParams {
   loadStory: (data: { title: string; doc: JSONContent }) => void;
   setCurrentTitle: (title: string) => void;
 
-  storiesCRUD: EntityCRUD<StoryMeta>;
+  storiesCRUD: EntityCRUD<StoryMeta, string, { title: string }>;
   stories: StoryMeta[];
 
   selectedProjectId: string | null;

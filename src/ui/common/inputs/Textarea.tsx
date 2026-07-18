@@ -9,7 +9,7 @@ import {
   Button,
 } from '@mantine/core';
 import classes from './Textarea.module.scss';
-import { Icon } from '../Icon';
+import { Icon, type IconType } from '../Icon';
 import type { RefObject } from 'react';
 
 type TextareaProps = {
@@ -28,7 +28,7 @@ type TextareaProps = {
   minLength?: number;
   maxLength?: number;
 
-  actionButtonIcon?: string;
+  actionButtonIcon?: IconType;
   actionButtonText?: string;
   onActionButtonClick?: (value: string) => void;
 
@@ -90,7 +90,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   const charCount = value.length;
   const overMax = Boolean(maxLength && charCount > maxLength);
 
-  const RightSection = () => {
+  const rightSection = (() => {
     if (effectiveError) {
       return (
         <Badge
@@ -116,7 +116,7 @@ export const Textarea: React.FC<TextareaProps> = ({
     } else {
       return null;
     }
-  }
+  })();
 
   const hasRightSection = Boolean(effectiveError || showCounter);
 
@@ -133,7 +133,7 @@ export const Textarea: React.FC<TextareaProps> = ({
               variant="filled"
               aria-label={actionButtonText}
               onClick={() => onActionButtonClick(value)}
-              rightSection={<Icon type={actionButtonIcon as any} size={12}/>}
+              rightSection={<Icon type={actionButtonIcon} size={12}/>}
             >
               {actionButtonText}
             </Button>
@@ -156,7 +156,7 @@ export const Textarea: React.FC<TextareaProps> = ({
         data-counter={showCounter}
         size="sm"
         {...(hasRightSection && {
-          rightSection: <RightSection />,
+          rightSection,
         })}
         ref={textareaRef}
       />

@@ -5,11 +5,21 @@ import { validateWizardConfig } from './validation';
 // Vite: eagerly import all JSON files in ./configs
 const modules = import.meta.glob('./configs/*.json', { eager: true });
 
-const RAW_REGISTRY: Record<WizardId, any> = {};
+type JsonModule = { default?: unknown };
+
+const RAW_REGISTRY: Record<WizardId, unknown> = {};
 for (const [, mod] of Object.entries(modules)) {
   // Vite puts JSON on `default`
-  const raw = (mod as any).default ?? mod;
-  if (raw?.id) RAW_REGISTRY[raw.id as WizardId] = raw;
+  const typedMod = mod as JsonModule;
+  const raw = typedMod.default ?? mod;
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    'id' in raw &&
+    typeof raw.id === 'string'
+  ) {
+    RAW_REGISTRY[raw.id as WizardId] = raw;
+  }
 }
 
 const CACHE: Partial<Record<WizardId, WizardConfig>> = {};

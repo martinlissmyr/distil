@@ -1,5 +1,6 @@
 // electron/handlers/chat.ts
 import { loadChatThread, saveChatThread } from '../fs/fs';
+import type { ChatThread } from '../fs/fs';
 import { safeHandle } from '../utils/ipcHandler';
 
 /**
@@ -13,7 +14,7 @@ export function registerChatThreadHandlers(): void {
     return loadChatThread(threadId);
   });
 
-  safeHandle('chat:save', async (thread: any) => {
+  safeHandle('chat:save', async (thread: ChatThread) => {
     if (!thread || !thread.threadId || !Array.isArray(thread.messages)) {
       throw new Error('Invalid chat thread data');
     }

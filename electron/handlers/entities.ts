@@ -2,6 +2,11 @@
 import { loadEntityIndex, saveEntityIndex, loadEntityDoc, saveEntityDoc } from '../fs/fs';
 import { validateProjectId, validateStoryId, validateJsonDoc } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
+import type { EntityIndex } from '../../src/models/entities/entityIndex';
+import { CharacterDocSchema } from '../../src/models/entities/schemas/character';
+import { LocationDocSchema } from '../../src/models/entities/schemas/location';
+
+type EntityDoc = ReturnType<typeof CharacterDocSchema.parse> | ReturnType<typeof LocationDocSchema.parse>;
 
 /**
  * Validates entity type
@@ -10,6 +15,32 @@ function validateEntityType(entityType: unknown): asserts entityType is 'charact
   if (entityType !== 'character' && entityType !== 'location') {
     throw new Error('Entity type must be either "character" or "location"');
   }
+}
+
+function validateEntityIndex(index: unknown): EntityIndex {
+  validateJsonDoc(index);
+
+  const candidate = index as Partial<EntityIndex>;
+  if (
+    candidate.version !== 1 ||
+    !candidate.scope ||
+    candidate.scope.kind !== 'story' ||
+    typeof candidate.scope.projectId !== 'string' ||
+    typeof candidate.scope.storyId !== 'string' ||
+    !Array.isArray(candidate.entities) ||
+    typeof candidate.updatedAt !== 'string'
+  ) {
+    throw new Error('Invalid entity index');
+  }
+
+  return candidate as EntityIndex;
+}
+
+function validateEntityDoc(entityType: 'character' | 'location', doc: unknown): EntityDoc {
+  validateJsonDoc(doc);
+  return entityType === 'character'
+    ? CharacterDocSchema.parse(doc)
+    : LocationDocSchema.parse(doc);
 }
 
 /**
@@ -28,12 +59,11 @@ export function registerEntityHandlers(): void {
 
   safeHandle(
     'entity:saveIndex',
-    async (projectId: string, storyId: string, entityType: 'character' | 'location', index: any) => {
+    async (projectId: string, storyId: string, entityType: 'character' | 'location', index: unknown) => {
       validateProjectId(projectId);
       validateStoryId(storyId);
       validateEntityType(entityType);
-      validateJsonDoc(index);
-      await saveEntityIndex(projectId, storyId, entityType, index);
+      await saveEntityIndex(projectId, storyId, entityType, validateEntityIndex(index));
       return undefined; // void return
     }
   );
@@ -55,17 +85,16 @@ export function registerEntityHandlers(): void {
 
   safeHandle(
     'entity:save',
-    async (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: any) => {
+    async (projectId: string, storyId: string, entityType: 'character' | 'location', entityId: string, doc: unknown) => {
       validateProjectId(projectId);
       validateStoryId(storyId);
       validateEntityType(entityType);
-      validateJsonDoc(doc);
 
       if (!entityId || typeof entityId !== 'string') {
         throw new Error('Invalid entity ID');
       }
 
-      await saveEntityDoc(projectId, storyId, entityType, entityId, doc);
+      await saveEntityDoc(projectId, storyId, entityType, entityId, validateEntityDoc(entityType, doc));
       return undefined; // void return
     }
   );

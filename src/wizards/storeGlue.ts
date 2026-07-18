@@ -1,58 +1,79 @@
 // src/wizards/storeGlue.ts
 import type { RefObject } from 'react';
-import type { WizardActions, WizardContext, WizardState, LlmProcessingStep } from './types';
+import type {
+  WizardActions,
+  WizardContext,
+  WizardState,
+  LlmProcessingStep,
+  WizardValue,
+} from './types';
 import { createWizardEngine } from './engine';
 import { docIdForMeta } from '../state/useAppStore';
 import { insertIntoTextarea } from '../helpers/inputHelpers';
 
+type StoreState = WizardState & {
+  wizardResult?: string | null;
+  bumpDocRevision: (docId: string) => void;
+};
+
+type StoreSet = (fn: (state: StoreState) => Partial<StoreState>) => void;
+type ChatResponse = {
+  ok: boolean;
+  data?: { output_text: string };
+  error?: string;
+};
+
 export function createWizardActions(args: {
-  set: (fn: any) => void;
-  get: () => any;
-  sendChat: (args: { messages: Array<{ role: 'system' | 'user'; content: string }> }) => Promise<any>;
+  set: StoreSet;
+  get: () => StoreState;
+  sendChat: (args: { messages: Array<{ role: 'system' | 'user'; content: string }> }) => Promise<ChatResponse>;
 }) {
+  const insertIntoEditor = async (ctx: WizardContext, text: string) => {
+    const editor = ctx.targetEditor;
+    const inputRef = ctx.targetInputRef;
+
+    if (!editor && !inputRef) {
+      args.set(() => ({ wizardResult: text }));
+      return;
+    }
+
+    if (editor) {
+      try {
+        const current = editor.getMarkdown();
+        const merged = current.trim() ? `${current}\n\n${text}` : text;
+        const json = editor.markdown?.parse(merged);
+        if (!json) {
+          throw new Error('Editor markdown parser unavailable');
+        }
+        editor.commands.setContent(json);
+
+        const scope =
+          ctx.ref.scope === 'story'
+            ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
+            : ({ scope: 'root' } as const);
+
+        const docId = docIdForMeta(scope, 'brief');
+        args.get().bumpDocRevision(docId);
+        return;
+      } catch {
+        args.set(() => ({ wizardResult: text }));
+        return;
+      }
+    }
+
+    if (inputRef) {
+      const ok = insertIntoTextarea(inputRef as RefObject<HTMLTextAreaElement>, text, 'replace');
+      if (!ok) {
+        args.set(() => ({ wizardResult: text }));
+      }
+    }
+  };
+
   const service = createWizardEngine({
     sendChat: args.sendChat,
     mockMode: false,
     mockDelayMs: 800,
-
-    insertIntoEditor: async (ctx, text) => {
-      const editor = ctx.targetEditor;
-      const inputRef = ctx.targetInputRef;
-
-      if (!editor && !inputRef) {
-        // fallback: store wizardResult
-        args.set(() => ({ wizardResult: text }));
-        return;
-      }
-
-      if (editor) {
-        try {
-          const current = editor.getMarkdown();
-          const merged = current.trim() ? `${current}\n\n${text}` : text;
-          const json = editor.markdown.parse(merged);
-          editor.commands.setContent(json);
-
-          const scope =
-            ctx.ref.scope === 'story'
-              ? ({ scope: 'story', projectId: ctx.ref.projectId, storyId: ctx.ref.storyId } as const)
-              : ({ scope: 'root' } as const);
-
-          const docId = docIdForMeta(scope, 'brief');
-          args.get().bumpDocRevision(docId);
-          return;
-        } catch {
-          args.set(() => ({ wizardResult: text }));
-          return;
-        }
-      }
-
-      if (inputRef) {
-        const ok = insertIntoTextarea(inputRef as RefObject<HTMLTextAreaElement>, text, 'replace');
-        if (!ok) {
-          args.set(() => ({ wizardResult: text }));
-        }
-      }
-    },
+    insertIntoEditor,
 
     alert: (m) => alert(m),
     confirm: (m) => confirm(m),
@@ -103,7 +124,7 @@ export function createWizardActions(args: {
     getAnswer: (stepId) => args.get().activeWizard?.answers?.[stepId],
 
     processLlmStep: async (step: LlmProcessingStep) => {
-      args.set((s: any) => ({
+      args.set((s) => ({
         activeWizard: s.activeWizard
           ? { ...s.activeWizard, isLlmProcessing: true, error: undefined }
           : s.activeWizard,
@@ -118,7 +139,7 @@ export function createWizardActions(args: {
       args.set(() => next);
     },
 
-    setLlmResult: (resultKey, value) => {
+    setLlmResult: (resultKey, value: WizardValue) => {
       const state: WizardState = {
         activeWizard: args.get().activeWizard,
         wizardContext: args.get().wizardContext,
@@ -150,10 +171,7 @@ export function createWizardActions(args: {
         args.set(() => ({ wizardResult: text }));
         return;
       }
-      const insertFn = (service as any)['insertIntoEditor'];
-      if (insertFn) {
-        await insertFn(ctx, text);
-      }
+      await insertIntoEditor(ctx, text);
     },
   };
 

@@ -10,10 +10,19 @@
  *    - var1 && var2
  */
 type HasContentResolver = (key: string) => boolean;
+type InterpolationValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | InterpolationValue[]
+  | { [key: string]: InterpolationValue };
+type InterpolationVars = Record<string, InterpolationValue>;
 
 export function interpolate(
   template: string,
-  vars: Record<string, any>,
+  vars: InterpolationVars,
   resolveHasContent?: HasContentResolver
 ): string {
   const ast = parseTemplate(template);
@@ -99,7 +108,7 @@ function stringifyNodesAsLiteral(nodes: Node[]): string {
 
 function renderNodes(
   nodes: Node[],
-  vars: Record<string, any>,
+  vars: InterpolationVars,
   resolveHasContent?: HasContentResolver
 ): string {
   let out = '';
@@ -131,7 +140,7 @@ function renderNodes(
  * - Arrays: joined with ', '
  * - Objects: JSON.stringify with formatting
  */
-function formatValue(value: any): string {
+function formatValue(value: InterpolationValue): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) return value.join(', ');
@@ -145,7 +154,7 @@ function formatValue(value: any): string {
  */
 function evaluateCondition(
   expression: string,
-  vars: Record<string, any>,
+  vars: InterpolationVars,
   resolveHasContent?: HasContentResolver
 ): boolean {
   const andParts = expression
@@ -158,7 +167,7 @@ function evaluateCondition(
 
 function evaluateTerm(
   part: string,
-  vars: Record<string, any>,
+  vars: InterpolationVars,
   resolveHasContent?: HasContentResolver
 ): boolean {
   if (part.startsWith('!')) {
@@ -182,7 +191,7 @@ function evaluateTerm(
 /**
  * Check if a value is truthy
  */
-function isTruthy(value: any): boolean {
+function isTruthy(value: InterpolationValue): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') return value.length > 0;

@@ -37,7 +37,7 @@ export const ContextDeterminatorTest: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [llmResponse, setLLMResponse] = useState<Record<string, any> | null>(null);
+  const [llmResponse, setLLMResponse] = useState<Record<string, unknown> | null>(null);
   const [contextualCandidates, setContextualCandidates] = useState<ContextRules | null>(null);
   const [heuristicResults, setHeuristicResults] = useState<HeuristicCheckResult[] | null>(null);
   const [remainingContexts, setRemainingContexts] = useState<MetaDocKey[] | null>(null);

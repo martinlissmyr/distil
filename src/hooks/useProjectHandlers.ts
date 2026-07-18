@@ -3,11 +3,11 @@ import { useState, useCallback } from 'react';
 import { client, Project, StoryMeta } from '../api/client';
 import type { RootSection } from './useNavigation';
 
-interface EntityCRUD<T> {
+interface EntityCRUD<T, TCreate, TUpdate> {
   items: T[];
   isLoading: boolean;
-  create: (data: any) => Promise<T | null>;
-  update: (id: string, data: any) => Promise<T | null>;
+  create: (data: TCreate) => Promise<T | null>;
+  update: (id: string, data: TUpdate) => Promise<T | null>;
   delete: (id: string) => Promise<boolean>;
   reorder: (ids: string[]) => Promise<boolean>;
   reload: () => Promise<void>;
@@ -21,7 +21,7 @@ export interface ProjectHandlersParams {
   goToProject: (projectId: string) => void;
   clearEditor: () => void;
 
-  projectsCRUD: EntityCRUD<Project>;
+  projectsCRUD: EntityCRUD<Project, string, { name: string }>;
   projects: Project[];
 
   setStories: (stories: StoryMeta[]) => void;

@@ -1,5 +1,6 @@
 // src/ui/layout/AppContent.tsx
 import React from 'react';
+import type { JSONContent } from '@tiptap/react';
 import { Box } from '@mantine/core';
 import { ProjectsView } from '../views/ProjectsView';
 import { ManifestView } from '../documents/meta/ManifestView';
@@ -29,7 +30,7 @@ export interface AppContentProps {
   currentProject: Project | undefined;
 
   // Editor state
-  currentDoc: any;
+  currentDoc: JSONContent | null;
   currentTitle: string;
 
   // Handlers
@@ -39,7 +40,7 @@ export interface AppContentProps {
   handleSelectStory: (id: string) => void;
   handleCreateStory: () => void;
   handleOpenEditStory: (id: string) => void;
-  handleDocChange: (doc: any) => void;
+  handleDocChange: (doc: JSONContent) => void;
   onReorderProjects: (ids: string[]) => void;
   onReorderStories: (ids: string[]) => void;
 }
@@ -158,6 +159,7 @@ export const AppContent: React.FC<AppContentProps> = ({
         );
 
       case 'EntityIndexView':
+      {
         // Type guard: only characters and locations use EntityIndexView
         const docKind = sectionConfig.docKind as DocKindId;
         if (docKind !== 'characters' && docKind !== 'locations') {
@@ -171,6 +173,7 @@ export const AppContent: React.FC<AppContentProps> = ({
             currentStoryTitle={currentTitle}
           />
         );
+      }
 
       default:
         return <Box p="md">{sectionConfig.label} (placeholder)</Box>;

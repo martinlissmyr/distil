@@ -9,7 +9,7 @@ import { useNavigation } from './hooks/useNavigation';
 import { getSectionConfig } from './models/sections';
 import type { UiMode } from './types/ui';
 
-function Root() {
+export function Root() {
   const { resolved } = useResolvedUiSchema();
   const { leafId } = useNavigation();
 

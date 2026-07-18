@@ -1,6 +1,6 @@
 // src/models/docs/systemTriggers/index.ts
 import type { DocKindId } from '../index';
-import type { DocumentTypeDef } from '../../entities/schemas/types';
+import type { DocumentTypeDef, GroupDef } from '../../entities/schemas/types';
 
 import proseSystemTriggersMd from './proseTriggers.md?raw';
 import charactersSystemTriggersMd from './charactersTriggers.md?raw';
@@ -18,7 +18,7 @@ import { extractDocumentRoleDescriptionsMarkdown } from '../../../helpers/entity
   that are available to fill in based on the entity schema 
 */
 function buildEntityTriggers(
-  schema: DocumentTypeDef<any>,
+  schema: DocumentTypeDef<readonly GroupDef[] | undefined>,
   md: string,
 ): string {
   const fieldsMd = extractDocumentRoleDescriptionsMarkdown(schema) || '';
@@ -41,4 +41,3 @@ const systemTriggersByDocKind: Partial<Record<DocKindId, string>> = {
 export function getSystemTriggersForDocKind(kind: DocKindId): string {
   return systemTriggersByDocKind[kind] ?? '';
 }
-

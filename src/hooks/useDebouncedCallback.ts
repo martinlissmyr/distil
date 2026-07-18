@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
  * call(newValue); // Will execute after 500ms unless called again or cancelled
  * cancel(); // Cancels any pending execution
  */
-export function useDebouncedCallback<TArgs extends any[]>(
+export function useDebouncedCallback<TArgs extends unknown[]>(
   fn: (...args: TArgs) => void | Promise<void>,
   delayMs: number
 ) {

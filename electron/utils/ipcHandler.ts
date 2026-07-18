@@ -49,7 +49,7 @@ export type IpcResponse<T> = SuccessResponse<T> | ErrorResponse;
  * });
  * ```
  */
-export function safeHandle<TArgs extends any[], TResult>(
+export function safeHandle<TArgs extends unknown[], TResult>(
   channel: string,
   handler: (...args: TArgs) => Promise<TResult>
 ): void {

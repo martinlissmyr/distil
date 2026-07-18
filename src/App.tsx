@@ -1,9 +1,11 @@
 // App.tsx
 import React, { useState, useEffect, useCallback } from 'react';
+import type { JSONContent } from '@tiptap/react';
 import './styles/App.scss';
 
 import {
   client,
+  type IpcResponse,
   Project,
   StoryMeta,
 } from './api/client';
@@ -126,7 +128,7 @@ const App: React.FC = () => {
   const storiesCRUD = useEntityCRUD<StoryMeta, string, { title: string }>({
     list: () => {
       if (!selectedProjectId) {
-        return Promise.resolve({ ok: true, data: [] } as any);
+        return Promise.resolve({ ok: true, data: [] as StoryMeta[] } satisfies IpcResponse<StoryMeta[]>);
       }
       return client.listStories(selectedProjectId);
     },
@@ -179,7 +181,7 @@ const App: React.FC = () => {
       const metadata = metadataResponse.data;
 
       // Load the first part's document (or use empty if no parts)
-      let partDoc: any;
+      let partDoc: JSONContent;
       if (metadata.parts.length > 0) {
         const firstPart = metadata.parts[0];
         const partResponse = await client.loadPartDoc(selectedProjectId, created.id, firstPart.id);
@@ -232,8 +234,8 @@ const App: React.FC = () => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   // Wizard Modal
-  const [wizardModalOpen, setWizardModalOpen] = useState(false);
   const activeWizard = useAppStore((s) => s.activeWizard);
+  const wizardModalOpen = !!activeWizard;
 
   // Export Modal
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -251,11 +253,6 @@ const App: React.FC = () => {
     onConfirm: () => void;
     onCancel: () => void;
   }>({ message: '', onConfirm: () => {}, onCancel: () => {} });
-
-  // Open wizard modal when wizard starts
-  useEffect(() => {
-    setWizardModalOpen(!!activeWizard);
-  }, [activeWizard]);
 
   // Update menu context when navigation changes
   useEffect(() => {
@@ -308,10 +305,7 @@ const App: React.FC = () => {
 
   const handleCloseWizardModal = () => {
     const { closeWizard } = useAppStore.getState();
-    const confirmed = closeWizard(false);
-    if (confirmed) {
-      setWizardModalOpen(false);
-    }
+    closeWizard(false);
   };
 
   // Register leave guard confirm function
@@ -364,7 +358,7 @@ const App: React.FC = () => {
     return () => {
       if (cleanup) cleanup();
     };
-  }, [projectHandlers.handleSelectProject]);
+  }, [projectHandlers]);
 
   // ---- Story handlers ----
   const storyHandlers = useStoryHandlers({
@@ -380,7 +374,7 @@ const App: React.FC = () => {
   });
 
   // ---- Handlers ----
-  const handleDocChange = useCallback((doc: any) => {
+  const handleDocChange = useCallback((doc: JSONContent) => {
     updateDoc(doc);
   }, [updateDoc]);
 

@@ -6,19 +6,20 @@ import { getSchema } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
+import type { JSONContent } from '@tiptap/react';
+import type { MergedStory } from '../../src/models/export';
 import { manuscriptStylesConfig } from './docxStyles';
 
-interface MergedPart {
-  partId: string;
-  partIndex: number;
-  partTitle: string;
-  content: any; // JSONContent
+type SerializerStateWithHeadingFlag = {
+  lastNodeWasHeading?: boolean;
+};
+
+function getLastNodeWasHeading(state: object): boolean {
+  return Boolean((state as SerializerStateWithHeadingFlag).lastNodeWasHeading);
 }
 
-interface MergedStory {
-  title: string;
-  parts: MergedPart[];
-  metadata: any;
+function setLastNodeWasHeading(state: object, value: boolean): void {
+  (state as SerializerStateWithHeadingFlag).lastNodeWasHeading = value;
 }
 
 /**
@@ -52,7 +53,7 @@ const customDocxSerializer = new DocxSerializer(
 
       // Track that we just rendered a heading
       // The next paragraph should use BodyTextFirst (no indent)
-      (state as any).lastNodeWasHeading = true;
+      setLastNodeWasHeading(state, true);
     },
 
     /**
@@ -68,7 +69,7 @@ const customDocxSerializer = new DocxSerializer(
       // Determine which style to use based on context
       // If the last node was a heading, use BodyTextFirst (no indent)
       // Otherwise use BodyText (with first-line indent)
-      const styleId = (state as any).lastNodeWasHeading ? 'BodyTextFirst' : 'BodyText';
+      const styleId = getLastNodeWasHeading(state) ? 'BodyTextFirst' : 'BodyText';
 
       console.log(`[Serializer] Rendering paragraph with style ${styleId}${isEmpty ? ' (empty)' : ''}`);
 
@@ -79,7 +80,7 @@ const customDocxSerializer = new DocxSerializer(
       // Only reset the heading flag if this paragraph has content
       // Empty paragraphs (used as separators between parts) shouldn't consume the BodyTextFirst styling
       if (!isEmpty) {
-        (state as any).lastNodeWasHeading = false;
+        setLastNodeWasHeading(state, false);
       }
     },
 
@@ -131,7 +132,7 @@ function createProseMirrorSchema(): Schema {
 /**
  * Convert TipTap JSONContent to ProseMirror Node
  */
-function createProseMirrorDoc(content: any, schema: Schema): ProseMirrorNode {
+function createProseMirrorDoc(content: JSONContent, schema: Schema): ProseMirrorNode {
   return ProseMirrorNode.fromJSON(schema, content);
 }
 

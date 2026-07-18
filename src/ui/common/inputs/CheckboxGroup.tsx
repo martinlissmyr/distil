@@ -57,7 +57,7 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
   error,
   cols = 2,
 }) => {
-  const selected = Array.isArray(value) ? value : [];
+  const selected = useMemo(() => (Array.isArray(value) ? value : []), [value]);
 
   const internalError = useMemo(
     () => validate({ value: selected, required, minSelections, maxSelections }),

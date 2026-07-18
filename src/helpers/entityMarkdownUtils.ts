@@ -1,9 +1,13 @@
-import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
+import type { DocumentTypeDef, FieldDef, GroupDef } from '../models/entities/schemas/types';
 import { getPrimaryTitleValue } from './entityProjectionUtils';
 
+type EntityFieldValue = string | number | boolean | null | undefined;
+type EntityFormData = Record<string, EntityFieldValue>;
+type EntitySchema = DocumentTypeDef<readonly GroupDef[] | undefined>;
+
 export function entityToMarkdown(
-  formData: Record<string, any>,
-  schema: DocumentTypeDef<any>,
+  formData: EntityFormData,
+  schema: EntitySchema,
   options?: { includeEmpty?: boolean }
 ): string {
   const includeEmpty = options?.includeEmpty ?? false;

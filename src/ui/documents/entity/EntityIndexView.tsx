@@ -1,11 +1,12 @@
 // src/ui/story/EntityIndexView.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, Stack } from '@mantine/core';
 import { getDocKind } from '../../../models/docs';
 import type { DocKindId } from '../../../models/docs';
 import type { EntityIndex, EntityIndexEntry } from '../../../models/entities/entityIndex';
 import type { CharacterDoc } from '../../../models/entities/schemas/character';
 import type { LocationDoc } from '../../../models/entities/schemas/location';
+import type { DocumentTypeDef, GroupDef } from '../../../models/entities/schemas/types';
 import { EntityEditView } from './EntityEditView';
 import { characterType } from '../../../models/entities/schemas/character';
 import { locationType } from '../../../models/entities/schemas/location';
@@ -23,6 +24,8 @@ type EntityIndexViewProps = {
 };
 
 type ViewMode = 'list' | 'edit';
+type EntityDoc = CharacterDoc | LocationDoc;
+type EntitySchema = DocumentTypeDef<readonly GroupDef[] | undefined>;
 
 export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   projectId,
@@ -42,35 +45,46 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
   const [entityIndex, setEntityIndex] = useState<EntityIndex | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const entityType = docKind === 'characters' ? 'character' : 'location';
+  const schema: EntitySchema = docKind === 'characters' ? characterType : locationType;
+  const entities = entityIndex?.entities || [];
+  const entityViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
+
+  const createEmptyIndex = useCallback((): EntityIndex => ({
+    version: 1,
+    scope: { kind: 'story', projectId, storyId },
+    entities: [],
+    updatedAt: new Date().toISOString(),
+  }), [projectId, storyId]);
+
   // Load entity index on mount
   useEffect(() => {
-    loadIndex();
-  }, [projectId, storyId, docKind]);
+    let cancelled = false;
 
-  // Clear editing state when switching between entity types
-  useEffect(() => {
-    setMode('list');
-    setEditingEntity(null);
-    setEditingEntityDoc(null);
-  }, [docKind]);
+    void client.loadEntityIndex(projectId, storyId, entityType)
+      .then((response) => {
+        if (cancelled) return;
 
-  const loadIndex = async () => {
-    setLoading(true);
-    try {
-      const entityType = docKind === 'characters' ? 'character' : 'location';
-      const response = await client.loadEntityIndex(projectId, storyId, entityType);
+        if (response.ok) {
+          setEntityIndex(response.data);
+        } else {
+          console.error('Failed to load entity index:', response.error);
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Error loading entity index:', error);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
 
-      if (response.ok) {
-        setEntityIndex(response.data);
-      } else {
-        console.error('Failed to load entity index:', response.error);
-      }
-    } catch (error) {
-      console.error('Error loading entity index:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [entityType, projectId, storyId]);
 
   const handleAddEntity = () => {
     setEditingEntity(null);
@@ -84,18 +98,19 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
     setEditingEntityDoc(null);
   };
 
-  const handleSaveEntity = async (doc: Partial<CharacterDoc | LocationDoc>) => {
+  const handleSaveEntity = async (doc: Partial<EntityDoc>) => {
     try {
-      const entityType = docKind === 'characters' ? 'character' : 'location';
-      const schema = docKind === 'characters' ? characterType : locationType;
+      if (!doc.id) {
+        throw new Error('Entity document must have an id before saving');
+      }
 
       // Save full entity doc to disk
       const saveDocResponse = await client.saveEntityDoc(
         projectId,
         storyId,
         entityType,
-        doc.id!,
-        doc
+        doc.id,
+        doc as EntityDoc
       );
 
       if (!saveDocResponse.ok) {
@@ -107,45 +122,44 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       const template = await loadProjectionTemplate(entityType);
 
       // Generate projection markdown
-      const projectionMarkdown = buildEntityProjectionMarkdown(doc as Record<string, any>, schema, template);
+      const projectionMarkdown = buildEntityProjectionMarkdown(doc, schema, template);
 
       // Update entity index with projection
-      const currentIndex: EntityIndex = entityIndex || {
-        version: 1,
-        scope: { kind: 'story', projectId, storyId },
-        entities: [],
-        updatedAt: new Date().toISOString(),
-      };
+      const currentIndex = entityIndex ?? createEmptyIndex();
 
       // Extract name using schema
-      const name = getPrimaryTitleValue(doc as Record<string, any>, schema);
+      const name = getPrimaryTitleValue(doc, schema);
 
       // Create index entry with projection
       const entry: EntityIndexEntry = {
-        id: doc.id!,
+        id: doc.id,
         name,
         projection: projectionMarkdown,
         docRef: {
           type: entityType,
-          id: doc.id!,
+          id: doc.id,
         },
       };
 
       // Add or update entry
       const existingIndex = currentIndex.entities.findIndex(e => e.id === entry.id);
-      if (existingIndex >= 0) {
-        currentIndex.entities[existingIndex] = entry;
-      } else {
-        currentIndex.entities.push(entry);
-      }
-
-      currentIndex.updatedAt = new Date().toISOString();
+      const nextEntities =
+        existingIndex >= 0
+          ? currentIndex.entities.map((currentEntry, index) =>
+              index === existingIndex ? entry : currentEntry
+            )
+          : [...currentIndex.entities, entry];
+      const nextIndex: EntityIndex = {
+        ...currentIndex,
+        entities: nextEntities,
+        updatedAt: new Date().toISOString(),
+      };
 
       // Save updated index
-      const saveIndexResponse = await client.saveEntityIndex(projectId, storyId, entityType, currentIndex);
+      const saveIndexResponse = await client.saveEntityIndex(projectId, storyId, entityType, nextIndex);
 
       if (saveIndexResponse.ok) {
-        setEntityIndex(currentIndex);
+        setEntityIndex(nextIndex);
         handleBackToList();
       } else {
         console.error('Failed to save entity index:', saveIndexResponse.error);
@@ -163,7 +177,6 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       setLoadingDoc(true);
 
       try {
-        const entityType = docKind === 'characters' ? 'character' : 'location';
         const response = await client.loadEntityDoc(projectId, storyId, entityType, entityId);
 
         if (response.ok && response.data) {
@@ -194,7 +207,6 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
     };
 
     try {
-      const entityType = docKind === 'characters' ? 'character' : 'location';
       const response = await client.saveEntityIndex(projectId, storyId, entityType, updatedIndex);
 
       if (response.ok) {
@@ -206,9 +218,6 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
       console.error('Error saving entity order:', error);
     }
   };
-
-  const entities = entityIndex?.entities || [];
-  const entityViewTitle = `${currentStoryTitle} – ${docConfig.title}`;
 
   return (
     <>
@@ -244,11 +253,12 @@ export const EntityIndexView: React.FC<EntityIndexViewProps> = ({
 
       {mode === 'edit' && !loadingDoc && (
         <EntityEditView
+          key={`${docKind}:${editingEntity?.id ?? 'new'}`}
           projectId={projectId}
           storyId={storyId}
           title={`${entityViewTitle} – ${editingEntity?.name || 'New'}`}
           entityDoc={editingEntityDoc}
-          schema={docKind === 'characters' ? characterType : locationType}
+          schema={schema}
           withChat={true}
           doc={{
             scope: 'story',

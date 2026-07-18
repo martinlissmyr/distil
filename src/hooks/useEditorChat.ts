@@ -1,10 +1,13 @@
 // src/hooks/useEditorChat.ts
 import { useCallback } from 'react';
 import { useAppStore } from '../state/useAppStore';
-import type { WizardContext } from '../wizards/types';
+import type { WizardContext, WizardValueMap } from '../wizards/types';
 import type { ChatConfig } from '../types/editor';
 import { useNavigation } from './useNavigation';
 import type { RefObject } from 'react';
+import type { Editor } from '@tiptap/react';
+import type { EditorKind } from '../types/chat';
+import type { StorySectionId } from '../models/sections';
 
 export type EditorChatHookProps = {
   /**
@@ -16,9 +19,23 @@ export type EditorChatHookProps = {
    * Optional: pass the TipTap editor for wizard integration.
    * If not provided, wizards will still work but without direct editor access.
    */
-  editor?: any;
-  targetInputRef?: RefObject<any>;
+  editor?: Editor;
+  targetInputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
 };
+
+const EDITOR_KINDS: EditorKind[] = [
+  'prose',
+  'manifest',
+  'brief',
+  'outline',
+  'world',
+  'characters',
+  'locations',
+];
+
+function isEditorKind(value: unknown): value is EditorKind {
+  return typeof value === 'string' && EDITOR_KINDS.includes(value as EditorKind);
+}
 
 /**
  * Hook to handle wizard opening and navigation from chat suggestions.
@@ -26,16 +43,16 @@ export type EditorChatHookProps = {
  */
 export function useEditorChat(props: EditorChatHookProps) {
   const { chatConfig, editor } = props;
-  const startWizard = useAppStore((s) => (s as any).startWizard);
+  const startWizard = useAppStore((s) => s.startWizard);
   const { setStorySection, goToManifest } = useNavigation();
 
   const handleOpenWizard = useCallback(
     (cmd: {
       wizardId: string;
-      editor?: any;
-      targetInputRef?: RefObject<any>;
+      editor?: Editor;
+      targetInputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
       currentContent?: string;
-      currentProjection?: Record<string, any>;
+      currentProjection?: WizardValueMap;
       /** Override default chatConfig for this wizard invocation */
       chatConfig?: ChatConfig;
     }) => {
@@ -48,22 +65,28 @@ export function useEditorChat(props: EditorChatHookProps) {
       const effectiveConfig = cmd.chatConfig || chatConfig || {};
 
       // Build ctx.ref from chatConfig or doc
-      const projectId = (effectiveConfig as any)?.projectId as string | undefined;
-      const storyId = (effectiveConfig as any)?.storyId as string | undefined;
+      const projectId = effectiveConfig.projectId;
+      const storyId = effectiveConfig.storyId;
+      const docKind = isEditorKind(effectiveConfig.docKind) ? effectiveConfig.docKind : 'prose';
 
       const ref =
         projectId && storyId
-          ? ({ scope: 'story', projectId, storyId } as const)
-          : ({ scope: 'root' } as const);
+          ? ({ scope: 'story', projectId, storyId, docKind } as const)
+          : ({ scope: 'root', docKind } as const);
+
+      const llmContextKinds = (effectiveConfig.llmContext?.kinds ?? []).filter(isEditorKind);
 
       const ctx: WizardContext = {
         ref,
-        targetEditor: cmd.editor || editor,
-        targetInputRef: cmd.targetInputRef || null,
+        targetEditor: cmd.editor ?? editor,
+        targetInputRef: cmd.targetInputRef ?? undefined,
         currentContent: cmd.currentContent,
         currentProjection: cmd.currentProjection,
-        llmContext: effectiveConfig.llmContext || { kinds: [], markdown: '' },
-      } as any;
+        llmContext: {
+          kinds: llmContextKinds,
+          markdown: effectiveConfig.llmContext?.markdown ?? '',
+        },
+      };
 
       startWizard(cmd.wizardId, ctx);
     },
@@ -74,7 +97,7 @@ export function useEditorChat(props: EditorChatHookProps) {
     if (target === 'manifest') {
       goToManifest();
     } else {
-      setStorySection(target as any);
+      setStorySection(target as StorySectionId);
     }
   }, [setStorySection, goToManifest]);
 

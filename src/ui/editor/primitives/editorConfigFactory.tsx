@@ -18,7 +18,10 @@ import { createBaseExtensions } from '../extensions/sharedExtensions';
 import { EditorToolbar } from './EditorToolbar';
 import type { EditorConfig, ToolbarItem } from '../../../models/docs/editorConfig';
 import { getToolbarItemLabel } from '../../../models/docs/editorConfig';
-import { getDocKind } from '../../../models/docs';
+import { getDocKind, isRichTextDoc, isMultiPartTextDoc } from '../../../models/docs';
+
+const isHeadingLevel = (level: number | undefined): level is 1 | 2 | 3 =>
+  level === 1 || level === 2 || level === 3;
 
 /**
  * Create TipTap extensions array from EditorConfig
@@ -93,9 +96,13 @@ function createToolbarItemHandler(item: ToolbarItem, editor: Editor | null): () 
 
   switch (item.type) {
     case 'heading':
+      if (!isHeadingLevel(item.level)) return () => {};
+      {
+        const level = item.level;
       // Note: TipTap heading levels map to HTML heading levels (1 = h1, 2 = h2, 3 = h3)
       // But our UI labels them differently (level 1 → "H2", level 2 → "H3")
-      return () => editor.chain().focus().toggleHeading({ level: item.level as any }).run();
+        return () => editor.chain().focus().toggleHeading({ level }).run();
+      }
     case 'paragraph':
       return () => editor.chain().focus().setParagraph().run();
     case 'bulletList':
@@ -132,6 +139,9 @@ export function createToolbarFromConfig(
  */
 export function getProseExtensions() {
   const docKind = getDocKind('prose');
-  const editorConfig = (docKind as any).editorConfig;
+  if (!isRichTextDoc(docKind) && !isMultiPartTextDoc(docKind)) {
+    throw new Error('Prose doc kind is not editor-backed');
+  }
+  const editorConfig = docKind.editorConfig;
   return createExtensionsFromConfig(editorConfig);
 }

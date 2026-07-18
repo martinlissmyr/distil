@@ -157,7 +157,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
       console.log(`[ChapterOverview] Triggering projection generation for current part ${currentPartId}`);
       projectionService.generateForPart(projectId, storyId, currentPartId);
     }
-  }, []); // Only run on mount
+  }, [currentPartId, projectId, storyId]);
 
   return (
     <Box>

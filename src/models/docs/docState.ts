@@ -1,6 +1,8 @@
 // src/models/docs/docState.ts
 import type { MetaDocKey } from '../../types/metaDoc';
-import type { EntityType } from '../entities/entityIndex';
+import type { MetaDocState } from '../../types/metaDoc';
+import type { IpcResponse } from '../../api/client';
+import type { EntityIndex, EntityType } from '../entities/entityIndex';
 import { getDocKind, isEntityIndexDoc } from './index';
 import { metaId } from '../../state/useAppStore';
 import type { DocState } from '../../chat/chatHints';
@@ -16,8 +18,12 @@ export async function computeDocState(
     | { scope: 'root' }
     | { scope: 'story'; projectId: string; storyId: string },
   options: {
-    metaDocs?: Record<string, any>;
-    loadEntityIndex?: (projectId: string, storyId: string, entityType: EntityType) => Promise<any>;
+    metaDocs?: Record<string, MetaDocState>;
+    loadEntityIndex?: (
+      projectId: string,
+      storyId: string,
+      entityType: EntityType
+    ) => Promise<IpcResponse<EntityIndex | null>>;
   } = {}
 ): Promise<DocState> {
   const docKind = getDocKind(docKey);
@@ -81,7 +87,7 @@ export function computeRichTextDocState(
   scope:
     | { scope: 'root' }
     | { scope: 'story'; projectId: string; storyId: string },
-  metaDocs: Record<string, any>
+  metaDocs: Record<string, MetaDocState>
 ): DocState {
   const id =
     scope.scope === 'root'

@@ -1,5 +1,5 @@
 // src/hooks/useScopeManager.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { QuestionScope } from '../types/chat';
 
 interface UseScopeManagerOptions {
@@ -20,28 +20,35 @@ interface UseScopeManagerResult {
 export function useScopeManager({
   hasSelection,
 }: UseScopeManagerOptions): UseScopeManagerResult {
-  const [scope, setScope] = useState<QuestionScope>(
+  const [manualScope, setManualScope] = useState<QuestionScope>(
     hasSelection ? 'selection' : 'text'
   );
   const [selectionPillDismissed, setSelectionPillDismissed] = useState(false);
+  const resetDismissTimerRef = useRef<number | null>(null);
 
-  // When selection changes from editor, auto-switch scope
+  // Reset dismissal when selection is cleared
   useEffect(() => {
-    if (hasSelection && !selectionPillDismissed) {
-      setScope('selection');
-    } else {
-      setScope('text');
+    if (!hasSelection) {
+      resetDismissTimerRef.current = window.setTimeout(() => {
+        setSelectionPillDismissed(false);
+        resetDismissTimerRef.current = null;
+      }, 0);
     }
 
-    // Reset dismissal when selection is cleared
-    if (!hasSelection) {
-      setSelectionPillDismissed(false);
-    }
+    return () => {
+      if (resetDismissTimerRef.current !== null) {
+        window.clearTimeout(resetDismissTimerRef.current);
+        resetDismissTimerRef.current = null;
+      }
+    };
   }, [hasSelection, selectionPillDismissed]);
+
+  const scope: QuestionScope =
+    hasSelection && !selectionPillDismissed ? 'selection' : manualScope;
 
   const dismissSelectionPill = useCallback(() => {
     setSelectionPillDismissed(true);
-    setScope('text');
+    setManualScope('text');
   }, []);
 
   const showSelectionPill =

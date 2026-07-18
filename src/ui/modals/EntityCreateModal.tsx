@@ -27,13 +27,20 @@ export const EntityCreateModal: React.FC<EntityCreateModalProps> = ({
   onClose,
   onCreate,
 }) => {
-  const [value, setValue] = useState(initialValue);
+  const [valueState, setValueState] = useState<{ sessionKey: string; value: string }>({
+    sessionKey: `${opened}:${initialValue}`,
+    value: initialValue,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const value = valueState.sessionKey === `${opened}:${initialValue}` ? valueState.value : initialValue;
 
   useEffect(() => {
     if (opened) {
-      setValue(initialValue);
-      setIsSubmitting(false);
+      const timeoutId = window.setTimeout(() => {
+        setValueState({ sessionKey: `${opened}:${initialValue}`, value: initialValue });
+        setIsSubmitting(false);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
   }, [opened, initialValue]);
 
@@ -56,7 +63,8 @@ export const EntityCreateModal: React.FC<EntityCreateModalProps> = ({
       type: 'text',
       label: fieldLabel,
       value,
-      onChange: setValue,
+      onChange: (nextValue) =>
+        setValueState({ sessionKey: `${opened}:${initialValue}`, value: nextValue }),
       placeholder,
       autoFocus: true,
       onCmdEnter: handleCreate,

@@ -2,9 +2,14 @@
 import type { JSONContent } from '@tiptap/react';
 import type { WritingLanguage } from '../types/language';
 import type { UiSchemaSetting } from '../types/ui';
-import type { EntityType } from '../models/entities/entityIndex';
+import type { EntityType, EntityIndex } from '../models/entities/entityIndex';
+import type { CharacterDoc } from '../models/entities/schemas/character';
+import type { LocationDoc } from '../models/entities/schemas/location';
 import type { StoryMetadata } from '../models/story';
+import type { MergedStory } from '../models/export';
 import type { ChatThread } from '../../electron/fs/fs';
+
+type EntityDoc = CharacterDoc | LocationDoc;
 
 export type Project = {
   id: string;
@@ -142,7 +147,7 @@ export const client = {
   loadEntityIndex(projectId: string, storyId: string, entityType: EntityType) {
     return window.distil.loadEntityIndex(projectId, storyId, entityType);
   },
-  saveEntityIndex(projectId: string, storyId: string, entityType: EntityType, index: any) {
+  saveEntityIndex(projectId: string, storyId: string, entityType: EntityType, index: EntityIndex) {
     return window.distil.saveEntityIndex(projectId, storyId, entityType, index);
   },
 
@@ -150,7 +155,7 @@ export const client = {
   loadEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string) {
     return window.distil.loadEntityDoc(projectId, storyId, entityType, entityId);
   },
-  saveEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: any) {
+  saveEntityDoc(projectId: string, storyId: string, entityType: EntityType, entityId: string, doc: EntityDoc) {
     return window.distil.saveEntityDoc(projectId, storyId, entityType, entityId, doc);
   },
 
@@ -170,7 +175,7 @@ export const client = {
     return window.distil.exportToPdf(projectId, storyId);
   },
   getMergedStory(projectId: string, storyId: string) {
-    return window.distil.getMergedStory(projectId, storyId);
+    return window.distil.getMergedStory(projectId, storyId) as Promise<IpcResponse<MergedStory>>;
   },
   showSaveDialog(storyTitle: string, format: 'docx' | 'pdf') {
     return window.distil.showSaveDialog(storyTitle, format);

@@ -1,5 +1,19 @@
 // src/helpers/zodHelpers.ts
+import { z } from 'zod';
 import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types';
+import type { GroupDef } from '../models/entities/schemas/types';
+
+type ZodDefLike = {
+  typeName?: string;
+  innerType?: z.ZodTypeAny;
+  schema?: z.ZodTypeAny;
+  checks?: Array<{ kind?: string; value?: number }>;
+  defaultValue?: () => unknown;
+};
+
+function getZodDef(schema: z.ZodTypeAny | null | undefined): ZodDefLike | undefined {
+  return schema?._def as ZodDefLike | undefined;
+}
 
 /**
  * Checks if a Zod schema represents a required field.
@@ -27,11 +41,12 @@ import type { DocumentTypeDef, FieldDef } from '../models/entities/schemas/types
  * @param schema - A Zod schema object
  * @returns true if the field is required, false if optional/nullable/has default
  */
-export function isZodFieldRequired(schema: any): boolean {
+export function isZodFieldRequired(schema: z.ZodTypeAny): boolean {
   try {
-    if (!schema?._def) return false;
+    const schemaDef = getZodDef(schema);
+    if (!schemaDef) return false;
 
-    const typeName = schema._def.typeName;
+    const typeName = schemaDef.typeName;
 
     // Explicitly NOT required types
     if (typeName === 'ZodOptional') return false;
@@ -39,12 +54,13 @@ export function isZodFieldRequired(schema: any): boolean {
 
     // ZodDefault: check if inner type is optional/nullable
     if (typeName === 'ZodDefault') {
-      const innerType = schema._def.innerType;
+      const innerType = schemaDef.innerType;
       if (!innerType) return false; // Has default, so not required
 
+      const innerDef = getZodDef(innerType);
       // If the inner type is optional or nullable, it's not required
-      if (innerType._def?.typeName === 'ZodOptional') return false;
-      if (innerType._def?.typeName === 'ZodNullable') return false;
+      if (innerDef?.typeName === 'ZodOptional') return false;
+      if (innerDef?.typeName === 'ZodNullable') return false;
 
       // Otherwise, even with a default, it's not required (default value satisfies requirement)
       return false;
@@ -52,15 +68,15 @@ export function isZodFieldRequired(schema: any): boolean {
 
     // ZodEffects: unwrap and check inner schema
     if (typeName === 'ZodEffects') {
-      const innerSchema = schema._def.schema;
+      const innerSchema = schemaDef.schema;
       if (innerSchema) return isZodFieldRequired(innerSchema);
     }
 
     // ZodString with .min(1) is required
     if (typeName === 'ZodString') {
-      const checks = schema._def.checks;
+      const checks = schemaDef.checks;
       if (Array.isArray(checks)) {
-        const hasMinLength = checks.some((check: any) => check.kind === 'min' && check.value >= 1);
+        const hasMinLength = checks.some((check) => check.kind === 'min' && (check.value ?? 0) >= 1);
         if (hasMinLength) return true;
       }
       // Plain z.string() without .min(1) is not inherently required
@@ -92,14 +108,15 @@ export function isZodFieldRequired(schema: any): boolean {
  * @param schema - A Zod schema object
  * @returns The default value if defined, otherwise undefined
  */
-export function getZodDefault(schema: any): any {
+export function getZodDefault(schema: z.ZodTypeAny): unknown {
   try {
+    const schemaDef = getZodDef(schema);
     // zod default() wraps with ZodDefault and stores defaultValue()
-    if (schema?._def?.typeName === 'ZodDefault' && typeof schema._def.defaultValue === 'function') {
-      return schema._def.defaultValue();
+    if (schemaDef?.typeName === 'ZodDefault' && typeof schemaDef.defaultValue === 'function') {
+      return schemaDef.defaultValue();
     }
     // sometimes you might have optional(default(...)) etc
-    if (schema?._def?.innerType) return getZodDefault(schema._def.innerType);
+    if (schemaDef?.innerType) return getZodDefault(schemaDef.innerType);
   } catch {
     // ignore
   }
@@ -126,7 +143,7 @@ export function getZodDefault(schema: any): any {
  * @param schema - A DocumentTypeDef schema definition
  * @returns Array of FieldDef objects that are marked as required
  */
-export function getRequiredFields<TGroups extends readonly any[] | undefined = undefined>(
+export function getRequiredFields<TGroups extends readonly GroupDef[] | undefined = undefined>(
   schema: DocumentTypeDef<TGroups>
 ): FieldDef[] {
   return schema.fields.filter((field) => isZodFieldRequired(field.schema)) as FieldDef[];

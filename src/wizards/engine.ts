@@ -3,6 +3,7 @@ import type {
   WizardContext,
   LlmProcessingStep,
   WizardState,
+  WizardValue,
 } from './types';
 import { getWizardConfig } from './registry';
 import {
@@ -94,7 +95,7 @@ export function createWizardEngine(deps: WizardDeps) {
     };
   }
 
-  function setAnswer(state: WizardState, stepId: string, value: any): WizardState {
+  function setAnswer(state: WizardState, stepId: string, value: WizardValue): WizardState {
     const { activeWizard } = state;
     if (!activeWizard) return state;
 
@@ -122,7 +123,7 @@ export function createWizardEngine(deps: WizardDeps) {
     };
   }
 
-  function setLlmResult(state: WizardState, resultKey: string, value: any): WizardState {
+  function setLlmResult(state: WizardState, resultKey: string, value: WizardValue): WizardState {
     const { activeWizard } = state;
     if (!activeWizard) return state;
 
@@ -209,10 +210,10 @@ export function createWizardEngine(deps: WizardDeps) {
       if (!res.ok || !res.data?.output_text)
         throw new Error(res.error || 'Chat error');
 
-      let result: any = res.data.output_text;
+      let result: WizardValue = res.data.output_text;
       if (step.extractJson) {
         const m = result.match(/```json\n([\s\S]*?)\n```/);
-        result = JSON.parse(m ? m[1] : result);
+        result = JSON.parse(m ? m[1] : result) as WizardValue;
       }
 
       const w = state.activeWizard!;

@@ -136,30 +136,36 @@ function nodeToHTML(node: JSONContent): string {
   }
 
   switch (node.type) {
-    case 'paragraph':
+    case 'paragraph': {
       const pContent = node.content?.map(n => inlineNodeToHTML(n)).join('') || '';
       return `<p>${pContent}</p>`;
+    }
 
-    case 'heading':
+    case 'heading': {
       const level = node.attrs?.level || 1;
       const hContent = node.content?.map(n => inlineNodeToHTML(n)).join('') || '';
       return `<h${level}>${hContent}</h${level}>`;
+    }
 
-    case 'bulletList':
+    case 'bulletList': {
       const ulItems = node.content?.map(n => nodeToHTML(n)).join('\n') || '';
       return `<ul>\n${ulItems}\n</ul>`;
+    }
 
-    case 'orderedList':
+    case 'orderedList': {
       const olItems = node.content?.map(n => nodeToHTML(n)).join('\n') || '';
       return `<ol>\n${olItems}\n</ol>`;
+    }
 
-    case 'listItem':
+    case 'listItem': {
       const liContent = node.content?.map(n => nodeToHTML(n)).join('\n') || '';
       return `<li>${liContent}</li>`;
+    }
 
-    case 'codeBlock':
+    case 'codeBlock': {
       const code = node.content?.map(n => n.text || '').join('\n') || '';
       return `<pre><code>${escapeHTML(code)}</code></pre>`;
+    }
 
     case 'horizontalRule':
       return '<hr>';
@@ -195,10 +201,11 @@ function inlineNodeToHTML(node: JSONContent): string {
           case 'code':
             html = `<code>${html}</code>`;
             break;
-          case 'link':
+          case 'link': {
             const href = mark.attrs?.href || '#';
             html = `<a href="${escapeHTML(href)}">${html}</a>`;
             break;
+          }
         }
       }
     }
