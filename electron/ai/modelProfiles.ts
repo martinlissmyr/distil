@@ -17,8 +17,8 @@ export const DEFAULT_CHAT_MODEL_PROFILE_ID: ChatModelProfileId = 'chat';
 
 export const chatModelProfiles: Record<ChatModelProfileId, ChatModelProfile> = {
   chat: {
-    model: 'gpt-5.4-mini',
-    fallbackModels: ['gpt-5-mini', 'gpt-4o-mini'],
+    model: 'gpt-5.4',
+    fallbackModels: ['gpt-5.4-mini', 'gpt-5-mini'],
     reasoningEffort: 'low',
   },
   classifier: {
