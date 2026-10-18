@@ -9,7 +9,7 @@ import type { EntityType, EntityIndex } from '../src/models/entities/entityIndex
 import type { CharacterDoc } from '../src/models/entities/schemas/character'
 import type { LocationDoc } from '../src/models/entities/schemas/location'
 import type { StoryMetadata, PartDoc } from '../src/models/story'
-import type { MergedStory } from '../src/models/export'
+import type { ExportRequest, MergedStory } from '../src/models/export'
 import type { ChatThread, ProjectMeta, StoryMeta } from './fs/fs'
 
 type EntityDoc = CharacterDoc | LocationDoc
@@ -109,6 +109,10 @@ contextBridge.exposeInMainWorld('distil', {
     ipcRenderer.invoke('export:exportToDocx', projectId, storyId),
   exportToPdf: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('export:exportToPdf', projectId, storyId),
+  exportProjectToDocx: (projectId: string) =>
+    ipcRenderer.invoke('export:projectToDocx', projectId),
+  exportProjectToPdf: (projectId: string) =>
+    ipcRenderer.invoke('export:projectToPdf', projectId),
   getMergedStory: (projectId: string, storyId: string) =>
     ipcRenderer.invoke('export:getMergedStory', projectId, storyId) as Promise<MergedStory>,
   showSaveDialog: (storyTitle: string, format: 'docx' | 'pdf') =>
@@ -191,10 +195,10 @@ contextBridge.exposeInMainWorld('devMode', {
 })
 
 contextBridge.exposeInMainWorld('menu', {
-  updateContext: (context: { isStoryContext: boolean; projectId?: string; storyId?: string }) =>
+  updateContext: (context: { isStoryContext: boolean; isProjectContext: boolean; projectId?: string; storyId?: string }) =>
     ipcRenderer.send('menu:updateContext', context),
-  onExport: (callback: (format: 'docx' | 'pdf') => void) => {
-    const handler = (_event: IpcRendererEvent, format: 'docx' | 'pdf') => callback(format);
+  onExport: (callback: (request: ExportRequest) => void) => {
+    const handler = (_event: IpcRendererEvent, request: ExportRequest) => callback(request);
     ipcRenderer.on('menu:export', handler);
 
     // Return cleanup function

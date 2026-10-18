@@ -23,3 +23,15 @@ export interface MergedStory {
   parts: MergedPart[];
   metadata: StoryMetadata;
 }
+
+/** Project content in the same order as the story list. */
+export interface MergedProject {
+  title: string;
+  stories: MergedStory[];
+}
+
+export type ExportFormat = 'docx' | 'pdf';
+export type ExportRequest = {
+  scope: 'project' | 'story';
+  format: ExportFormat;
+};

@@ -1,13 +1,15 @@
 // src/export/exportOrchestrator.ts
-import { client } from '../api/client';
+import { client, type IpcResponse } from '../api/client';
 import type { ExportStatus } from '../ui/modals/ExportProgressModal';
-
-export type ExportFormat = 'docx' | 'pdf';
+import type { ExportFormat } from '../models/export';
 
 export interface ExportProgress {
   status: ExportStatus;
   errorMessage?: string;
+  cancelled?: boolean;
 }
+
+type ExportResult = { success: boolean; filePath?: string; cancelled?: boolean };
 
 /**
  * Orchestrates the export process with progress updates
@@ -19,15 +21,30 @@ export async function exportStory(
   format: ExportFormat,
   onProgress: (progress: ExportProgress) => void
 ): Promise<void> {
-  try {
-    // Show loading state
-    onProgress({ status: 'loading' });
-    console.log(`[Export] Starting ${format.toUpperCase()} export...`);
+  const response = format === 'docx'
+    ? client.exportToDocx(projectId, storyId)
+    : client.exportToPdf(projectId, storyId);
+  await runExport(response, onProgress);
+}
 
-    // All the work happens in main process: merge, show dialog, convert, save
-    const response = format === 'docx'
-      ? await client.exportToDocx(projectId, storyId)
-      : await client.exportToPdf(projectId, storyId);
+export async function exportProject(
+  projectId: string,
+  format: ExportFormat,
+  onProgress: (progress: ExportProgress) => void
+): Promise<void> {
+  const response = format === 'docx'
+    ? client.exportProjectToDocx(projectId)
+    : client.exportProjectToPdf(projectId);
+  await runExport(response, onProgress);
+}
+
+async function runExport(
+  operation: Promise<IpcResponse<ExportResult>>,
+  onProgress: (progress: ExportProgress) => void
+): Promise<void> {
+  try {
+    onProgress({ status: 'loading' });
+    const response = await operation;
 
     if (!response.ok) {
       throw new Error(response.error);
@@ -37,18 +54,16 @@ export async function exportStory(
 
     // User cancelled the save dialog
     if (result.cancelled) {
-      console.log('[Export] User cancelled export');
-      throw new Error('Export cancelled');
+      onProgress({ status: 'complete', cancelled: true });
+      return;
     }
+
+    if (!result.success) throw new Error('Export failed');
 
     // Success
     console.log('[Export] Export complete! File saved to:', result.filePath);
     onProgress({ status: 'complete' });
 
-    // Auto-close after showing success briefly
-    setTimeout(() => {
-      onProgress({ status: 'complete' });
-    }, 1500)
   } catch (error) {
     console.error('[Export] Export failed:', error);
     const errorMessage =

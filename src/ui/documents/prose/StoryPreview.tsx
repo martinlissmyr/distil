@@ -1,19 +1,7 @@
 // src/ui/story/StoryPreview.tsx
-import React, { useEffect, useMemo, useState } from 'react';
-import { Box } from '@mantine/core';
-import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
+import { useEffect, useState } from 'react';
 import { client } from '../../../api/client';
-import { getProseExtensions } from '../../editor/primitives/editorConfigFactory';
-import { TopNavigation } from '../../common/TopNavigation';
-import navigationStyles from './StoryNavigation.module.scss';
-import previewStyles from './StoryPreview.module.scss';
-
-type PartDoc = {
-  partId: string;
-  partIndex: number;
-  partTitle: string;
-  Element: React.ReactElement;
-};
+import { ReadingPreview, type ReadingSection } from './ReadingPreview';
 
 export const StoryPreview = ({
   projectId,
@@ -26,8 +14,7 @@ export const StoryPreview = ({
   currentStoryTitle: string;
   onNavigateToEditor: () => void;
 }) => {
-  const extensions = useMemo(() => getProseExtensions(), []);
-  const [partDocs, setPartDocs] = useState<PartDoc[]>([]);
+  const [sections, setSections] = useState<ReadingSection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -35,7 +22,7 @@ export const StoryPreview = ({
 
     async function loadAllParts() {
       if (!projectId || !storyId) {
-        setPartDocs([]);
+        setSections([]);
         return;
       }
 
@@ -51,24 +38,17 @@ export const StoryPreview = ({
 
         if (cancelled) return;
 
-        const results = merged.parts.map((part) => {
-          const Element = renderToReactElement({
-            extensions,
+        setSections([{
+          id: merged.metadata.id,
+          parts: merged.parts.map((part) => ({
+            id: part.partId,
+            title: part.partTitle,
             content: part.content,
-          }) as React.ReactElement;
-
-          return {
-            partId: part.partId,
-            partIndex: part.partIndex,
-            partTitle: part.partTitle,
-            Element,
-          } satisfies PartDoc;
-        });
-
-        setPartDocs(results);
+          })),
+        }]);
       } catch (error) {
         console.error('[PREVIEW] Failed to load parts:', error);
-        if (!cancelled) setPartDocs([]);
+        if (!cancelled) setSections([]);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -79,33 +59,15 @@ export const StoryPreview = ({
     return () => {
       cancelled = true;
     };
-  }, [projectId, storyId, extensions]);
+  }, [projectId, storyId]);
 
   return (
-    <>
-      <Box className={navigationStyles.topNavigation}>
-        <TopNavigation
-          title={`${currentStoryTitle} – Preview`}
-          onBack={onNavigateToEditor}
-        />
-      </Box>
-
-      <Box className={navigationStyles.topOverlay} />
-
-      <Box className={previewStyles.content}>
-        {isLoading ? (
-          'Loading…'
-        ) : (
-          partDocs.map(({ partId, partTitle, Element }) => (
-            <Box key={partId} className={previewStyles.part}>
-              {partTitle && (
-                <h1 className={previewStyles.partTitle}>{partTitle}</h1>
-              )}
-              {Element}
-            </Box>
-          ))
-        )}
-      </Box>
-    </>
+    <ReadingPreview
+      title={`${currentStoryTitle} – Preview`}
+      sections={sections}
+      isLoading={isLoading}
+      emptyMessage="This story has no text yet."
+      onBack={onNavigateToEditor}
+    />
   );
 };

@@ -7,7 +7,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import type { JSONContent } from '@tiptap/react';
-import type { MergedStory } from '../../src/models/export';
+import type { MergedPart, MergedProject, MergedStory } from '../../src/models/export';
 import { manuscriptStylesConfig } from './docxStyles';
 
 type SerializerStateWithHeadingFlag = {
@@ -49,7 +49,10 @@ const customDocxSerializer = new DocxSerializer(
 
       // Render the heading content
       state.renderInline(node);
-      state.closeBlock(node, { style: styleId });
+      state.closeBlock(node, {
+        style: styleId,
+        pageBreakBefore: node.attrs.exportPageBreak === true,
+      });
 
       // Track that we just rendered a heading
       // The next paragraph should use BodyTextFirst (no indent)
@@ -118,9 +121,14 @@ function createProseMirrorSchema(): Schema {
     StarterKit.configure({
       heading: false, // We'll add Heading explicitly
     }),
-    Heading.configure({
-      levels: [2, 3], // Match prose editor config
-    }),
+    Heading.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          exportPageBreak: { default: false, rendered: false },
+        };
+      },
+    }).configure({ levels: [1, 2, 3] }),
     Placeholder.configure({
       placeholder: '',
     }),
@@ -142,6 +150,18 @@ function createProseMirrorDoc(content: JSONContent, schema: Schema): ProseMirror
 function createTitlePageDoc(title: string, schema: Schema): ProseMirrorNode {
   return schema.node('doc', null, [
     schema.node('heading', { level: 2 }, [schema.text(title)]),
+  ]);
+}
+
+function createProjectTitlePageDoc(title: string, schema: Schema): ProseMirrorNode {
+  return schema.node('doc', null, [
+    schema.node('heading', { level: 1 }, [schema.text(title)]),
+  ]);
+}
+
+function createStoryHeadingDoc(title: string, schema: Schema): ProseMirrorNode {
+  return schema.node('doc', null, [
+    schema.node('heading', { level: 1, exportPageBreak: true }, [schema.text(title)]),
   ]);
 }
 
@@ -183,33 +203,38 @@ export async function exportToDocx(story: MergedStory): Promise<Buffer> {
   console.log('[DOCX Export] Starting export for story:', story.title);
   console.log('[DOCX Export] Number of parts:', story.parts.length);
 
-  // Create ProseMirror schema
   const schema = createProseMirrorSchema();
+  const docs = [createTitlePageDoc(story.title, schema), ...createPartDocs(story.parts, schema)];
+  return serializeDocs(docs, schema);
+}
 
-  // Build the complete document
+export async function exportProjectToDocx(project: MergedProject): Promise<Buffer> {
+  const schema = createProseMirrorSchema();
+  const docs = [createProjectTitlePageDoc(project.title, schema)];
+
+  for (const story of project.stories) {
+    docs.push(createStoryHeadingDoc(story.title, schema));
+    docs.push(...createPartDocs(story.parts, schema));
+  }
+
+  return serializeDocs(docs, schema);
+}
+
+function createPartDocs(parts: MergedPart[], schema: Schema): ProseMirrorNode[] {
   const docs: ProseMirrorNode[] = [];
-
-  // Add title page
-  docs.push(createTitlePageDoc(story.title, schema));
-  console.log('[DOCX Export] Added title page');
-
-  // Add each chapter
-  for (const part of story.parts) {
+  for (const part of parts) {
     console.log(`[DOCX Export] Processing part ${part.partIndex}: ${part.partTitle}`);
-    console.log('[DOCX Export] Part content:', JSON.stringify(part.content).substring(0, 200));
 
-    // Add chapter heading if there's a title
     if (part.partTitle) {
       docs.push(createChapterHeadingDoc(part.partTitle, schema));
     }
 
-    // Add chapter content
-    const partDoc = createProseMirrorDoc(part.content, schema);
-    console.log('[DOCX Export] Part doc created, child count:', partDoc.childCount);
-    docs.push(partDoc);
+    docs.push(createProseMirrorDoc(part.content, schema));
   }
+  return docs;
+}
 
-  // Merge all documents
+async function serializeDocs(docs: ProseMirrorNode[], schema: Schema): Promise<Buffer> {
   const finalDoc = mergeDocs(docs, schema);
   console.log('[DOCX Export] Final doc child count:', finalDoc.childCount);
 

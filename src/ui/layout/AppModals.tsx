@@ -53,6 +53,7 @@ export interface AppModalsProps {
   onCloseExportModal: () => void;
   exportStatus: ExportStatus;
   exportFormat: 'docx' | 'pdf';
+  exportScope: 'project' | 'story';
   exportError?: string;
 }
 
@@ -93,6 +94,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
   onCloseExportModal,
   exportStatus,
   exportFormat,
+  exportScope,
   exportError,
 }) => {
   return (
@@ -168,6 +170,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
         onClose={onCloseExportModal}
         status={exportStatus}
         format={exportFormat}
+        scope={exportScope}
         errorMessage={exportError}
       />
     </>
