@@ -28,6 +28,21 @@
     }
   }
 
+  .cover {
+    min-height: 0;
+    height: 20cm;
+    padding: 0;
+    page-break-after: always;
+  }
+
+  .story + .story {
+    page-break-before: always;
+  }
+
+  .story > .part:first-of-type {
+    page-break-before: avoid;
+  }
+
   // Content area adaptations
   .content {
     // Override responsive values with fixed ones for print

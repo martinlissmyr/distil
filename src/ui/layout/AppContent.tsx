@@ -101,6 +101,7 @@ export const AppContent: React.FC<AppContentProps> = ({
     return (
       <StoriesView
         stories={stories}
+        projectId={selectedProjectId}
         currentProject={currentProject}
         onSelectStory={handleSelectStory}
         onCreateStory={handleCreateStory}

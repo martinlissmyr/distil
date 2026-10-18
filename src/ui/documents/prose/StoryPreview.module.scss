@@ -20,6 +20,36 @@
   }
 }
 
+.story {
+  position: relative;
+
+  & + .story,
+  .cover + & {
+    margin-top: clamp(72px, 10vh, 144px);
+    padding-top: clamp(72px, 10vh, 144px);
+
+    &:before {
+      content: "✦";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      line-height: 1;
+      opacity: 0.75;
+      padding: 0 12px;
+    }
+  }
+}
+
+.cover {
+  min-height: min(62vh, 620px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: clamp(80px, 14vh, 160px) 0;
+}
+
 .content {
   // A "book page" measure: ~60–75 characters per line is the sweet spot
   max-width: 72ch;
@@ -71,6 +101,14 @@
   // p + p { margin-top: 0.2em; } // subtle only
 
   // --- Titles / headings: more “book” than “UI” ---
+  h1.coverTitle {
+    margin: 0;
+    font-size: clamp(56px, 8vw, 96px);
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: 0.015em;
+  }
+
   h1.partTitle {
     text-align: center;
     margin: 0 0 48px;
@@ -82,6 +120,19 @@
 
     // If your font supports it, a very bookish look:
     // font-variant-caps: small-caps;
+  }
+
+  h1.storyTitle {
+    text-align: center;
+    margin: 0 0 24px;
+    font-weight: 600;
+    font-size: clamp(34px, 4vw, 52px);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+
+  .storyTitle + .part p:first-child {
+    text-indent: 0;
   }
 
   h1 {

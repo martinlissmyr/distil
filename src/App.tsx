@@ -22,6 +22,8 @@ import { useAppInitialization } from './hooks/useAppInitialization';
 import { useProjectHandlers } from './hooks/useProjectHandlers';
 import { useStoryHandlers } from './hooks/useStoryHandlers';
 import { projectionService } from './services/ProjectionGenerationService';
+import type { ExportRequest } from './models/export';
+import type { ExportProgress } from './export/exportOrchestrator';
 
 const App: React.FC = () => {
   const ensureMetaDocsLoaded = useAppStore((s) => s.ensureMetaDocsLoaded);
@@ -241,6 +243,7 @@ const App: React.FC = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportStatus, setExportStatus] = useState<'loading' | 'converting' | 'saving' | 'complete' | 'error'>('loading');
   const [exportFormat, setExportFormat] = useState<'docx' | 'pdf'>('docx');
+  const [exportScope, setExportScope] = useState<'project' | 'story'>('story');
   const [exportError, setExportError] = useState<string>();
 
   // Leave guard modal
@@ -257,8 +260,10 @@ const App: React.FC = () => {
   // Update menu context when navigation changes
   useEffect(() => {
     const isStoryContext = appSection === 'story';
+    const isProjectContext = appSection === 'project';
     window.menu.updateContext({
       isStoryContext,
+      isProjectContext,
       projectId: selectedProjectId || undefined,
       storyId: selectedStoryId || undefined,
     });
@@ -266,32 +271,42 @@ const App: React.FC = () => {
 
   // Handle export from menu
   useEffect(() => {
-    const handleExport = async (format: 'docx' | 'pdf') => {
-      if (!selectedProjectId || !selectedStoryId) {
-        console.error('[Export] No project or story selected');
+    const handleExport = async ({ scope, format }: ExportRequest) => {
+      if (!selectedProjectId ||
+          (scope === 'project' && appSection !== 'project') ||
+          (scope === 'story' && (appSection !== 'story' || !selectedStoryId))) {
+        console.error('[Export] Invalid export context');
         return;
       }
 
       setExportFormat(format);
+      setExportScope(scope);
       setExportModalOpen(true);
       setExportStatus('loading');
       setExportError(undefined);
 
-      const { exportStory } = await import('./export/exportOrchestrator');
+      const { exportStory, exportProject } = await import('./export/exportOrchestrator');
 
-      await exportStory(selectedProjectId, selectedStoryId, format, (progress) => {
+      const onProgress = (progress: ExportProgress) => {
         setExportStatus(progress.status);
         if (progress.errorMessage) {
           setExportError(progress.errorMessage);
         }
 
-        // Auto-close on complete after brief delay
-        if (progress.status === 'complete') {
+        if (progress.cancelled) {
+          setExportModalOpen(false);
+        } else if (progress.status === 'complete') {
           setTimeout(() => {
             setExportModalOpen(false);
           }, 1500);
         }
-      });
+      };
+
+      if (scope === 'project') {
+        await exportProject(selectedProjectId, format, onProgress);
+      } else if (selectedStoryId) {
+        await exportStory(selectedProjectId, selectedStoryId, format, onProgress);
+      }
     };
 
     // Register the handler
@@ -301,7 +316,7 @@ const App: React.FC = () => {
     return () => {
       if (cleanup) cleanup();
     };
-  }, [selectedProjectId, selectedStoryId]);
+  }, [appSection, selectedProjectId, selectedStoryId]);
 
   const handleCloseWizardModal = () => {
     const { closeWizard } = useAppStore.getState();
@@ -477,6 +492,7 @@ const App: React.FC = () => {
         onCloseExportModal={() => setExportModalOpen(false)}
         exportStatus={exportStatus}
         exportFormat={exportFormat}
+        exportScope={exportScope}
         exportError={exportError}
       />
     </>

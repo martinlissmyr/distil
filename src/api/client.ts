@@ -174,6 +174,12 @@ export const client = {
   exportToPdf(projectId: string, storyId: string) {
     return window.distil.exportToPdf(projectId, storyId);
   },
+  exportProjectToDocx(projectId: string) {
+    return window.distil.exportProjectToDocx(projectId);
+  },
+  exportProjectToPdf(projectId: string) {
+    return window.distil.exportProjectToPdf(projectId);
+  },
   getMergedStory(projectId: string, storyId: string) {
     return window.distil.getMergedStory(projectId, storyId) as Promise<IpcResponse<MergedStory>>;
   },

@@ -10,7 +10,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import type { MergedStory } from '../../src/models/export';
+import type { MergedPart, MergedProject, MergedStory } from '../../src/models/export';
 import type { JSONContent } from '@tiptap/react';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +23,17 @@ export async function exportToPdf(
   mergedStory: MergedStory,
   outputPath: string
 ): Promise<void> {
+  await renderPdf(await generateStoryHTML(mergedStory), outputPath);
+}
+
+export async function exportProjectToPdf(
+  mergedProject: MergedProject,
+  outputPath: string
+): Promise<void> {
+  await renderPdf(await generateProjectHTML(mergedProject), outputPath);
+}
+
+async function renderPdf(html: string, outputPath: string): Promise<void> {
   let hiddenWindow: BrowserWindow | null = null;
 
   try {
@@ -35,9 +46,6 @@ export async function exportToPdf(
         offscreen: true,
       },
     });
-
-    // Generate HTML content with embedded CSS
-    const html = await generateStoryHTML(mergedStory);
 
     // Load HTML into window
     const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
@@ -77,37 +85,51 @@ export async function exportToPdf(
  * Generate complete HTML document from merged story
  */
 async function generateStoryHTML(mergedStory: MergedStory): Promise<string> {
-  // Load compiled print CSS
+  const partsHTML = renderPartsHTML(mergedStory.parts, true);
+  return wrapHtml(mergedStory.title, partsHTML);
+}
+
+async function generateProjectHTML(project: MergedProject): Promise<string> {
+  const storiesHTML = project.stories.map((story) => `
+    <section class="story">
+      <h1 class="storyTitle">${escapeHTML(story.title)}</h1>
+      ${renderPartsHTML(story.parts, false)}
+    </section>
+  `).join('\n');
+
+  return wrapHtml(project.title, `
+    <main class="content">
+      <header class="cover"><h1 class="coverTitle">${escapeHTML(project.title)}</h1></header>
+      ${storiesHTML}
+    </main>
+  `);
+}
+
+function renderPartsHTML(parts: MergedPart[], wrapContent: boolean): string {
+  return parts.map((part) => `
+    <div class="part">
+      ${part.partTitle ? `<h1 class="partTitle">${escapeHTML(part.partTitle)}</h1>` : ''}
+      ${wrapContent
+        ? `<div class="content">${convertJSONContentToHTML(part.content)}</div>`
+        : convertJSONContentToHTML(part.content)}
+    </div>
+  `).join('\n');
+}
+
+async function wrapHtml(title: string, body: string): Promise<string> {
   const cssPath = path.join(__dirname, 'pdfStyles.css');
   const css = await fs.readFile(cssPath, 'utf-8');
 
-  // Generate parts HTML
-  const partsHTML = mergedStory.parts
-    .map(part => {
-      const contentHTML = convertJSONContentToHTML(part.content);
-
-      return `
-        <div class="part">
-          ${part.partTitle ? `<h1 class="partTitle">${escapeHTML(part.partTitle)}</h1>` : ''}
-          <div class="content">
-            ${contentHTML}
-          </div>
-        </div>
-      `.trim();
-    })
-    .join('\n');
-
-  // Complete HTML document
   return `<!DOCTYPE html>
 <html lang="sv">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${escapeHTML(mergedStory.title)}</title>
+    <title>${escapeHTML(title)}</title>
     <style>${css}</style>
   </head>
   <body>
-    ${partsHTML}
+    ${body}
   </body>
 </html>`;
 }

@@ -16,11 +16,12 @@ interface ExportProgressModalProps {
   onClose: () => void;
   status: ExportStatus;
   format: 'docx' | 'pdf';
+  scope: 'project' | 'story';
   errorMessage?: string;
 }
 
 const statusMessages: Record<ExportStatus, string> = {
-  loading: 'Loading story...',
+  loading: 'Loading {{scope}}...',
   converting: 'Converting to {{format}}...',
   saving: 'Saving file...',
   complete: 'Export complete!',
@@ -32,9 +33,12 @@ export const ExportProgressModal: React.FC<ExportProgressModalProps> = ({
   onClose,
   status,
   format,
+  scope,
   errorMessage,
 }) => {
-  const message = statusMessages[status].replace('{{format}}', format.toUpperCase());
+  const message = statusMessages[status]
+    .replace('{{format}}', format.toUpperCase())
+    .replace('{{scope}}', scope);
 
   // Allow closing only when error or complete
   const canClose = status === 'error' || status === 'complete';

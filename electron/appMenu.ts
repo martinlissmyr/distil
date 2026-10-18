@@ -1,13 +1,40 @@
 // electron/appMenu.ts
 import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow } from 'electron';
+import type { ExportRequest } from '../src/models/export';
 
 const isMac = process.platform === 'darwin';
 const isDevMode = !!process.env['VITE_DEV_SERVER_URL'];
 
 export interface MenuContext {
   isStoryContext: boolean;
+  isProjectContext: boolean;
   projectId?: string;
   storyId?: string;
+}
+
+function sendExport(request: ExportRequest, browserWindow?: Electron.BaseWindow): void {
+  const window = browserWindow instanceof BrowserWindow
+    ? browserWindow
+    : BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+  window?.webContents.send('menu:export', request);
+}
+
+function exportMenu(scope: ExportRequest['scope']): MenuItemConstructorOptions {
+  return {
+    label: scope === 'project' ? 'Export project' : 'Export story',
+    submenu: [
+      {
+        label: 'Export as DOCX...',
+        accelerator: 'CmdOrCtrl+Shift+E',
+        click: (_item, browserWindow) => sendExport({ scope, format: 'docx' }, browserWindow),
+      },
+      {
+        label: 'Export as PDF...',
+        accelerator: 'CmdOrCtrl+Shift+P',
+        click: (_item, browserWindow) => sendExport({ scope, format: 'pdf' }, browserWindow),
+      },
+    ],
+  };
 }
 
 /**
@@ -35,36 +62,11 @@ export function createAppMenu(context: MenuContext) {
   template.push({
     label: 'File',
     submenu: [
-      {
-        label: 'Export story',
-        submenu: [
-          {
-            label: 'Export as DOCX...',
-            enabled: context.isStoryContext,
-            accelerator: 'CmdOrCtrl+Shift+E',
-            click: () => {
-              // Send message to renderer to trigger export
-              const windows = BrowserWindow.getAllWindows();
-              if (windows.length > 0) {
-                windows[0].webContents.send('menu:export', 'docx');
-              }
-            },
-          },
-          {
-            label: 'Export as PDF...',
-            enabled: context.isStoryContext,
-            accelerator: 'CmdOrCtrl+Shift+P',
-            click: () => {
-              // Send message to renderer to trigger export
-              const windows = BrowserWindow.getAllWindows();
-              if (windows.length > 0) {
-                windows[0].webContents.send('menu:export', 'pdf');
-              }
-            },
-          },
-        ],
-      },
-      { type: 'separator' as const },
+      ...(context.isStoryContext ? [exportMenu('story')] : []),
+      ...(context.isProjectContext ? [exportMenu('project')] : []),
+      ...((context.isStoryContext || context.isProjectContext) && !isMac
+        ? [{ type: 'separator' as const }]
+        : []),
       ...(isMac ? [] : [{ role: 'quit' as const }]),
     ] as MenuItemConstructorOptions[],
   });

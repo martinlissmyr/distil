@@ -8,7 +8,7 @@ import type { EntityType, EntityIndex } from './models/entities/entityIndex';
 import type { CharacterDoc } from './models/entities/schemas/character';
 import type { LocationDoc } from './models/entities/schemas/location';
 import type { PartDoc, StoryMetadata } from './models/story';
-import type { MergedStory } from './models/export';
+import type { ExportRequest, MergedStory } from './models/export';
 import type { ChatModelProfileId } from './types/ai';
 import type { ChatThread } from '../electron/fs/fs';
 
@@ -155,6 +155,12 @@ declare global {
       exportToPdf: (projectId: string, storyId: string) => Promise<
         IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
       >;
+      exportProjectToDocx: (projectId: string) => Promise<
+        IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
+      >;
+      exportProjectToPdf: (projectId: string) => Promise<
+        IpcResponse<{ success: boolean; filePath?: string; cancelled?: boolean }>
+      >;
       getMergedStory: (projectId: string, storyId: string) => Promise<
         IpcResponse<MergedStory>
       >;
@@ -222,10 +228,11 @@ declare global {
     menu: {
       updateContext: (context: {
         isStoryContext: boolean;
+        isProjectContext: boolean;
         projectId?: string;
         storyId?: string;
       }) => void;
-      onExport: (callback: (format: 'docx' | 'pdf') => void) => (() => void) | undefined;
+      onExport: (callback: (request: ExportRequest) => void) => (() => void) | undefined;
       onNavigateToProject: (callback: (projectId: string) => void) => (() => void) | undefined;
     };
   }

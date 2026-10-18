@@ -3,10 +3,10 @@ import { dialog } from 'electron';
 import * as fs from 'fs/promises';
 import { validateProjectId, validateStoryId } from '../validation';
 import { safeHandle } from '../utils/ipcHandler';
-import { loadStoryMetadata, loadPartDoc } from '../fs/fs';
-import { exportToDocx } from '../export/docxExporter';
-import { exportToPdf } from '../export/pdfExporter';
-import type { MergedPart, MergedStory } from '../../src/models/export';
+import { listProjects, listStories, loadStoryMetadata, loadPartDoc } from '../fs/fs';
+import { exportProjectToDocx, exportToDocx } from '../export/docxExporter';
+import { exportProjectToPdf, exportToPdf } from '../export/pdfExporter';
+import type { ExportFormat, MergedPart, MergedProject, MergedStory } from '../../src/models/export';
 
 /**
  * Get chapter title for a part (matches storyMerger.ts logic)
@@ -67,12 +67,26 @@ async function mergeStoryParts(
   };
 }
 
+async function mergeProjectStories(projectId: string): Promise<MergedProject> {
+  const project = (await listProjects()).find((item) => item.id === projectId);
+  if (!project) {
+    throw new Error('Project not found');
+  }
+
+  const stories = await listStories(projectId);
+  return {
+    title: project.name,
+    stories: await Promise.all(stories.map((story) => mergeStoryParts(projectId, story.id))),
+  };
+}
+
 /**
  * Show save dialog and return selected path
  */
 async function showSaveDialog(
-  storyTitle: string,
-  format: 'docx' | 'pdf'
+  title: string,
+  format: ExportFormat,
+  scope: 'Story' | 'Project' = 'Story'
 ): Promise<string | null> {
   const filters =
     format === 'docx'
@@ -80,37 +94,34 @@ async function showSaveDialog(
       : [{ name: 'PDF Document', extensions: ['pdf'] }];
 
   const { filePath } = await dialog.showSaveDialog({
-    title: `Export Story as ${format.toUpperCase()}`,
-    defaultPath: `${storyTitle}.${format}`,
+    title: `Export ${scope} as ${format.toUpperCase()}`,
+    defaultPath: `${title}.${format}`,
     filters,
   });
 
   return filePath || null;
 }
 
-/**
- * Complete export flow - merges story, shows dialog, generates DOCX, and saves file
- * All happens in the main process for better performance and reliability
- */
-async function exportStoryToDocx(
-  projectId: string,
-  storyId: string
+/** Save a merged story or project through the same local export flow. */
+async function exportDocument(
+  merged: MergedStory | MergedProject,
+  format: ExportFormat
 ): Promise<{ success: boolean; filePath?: string; cancelled?: boolean }> {
-  // Step 1: Merge story parts
-  const mergedStory = await mergeStoryParts(projectId, storyId);
-
-  // Step 2: Show save dialog
-  const filePath = await showSaveDialog(mergedStory.title, 'docx');
+  const isProject = 'stories' in merged;
+  const filePath = await showSaveDialog(merged.title, format, isProject ? 'Project' : 'Story');
 
   if (!filePath) {
     return { success: false, cancelled: true };
   }
 
-  // Step 3: Generate DOCX
-  const buffer = await exportToDocx(mergedStory);
-
-  // Step 4: Save to disk
-  await fs.writeFile(filePath, buffer);
+  if (format === 'docx') {
+    const buffer = isProject ? await exportProjectToDocx(merged) : await exportToDocx(merged);
+    await fs.writeFile(filePath, buffer);
+  } else if (isProject) {
+    await exportProjectToPdf(merged, filePath);
+  } else {
+    await exportToPdf(merged, filePath);
+  }
 
   return { success: true, filePath };
 }
@@ -125,43 +136,24 @@ export function registerExportHandlers(): void {
   safeHandle('export:exportToDocx', async (projectId: string, storyId: string) => {
     validateProjectId(projectId);
     validateStoryId(storyId);
-    return await exportStoryToDocx(projectId, storyId);
+    return exportDocument(await mergeStoryParts(projectId, storyId), 'docx');
   });
 
-  /**
-   * IPC Handler: Export story to PDF
-   * Merges parts, shows save dialog, generates PDF, and saves to disk
-   */
+  /** Export the current story to PDF. */
   safeHandle('export:exportToPdf', async (projectId: string, storyId: string) => {
-    // Validate inputs
-    if (!projectId || !storyId) {
-      return { success: false, error: 'Missing projectId or storyId' };
-    }
+    validateProjectId(projectId);
+    validateStoryId(storyId);
+    return exportDocument(await mergeStoryParts(projectId, storyId), 'pdf');
+  });
 
-    try {
-      console.log('[PDF Export] Starting PDF export for story:', storyId);
+  safeHandle('export:projectToDocx', async (projectId: string) => {
+    validateProjectId(projectId);
+    return exportDocument(await mergeProjectStories(projectId), 'docx');
+  });
 
-      // Merge story parts (reuse existing function)
-      const merged = await mergeStoryParts(projectId, storyId);
-
-      // Show save dialog (reuse existing function)
-      const savePath = await showSaveDialog(merged.title, 'pdf');
-
-      if (!savePath) {
-        return { success: true, cancelled: true };
-      }
-
-      // Export to PDF
-      await exportToPdf(merged, savePath);
-
-      return { success: true, filePath: savePath };
-    } catch (error) {
-      console.error('[PDF Export] Error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error during PDF export',
-      };
-    }
+  safeHandle('export:projectToPdf', async (projectId: string) => {
+    validateProjectId(projectId);
+    return exportDocument(await mergeProjectStories(projectId), 'pdf');
   });
 
   /**

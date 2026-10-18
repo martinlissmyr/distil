@@ -224,7 +224,7 @@ app.whenReady().then(() => {
   setupAutoUpdates();
 
   // Create initial menu
-  const menu = createAppMenu({ isStoryContext: false });
+  const menu = createAppMenu({ isStoryContext: false, isProjectContext: false });
   Menu.setApplicationMenu(menu);
 
   if (app.isPackaged) {
