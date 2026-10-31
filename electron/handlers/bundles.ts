@@ -173,6 +173,14 @@ export async function syncRegistryWithDistilFolder(): Promise<void> {
               bundlePath: bundlePath
             })
           }
+        } else {
+          // Reconcile stale entries that reference this same bundle path under
+          // an older project ID.
+          await addOrUpdateProject({
+            ...existing,
+            name: project.name,
+            bundlePath
+          })
         }
       } catch (err) {
         console.error(`[bundles] Error reading bundle ${bundlePath}:`, err)

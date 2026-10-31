@@ -78,9 +78,18 @@ export async function updateRegistry(
 // Helper: Add or update project entry
 export async function addOrUpdateProject(entry: ProjectRegistryEntry): Promise<void> {
   await updateRegistry(registry => {
-    const index = registry.projects.findIndex(p => p.id === entry.id)
+    // A bundle has one authoritative project ID. A previous copy/move recovery
+    // can otherwise leave a stale entry pointing at the same bundle path.
+    const index = registry.projects.findIndex(
+      project => project.id === entry.id || project.bundlePath === entry.bundlePath
+    )
+
+    registry.projects = registry.projects.filter(
+      project => project.id !== entry.id && project.bundlePath !== entry.bundlePath
+    )
+
     if (index >= 0) {
-      registry.projects[index] = entry
+      registry.projects.splice(index, 0, entry)
     } else {
       registry.projects.push(entry)
     }
