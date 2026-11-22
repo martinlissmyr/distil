@@ -13,6 +13,7 @@ import { useChatScroll } from '../../hooks//useChatScroll';
 import { useScopeManager } from '../../hooks//useScopeManager';
 import { MessageBubble } from './MessageBubble';
 import { SelectionPill } from './SelectionPill';
+import { ChapterContextPill } from './ChapterContextPill';
 import { TypingIndicator } from './TypingIndicator';
 import styles from './ChatAside.module.scss';
 
@@ -38,6 +39,8 @@ type ChatAsideProps = {
   selectionMarkdown?: string;
   hasSelection?: boolean;
   isTextLoaded?: boolean;
+  /** Identifies the focused chapter when chat is scoped to a multi-chapter editor. */
+  contextChapterNumber?: number;
 
   /**
    * Called for any suggestion action (for analytics / orchestration).
@@ -120,6 +123,7 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
     onNavigate,
     onOpenWizard,
     editor,
+    contextChapterNumber,
   } = props;
 
   const doc = useMemo(
@@ -321,6 +325,11 @@ export const ChatAside: React.FC<ChatAsideProps> = (props) => {
       </Box>
 
       {/* Context pill */}
+      {contextChapterNumber !== undefined && (
+        <Box ml="xs">
+          <ChapterContextPill chapterNumber={contextChapterNumber} />
+        </Box>
+      )}
       {showSelectionPill && (
         <Box ml="xs">
           <SelectionPill onDismiss={dismissSelectionPill} />

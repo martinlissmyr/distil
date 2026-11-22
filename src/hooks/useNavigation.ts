@@ -70,6 +70,8 @@ export type EditorPosition = {
   scrollTop: number;
   cursorFrom: number;
   cursorTo: number;
+  /** Present when a shared chapter viewport owns the saved position. */
+  partId?: string;
 };
 
 export type StorySection = StorySectionId;
@@ -175,7 +177,8 @@ const useNavigationStore = create<NavigationStore>((set, get) => ({
         current &&
         current.scrollTop === position.scrollTop &&
         current.cursorFrom === position.cursorFrom &&
-        current.cursorTo === position.cursorTo
+        current.cursorTo === position.cursorTo &&
+        current.partId === position.partId
       ) {
         return state;
       }

@@ -10,46 +10,14 @@ import {
 } from './projectionUtils';
 
 /**
- * Background service that generates part projections (summaries):
- * 1. Current part: Only when explicitly triggered (navigation away, opening overview)
- * 2. Background parts: Periodically checks for stale projections and regenerates
+ * Generates part projections (summaries) when the user opens Chapters Overview.
  *
  * Projections are used in the chapter overview to show what each part contains
  * without loading full part documents.
  */
 class ProjectionGenerationService {
-  private checkIntervalId: NodeJS.Timeout | null = null;
-  private unsubscribeFromStore: (() => void) | null = null;
-
-  start(): void {
-    // Subscribe to store changes (just to track metadata changes for periodic check)
-    this.unsubscribeFromStore = useAppStore.subscribe(() => {
-      // Could add logic here if needed, but for now just maintain subscription
-    });
-
-    // Start periodic check for stale projections
-    this.checkIntervalId = setInterval(() => {
-      this.periodicCheck();
-    }, 30000); // Every 30 seconds
-  }
-
-  stop(): void {
-    // Unsubscribe from store
-    if (this.unsubscribeFromStore) {
-      this.unsubscribeFromStore();
-      this.unsubscribeFromStore = null;
-    }
-
-    // Clear periodic check
-    if (this.checkIntervalId) {
-      clearInterval(this.checkIntervalId);
-      this.checkIntervalId = null;
-    }
-  }
-
   /**
    * Generates a projection for a specific part.
-   * Called explicitly when navigating away from a part or opening chapter overview.
    * Only regenerates if the projection is stale.
    */
   public async generateForPart(projectId: string, storyId: string, partId: string): Promise<void> {
@@ -76,40 +44,14 @@ class ProjectionGenerationService {
     await this.generateProjection(projectId, storyId, partId);
   }
 
-  private periodicCheck(): void {
-    const { currentStoryMetadata, currentPartIdMap } = useAppStore.getState();
+  /** Refreshes every stale, eligible chapter summary in order. */
+  public async generateForStory(projectId: string, storyId: string): Promise<void> {
+    const metadata = useAppStore.getState().currentStoryMetadata;
+    if (!metadata || metadata.id !== storyId) return;
 
-    // Only check if story has parts enabled
-    if (!currentStoryMetadata || !currentStoryMetadata.partsEnabled) return;
-
-    const projectId = this.getProjectIdFromNavigation();
-    const storyId = currentStoryMetadata.id;
-    if (!projectId) return;
-
-    const currentPartId = currentPartIdMap[storyId];
-
-    // Process all stale parts EXCEPT the current one
-    for (const part of currentStoryMetadata.parts) {
-      if (part.id === currentPartId) continue; // Skip current part
-
-      if (shouldGenerateProjection(part)) {
-        // Generate immediately in background (no queue, no idle wait)
-        void this.generateProjection(projectId, storyId, part.id);
-      }
-    }
-  }
-
-  private getProjectIdFromNavigation(): string | null {
-    // Read navigation state from localStorage
-    const navStateKey = 'Distil:navState:v4';
-    const raw = window.localStorage.getItem(navStateKey);
-    if (!raw) return null;
-
-    try {
-      const navState = JSON.parse(raw);
-      return navState.selectedProjectId || null;
-    } catch {
-      return null;
+    // Generate serially: each summary is saved before the next uses it as context.
+    for (const partId of metadata.parts.map((part) => part.id)) {
+      await this.generateForPart(projectId, storyId, partId);
     }
   }
 

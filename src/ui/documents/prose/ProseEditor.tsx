@@ -1,17 +1,14 @@
 // src/ui/story/StoryTextView.tsx
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { JSONContent } from '@tiptap/react';
-import { Box } from '@mantine/core';
 import { WritingEnvironment } from '../../editor/WritingEnvironment';
 import { usePreloadMetaDocs } from '../../../hooks/usePreloadMetaDocs';
 import { TopNavigation, type TopNavigationMenuItem } from '../../common/TopNavigation';
-import { useChapterNavigationButtons } from './ChapterNavigation';
 import { ChapterOverview } from './ChapterOverview';
 import { useAppStore } from '../../../state/useAppStore';
 import { useNavigation } from '../../../hooks/useNavigation';
-import { getNextPart, getPreviousPart } from '../../../models/story';
-import { PartPreview } from './PartPreview';
 import { StoryPreview } from './StoryPreview';
+import { MultiChapterEditor } from './MultiChapterEditor';
 
 type StoryTextViewProps = {
   projectId: string;
@@ -35,6 +32,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
     storyKey,
     view: 'editor',
   });
+  const [partToFocus, setPartToFocus] = useState<string | null>(null);
   const subview = subviewState.storyKey === storyKey ? subviewState.view : 'editor';
 
   // Get parts state from app store
@@ -75,17 +73,6 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
 
   const partsEnabled = currentStoryMetadata?.partsEnabled ?? false;
   const parts = currentStoryMetadata?.parts ?? [];
-  const currentPartIndex = parts.findIndex((p) => p.id === currentPartId);
-  const totalParts = parts.length;
-  const partTitle = 'Chapter ' + (currentPartIndex + 1);
-
-  // Compute previous/next parts for preview
-  const previousPart = currentPartId ? getPreviousPart(parts, currentPartId) : null;
-  const nextPart = currentPartId ? getNextPart(parts, currentPartId) : null;
-
-  const showPreviousPreview = partsEnabled && previousPart?.projection?.summary;
-  const showNextPreview = partsEnabled && nextPart?.projection?.summary;
-
   // Load part document when currentPartId changes and sync to navigation store
   useEffect(() => {
     if (!currentPartId) return;
@@ -119,36 +106,12 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
     projectId,
   };
 
-  // Calculate position key for editor state persistence
-  const positionKey = useMemo(() => {
-    if (partsEnabled && currentPartId) {
-      return `${storyId}:prose:${currentPartId}`;
-    }
-    return `${storyId}:prose`;
-  }, [storyId, partsEnabled, currentPartId]);
-
   // Chapter navigation handlers
   const handleEnableParts = async () => {
     try {
       await enableParts(projectId, storyId);
     } catch (error) {
       console.error('Failed to enable parts:', error);
-    }
-  };
-
-  const handlePreviousPart = async () => {
-    if (currentPartIndex > 0) {
-      const previousPart = parts[currentPartIndex - 1];
-      setCurrentPartId(storyId, previousPart.id);
-      await loadCurrentPartDoc(projectId, storyId, previousPart.id);
-    }
-  };
-
-  const handleNextPart = async () => {
-    if (currentPartIndex < totalParts - 1) {
-      const nextPart = parts[currentPartIndex + 1];
-      setCurrentPartId(storyId, nextPart.id);
-      await loadCurrentPartDoc(projectId, storyId, nextPart.id);
     }
   };
 
@@ -164,44 +127,16 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
     // Don't check currentStoryMetadata - the store action will reload it
     // Just use the current parts array from the store
     try {
-      // Determine order for new part (after current part)
-      const newOrder = currentPartIndex >= 0 ? currentPartIndex + 1 : parts.length;
-
-      // Create the new part
+      // New chapters are appended until inline chapter controls are introduced.
+      const newOrder = parts.length;
       const createPart = useAppStore.getState().createPart;
       const newPartId = await createPart(projectId, storyId, newOrder);
-
-      // Switch to the new part
       setCurrentPartId(storyId, newPartId);
+      setPartToFocus(newPartId);
     } catch (error) {
       console.error('Failed to create part:', error);
     }
   };
-
-  const handleClickPreviousPreview = () => {
-    if (previousPart) {
-      setCurrentPartId(storyId, previousPart.id);
-      void loadCurrentPartDoc(projectId, storyId, previousPart.id);
-    }
-  };
-
-  const handleClickNextPreview = () => {
-    if (nextPart) {
-      setCurrentPartId(storyId, nextPart.id);
-      void loadCurrentPartDoc(projectId, storyId, nextPart.id);
-    }
-  };
-
-  const chapterNavButtons = useChapterNavigationButtons({
-    partsEnabled,
-    currentPartIndex,
-    totalParts,
-    onPreviousPart: handlePreviousPart,
-    onNextPart: handleNextPart,
-    canGoPrevious: true,
-    canGoNext: true,
-    onOpenOverview: handleOpenChaptersOverview,
-  });
 
   // Build menu items for the story menu
   const menuItems: TopNavigationMenuItem[] = [];
@@ -246,7 +181,7 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
 
   // Don't render editor until part data is synced
   const storyMetadataMissing = !currentStoryMetadata || currentStoryMetadata.id !== storyId;
-  const currentPartDocMissing = !!currentPartId && !currentPartDoc;
+  const currentPartDocMissing = !partsEnabled && !!currentPartId && !currentPartDoc;
   if (storyMetadataMissing || currentPartDocMissing) return null;
 
   // Show story preview subview
@@ -268,7 +203,26 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
         projectId={projectId}
         storyId={storyId}
         currentStoryTitle={title}
-        onNavigateToEditor={() => setSubviewState({ storyKey, view: 'editor' })}
+        onNavigateToEditor={(partId) => {
+          if (partId) setPartToFocus(partId);
+          setSubviewState({ storyKey, view: 'editor' });
+        }}
+      />
+    );
+  }
+
+  if (partsEnabled) {
+    return (
+      <MultiChapterEditor
+        key={storyKey}
+        projectId={projectId}
+        storyId={storyId}
+        storyTitle={title}
+        parts={parts}
+        menuItems={menuItems}
+        chatConfig={chatConfig}
+        focusPartId={partToFocus ?? undefined}
+        onFocusPartComplete={() => setPartToFocus(null)}
       />
     );
   }
@@ -281,45 +235,15 @@ export const ProseEditor: React.FC<StoryTextViewProps> = ({
         onUpdate={handleUpdate}
         onSave={handleSave}
         autosaveDelay={1000}
-        title={partsEnabled ? partTitle : title}
+        title={title}
         placeholder="Start writing your story..."
         chatConfig={chatConfig}
-        positionKey={positionKey}
         navigation={
           <TopNavigation
-            title={partsEnabled ? partTitle : title}
+            title={title}
             menuItems={menuItems}
           />
         }
-        bottomNavigation={
-          <TopNavigation
-            title=""
-            buttons={chapterNavButtons}
-          />
-        }
-        renderEditorContent={(editorContent) => (
-          <>
-            {showPreviousPreview && (
-              <Box>
-                <PartPreview
-                  summary={previousPart!.projection!.summary}
-                  position="previous"
-                  onClick={handleClickPreviousPreview}
-                />
-              </Box>
-            )}
-
-            {editorContent}
-
-            {showNextPreview && (
-              <PartPreview
-                summary={nextPart!.projection!.summary}
-                position="next"
-                onClick={handleClickNextPreview}
-              />
-            )}
-          </>
-        )}
       />
   );
 };
