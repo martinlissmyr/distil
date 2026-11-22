@@ -21,7 +21,6 @@ import { useStoryEditor } from './hooks/useStoryEditor';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { useProjectHandlers } from './hooks/useProjectHandlers';
 import { useStoryHandlers } from './hooks/useStoryHandlers';
-import { projectionService } from './services/ProjectionGenerationService';
 import type { ExportRequest } from './models/export';
 import type { ExportProgress } from './export/exportOrchestrator';
 
@@ -32,52 +31,6 @@ const App: React.FC = () => {
   useEffect(() => {
     void ensureMetaDocsLoaded({ scope: 'root' }, ['manifest']);
   }, [ensureMetaDocsLoaded]);
-
-  // Start projection generation service
-  useEffect(() => {
-    projectionService.start();
-    return () => {
-      projectionService.stop();
-    };
-  }, []);
-
-  // Generate projection when navigating away from a part
-  useEffect(() => {
-    let previousPartIdMap: { [storyId: string]: string } = {};
-
-    const unsubscribe = useAppStore.subscribe(() => {
-      const state = useAppStore.getState();
-      const currentPartIdMap = state.currentPartIdMap;
-      const metadata = state.currentStoryMetadata;
-
-      // When part ID changes for any story, generate projection for the OLD part
-      if (metadata) {
-        const storyId = metadata.id;
-        const currentPartId = currentPartIdMap[storyId];
-        const previousPartId = previousPartIdMap[storyId];
-
-        if (previousPartId && previousPartId !== currentPartId) {
-          // Get projectId from navigation state
-          const navState = localStorage.getItem('Distil:navState:v4');
-          if (navState) {
-            try {
-              const parsed = JSON.parse(navState);
-              if (parsed.projectId) {
-                console.log(`[App] Triggering projection generation for part ${previousPartId} in story ${storyId} (navigated away)`);
-                projectionService.generateForPart(parsed.projectId, storyId, previousPartId);
-              }
-            } catch (err) {
-              console.error('Failed to parse navigation state:', err);
-            }
-          }
-        }
-      }
-
-      previousPartIdMap = { ...currentPartIdMap };
-    });
-
-    return unsubscribe;
-  }, []); // Empty dependency array - subscribe once on mount
 
   // Navigation hook
   const navigation = useNavigation();

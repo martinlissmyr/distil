@@ -13,7 +13,7 @@ type ChapterOverviewProps = {
   projectId: string;
   storyId: string;
   currentStoryTitle: string;
-  onNavigateToEditor: () => void;
+  onNavigateToEditor: (partId?: string) => void;
 };
 
 type ChapterGridItem = {
@@ -34,7 +34,6 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   const currentStoryMetadata = useAppStore((state) => state.currentStoryMetadata);
 
   // Get store actions
-  const getCurrentPartId = useAppStore((state) => state.getCurrentPartId);
   const setCurrentPartId = useAppStore((state) => state.setCurrentPartId);
   const loadCurrentPartDoc = useAppStore((state) => state.loadCurrentPartDoc);
   const createPart = useAppStore((state) => state.createPart);
@@ -75,7 +74,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
   const handleEdit = useCallback(async (partId: string) => {
     setCurrentPartId(storyId, partId);
     await loadCurrentPartDoc(projectId, storyId, partId);
-    onNavigateToEditor();
+    onNavigateToEditor(partId);
   }, [storyId, projectId, setCurrentPartId, loadCurrentPartDoc, onNavigateToEditor]);
 
   // Create new part
@@ -86,7 +85,7 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
 
       setCurrentPartId(storyId, newPartId);
       // createPart already loads the doc, so we can navigate directly
-      onNavigateToEditor();
+      onNavigateToEditor(newPartId);
     } catch (error) {
       console.error('Failed to create part:', error);
     }
@@ -148,16 +147,12 @@ export const ChapterOverview: React.FC<ChapterOverviewProps> = ({
     },
   ], [organise, handleCreate]);
 
-  // Get current part ID from store
-  const currentPartId = getCurrentPartId(storyId);
-
-  // Generate projection for current part when opening chapter overview
+  // Refresh all stale chapter summaries when opening Chapters Overview.
   useEffect(() => {
-    if (currentPartId && projectId && storyId) {
-      console.log(`[ChapterOverview] Triggering projection generation for current part ${currentPartId}`);
-      projectionService.generateForPart(projectId, storyId, currentPartId);
+    if (projectId && storyId) {
+      void projectionService.generateForStory(projectId, storyId);
     }
-  }, [currentPartId, projectId, storyId]);
+  }, [projectId, storyId]);
 
   return (
     <Box>

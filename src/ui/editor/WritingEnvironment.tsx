@@ -53,12 +53,6 @@ export type WritingEnvironmentProps = {
   /** Whether to show chat aside (default: true) */
   withChat?: boolean;
 
-  /** Optional: Custom render function for editor content (for part previews, etc) */
-  renderEditorContent?: (editor: React.ReactNode) => React.ReactNode;
-
-  /** Optional: Ref for scroll viewport (for scroll anchoring in StoryTextView) */
-  scrollViewportRef?: React.RefObject<HTMLDivElement>;
-
   /** Optional: Key for saving/restoring editor position */
   positionKey?: string;
 };
@@ -90,8 +84,6 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   navigation,
   bottomNavigation,
   withChat = true,
-  renderEditorContent,
-  scrollViewportRef,
   positionKey,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -100,9 +92,8 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
   const lastSavedPositionRef = useRef<EditorPosition | null>(null);
   const restorationTimerRef = useRef<number | null>(null);
 
-  // Create internal viewport ref, use external if provided
   const internalViewportRef = useRef<HTMLDivElement>(null);
-  const viewportRef = scrollViewportRef || internalViewportRef;
+  const viewportRef = internalViewportRef;
 
   // Navigation store actions
   const { saveEditorPosition, getEditorPosition } = useNavigation();
@@ -236,18 +227,10 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
 
         const viewport = viewportRef.current;
 
-        // Get editor element position (universal minimum scroll for all cases)
-        const editorElement = editor.view.dom;
-        const editorTop = editorElement.offsetTop;
-
-        // Restore scroll first
         if (savedPosition) {
-          // Restore scroll, but ensure we're at least at editor top
-          const targetScroll = Math.max(savedPosition.scrollTop, editorTop);
-          viewport.scrollTop = targetScroll;
+          viewport.scrollTop = savedPosition.scrollTop;
         } else {
-          // No saved position - scroll to editor top (past any previews)
-          viewport.scrollTop = editorTop;
+          viewport.scrollTop = 0;
         }
 
         hasRestoredPositionRef.current = true;
@@ -366,11 +349,7 @@ export const WritingEnvironment: React.FC<WritingEnvironmentProps> = ({
           }}
         >
           <Box className={styles.editor}>
-            {renderEditorContent ? (
-              renderEditorContent(<EditorContent editor={editor} />)
-            ) : (
-              <EditorContent editor={editor} />
-            )}
+            <EditorContent editor={editor} />
           </Box>
         </ScrollArea>
 
